@@ -13,6 +13,7 @@ This repository contains Haven's public source, English documentation, configura
 - Profiles and the board are not authorization boundaries. The full lower-trust executor must be isolated from the controller's database, credentials and personal data. The probes use synthetic executors and do not implement the production adapter.
 - Keep recovery independent of Nora's model. Retries must bind results to the current run and reconcile uncertain external effects before repeating them.
 - Use targeted checks justified by the change. Before handing off, run `git diff --check`, inspect `git status --short`, and verify changed documentation links. Never overwrite unrelated changes.
+- Primary branches are owner-controlled: prepare agent changes on topic branches and leave merges to `main`/`master` to `ondrejkrpec`. Do not commit directly to, push updates to, or merge into these branches unless the owner explicitly delegates that specific operation. Access to owner credentials is not independent authorization.
 - Do not commit, push, create remotes, publish or deploy unless the user asks. Disposable Git snapshots used only to test cloning must remain outside the working repositories and must not be pushed.
 
 Record significant architectural decisions as short ADRs when made. Record experiments with the exact revision, date, commands, result and scope. Keep planned behavior separate from verified behavior.

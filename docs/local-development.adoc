@@ -29,6 +29,14 @@ git status --short
 
 The checksum manifest covers the retained H0.1 report, pins, patch, MIT notice, probes and sanitized evidence. It detects accidental changes; it is not a signature. The behavior suite checks configuration and public documentation boundaries; it does not run Hermes or paid services. After installing the link:documentation.adoc[H0.4 check tools], run `.venv/bin/python -m scripts.check` for the full local/CI workflow. The first GitHub run was attempted; automatic local push checks replace unavailable Actions, recorded in link:h1.1-publication.adoc[H1.1].
 
+== Primary branch and merge policy
+
+The default branch is `main`; the repository has not been renamed to `master`. The active https://github.com/ondrejkrpec/haven/rules/25829239[owner-only ruleset] restricts creation, updates and deletion of the default branch, `main` and `master`. Its only bypass actor is user `ondrejkrpec` (GitHub user ID `8884243`), with no role-wide, team or application exception. This also prevents another writer from merging pull requests into those branches.
+
+The owner can push directly or merge reviewed changes. Contributors and coding agents prepare topic branches and pull requests; final primary-branch changes belong to the owner unless the owner explicitly delegates a particular operation. The rule controls the authenticated GitHub actor, not the text of a commit's author field. An agent using the owner's credentials has the same server identity, so agent instructions must also enforce this workflow. Automated executors should use their own restricted identity when introduced.
+
+This server-side access rule is independent of GitHub Actions and complements the local pre-push checks. It was read back from the ruleset API and the effective rules for `main` on 2026-10-25. The only repository collaborator at verification was the owner. See GitHub's https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets[restriction semantics] and https://github.blog/changelog/2026-05-07-repository-rulesets-user-bypass-and-branch-renaming/[individual-user bypass support].
+
 == Optional H0.1 reproduction
 
 The complete historical procedure and its limitations are in link:../research/h0.1/README.adoc[the research report]. It builds Hermes through its own pinned package manager and uses the upstream test runner. This can download substantial dependencies and images; it is separate from foundation setup.
