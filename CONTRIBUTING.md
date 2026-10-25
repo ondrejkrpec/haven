@@ -2,6 +2,8 @@
 
 Develop new features locally in a branch with a focused change. Public prose and technical documentation use English. Technical guides live in `docs/` as AsciiDoc; [documentation and public checks](docs/documentation.adoc) describes the Antora build and the shared local/CI workflow.
 
+The default branch is `main`. Only GitHub account `ondrejkrpec` may push to or merge into the primary branches. The active server ruleset covers the default branch, `main` and `master`, with an exception only for that exact user. Contributors and agents prepare topic branches and pull requests; the owner performs the final merge. The owner can also push directly. Local checks supplement the server access rule.
+
 Start with [local development](docs/local-development.adoc). Keep instance configuration, hostnames and personal instructions in a separate private repository. Use synthetic values in examples and tests. Store credentials and runtime data outside both source repositories.
 
 For a change:
