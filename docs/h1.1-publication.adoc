@@ -1,6 +1,6 @@
 = H1.1: GitHub publication and first CI
 
-Status on 2026-10-25: in progress. The owner selected MIT for original Haven material. Local publication checks passed before the final licensing/documentation updates; authenticated availability checks confirmed both target names, SSH authentication succeeded as the owner, and repository creation plus the first GitHub Actions run are pending.
+Status on 2026-10-25: public/private repositories are published with MIT and correct visibility. The owner accepted automatic local push checks in place of unavailable GitHub Actions. Public HTTPS cloning without credentials was verified; successful Actions execution is not claimed.
 
 == Scope and licensing
 
@@ -16,7 +16,7 @@ Use the authenticated owner's account to verify repository names. Create the pub
 
 GitHub authentication uses the official CLI browser flow; tokens and one-time codes are not recorded in project files or reports. Commit metadata uses the owner's identity and GitHub noreply address. No provider credentials, WhatsApp sessions, runtime databases, package caches or generated sites belong in either source publication.
 
-After pushing, verify remote visibility and matching branch revisions, clone the public repository from GitHub without private access and verify retained checksums. Wait for the actual `Public foundation` Actions run at the published revision; investigate failures and rerun after fixing them. Local actionlint success alone does not establish GitHub execution.
+After pushing, verify remote visibility and matching branch revisions, clone the public repository from GitHub without private access and verify retained checksums. Use the configured local push pipeline to check the exact committed HEAD before publication. The private hook also checks its explicit configuration and files/history. Local actionlint success and local pipeline success do not establish GitHub Actions execution.
 
 == Local preparation
 
@@ -31,13 +31,16 @@ The npm documentation shortcut was corrected to run `python3 -m scripts.build_do
 |Check |Current result
 |Owner-selected license |MIT, with independent upstream attribution retained
 |Authenticated repository-name check |Both `ondrejkrpec/haven` and `ondrejkrpec/haven-private` were available
-|Public remote and exact source revision |Pending
-|Private remote and matching public revision |Pending
-|Remote visibility verification |Pending
-|Public clone from GitHub |Pending
-|Actual GitHub Actions run and conclusion |Pending
+|Public remote and exact source revision |https://github.com/ondrejkrpec/haven[`ondrejkrpec/haven`], first publication `4d8d861a98ae85154bfbd7760f2288386ae1617d`
+|Private remote and matching public revision |Private `ondrejkrpec/haven-private`; `HAVEN_REVISION` records the matching public commit
+|Remote visibility verification |Authenticated API confirmed PUBLIC for the project and PRIVATE for the instance; both default branches are `main`
+|Public clone from GitHub |HTTPS clone with empty HOME, disabled Git user/system configuration and no credential helper passed; all 16 research checksums passed
+|GitHub Actions history |https://github.com/ondrejkrpec/haven/actions/runs/40208770232[First run] failed before steps; owner chose an independent pipeline
+|Replacement pipeline |Versioned pre-push hooks, clean-HEAD/ref checks, complete public checks, explicit private validation/scans, commit-bound receipts in Git metadata
 |===
 
-H1.1 is complete only when the intended remotes are reachable with the correct visibility and the real public Actions run succeeds. Hosting and deployment are outside this ticket. Continue with link:h1-prerequisites.adoc[H1 prerequisites] after recording the result.
+The seven push-gating tests cover successful revision-bound receipts, dirty/untracked sources, failed checks, checkout mutation, pushes of another revision, empty/deletion pushes and mismatched private/public revisions. The default source suite now contains 30 tests.
+
+H1.1 acceptance uses the owner's replacement criterion: correctly visible and reachable remotes, an anonymous public clone and successful local automatic push checks tied to the published revisions. Actions is manual-only and does not block progress. Hosting and deployment remain later tickets. Continue with link:h1-prerequisites.adoc[H1 prerequisites].
 
 Primary references consulted on 2026-10-25: https://cli.github.com/manual/gh_auth_login[GitHub CLI authentication], https://cli.github.com/manual/gh_repo_create[repository creation], https://cli.github.com/manual/gh_run_watch[watching an Actions run] and https://choosealicense.com/licenses/mit/[MIT]. GitHub CLI 2.103.2 was downloaded from its official release and its archive SHA-256 verified. Context7 was unavailable because its monthly quota was exhausted.

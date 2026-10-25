@@ -2,14 +2,14 @@
 
 Haven is a personal agent system built around Hermes, with WhatsApp as its planned phone interface. The first deployment will use one Ubuntu VPS and bounded automation, with separate worker and reviewer roles.
 
-**Status: H0 local foundation accepted through a clean checkout.** Configuration v1, documentation and public checks are available. Deployment, authenticated Codex use and WhatsApp pairing remain untested; GitHub publication and the first Actions run are pending.
+**Status: H0 local foundation accepted through a clean checkout.** Configuration v1, documentation and public checks are available. Deployment, authenticated Codex use and WhatsApp pairing remain untested; GitHub repositories are published; automatic local pre-push checks replace unavailable GitHub Actions.
 
 ## Start locally
 
-Prerequisites: a POSIX shell, Git 2.28 or newer, and `sha256sum`. Configuration validation needs Python 3.12+; the complete public checks also need Node.js/npm and Linux check tools. Podman is used only by optional H0.1 probes. Use an existing checkout, or clone a copy once a remote is available:
+Prerequisites: a POSIX shell, Git 2.28 or newer, and `sha256sum`. Configuration validation needs Python 3.12+; the complete public checks also need Node.js/npm and Linux check tools. Podman is used only by optional H0.1 probes. Use an existing checkout, or clone the public repository:
 
 ```sh
-git clone <repository-url> haven
+git clone https://github.com/ondrejkrpec/haven.git haven
 cd haven
 ```
 
@@ -25,6 +25,8 @@ cp ../haven-private/config/instance.yaml.example ../haven-private/config/instanc
 ```
 
 Read the private README, edit your instance and follow [configuration setup and validation](docs/configuration.adoc). Validation requires Python 3.12+, system time-zone data and the hash-pinned dependencies in an isolated environment. It checks Haven inputs; translation to Hermes and deployment remain H1 work. The public checkout works independently of any private repository.
+
+Enable the documented local push pipeline with `git config --local core.hooksPath .githooks` after [tool setup](docs/documentation.adoc). It checks the clean commit being pushed; configure each new clone separately.
 
 ## Project files
 
@@ -43,4 +45,4 @@ See [H0.5 acceptance](docs/h0.5-acceptance.adoc) for the clean-checkout result. 
 
 ## Publication and licensing
 
-Haven's original source, documentation and template use the [MIT License](LICENSE), selected by the owner. Copied Hermes material retains its [upstream MIT notice](research/h0.1/UPSTREAM-LICENSE), attribution and patch author metadata. The proposed GitHub names are `haven` and `haven-private`, under the owner's personal account; [H1.1 publication](docs/h1.1-publication.adoc) records the current migration status.
+Haven's original source, documentation and template use the [MIT License](LICENSE), selected by the owner. Copied Hermes material retains its [upstream MIT notice](research/h0.1/UPSTREAM-LICENSE), attribution and patch author metadata. The public repository is [ondrejkrpec/haven](https://github.com/ondrejkrpec/haven), with a separate private instance repository; [H1.1 publication](docs/h1.1-publication.adoc) records the current migration status.

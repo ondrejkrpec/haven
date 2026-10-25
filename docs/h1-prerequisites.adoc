@@ -6,7 +6,7 @@ H1 is planned work. These are decisions and acceptance checks, not an installati
 
 link:h0.5-acceptance.adoc[H0.5 acceptance] establishes the local foundation from a clean public clone with freshly installed dependencies. Configuration validation, instance creation and public documentation/checks work without the original private repository. The synthetic model and host are not deployment inputs, and the tested fixture commit is not a real Haven release.
 
-Before reproducible deployment, establish the intended public-source revision and matching private configuration within the owner's commit/remote authorization. The working repositories still have no commits or remotes. The owner selected MIT; authenticated repository-name verification and publication remain in progress in link:h1.1-publication.adoc[H1.1]; the first actual GitHub Actions run is pending remote setup. These are distinct from the host/account acceptance below.
+Before reproducible deployment, establish the intended public-source revision and matching private configuration within the owner's commit/remote authorization. Real source commits and separate public/private GitHub remotes now exist. The owner selected MIT; authenticated repository-name checks and publication are recorded in link:h1.1-publication.adoc[H1.1]; automatic local push checks replace unavailable GitHub Actions with the owner's agreement. These are distinct from the host/account acceptance below.
 
 == Owner choices before provisioning
 

@@ -1,5 +1,7 @@
 = H0.5 clean-checkout acceptance and H1 handoff
 
+Historical acceptance record from before GitHub publication. Current repository, licensing and CI status is in link:h1.1-publication.adoc[H1.1].
+
 Verified on 2026-10-25 on Manjaro Linux x86_64. The local H0 foundation is accepted: a fresh public clone can install its dependencies, validate configuration, create another synthetic private instance and build documentation using the documented workflow. GitHub publication/execution and live Ubuntu services remain pending.
 
 == Revision and environment

@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+if [ ! -x .venv/bin/python ]; then
+  echo 'Prepare the documented .venv before pushing Haven.' >&2
+  exit 1
+fi
+exec .venv/bin/python -m scripts.pre_push "$@"

@@ -26,8 +26,9 @@ Automatic deployment will initially be limited to the proposed `haven-health` de
 |===
 |Milestone |Remaining work
 |H0.3 |Implemented locally: versioned YAML schema, validator, defaults/override rules and secret references. Runtime translation remains H1.
-|H0.4 |Implemented locally: Antora documentation build, public check workflow, secret scan and link checks. First GitHub execution is pending remote setup.
+|H0.4 |Implemented locally: Antora documentation build, public check workflow, secret scan and link checks. Automatic local push checks replace unavailable GitHub Actions.
 |H0.5 |Accepted locally: fresh public clone, newly installed dependencies, independent private instance and public build checks. See link:h0.5-acceptance.adoc[acceptance and H1 handoff].
+|H1.1 |MIT selected; public/private GitHub remotes and source history exist. link:h1.1-publication.adoc[Local push checks] replace unavailable Actions with the owner's agreement.
 |H1 |Ubuntu VPS, real authentication, WhatsApp pairing, Czech voice latency/quality, systemd, private access, backups and restore.
 |H2 |Controller adapter, separate roles, full executor isolation, negative access tests and review lifecycle.
 |H3 |Bounded automated repair and deployment with rollback.

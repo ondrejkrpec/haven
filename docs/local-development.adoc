@@ -27,7 +27,7 @@ git status --short
 .venv/bin/python -m unittest discover -s tests -v
 ----
 
-The checksum manifest covers the retained H0.1 report, pins, patch, MIT notice, probes and sanitized evidence. It detects accidental changes; it is not a signature. The behavior suite checks configuration and public documentation boundaries; it does not run Hermes or paid services. After installing the link:documentation.adoc[H0.4 check tools], run `.venv/bin/python -m scripts.check` for the full local/CI workflow. The first actual GitHub run remains pending remote setup.
+The checksum manifest covers the retained H0.1 report, pins, patch, MIT notice, probes and sanitized evidence. It detects accidental changes; it is not a signature. The behavior suite checks configuration and public documentation boundaries; it does not run Hermes or paid services. After installing the link:documentation.adoc[H0.4 check tools], run `.venv/bin/python -m scripts.check` for the full local/CI workflow. The first GitHub run was attempted; automatic local push checks replace unavailable Actions, recorded in link:h1.1-publication.adoc[H1.1].
 
 == Optional H0.1 reproduction
 
@@ -37,11 +37,11 @@ Never reuse an active Hermes home, runtime or Podman store for an experiment. Do
 
 == GitHub and publication
 
-The initial local repositories use branch `main`, have no commits and have no remotes. The README clone example becomes directly usable once a source repository has a committed snapshot. H0.2 acceptance uses a disposable snapshot repository to exercise a real clone without committing the owner's working repositories.
+The project and instance repositories use `main`, have real commits and track their GitHub remotes. The public README clone command is usable; the instance remote is private. H0.2 acceptance uses a disposable snapshot repository to exercise a real clone without committing the owner's working repositories.
 
 link:h0.2-acceptance.adoc[H0.2 acceptance] records the initial local check; link:h0.5-acceptance.adoc[H0.5 acceptance] verifies the complete foundation from a fresh clone and newly installed dependencies. Neither fixture establishes a published project revision.
 
-Before creating remotes, verify `haven` and `haven-private` are available under the owner's personal GitHub account. The owner selected MIT; retain the root license and independent upstream notices. Keep the instance repository private. Review the exact files to be published, then create and push remotes only within the user's authorization.
+H1.1 verified the names and created public `ondrejkrpec/haven` and private `ondrejkrpec/haven-private`. The owner selected MIT; retain the root license and independent upstream notices. Keep the instance repository private. For future publication changes, review the exact files and stay within the user's commit/push authorization.
 
 link:h1.1-publication.adoc[H1.1 publication] records the current remote/CI status; earlier acceptance reports retain their historical scope.
 

@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+instance=$(git rev-parse --show-toplevel)
+public=$(git config --path --get haven.publicRoot) || {
+  echo 'Set haven.publicRoot to the public Haven checkout before pushing.' >&2
+  exit 1
+}
+cd "$public"
+exec .venv/bin/python -m scripts.pre_push --instance "$instance" "$@"

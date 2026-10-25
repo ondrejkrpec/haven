@@ -1,5 +1,7 @@
 = H0.4 documentation and check acceptance
 
+Historical acceptance record from before GitHub publication. Current repository, licensing and CI status is in link:h1.1-publication.adoc[H1.1].
+
 Verified locally on 2026-10-25 on Manjaro Linux x86_64. H0.4 is implemented locally: Antora generation, the public check entry point and the GitHub Actions definition. No remote, hosted site, live credentials or deployed Haven service were used.
 
 == Tools and procedure

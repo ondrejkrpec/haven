@@ -1,6 +1,6 @@
 = Documentation and public checks
 
-H0.4 adds an Antora site and one local/CI check workflow. The build consumes public sources only. link:adr/0002-documentation-and-checks.adoc[ADR 0002] records the choice; link:h0.4-acceptance.adoc[acceptance] separates local verification from pending GitHub execution.
+H0.4 added an Antora site and shared checks. H1.1 uses automatic local pre-push checks as the primary pipeline because GitHub Actions is unavailable for the owner's account. The build consumes public sources only. link:adr/0002-documentation-and-checks.adoc[ADR 0002] records the choice; link:h0.4-acceptance.adoc[acceptance] separates local verification from pending GitHub execution.
 
 == Prepare tools
 
@@ -52,11 +52,34 @@ The exporter never discovers sibling repositories. It copies only selected publi
 
 The repository-owned UI uses HTML/CSS and system fonts, with navigation, responsive layout, dark mode and a keyboard skip link. It requires no browser JavaScript. This is a documentation build, not a hosted service. No Pages workflow or private documentation build is added yet.
 
-== CI and publication boundary
+== Automatic local push pipeline
 
-link:../.github/workflows/checks.yml[GitHub Actions] runs the same checks on pushes, pull requests and manual dispatch using Ubuntu 24.04, Python 3.12 and Node.js 24. Actions are pinned to full commits, the token has only `contents: read`, checkout credentials are not persisted, and no instance secrets are supplied. There is no `pull_request_target` workflow, deployment permission or publication step.
+After preparing the tools, enable the versioned public hook in each checkout:
 
-The first actual run remains pending remote creation and push. No remote is configured locally. The owner selected MIT; review publication files and retain license notices before making the repository public. link:h1.1-publication.adoc[H1.1] records the current remote/CI status. Hosting, its base URL and private Tailscale documentation belong to later work. link:h0.5-acceptance.adoc[H0.5] verified setup, validation and documentation generation from a clean checkout with new dependencies.
+[source,sh]
+----
+git config --local core.hooksPath .githooks
+----
+
+Commit your intended changes before pushing. The hook requires a clean checkout, including untracked source files, and the pushed commit must be the checked-out HEAD. It runs the complete `scripts.check` command and rejects the push on failure or a checkout change during checks. A successful receipt records the exact public revision, timestamp and result in Git metadata at `haven-checks/last-success.json`. It is not a tracked source or documentation input. Deletions and pushes with no new source revision do not run source checks.
+
+For an instance created from the template, configure its independent private hook from the public checkout:
+
+[source,sh]
+----
+git -C ../haven-private config --local core.hooksPath .githooks
+git -C ../haven-private config --local haven.publicRoot "$PWD"
+----
+
+Record the public HEAD in the private `HAVEN_REVISION` file and commit the instance before pushing. Its hook requires both checkouts to be clean and that revision to match the public HEAD. It reruns the public checks, explicitly validates the instance and scans private files and history with redacted Gitleaks output. Private receipts stay in that repository's Git metadata; private source never enters the public build. Configure `haven.publicRoot` for the actual installation path; it is local Git configuration.
+
+These are client-side checks on the configured checkouts. GitHub web edits and other clones do not automatically use them; every development clone needs setup. They are not a server-side permission boundary. An independent runner after VPS provisioning can add remote enforcement without depending on GitHub Actions. Do not use `--no-verify` as the normal publication path.
+
+== GitHub workflow and publication
+
+link:../.github/workflows/checks.yml[GitHub Actions] retains a manual `workflow_dispatch` definition for possible future use, without push/PR triggers. The owner selected the local pipeline after GitHub rejected the first job at account level before runner allocation. A successful Actions run is no longer required for H1.1 acceptance. No claim is made that GitHub-hosted checks passed.
+
+The manual workflow selects Ubuntu 24.04, Python 3.12 and Node.js 24, with Actions pinned to full commits, read-only repository permissions and no instance secrets. Both source remotes are configured and MIT is selected. link:h1.1-publication.adoc[H1.1] records publication and local-pipeline acceptance. Hosting and private Tailscale documentation remain later work. link:h0.5-acceptance.adoc[H0.5] records the clean-checkout dependency installation.
 
 == Dependency updates and references
 
@@ -71,3 +94,5 @@ uv pip compile requirements-dev.in --python-version 3.12 --constraint requiremen
 For npm updates, change exact direct versions, regenerate `package-lock.json`, review dependency changes, then use `npm ci --ignore-scripts`. For binary updates, verify the upstream release archives/checksums and update both supported architectures. For Action updates, resolve the release tag to its full commit and review the release notes. Do not substitute mutable `latest` URLs for checked-in pins.
 
 Primary references consulted on 2026-10-25: https://docs.antora.org/antora/latest/whats-new/[Antora 3.2 release notes], https://docs.antora.org/antora/latest/playbook/content-source-url/[local sources], https://docs.antora.org/antora/latest/playbook/ui-bundle-url/[local UI bundles], https://docs.antora.org/antora/latest/playbook/runtime-log-failure-level/[failure thresholds], https://github.com/gitleaks/gitleaks/tree/v8.30.1[Gitleaks 8.30.1], https://github.com/rhysd/actionlint/tree/v1.7.12[actionlint 1.7.12], https://docs.astral.sh/ruff/configuration/[Ruff configuration], https://yamllint.readthedocs.io/en/stable/configuration.html[yamllint configuration] and https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions[Actions security]. Context7 was unavailable because its monthly quota was exhausted; official documentation and public package/release metadata were used instead.
+
+The local pipeline follows Git's official https://git-scm.com/docs/githooks#_pre_push[pre-push contract] and https://git-scm.com/docs/git-config#Documentation/git-config.txt-corehooksPath[repository-local hook configuration].

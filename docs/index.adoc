@@ -18,4 +18,4 @@ link:../research/h0.1/README.adoc[H0.1] established a technical path using synth
 
 This site contains only public material. Personal configuration and instructions belong in each user's separate private repository. Runtime sessions, credentials, databases and backups stay outside the public sources and build inputs.
 
-The owner selected MIT; link:h1.1-publication.adoc[GitHub publication and first CI] are in progress. Original Haven material uses link:../LICENSE[MIT]. The retained Hermes patch and license keep their independent upstream attribution.
+The owner selected MIT and both repositories are published with their intended visibility; link:h1.1-publication.adoc[automatic local push checks] replace unavailable GitHub Actions with the owner's agreement. Original Haven material uses link:../LICENSE[MIT]. The retained Hermes patch and license keep their independent upstream attribution.
