@@ -1,0 +1,10 @@
+name: haven
+title: Haven
+version: ~
+nav:
+  - modules/ROOT/nav.adoc
+asciidoc:
+  attributes:
+    source-highlighter: ~
+    sectanchors: ''
+    icons: ~

@@ -1,0 +1,43 @@
+= H1.1: GitHub publication and first CI
+
+Status on 2026-10-25: in progress. The owner selected MIT for original Haven material. Local publication checks passed before the final licensing/documentation updates; authenticated availability checks confirmed both target names, SSH authentication succeeded as the owner, and repository creation plus the first GitHub Actions run are pending.
+
+== Scope and licensing
+
+The public repository contains common source, English documentation, synthetic examples, the private-instance template and retained research evidence. Each installation owns its separate private repository. Local workspaces remain in place; GitHub adds remote history and distribution. Documentation hosting remains H1.8 work.
+
+link:../LICENSE[MIT] covers original Haven material. The copied Hermes patch and research artifacts retain their link:../research/h0.1/UPSTREAM-LICENSE[upstream notice], author metadata and provenance. The private template carries `TEMPLATE-LICENSE` so its notice survives copying. A private instance must stay private and must not supply public build inputs.
+
+== Publication procedure
+
+Before the first push, review the exact Git-eligible candidates, inspect ignore boundaries, validate the instance explicitly and run the public foundation checks. Scan the private source separately, without copying it into public test or documentation inputs. Disposable review indexes can check new files without modifying working indexes.
+
+Use the authenticated owner's account to verify repository names. Create the public project and private instance with their intended visibility, without an extra remote README/license commit. Commit the reviewed local source and configure its matching remote. Record the exact public source revision in the private instance, then commit and push the private instance to its private remote. Preserve local instance edits during template updates.
+
+GitHub authentication uses the official CLI browser flow; tokens and one-time codes are not recorded in project files or reports. Commit metadata uses the owner's identity and GitHub noreply address. No provider credentials, WhatsApp sessions, runtime databases, package caches or generated sites belong in either source publication.
+
+After pushing, verify remote visibility and matching branch revisions, clone the public repository from GitHub without private access and verify retained checksums. Wait for the actual `Public foundation` Actions run at the published revision; investigate failures and rerun after fixing them. Local actionlint success alone does not establish GitHub execution.
+
+== Local preparation
+
+The initial publication review covered 71 public files and eight private files, before the MIT license files and these publication updates were added. The private input remained synthetic, passed configuration validation and had no Gitleaks findings. The complete local check command passed, including 23 tests and the retained H0.1 manifest. Those counts describe the initial review, not the final published tree.
+
+The npm documentation shortcut was corrected to run `python3 -m scripts.build_docs`, matching the canonical module invocation. This makes imports work from an activated virtual environment without relying on an inherited Python path. No dependency versions were changed. Extensionless license attachments use `.txt` download aliases so Antora produces file links rather than local fragments; their canonical source names and bytes are preserved.
+
+== Repository and CI acceptance
+
+[cols="1,3",options="header"]
+|===
+|Check |Current result
+|Owner-selected license |MIT, with independent upstream attribution retained
+|Authenticated repository-name check |Both `ondrejkrpec/haven` and `ondrejkrpec/haven-private` were available
+|Public remote and exact source revision |Pending
+|Private remote and matching public revision |Pending
+|Remote visibility verification |Pending
+|Public clone from GitHub |Pending
+|Actual GitHub Actions run and conclusion |Pending
+|===
+
+H1.1 is complete only when the intended remotes are reachable with the correct visibility and the real public Actions run succeeds. Hosting and deployment are outside this ticket. Continue with link:h1-prerequisites.adoc[H1 prerequisites] after recording the result.
+
+Primary references consulted on 2026-10-25: https://cli.github.com/manual/gh_auth_login[GitHub CLI authentication], https://cli.github.com/manual/gh_repo_create[repository creation], https://cli.github.com/manual/gh_run_watch[watching an Actions run] and https://choosealicense.com/licenses/mit/[MIT]. GitHub CLI 2.103.2 was downloaded from its official release and its archive SHA-256 verified. Context7 was unavailable because its monthly quota was exhausted.

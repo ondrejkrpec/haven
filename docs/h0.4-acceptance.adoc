@@ -1,0 +1,45 @@
+= H0.4 documentation and check acceptance
+
+Verified locally on 2026-10-25 on Manjaro Linux x86_64. H0.4 is implemented locally: Antora generation, the public check entry point and the GitHub Actions definition. No remote, hosted site, live credentials or deployed Haven service were used.
+
+== Tools and procedure
+
+[cols="1,2",options="header"]
+|===
+|Tool |Verified version or pin
+|Python |3.14.7 and 3.12.14
+|Node.js |26.7.0 and 24.22.1; the 24.22.1 official Linux archive matched its published SHA-256
+|Antora CLI and default generator |3.2.1, exact direct dependencies with npm lock integrity
+|Ruff / yamllint |0.17.2 / 1.38.0, hash-pinned development lock
+|Gitleaks / actionlint |8.30.1 / 1.7.12, Linux x86_64 archives verified against checked-in SHA-256 pins
+|GitHub Actions |checkout 7.0.1, setup-python 7.1.0 and setup-node 7.1.0, each resolved to a full release commit
+|===
+
+Install dependencies and binaries as described in link:documentation.adoc[documentation and checks], then run:
+
+[source,sh]
+----
+.venv/bin/python -m scripts.check
+----
+
+The complete check command passed with Python 3.14.7 / Node.js 26.7.0 and Python 3.12.14 / Node.js 24.22.1. The same 23 behavior tests passed on both Python versions: 16 configuration tests plus seven documentation/export boundary tests. Ruff, strict yamllint, actionlint, both synthetic configuration inputs, secret scanning, all 16 H0.1 manifest entries and documentation/link checks passed.
+
+== Public build independence
+
+A disposable repository under `/tmp` received only Git-eligible public sources. It had no private sibling. Already verified tools and installed public npm packages were copied as ignored dependencies; this was a build/check-input test, not a fresh dependency-install or full H0.5 clean-clone acceptance. The complete check command passed using Python 3.12 and Node.js 24.
+
+The site contains 11 documentation pages plus the generated root redirect, a local CSS/Handlebars UI and explicitly declared public attachments. Source paths and H0.1 evidence bytes remain unchanged. The exporter creates an unborn temporary source repository and removes it after generation; no fixture commit is needed for Antora. A separate disposable Git index checked all new source files for whitespace errors. Working repository indexes were not modified.
+
+The maintained tests reject symlinks to private inputs, links escaping the public root, missing or undeclared targets and include indirection. Synthetic private-sibling and ignored-source markers are absent from exported files. The generated-link checker rejects missing files, missing HTML fragments and paths escaping the site. A separate invocation with an invalid Antora navigation reference exited unsuccessfully, verifying the warning failure threshold.
+
+== Secret scan and presentation checks
+
+The public candidate-file scan reported no findings. The working repository has no commits, so its history scan was explicitly skipped. A separate disposable repository was given a generated synthetic token, then another commit removed it. Gitleaks rejected both the current-file fixture and the deleted-history fixture with exit status `1`; the full token did not appear in either output stream. Those fixture commits were outside the working repositories. No broad allowlist, ignored-rule baseline or inline allowance was added.
+
+Firefox rendered the generated site with isolated temporary profiles at desktop and narrow window widths; the resulting screenshots were inspected. Navigation, headings and content rendered, with the narrow layout stacking navigation above the article. Browser artifacts stayed under `/tmp`. External website availability and a full accessibility audit are outside these checks.
+
+== Remaining acceptance
+
+GitHub Actions was checked locally with actionlint; it has not run on GitHub because no remote has been created or pushed. The workflow fetches full history and invokes the same public check command with read-only repository permissions and no private inputs. Local success is not an actual GitHub run.
+
+Hosting and private documentation delivery remain future work. Before publication, the owner must choose Haven's license and verify repository names. H0.5 must still repeat the documented setup from a clean checkout and record the handoff to link:h1-prerequisites.adoc[H1].

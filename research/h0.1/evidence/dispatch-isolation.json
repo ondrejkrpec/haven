@@ -1,0 +1,13 @@
+{
+  "probe": "kanban-to-isolated-executor",
+  "revision": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+  "result": "PASS",
+  "outcomes": [
+    "review_requested",
+    "completed"
+  ],
+  "idempotent_intake": true,
+  "board_exposed_to_executor": false,
+  "nora_running": false,
+  "limits": "Synthetic executors, one default profile, internal spawn_fn API; no LLM, real Codex, role authorization or production supervision."
+}

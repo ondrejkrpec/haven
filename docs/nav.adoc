@@ -1,0 +1,16 @@
+* xref:index.adoc[Overview]
+* Getting started
+** xref:local-development.adoc[Local development]
+** xref:configuration.adoc[Configuration v1]
+** xref:documentation.adoc[Documentation and checks]
+* Architecture
+** xref:architecture.adoc[System boundaries]
+** xref:h1-prerequisites.adoc[H1 prerequisites]
+** xref:adr/0001-configuration-validation.adoc[ADR 0001: Configuration validation]
+** xref:adr/0002-documentation-and-checks.adoc[ADR 0002: Documentation and checks]
+* Verification
+** xref:research/h0.1/README.adoc[H0.1 feasibility]
+** xref:h0.2-acceptance.adoc[H0.2 foundation]
+** xref:h0.4-acceptance.adoc[H0.4 documentation and checks]
+** xref:h0.5-acceptance.adoc[H0.5 clean checkout and handoff]
+** xref:h1.1-publication.adoc[H1.1 GitHub publication]

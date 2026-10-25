@@ -1,0 +1,19 @@
+= ADR 0001: Validate Haven inputs before runtime translation
+
+Date: 2026-10-25. Status: implemented locally in H0.3; live deployment remains H1.
+
+== Context
+
+Public defaults and each user's private configuration must be independently maintainable. The H0.2 YAML draft had no contract. First deployment needs a small set of instance, host, model and WhatsApp inputs; account setup and executor permissions are still unverified.
+
+== Decision
+
+Use a versioned JSON Schema draft 2020-12 contract for YAML documents and a small Python validator using pinned PyYAML and jsonschema. Every input layer declares its version and is checked before merging; the complete result is checked afterwards. Maps merge recursively, lists replace completely, and nulls do not delete values.
+
+Keep credential references as strings and resolve nothing during validation. Reject ambiguous YAML indirection and duplicate keys. Print schema field diagnostics without user values or source excerpts. Expose one validation script, without introducing the proposed general-purpose `havenctl` CLI.
+
+== Consequences
+
+The example and private template can be checked without accounts or credentials. List replacement prevents an override from silently retaining earlier allowed senders. Custom formats need Haven's validator; a generic JSON Schema editor alone does not establish time-zone, host or credential-reference validity.
+
+Validation does not prove provider support, authorization, host reachability or deployment readiness. H1 must add native Hermes translation and authorized credential loading. Future incompatible input changes need an explicit new schema version. See link:../configuration.adoc[configuration v1] for the maintained contract and commands.

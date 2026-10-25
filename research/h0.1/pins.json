@@ -1,0 +1,74 @@
+{
+  "checked_on": "2026-10-25",
+  "hermes": {
+    "repository": "https://github.com/NousResearch/hermes-agent",
+    "tag": "v0.22.5",
+    "commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+    "candidate_requires_patch": true,
+    "source_hashes_sha256": {
+      "pm/lock.json": "0ede00c6ee83d3cf7a93fe1b569b31c705cd274d83050547511b2d8c2f244e04",
+      "uv.lock": "f1609519f30dac8886b03e60693e36fa75e033fa3e7259c8c8befe8fb6e34460",
+      "pyproject.toml": "68325d6717bd4ebc3a7b015c5150bea4d5600c612259b9b7393e964caa828761",
+      "scripts/whatsapp-bridge/package.json": "9c5eb2f59af8bfba4582ba1c9f50eda11a2e67c771fcf1e9a65dd8a7f2dc6f27",
+      "scripts/whatsapp-bridge/package-lock.json": "fd22e0823315c936e9b1b034a437f6b776b27899083e5e0a691345f6d18d3bb6"
+    }
+  },
+  "patch": {
+    "pr": "https://github.com/NousResearch/hermes-agent/pull/117820",
+    "head_commit": "36fbe1ebb69340a6de881e7c93aecd5c684a373b",
+    "state_at_inspection": "open, unmerged",
+    "file": "patches/upstream-117820.patch",
+    "sha256": "785f2646e94877da9a004744797126175e25b5f6a3007c34c7c6c0f2d0875660"
+  },
+  "upstream_runtime_pins": {
+    "ffmpeg": "9.0.1",
+    "node": "26.12.1",
+    "npm": "12.0.2",
+    "python": "3.14.9+20261021",
+    "uv": "0.13.5"
+  },
+  "tested": {
+    "os": "Manjaro Linux",
+    "python": "3.14.9",
+    "podman": "6.1.0, rootless",
+    "codex_cli_present": "0.164.0 (no authenticated turn tested)",
+    "whatsapp_baileys_source_pin": "7.0.0-rc13",
+    "busybox_image": "docker.io/library/busybox@sha256:66a6306db78bf2dbf3487f293aa8d6990d8e506fdffab9cc43fe422becf886e4"
+  },
+  "evidence": {
+    "upstream-tests.log": {
+      "passed": 235,
+      "failed": 0,
+      "skipped": 1
+    },
+    "recovery-tests.log": {
+      "passed": 13,
+      "failed": 1,
+      "skipped": 0
+    },
+    "patched-recovery-tests.log": {
+      "passed": 110,
+      "failed": 0,
+      "skipped": 1
+    },
+    "auth-whatsapp-tests.log": {
+      "passed": 42,
+      "failed": 2,
+      "skipped": 3,
+      "note": "aiohttp missing from initial test environment"
+    },
+    "auth-whatsapp-complete-tests.log": {
+      "passed": 44,
+      "failed": 0,
+      "skipped": 3,
+      "note": "fresh PM environment, groups dev+test, extra sms"
+    }
+  },
+  "limits": [
+    "No real credentials or paid model requests",
+    "No WhatsApp pairing or real Czech audio",
+    "No production services or Ubuntu validation",
+    "Container bridge probe uses synthetic executors and an internal version-bound API",
+    "Test counts overlap across runs"
+  ]
+}

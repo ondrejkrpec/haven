@@ -1,0 +1,119 @@
+▶ not activated — using HERMES_PYTHON: /tmp/haven-h0.1-testenv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 3 test files (~11 tests) under ['tests/e2e/core/kanban/test_kanban_rate_limit_review.py', 'tests/e2e/core/kanban/test_kanban_dispatcher_restart.py', 'tests/hermes_cli/test_kanban_dispatch_claim_allowlist.py']; running with -j 2
+[ 18.2% |     2/~11 | ✓2 | ✗0] ✓ tests/e2e/core/kanban/test_kanban_dispatcher_restart.py (2✓, 42.2s)
+[ 72.7% |     8/~11 | ✓11 | ✗ 0] ✓ tests/hermes_cli/test_kanban_dispatch_claim_allowlist.py (9✓, 4.4s)
+[100.0% |    11/~11 | ✓13 | ✗ 1] ✗ tests/e2e/core/kanban/test_kanban_rate_limit_review.py (2✓ 1✗, 50.2s)
+
+  ╔╍ Failed: tests/e2e/core/kanban/test_kanban_rate_limit_review.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║         guarded = [g for t in f.ticks for g in t["guarded"]]
+  ║         with known_gate(KNOWN, scenario, raises=ReviewerNeverSpawned):
+  ║             if not reviewers or b.task(tid)["status"] != "done":
+  ║ >               raise ReviewerNeverSpawned(
+  ║                     f"{scenario}: status={b.task(tid)['status']} after {len(f.ticks)} ticks, "
+  ║                     f"reviewer attempts={len(reviewers)}, respawn_guarded={guarded}\n{diag}")
+  ║ E               tests.e2e.core.kanban.test_kanban_rate_limit_review.ReviewerNeverSpawned: rate_limited_then_review: status=review after 6 ticks, reviewer attempts=0, respawn_guarded=['blocker_auth', 'blocker_auth', 'blocker_auth', 'blocker_auth']
+  ║ E               ticks=[{'tick': 1, 'spawned': 1, 'status': 'running', 'consecutive_failures': 0, 'guarded': []}, {'tick': 2, 'spawned': 1, 'status': 'review', 'consecutive_failures': 0, 'guarded': []}, {'tick': 3, 'spawned': 0, 'status': 'review', 'consecutive_failures': 0, 'guarded': ['blocker_auth']}, {'tick': 4, 'spawned': 0, 'status': 'review', 'consecutive_failures': 0, 'guarded': ['blocker_auth']}, {'tick': 5, 'spawned': 0, 'status': 'review', 'consecutive_failures': 0, 'guarded': ['blocker_auth']}, {'tick': 6, 'spawned': 0, 'status': 'review', 'consecutive_failures': 0, 'guarded': ['blocker_auth']}]
+  ║ E               attempts=[('impl', 1, ['Error']), ('impl', 2, ['kanban_request_review', 'Text'])]
+  ║ E               task={"id": "t_0b90e5e2", "title": "rate-limit review flow (1 x 429)", "body": null, "assignee": "default", "status": "review", "priority": 0, "created_by": "user", "created_at": 1792934725, "started_at": 1792934727, "completed_at": null, "workspace_kind": "scratch", "workspace_path": "/var/tmp/hermes-pytest-1000/r-rywvxd7c/pytest-of-host-user/pytest-0/kanban-rl0/home/.hermes/kanban/workspaces/t_0b90e5e2", "branch_name": null, "project_id": null, "claim_lock": null, "claim_expires": null, "tenant": null, "result": null, "idempotency_key": null, "consecutive_failures": 0, "worker_pid": null, "worker_started_at": "427fe409-1251-454f-a177-2aa5bb5c29d9:17|2230241", "last_failure_error": "pid 101891 exited rate-limited (quota wall) \u2014 requeued without counting a failure", "max_runtime_seconds": null, "last_heartbeat_at": 1792934747, "current_run_id": null, "workflow_template_id": null, "current_step_key": null, "skills": null, "model_override": null, "provider_override": null, "reasoning_effort": null, "max_retries": null, "goal_mode": 0, "goal_max_turns": null, "session_id": null, "block_kind": null, "block_recurrences": 0, "completion_contract": "local-only"}
+  ║ E               runs=[{"id": 1, "task_id": "t_0b90e5e2", "profile": "default", "step_key": null, "status": "rate_limited", "claim_lock": "synthetic-host:101679", "claim_expires": null, "worker_pid": 101891, "worker_started_at": "427fe409-1251-454f-a177-2aa5bb5c29d9:17|2228683", "max_runtime_seconds": null, "last_heartbeat_at": 1792934740, "started_at": 1792934727, "ended_at": 1792934743, "outcome": "rate_limited", "summary": null, "metadata": "{\"pid\": 101891, \"claimer\": \"synthetic-host:101679\", \"exit_code\": 75, \"retry_status\": \"ready\"}", "error": "pid 101891 exited rate-limited (quota wall) \u2014 requeued without counting a failure"}, {"id": 2, "task_id": "t_0b90e5e2", "profile": "default", "step_key": null, "status": "review", "claim_lock": "synthetic-host:103782", "claim_expires": null, "worker_pid": 103905, "worker_started_at": "427fe409-1251-454f-a177-2aa5bb5c29d9:17|2230241", "max_runtime_seconds": null, "last_heartbeat_at": 1792934747, "started_at": 1792934744, "ended_at": 1792934747, "outcome": "review_requested", "summary": "implementation ready for review", "metadata": "{\"worker_session_id\": \"local-ac63c21ceabea4b20a895793f4623200e10d17afabb31b08bb09da7eb0b7df94\"}", "error": null}]
+  ║ E               events=[('worker_bound', {'pid': 102912, 'claim_lock': 'synthetic-host:101679', 'started_at': '427fe409-1251-454f-a177-2aa5bb5c29d9:17|2229569'}), ('heartbeat', None), ('worker_result', {'pid': 102912, 'claim_lock': 'synthetic-host:101679', 'exit_code': 75, 'last_output': 'custom is rate-limiting requests right now — it looks temporarily unavailable. Wait a minute and send /retry, or switch models with /model. To avoid this in future, add a backup provider with `hermes fallback add`.\n\nProvider said: HTTP 429: Rate limit exceeded: quota for this key'}), ('rate_limited', {'pid': 101891, 'claimer': 'synthetic-host:101679', 'exit_code': 75, 'retry_status': 'ready'}), ('claimed', {'lock': 'synthetic-host:103782', 'expires': 1792935644, 'run_id': 2}), ('spawned', {'pid': 103905, 'started_at': '427fe409-1251-454f-a177-2aa5bb5c29d9:17|2230241'}), ('owner_admitted', {'db': '/var/tmp/hermes-pytest-1000/r-rywvxd7c/pytest-of-host-user/pytest-0/kanban-rl0/home/.hermes/state.db', 'session_id': 'local-ac63c21ceabea4b20a895793f4623200e10d17afabb31b08bb09da7eb0b7df94', 'request_id': 'kanban:["default","t_0b90e5e2",2]', 'pid': 101980, 'birth': 1792934728.5}), ('worker_bound', {'pid': 103914, 'claim_lock': 'synthetic-host:103782', 'started_at': '427fe409-1251-454f-a177-2aa5bb5c29d9:17|2230269'}), ('heartbeat', None), ('review_requested', {'summary': 'implementation ready for review', 'implementer': 'default', 'reviewer': None}), ('worker_result', {'pid': 103914, 'claim_lock': 'synthetic-host:103782', 'exit_code': 0, 'last_output': 'done'}), ('respawn_guarded', {'reason': 'blocker_auth'}), ('respawn_guarded', {'reason': 'blocker_auth'}), ('respawn_guarded', {'reason': 'blocker_auth'}), ('respawn_guarded', {'reason': 'blocker_auth'})]
+  ║ E               log tail:
+  ║ E               Session: local-5da87b9a5e920fc11accafe6fa555ccf4a274508dd326400474a6405bff2d25d
+  ║ E               
+  ║ E               [kanban-worker-exit] rc=75
+  ║ E               custom is rate-limiting requests right now — it looks temporarily unavailable. Wait a minute and send /retry, or switch models with /model. To avoid this in future, add a backup provider with `hermes fallback add`.
+  ║ E               
+  ║ E               Provider said: HTTP 429: Rate limit exceeded: quota for this key
+  ║ E               Session: local-ac63c21ceabea4b20a895793f4623200e10d17afabb31b08bb09da7eb0b7df94
+  ║ E               
+  ║ E               [kanban-worker-exit] rc=0
+  ║ E               done
+  ║ E               
+  ║ E               HERMES_E2E_STRICT_ACCEPTANCE=1: the known gap is not excused in this acceptance run (#119070 stale rate-limit stamp parks the review handoff as blocker_auth)
+  ║ 
+  ║ tests/e2e/core/kanban/test_kanban_rate_limit_review.py:243: ReviewerNeverSpawned
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/e2e/core/kanban/test_kanban_rate_limit_review.py::test_rate_limited_then_review_handoff_reaches_the_reviewer[rate_limited_then_review]
+  ║ ========================= 1 failed, 2 passed in 48.67s =========================
+  ║
+  ║  Repro: python -m pytest tests/e2e/core/kanban/test_kanban_rate_limit_review.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+
+=== Summary: 3 files, 13 tests passed, 1 failed (100% complete) in 50.2s (2 workers) ===
+  Durations cached to test_durations.json (2 files)
+
+=== Per-file subprocess time distribution ===
+  Files:   3
+  Total subprocess CPU-wall: 96.7s  (runner wall: 50.2s, parallelism: 2x)
+  P50: 42.21s  P90: 50.15s  P95: 50.15s  P99: 50.15s  Max: 50.15s
+  <1s: 0 files (0%)  <2s: 0 files (0%)
+  Top 10 slowest:
+     50.15s  tests/e2e/core/kanban/test_kanban_rate_limit_review.py
+     42.21s  tests/e2e/core/kanban/test_kanban_dispatcher_restart.py
+      4.35s  tests/hermes_cli/test_kanban_dispatch_claim_allowlist.py
+
+=== Failure output ===
+
+--- tests/e2e/core/kanban/test_kanban_rate_limit_review.py ---
+============================= test session starts ==============================
+platform linux -- Python 3.14.9, pytest-9.1.1, pluggy-1.6.0
+rootdir: /tmp/haven-h0.1-hermes-v0.22.5
+configfile: pyproject.toml
+plugins: anyio-4.14.2, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 3 items
+
+tests/e2e/core/kanban/test_kanban_rate_limit_review.py ..F               [100%]
+
+=================================== FAILURES ===================================
+_ test_rate_limited_then_review_handoff_reaches_the_reviewer[rate_limited_then_review] _
+
+rate_limited_flow = Flow(board=Board(root=PosixPath('/var/tmp/hermes-pytest-1000/r-rywvxd7c/pytest-of-host-user/pytest-0/kanban-rl0'), b...locker_auth']}, {'tick': 6, 'spawned': 0, 'status': 'review', 'consecutive_failures': 0, 'guarded': ['blocker_auth']}])
+scenario = 'rate_limited_then_review'
+
+    @pytest.mark.parametrize("scenario", ["rate_limited_then_review"])
+    def test_rate_limited_then_review_handoff_reaches_the_reviewer(rate_limited_flow: Flow, scenario: str) -> None:
+        f = rate_limited_flow
+        b, tid, diag = f.board, f.tid, f.diag()
+        # Precondition (harness, stays red if broken): the card really got to the review lane via a
+        # rate-limited run followed by a successful handoff.
+        assert f.run_outcomes()[:2] == ["rate_limited", "review_requested"], diag
+        reviewers = f.model.by_role("review")
+        guarded = [g for t in f.ticks for g in t["guarded"]]
+        with known_gate(KNOWN, scenario, raises=ReviewerNeverSpawned):
+            if not reviewers or b.task(tid)["status"] != "done":
+>               raise ReviewerNeverSpawned(
+                    f"{scenario}: status={b.task(tid)['status']} after {len(f.ticks)} ticks, "
+                    f"reviewer attempts={len(reviewers)}, respawn_guarded={guarded}\n{diag}")
+E               tests.e2e.core.kanban.test_kanban_rate_limit_review.ReviewerNeverSpawned: rate_limited_then_review: status=review after 6 ticks, reviewer attempts=0, respawn_guarded=['blocker_auth', 'blocker_auth', 'blocker_auth', 'blocker_auth']
+E               ticks=[{'tick': 1, 'spawned': 1, 'status': 'running', 'consecutive_failures': 0, 'guarded': []}, {'tick': 2, 'spawned': 1, 'status': 'review', 'consecutive_failures': 0, 'guarded': []}, {'tick': 3, 'spawned': 0, 'status': 'review', 'consecutive_failures': 0, 'guarded': ['blocker_auth']}, {'tick': 4, 'spawned': 0, 'status': 'review', 'consecutive_failures': 0, 'guarded': ['blocker_auth']}, {'tick': 5, 'spawned': 0, 'status': 'review', 'consecutive_failures': 0, 'guarded': ['blocker_auth']}, {'tick': 6, 'spawned': 0, 'status': 'review', 'consecutive_failures': 0, 'guarded': ['blocker_auth']}]
+E               attempts=[('impl', 1, ['Error']), ('impl', 2, ['kanban_request_review', 'Text'])]
+E               task={"id": "t_0b90e5e2", "title": "rate-limit review flow (1 x 429)", "body": null, "assignee": "default", "status": "review", "priority": 0, "created_by": "user", "created_at": 1792934725, "started_at": 1792934727, "completed_at": null, "workspace_kind": "scratch", "workspace_path": "/var/tmp/hermes-pytest-1000/r-rywvxd7c/pytest-of-host-user/pytest-0/kanban-rl0/home/.hermes/kanban/workspaces/t_0b90e5e2", "branch_name": null, "project_id": null, "claim_lock": null, "claim_expires": null, "tenant": null, "result": null, "idempotency_key": null, "consecutive_failures": 0, "worker_pid": null, "worker_started_at": "427fe409-1251-454f-a177-2aa5bb5c29d9:17|2230241", "last_failure_error": "pid 101891 exited rate-limited (quota wall) \u2014 requeued without counting a failure", "max_runtime_seconds": null, "last_heartbeat_at": 1792934747, "current_run_id": null, "workflow_template_id": null, "current_step_key": null, "skills": null, "model_override": null, "provider_override": null, "reasoning_effort": null, "max_retries": null, "goal_mode": 0, "goal_max_turns": null, "session_id": null, "block_kind": null, "block_recurrences": 0, "completion_contract": "local-only"}
+E               runs=[{"id": 1, "task_id": "t_0b90e5e2", "profile": "default", "step_key": null, "status": "rate_limited", "claim_lock": "synthetic-host:101679", "claim_expires": null, "worker_pid": 101891, "worker_started_at": "427fe409-1251-454f-a177-2aa5bb5c29d9:17|2228683", "max_runtime_seconds": null, "last_heartbeat_at": 1792934740, "started_at": 1792934727, "ended_at": 1792934743, "outcome": "rate_limited", "summary": null, "metadata": "{\"pid\": 101891, \"claimer\": \"synthetic-host:101679\", \"exit_code\": 75, \"retry_status\": \"ready\"}", "error": "pid 101891 exited rate-limited (quota wall) \u2014 requeued without counting a failure"}, {"id": 2, "task_id": "t_0b90e5e2", "profile": "default", "step_key": null, "status": "review", "claim_lock": "synthetic-host:103782", "claim_expires": null, "worker_pid": 103905, "worker_started_at": "427fe409-1251-454f-a177-2aa5bb5c29d9:17|2230241", "max_runtime_seconds": null, "last_heartbeat_at": 1792934747, "started_at": 1792934744, "ended_at": 1792934747, "outcome": "review_requested", "summary": "implementation ready for review", "metadata": "{\"worker_session_id\": \"local-ac63c21ceabea4b20a895793f4623200e10d17afabb31b08bb09da7eb0b7df94\"}", "error": null}]
+E               events=[('worker_bound', {'pid': 102912, 'claim_lock': 'synthetic-host:101679', 'started_at': '427fe409-1251-454f-a177-2aa5bb5c29d9:17|2229569'}), ('heartbeat', None), ('worker_result', {'pid': 102912, 'claim_lock': 'synthetic-host:101679', 'exit_code': 75, 'last_output': 'custom is rate-limiting requests right now — it looks temporarily unavailable. Wait a minute and send /retry, or switch models with /model. To avoid this in future, add a backup provider with `hermes fallback add`.\n\nProvider said: HTTP 429: Rate limit exceeded: quota for this key'}), ('rate_limited', {'pid': 101891, 'claimer': 'synthetic-host:101679', 'exit_code': 75, 'retry_status': 'ready'}), ('claimed', {'lock': 'synthetic-host:103782', 'expires': 1792935644, 'run_id': 2}), ('spawned', {'pid': 103905, 'started_at': '427fe409-1251-454f-a177-2aa5bb5c29d9:17|2230241'}), ('owner_admitted', {'db': '/var/tmp/hermes-pytest-1000/r-rywvxd7c/pytest-of-host-user/pytest-0/kanban-rl0/home/.hermes/state.db', 'session_id': 'local-ac63c21ceabea4b20a895793f4623200e10d17afabb31b08bb09da7eb0b7df94', 'request_id': 'kanban:["default","t_0b90e5e2",2]', 'pid': 101980, 'birth': 1792934728.5}), ('worker_bound', {'pid': 103914, 'claim_lock': 'synthetic-host:103782', 'started_at': '427fe409-1251-454f-a177-2aa5bb5c29d9:17|2230269'}), ('heartbeat', None), ('review_requested', {'summary': 'implementation ready for review', 'implementer': 'default', 'reviewer': None}), ('worker_result', {'pid': 103914, 'claim_lock': 'synthetic-host:103782', 'exit_code': 0, 'last_output': 'done'}), ('respawn_guarded', {'reason': 'blocker_auth'}), ('respawn_guarded', {'reason': 'blocker_auth'}), ('respawn_guarded', {'reason': 'blocker_auth'}), ('respawn_guarded', {'reason': 'blocker_auth'})]
+E               log tail:
+E               Session: local-5da87b9a5e920fc11accafe6fa555ccf4a274508dd326400474a6405bff2d25d
+E               
+E               [kanban-worker-exit] rc=75
+E               custom is rate-limiting requests right now — it looks temporarily unavailable. Wait a minute and send /retry, or switch models with /model. To avoid this in future, add a backup provider with `hermes fallback add`.
+E               
+E               Provider said: HTTP 429: Rate limit exceeded: quota for this key
+E               Session: local-ac63c21ceabea4b20a895793f4623200e10d17afabb31b08bb09da7eb0b7df94
+E               
+E               [kanban-worker-exit] rc=0
+E               done
+E               
+E               HERMES_E2E_STRICT_ACCEPTANCE=1: the known gap is not excused in this acceptance run (#119070 stale rate-limit stamp parks the review handoff as blocker_auth)
+
+tests/e2e/core/kanban/test_kanban_rate_limit_review.py:243: ReviewerNeverSpawned
+=========================== short test summary info ============================
+FAILED tests/e2e/core/kanban/test_kanban_rate_limit_review.py::test_rate_limited_then_review_handoff_reaches_the_reviewer[rate_limited_then_review]
+========================= 1 failed, 2 passed in 48.67s =========================
+
+=== 1 file with test failures (1 test failed) ===
+  tests/e2e/core/kanban/test_kanban_rate_limit_review.py  (1 test failed)

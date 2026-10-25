@@ -1,0 +1,19 @@
+= ADR 0002: Build public documentation from bounded inputs
+
+Date: 2026-10-25. Status: implemented locally in H0.4; GitHub execution and hosting remain pending.
+
+== Context
+
+Haven already has English AsciiDoc guides with repository-relative links and a separate private-instance repository. The public build must work independently of private data. Both working repositories currently have no commits or remotes.
+
+== Decision
+
+Use Antora 3.2.1, pinned npm dependencies and a small repository-owned UI. Keep existing guide paths canonical. Export those guides, the retained H0.1 report and an explicit set of public attachments to a temporary native Antora component. Translate local file links to Antora resource references during export. Reject missing, undeclared or escaping targets and symlink inputs. Initialize only the disposable source repository; create no commits.
+
+Run the same Python check entry point locally and in GitHub Actions. Pin Python check dependencies with hashes, binary releases with SHA-256, and Actions with full commit identifiers. Validate examples, test behavior, lint supported source types, scan candidate files and available history, build documentation and check local links/fragments. No private checkout or credentials are needed. Do not publish the build in this milestone.
+
+== Consequences
+
+Guide paths and research checksums stay stable. The exporter is a maintained part of the build: new public attachments must be declared, and unsupported includes are rejected. The site has no remote UI, fonts or JavaScript dependency. Dependency installation and binary installation need network access; checks and documentation generation then run offline.
+
+Link checks establish local file/fragment integrity, not external website availability. Secret scanning detects known patterns, not all personal data. CI requires a first GitHub run after remote setup; passing local commands is not proof of GitHub execution. See link:../documentation.adoc[the maintained workflow].

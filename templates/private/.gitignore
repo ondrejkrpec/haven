@@ -1,0 +1,29 @@
+# Generated and local runtime files
+.DS_Store
+__pycache__/
+/.runtime/
+/runtime/
+/state/
+/sessions/
+/credentials/
+/backups/
+/.hermes/
+/.codex/
+/.ssh/
+/.aws/
+/.gnupg/
+/keys/
+.env
+.env.*
+*.pem
+*.key
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*.log
+# Permit documented encrypted YAML naming only after encryption is configured and verified
+/secrets/*
+!/secrets/README.md
+!/secrets/*.sops.yaml

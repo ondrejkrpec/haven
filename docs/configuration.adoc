@@ -1,0 +1,109 @@
+= Configuration v1
+
+H0.3 implements versioned YAML input validation. The contract is link:../schemas/instance-v1.schema.json[JSON Schema draft 2020-12] with Haven format checks. Passing validation establishes syntax and configuration consistency. H1 must implement translation to the pinned Hermes version and verify actual accounts, model availability and host access before deployment.
+
+link:adr/0001-configuration-validation.adoc[ADR 0001] records the rationale and consequences.
+
+== Validate locally
+
+From the public Haven checkout, create an isolated Python 3.12+ environment with system IANA time-zone data and install the hash-pinned dependencies. PyYAML 6.0.3 parses YAML; jsonschema 4.26.0 checks the contract. `uv` is optional; the standard setup is:
+
+[source,sh]
+----
+python3 -m venv .venv
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements.txt
+.venv/bin/python scripts/validate_config.py examples/instance.yaml
+.venv/bin/python -m unittest discover -s tests -v
+----
+
+An existing `uv` installation can create the environment with `uv venv --python python3 .venv` and install the same lock with `uv pip sync --python .venv/bin/python --require-hashes --only-binary :all: requirements.txt`. Ubuntu may require the OS `python3-venv` package. No system Python packages are modified.
+
+Validate your own private configuration by explicitly naming its path:
+
+[source,sh]
+----
+.venv/bin/python scripts/validate_config.py ../haven-private/config/instance.yaml
+----
+
+Exit status is `0` for valid input, `1` for invalid/unreadable configuration and `2` for incorrect command arguments. Success prints only the supported schema version. Errors identify the layer and schema field without values, source excerpts or file paths. Unknown keys are reported at their containing object. The validator does not start services, resolve DNS or read credentials. Do not put secrets in command arguments or filenames; argument-parsing errors follow Python's normal CLI behavior.
+
+== Layers and overrides
+
+Layer order is link:../config/defaults.yaml[public defaults], the explicitly supplied base file, then each repeated `--override` in command-line order. No neighboring private repository, environment variable or working-directory configuration is discovered automatically.
+
+[source,sh]
+----
+.venv/bin/python scripts/validate_config.py examples/instance.yaml \
+  --override ../haven-private/config/instance.yaml
+----
+
+Every layer must declare `schema_version: 1`. A layer may omit other fields, but any supplied field must already have a supported type, value and name. A later override cannot hide an invalid earlier value. After all layers merge, required fields and cross-field constraints are checked.
+
+Mappings merge recursively. Scalars and lists replace the previous value completely; allowlists are never concatenated. An empty mapping preserves existing values, and `[]` clears a list. `null` is rejected and cannot delete or reset a field. Omit an override to inherit a value, or set an explicit valid replacement.
+
+For example, this override changes the time zone while retaining the base instance name:
+
+[source,yaml]
+----
+schema_version: 1
+instance:
+  timezone: Europe/Prague
+----
+
+Do not pass the public synthetic example as a deployment fallback. Once real deployment exists, its required fields must come from the intended instance. The example deliberately contains an unreachable placeholder host and an unverified placeholder model.
+
+== Supported fields
+
+[cols="2,3,2",options="header"]
+|===
+|Field |Constraint |Default
+|`schema_version` |Integer, supported version `1`; required in every layer. |Each file declares it.
+|`instance.name` |Lowercase letter followed by lowercase letters, digits or hyphens; at most 63 characters. |Required input.
+|`instance.timezone` |IANA time-zone key recognized by local `zoneinfo` data. |`Etc/UTC`
+|`host.address` |ASCII hostname, IPv4 or IPv6 address; no URL, username or port. No network lookup. |Required input.
+|`host.service_user` |Unix-style lowercase account name, at most 32 characters; `root` rejected. Does not establish OS permissions. |`haven`
+|`model.provider` |Lowercase identifier, at most 64 characters. No provider-support or account-eligibility check. |Required input.
+|`model.name` |Non-empty string without whitespace, at most 128 characters. No live model query. |Required input.
+|`model.credential_ref` |Optional `env:VARIABLE_NAME` or `file:/absolute/path` reference. |Absent.
+|`whatsapp.enabled` |Boolean. If true, the effective allowlist must be non-empty. |`false`
+|`whatsapp.allowed_senders` |Unique quoted strings, `+` followed by 8–15 digits, first digit nonzero; at most 100 items. Syntax only, not proof of ownership. |`[]`
+|===
+
+No field grants runtime authority. WhatsApp group policy, STT, role permissions, schedules, execution/expense limits, Tailscale, backups and deployment targets are not part of this initial contract. Unknown fields are rejected. Add fields with corresponding validation, examples and runtime behavior when their milestone needs them.
+
+== Secrets
+
+YAML contains references, never secret values. For a provider needing an API key, the optional field can be:
+
+[source,yaml]
+----
+schema_version: 1
+model:
+  credential_ref: env:HAVEN_MODEL_API_KEY
+----
+
+Alternatively use a reference such as `file:/run/credentials/haven/model-api-key`. Environment names use uppercase letters, digits and underscores and cannot start with a digit. File paths are absolute POSIX paths with letters, digits, underscores, dots, hyphens and slashes; empty, `.` and `..` components are rejected. Variables and `~` are not expanded.
+
+References are checked structurally; the validator neither reads the environment variable nor opens the referenced file, and an unset or nonexistent reference can validate. H1 must resolve the reference only for its authorized service and reject missing credentials then. Subscription OAuth and WhatsApp sessions are separate runtime state; do not embed them in YAML. A credential reference does not imply that subscription authentication needs an API key.
+
+Keep plaintext credential files and all decryption/recovery keys outside both Git repositories. SOPS with age remains a proposal; this milestone adds no encryption or decryption workflow. The template's `*.sops.yaml` ignore exception does not prove a file is encrypted. The validator is not a general secret scanner.
+
+== YAML dialect and migration
+
+Files must be a single UTF-8 mapping, at most 64 KiB and 32 collection levels deep, with at most 10,000 parser events. Keys must be unique strings. Anchors, aliases, merge keys, explicit tags and multiple documents are unsupported. Boolean values are lowercase `true` or `false`; `yes`, `no`, `on`, `off`, `True` and `False` remain strings. Dates remain strings. Quote phone identifiers so they remain strings.
+
+The H0.2 draft had no supported contract. To migrate a personal copy, preserve its name/time zone, add `schema_version: 1`, supply `host.address` and `model.provider`/`model.name`, then validate. The local unchanged synthetic draft was migrated this way. The template provides the complete example. There is no automatic version inference; a future incompatible contract requires a new schema version and explicit migration instructions.
+
+== Verification and dependencies
+
+On 2026-10-25, the same 16-test behavior suite passed under Python 3.14.7 and 3.12.14 on Manjaro Linux. It covers valid examples, required/version/unknown-field rejection, ordered map/list merging, WhatsApp gating, secret-reference non-resolution, safe errors and unsupported/resource-heavy YAML. A disposable public source snapshot also validated the example without a private sibling. This is not Ubuntu or live integration acceptance.
+
+`requirements.in` pins direct dependencies; `requirements.txt` pins the resolved dependencies and distribution hashes. The lock was generated using uv 0.12.5 for Python 3.12. Regenerate intentionally with:
+
+[source,sh]
+----
+uv pip compile requirements.in --python-version 3.12 --generate-hashes \
+  --no-header --output-file requirements.txt --default-index https://pypi.org/simple
+----
+
+Sources: https://pyyaml.org/wiki/PyYAMLDocumentation[PyYAML safe loading and parser API], https://github.com/yaml/pyyaml/tree/6.0.3[PyYAML 6.0.3 source], https://python-jsonschema.readthedocs.io/en/v4.26.0/validate/[jsonschema 4.26.0 validation and format checks], https://docs.astral.sh/uv/pip/compile/[uv dependency locking]. Context7 returned a monthly quota error, so official documentation and pinned packages were used.

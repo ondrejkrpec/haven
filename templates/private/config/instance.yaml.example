@@ -1,0 +1,12 @@
+# Synthetic instance configuration. Validate through the public Haven repository.
+# The example model is a placeholder; this file does not deploy a service.
+schema_version: 1
+instance:
+  name: example
+  timezone: Etc/UTC
+host:
+  address: vps.example.invalid
+model:
+  provider: openai-codex
+  name: example-model
+  # credential_ref: env:HAVEN_MODEL_API_KEY

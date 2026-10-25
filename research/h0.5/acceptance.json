@@ -1,0 +1,201 @@
+{
+  "date_utc": "2026-10-25T15:12:27.988338+00:00",
+  "scope": "Fresh local public clone, isolated HOME/configuration/caches and newly installed project dependencies; existing declared Python/Node/system prerequisites; not a clean OS or VPS.",
+  "snapshot_commit": "ecba71a1d54d1901bbc1afce17f206b5c90b591f",
+  "snapshot_tree": "8441bbe5b7b909291b1b303813bf02d005806061",
+  "source_files": 68,
+  "versions": {
+    "python": "Python 3.12.14",
+    "node": "v24.22.1",
+    "npm": "11.19.1",
+    "git": "git version 2.55.0"
+  },
+  "checks": [
+    {
+      "check": "snapshot-init",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "snapshot-add",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "snapshot-whitespace",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "snapshot-commit",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "snapshot-revision",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "snapshot-tree",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "clone",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "clone-status",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "version-python",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "version-node",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "version-npm",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "version-git",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "configuration-guide",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "documentation-tools",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "pip-check",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "public-checks-no-private",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "readme-create-instance",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "private-validate",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "private-layered",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "private-values-preserved",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "readme-repeat-refuses-existing",
+      "exit_code": 1,
+      "expected": 1
+    },
+    {
+      "check": "public-checks-malformed-private",
+      "exit_code": 0,
+      "expected": 0
+    },
+    {
+      "check": "final-public-status",
+      "exit_code": 0,
+      "expected": 0
+    }
+  ],
+  "results": {
+    "new_home_and_empty_caches": true,
+    "clone_no_alternates": true,
+    "runtime_and_dev_hash_install": true,
+    "npm_ci_fresh": true,
+    "verified_binary_download": true,
+    "public_checks_without_private": true,
+    "public_checks_with_malformed_private": true,
+    "private_synthetic_overrides_valid": true,
+    "repeat_setup_preserves_private": true,
+    "private_marker_absent_from_site": true,
+    "ignore_boundaries": true,
+    "public_clone_clean": true,
+    "source_hashes_unchanged": true
+  },
+  "source_manifest_sha256": "aa9a1df0bd3f102d23eb64f7625bf8c6db14d14011b73737f2c928813709591c",
+  "source_manifest_scope": "68 Git-eligible public files at the start of H0.5, before acceptance evidence/status updates and the two documentation-export attachment declarations were added; no configuration/runtime logic or dependency lock changed.",
+  "behavior_tests": 23,
+  "documentation_pages_at_setup": 11,
+  "operating_system": "Manjaro Linux x86_64",
+  "pending": [
+    "Actual GitHub Actions execution and repository publication",
+    "Ubuntu/VPS and authenticated service integration acceptance in H1",
+    "Full executor admission/isolation adapter in H2"
+  ],
+  "python_packages": [
+    {
+      "name": "attrs",
+      "version": "26.1.0"
+    },
+    {
+      "name": "jsonschema",
+      "version": "4.26.0"
+    },
+    {
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1"
+    },
+    {
+      "name": "pathspec",
+      "version": "1.1.1"
+    },
+    {
+      "name": "pip",
+      "version": "25.0.1"
+    },
+    {
+      "name": "PyYAML",
+      "version": "6.0.3"
+    },
+    {
+      "name": "referencing",
+      "version": "0.37.0"
+    },
+    {
+      "name": "rpds-py",
+      "version": "2026.9.1"
+    },
+    {
+      "name": "ruff",
+      "version": "0.17.2"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0"
+    },
+    {
+      "name": "yamllint",
+      "version": "1.38.0"
+    }
+  ]
+}

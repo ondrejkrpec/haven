@@ -1,0 +1,34 @@
+= H1 prerequisites and acceptance
+
+H1 is planned work. These are decisions and acceptance checks, not an installation procedure. link:../research/h0.1/README.adoc[H0.1 evidence] comes from local Manjaro tests with synthetic providers; it does not establish live Ubuntu, account or WhatsApp behavior.
+
+== H0 handoff
+
+link:h0.5-acceptance.adoc[H0.5 acceptance] establishes the local foundation from a clean public clone with freshly installed dependencies. Configuration validation, instance creation and public documentation/checks work without the original private repository. The synthetic model and host are not deployment inputs, and the tested fixture commit is not a real Haven release.
+
+Before reproducible deployment, establish the intended public-source revision and matching private configuration within the owner's commit/remote authorization. The working repositories still have no commits or remotes. The owner selected MIT; authenticated repository-name verification and publication remain in progress in link:h1.1-publication.adoc[H1.1]; the first actual GitHub Actions run is pending remote setup. These are distinct from the host/account acceptance below.
+
+== Owner choices before provisioning
+
+* Select a VPS and region within the agreed infrastructure budget. Ubuntu Server 24.04 LTS is the current proposal; verify resources and supported versions before provisioning.
+* Select an off-site backup destination, retention policy and recovery-key storage. Git does not back up sessions or databases.
+* Arrange a separate WhatsApp number and choose the initial transport. The bridge is the current proposal; account pairing and allowlisting require interactive steps.
+* Select actual model identifiers and confirm authentication eligibility. The public model and hostname are placeholders. A Codex subscription is not proof that every Hermes integration is supported.
+
+== Technical work and evidence required
+
+[cols="1,3",options="header"]
+|===
+|Area |Acceptance to establish in H1
+|Host |Document admin access, updates, firewall and service account; restrict internal services through the selected private access mechanism.
+|Hermes |Install the exact candidate and patch, translate Haven configuration to native inputs, supervise with systemd and survive a restart.
+|Credentials |Resolve references only for authorized services, reject missing credentials, and protect OAuth/WhatsApp runtime state outside Git.
+|WhatsApp |Pair interactively, accept only allowed senders and verify unauthorized messages are rejected. Measure Czech voice transcription quality and latency.
+|Recovery |Exercise quota deferral/resumption and distinguish transient quota limits from revoked authentication; deterministic recovery must work without Nora's model.
+|Backup |Restore the necessary configuration and runtime state on a clean target. Prevent a second simultaneously active WhatsApp session.
+|Documentation |Record the actually verified setup, interactive steps and recovery procedure without credentials, QR codes or session data.
+|===
+
+Tailscale, Ansible, SOPS with age and restic remain proposed implementation choices. H0.3 only checks credential-reference syntax; it does not implement encrypted storage or runtime authorization.
+
+The production controller/executor adapter belongs to H2. Deployment authorization and automatic rollback for the bounded demonstration target belong to H3. Passing foundation CI does not establish these runtime properties.

@@ -1,0 +1,8 @@
+<ul>
+{{#each items}}
+  <li>
+    {{#if url}}<a href="{{relativize url}}">{{{content}}}</a>{{else}}<span>{{{content}}}</span>{{/if}}
+    {{#if items}}{{> navigation items=items}}{{/if}}
+  </li>
+{{/each}}
+</ul>

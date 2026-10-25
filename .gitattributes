@@ -1,0 +1,10 @@
+* text=auto
+*.md text eol=lf
+*.adoc text eol=lf
+*.py text eol=lf
+*.json text eol=lf
+*.yaml.example text eol=lf
+# Keep the audited patch byte-for-byte, including author metadata.
+research/h0.1/patches/*.patch -text -whitespace
+# Historical runner output includes indentation and blank-line spaces.
+research/h0.1/evidence/*.log -whitespace

@@ -1,0 +1,73 @@
+= Documentation and public checks
+
+H0.4 adds an Antora site and one local/CI check workflow. The build consumes public sources only. link:adr/0002-documentation-and-checks.adoc[ADR 0002] records the choice; link:h0.4-acceptance.adoc[acceptance] separates local verification from pending GitHub execution.
+
+== Prepare tools
+
+Use Linux x86_64 or aarch64, Git 2.28+, `sha256sum`, Python 3.12+ with system IANA time-zone data, and Node.js 24 LTS with npm. Node.js 26 is also accepted for local work; CI selects 24. A VPS and live accounts are unnecessary. Create a virtual environment as described in link:configuration.adoc[configuration setup], then install the check dependencies:
+
+[source,sh]
+----
+python3 -m venv .venv
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements-dev.txt
+npm ci --ignore-scripts --no-audit --no-fund
+.venv/bin/python -m scripts.install_check_tools
+----
+
+Installation downloads public packages and release archives. `requirements-dev.txt` includes the runtime dependencies, Ruff and yamllint. It is compiled with the runtime lock as a constraint. `package-lock.json` fixes the npm dependency tree and archive integrity. No npm lifecycle scripts are needed. The binary installer verifies the archive SHA-256 from `scripts/check-tools.json` before extracting only the named Gitleaks/actionlint binary to ignored `build/tools`. It supports Linux x86_64 and aarch64; other operating systems need a separately verified setup before claiming parity.
+
+== Run the public checks
+
+[source,sh]
+----
+.venv/bin/python -m scripts.check
+----
+
+The command fails at the first unsuccessful check. It runs:
+
+* Ruff for Python import/name/syntax errors in maintained scripts and tests; historical H0.1 probes retain their original bytes.
+* Strict yamllint for Git-eligible YAML and the private template example; actionlint for workflow syntax, expressions and action inputs. ShellCheck/Pyflakes integration is disabled explicitly; workflow shell steps contain only literal tool invocations.
+* Configuration validation for the public example and private template, followed by behavior tests.
+* The retained H0.1 checksum manifest.
+* Gitleaks with default rules, full redaction and no inline allow markers. A disposable snapshot includes tracked and untracked Git-eligible candidates, excluding ignored local files. Available Git history is scanned with `--all`; an unborn repository explicitly skips only the history scan. CI fetches full history. No broad secret exclusions or baseline are configured.
+* The documentation build and offline source/generated-link checks, including HTML fragments.
+* `git diff --check` for tracked changes. New untracked files still need review before the first commit.
+
+This does not validate your private instance, access any credentials, run Hermes or test upstream integrations. Explicit private validation remains a separate operation in link:configuration.adoc[the configuration guide]. Pattern scanning cannot establish the absence of all sensitive data; review the exact publication candidates before publishing.
+
+== Build and view documentation
+
+[source,sh]
+----
+.venv/bin/python -m scripts.build_docs
+.venv/bin/python -m scripts.check_links
+.venv/bin/python -m http.server 8000 --bind 127.0.0.1 --directory build/site
+----
+
+Open `http://127.0.0.1:8000/` and stop the local server with Ctrl-C. The last command serves only the generated site, bound to loopback. Alternatively, activate `.venv` and run `npm run docs:build`; npm uses `python3` from your PATH.
+
+Canonical guides remain in `docs/`, with navigation in `docs/nav.adoc`. The exporter creates a native Antora component in a temporary directory from Git-eligible `.adoc` guides and the retained H0.1 report. Relative `link:` file references become Antora `xref:` resources. The explicit `ATTACHMENTS` tuple in `scripts/build_docs.py` bounds downloadable public files; new targets must be declared. Raw Markdown attachments are downloads, not rendered site pages. Includes are unsupported, and escaping links or symlink inputs fail the build. Use repository-relative `link:` references in guides and native `xref:` references in navigation.
+
+The exporter never discovers sibling repositories. It copies only selected public inputs and the Git-eligible local UI, initializes a temporary Git repository without commits, runs Antora with warning-level failure, then removes the temporary sources. Generated output replaces ignored `build/site`. Existing source paths, research evidence and working Git indexes are preserved. Once dependencies are installed, generation needs no network, external UI or private source. Antora 3.2 supports repositories without commits; no first-commit workaround is needed.
+
+The repository-owned UI uses HTML/CSS and system fonts, with navigation, responsive layout, dark mode and a keyboard skip link. It requires no browser JavaScript. This is a documentation build, not a hosted service. No Pages workflow or private documentation build is added yet.
+
+== CI and publication boundary
+
+link:../.github/workflows/checks.yml[GitHub Actions] runs the same checks on pushes, pull requests and manual dispatch using Ubuntu 24.04, Python 3.12 and Node.js 24. Actions are pinned to full commits, the token has only `contents: read`, checkout credentials are not persisted, and no instance secrets are supplied. There is no `pull_request_target` workflow, deployment permission or publication step.
+
+The first actual run remains pending remote creation and push. No remote is configured locally. The owner selected MIT; review publication files and retain license notices before making the repository public. link:h1.1-publication.adoc[H1.1] records the current remote/CI status. Hosting, its base URL and private Tailscale documentation belong to later work. link:h0.5-acceptance.adoc[H0.5] verified setup, validation and documentation generation from a clean checkout with new dependencies.
+
+== Dependency updates and references
+
+Update pins intentionally and rerun the full workflow. Regenerate the development lock while preserving runtime versions:
+
+[source,sh]
+----
+uv pip compile requirements-dev.in --python-version 3.12 --constraint requirements.txt \
+  --generate-hashes --output-file requirements-dev.txt
+----
+
+For npm updates, change exact direct versions, regenerate `package-lock.json`, review dependency changes, then use `npm ci --ignore-scripts`. For binary updates, verify the upstream release archives/checksums and update both supported architectures. For Action updates, resolve the release tag to its full commit and review the release notes. Do not substitute mutable `latest` URLs for checked-in pins.
+
+Primary references consulted on 2026-10-25: https://docs.antora.org/antora/latest/whats-new/[Antora 3.2 release notes], https://docs.antora.org/antora/latest/playbook/content-source-url/[local sources], https://docs.antora.org/antora/latest/playbook/ui-bundle-url/[local UI bundles], https://docs.antora.org/antora/latest/playbook/runtime-log-failure-level/[failure thresholds], https://github.com/gitleaks/gitleaks/tree/v8.30.1[Gitleaks 8.30.1], https://github.com/rhysd/actionlint/tree/v1.7.12[actionlint 1.7.12], https://docs.astral.sh/ruff/configuration/[Ruff configuration], https://yamllint.readthedocs.io/en/stable/configuration.html[yamllint configuration] and https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions[Actions security]. Context7 was unavailable because its monthly quota was exhausted; official documentation and public package/release metadata were used instead.

@@ -1,0 +1,26 @@
+▶ not activated — using HERMES_PYTHON: /tmp/haven-h0.1-testenv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 4 test files (~96 tests) under ['tests/e2e/core/kanban/test_kanban_rate_limit_review.py', 'tests/hermes_cli/test_kanban_db.py', 'tests/hermes_cli/test_kanban_review_lifecycle.py', 'tests/hermes_cli/test_kanban_review_lifecycle_complete.py']; running with -j 2
+[ 53.1% |    51/~96 | ✓57 | ✗ 0] ✓ tests/hermes_cli/test_kanban_db.py (57✓ 1s, 14.1s)
+[ 78.1% |    75/~96 | ✓83 | ✗ 0] ✓ tests/hermes_cli/test_kanban_review_lifecycle.py (26✓, 10.3s)
+[ 96.9% |    93/~96 | ✓107 | ✗  0] ✓ tests/hermes_cli/test_kanban_review_lifecycle_complete.py (24✓, 11.2s)
+[100.0% |    96/~96 | ✓110 | ✗  0] ✓ tests/e2e/core/kanban/test_kanban_rate_limit_review.py (3✓, 41.8s)
+
+=== Summary: 4 files, 110 tests passed, 0 failed, 1 skipped (100% complete) in 41.8s (2 workers) ===
+
+  note: platforms('windows') tests (in 1 file) were SKIPPED on this host (linux); they run on the Windows Python-tests lane.
+  Durations cached to test_durations.json (4 files)
+
+=== Per-file subprocess time distribution ===
+  Files:   4
+  Total subprocess CPU-wall: 77.4s  (runner wall: 41.8s, parallelism: 2x)
+  P50: 14.10s  P90: 41.79s  P95: 41.79s  P99: 41.79s  Max: 41.79s
+  <1s: 0 files (0%)  <2s: 0 files (0%)
+  Top 10 slowest:
+     41.79s  tests/e2e/core/kanban/test_kanban_rate_limit_review.py
+     14.10s  tests/hermes_cli/test_kanban_db.py
+     11.19s  tests/hermes_cli/test_kanban_review_lifecycle_complete.py
+     10.29s  tests/hermes_cli/test_kanban_review_lifecycle.py

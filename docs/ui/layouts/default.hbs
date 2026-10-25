@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{page.title}} · {{site.title}}</title>
+  <link rel="stylesheet" href="{{uiRootPath}}/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="{{relativize site.homeUrl}}">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation">{{> navigation items=page.navigation}}</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>{{{page.title}}}</h1>
+        {{{page.contents}}}
+      </article>
+      <footer>Local foundation verified. Live deployment remains future work.</footer>
+    </main>
+  </div>
+</body>
+</html>

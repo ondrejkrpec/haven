@@ -1,0 +1,48 @@
+= Local development
+
+Status: H0.5, verified locally on 2026-10-25. The foundation requires a POSIX shell, Git 2.28+ (`git init -b`) and `sha256sum`. Configuration validation needs Python 3.12+, system IANA time-zone data and hash-pinned Python dependencies. The complete check workflow also needs Node.js/npm and pinned Linux check binaries; see link:documentation.adoc[documentation and checks]. Optional research reproduction needs Linux and rootless Podman. A VPS and paid API access are unnecessary for local work.
+
+== Separate the public project and each instance
+
+Use a parent workspace such as `project-haven` with sibling Git repositories `haven` and `haven-private`. The parent is an ordinary directory. Maintained research evidence belongs in `haven/research`; disposable experiment directories belong under `/tmp` and are not required for development.
+
+Clone the public repository into `haven`, then follow the setup block in link:../README.md[README]. It copies only `templates/private` to a new sibling directory, initializes an independent Git repository and creates `config/instance.yaml`. It refuses an existing destination. For another instance, use a different new directory name.
+
+The copied template contains README, agent rules, ignore rules, a versioned YAML example and directories for personal instructions, runbooks and future encrypted secrets. Edit the copy. Keep the public example synthetic. The validator reads private files only when explicitly named; no Git submodule or private dependency is required.
+
+Follow link:configuration.adoc[configuration v1] to install dependencies, validate the example or your private configuration, and apply explicit overrides. The file is Haven input, not native Hermes configuration. A renderer and live deployment remain H1 work. Validation never needs real credentials.
+
+The local private workspace was migrated from the unchanged H0.2 example to configuration v1. It still contains only synthetic values. The public template remains the source for creating another user's workspace; changes to an existing private instance must be intentional and must not overwrite personal edits.
+
+== Work on a change
+
+Use a focused local branch once project history exists. Review public/private boundaries, update the relevant guide and run checks appropriate to the change:
+
+[source,sh]
+----
+git diff --check
+git status --short
+(cd research/h0.1 && sha256sum -c SHA256SUMS)
+.venv/bin/python scripts/validate_config.py examples/instance.yaml
+.venv/bin/python -m unittest discover -s tests -v
+----
+
+The checksum manifest covers the retained H0.1 report, pins, patch, MIT notice, probes and sanitized evidence. It detects accidental changes; it is not a signature. The behavior suite checks configuration and public documentation boundaries; it does not run Hermes or paid services. After installing the link:documentation.adoc[H0.4 check tools], run `.venv/bin/python -m scripts.check` for the full local/CI workflow. The first actual GitHub run remains pending remote setup.
+
+== Optional H0.1 reproduction
+
+The complete historical procedure and its limitations are in link:../research/h0.1/README.adoc[the research report]. It builds Hermes through its own pinned package manager and uses the upstream test runner. This can download substantial dependencies and images; it is separate from foundation setup.
+
+Never reuse an active Hermes home, runtime or Podman store for an experiment. Do not supply real credentials. The report uses disposable paths and synthetic provider responses. Rootless probes still execute container processes; they do not establish production security on Ubuntu.
+
+== GitHub and publication
+
+The initial local repositories use branch `main`, have no commits and have no remotes. The README clone example becomes directly usable once a source repository has a committed snapshot. H0.2 acceptance uses a disposable snapshot repository to exercise a real clone without committing the owner's working repositories.
+
+link:h0.2-acceptance.adoc[H0.2 acceptance] records the initial local check; link:h0.5-acceptance.adoc[H0.5 acceptance] verifies the complete foundation from a fresh clone and newly installed dependencies. Neither fixture establishes a published project revision.
+
+Before creating remotes, verify `haven` and `haven-private` are available under the owner's personal GitHub account. The owner selected MIT; retain the root license and independent upstream notices. Keep the instance repository private. Review the exact files to be published, then create and push remotes only within the user's authorization.
+
+link:h1.1-publication.adoc[H1.1 publication] records the current remote/CI status; earlier acceptance reports retain their historical scope.
+
+Git behavior follows the official https://git-scm.com/docs/git-init[init], https://git-scm.com/docs/git-clone[clone] and https://git-scm.com/docs/gitignore[ignore] references. Context7 was unavailable because its monthly quota was exhausted; Git 2.55.0 was available for local verification.

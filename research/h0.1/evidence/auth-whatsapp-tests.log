@@ -1,0 +1,156 @@
+▶ not activated — using HERMES_PYTHON: /tmp/haven-h0.1-testenv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 4 test files (~44 tests) under ['tests/hermes_cli/test_auth_codex_provider.py', 'tests/gateway/test_whatsapp_allowlist_lid_resolution.py', 'tests/gateway/test_whatsapp_group_gating.py', 'tests/gateway/test_whatsapp_connect.py']; running with -j 2
+[ 11.4% |     5/~44 | ✓5 | ✗0] ✓ tests/gateway/test_whatsapp_allowlist_lid_resolution.py (5✓, 1.9s)
+[ 50.0% |    22/~44 | ✓20 | ✗ 2] ✗ tests/gateway/test_whatsapp_connect.py (15✓ 2✗ 3s, 2.5s)
+
+  ╔╍ Failed: tests/gateway/test_whatsapp_connect.py ╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+  ║     @pytest.mark.asyncio
+  ║     async def test_releases_lock_when_npm_install_fails(self):
+  ║         adapter = _make_adapter()
+  ║     
+  ║         def _path_exists(path_obj):
+  ║             return not str(path_obj).endswith("node_modules")
+  ║     
+  ║         install_result = MagicMock(returncode=1, stderr="install failed")
+  ║     
+  ║         with patch("plugins.platforms.whatsapp.adapter.check_whatsapp_requirements", return_value=True), \
+  ║              patch.object(Path, "exists", autospec=True, side_effect=_path_exists), \
+  ║              patch("subprocess.run", return_value=install_result), \
+  ║              patch("gateway.status.acquire_scoped_lock", return_value=(True, None)), \
+  ║              patch("gateway.status_scoped_locks.release_scoped_lock") as mock_release:
+  ║             result = await adapter.connect()
+  ║     
+  ║         assert result is False
+  ║ >       assert adapter.fatal_error_code == "whatsapp_npm_install_failed"
+  ║ E       AssertionError: assert 'whatsapp_aiohttp_missing' == 'whatsapp_npm_install_failed'
+  ║ E         
+  ║ E         - whatsapp_npm_install_failed
+  ║ E         + whatsapp_aiohttp_missing
+  ║ 
+  ║ tests/gateway/test_whatsapp_connect.py:181: AssertionError
+  ║ ------------------------------ Captured log call -------------------------------
+  ║ WARNING  plugins.platforms.whatsapp.adapter:adapter.py:601 [Whatsapp] aiohttp is unavailable (pm-runtime: not installed and lazy installs are disabled while enabling ['sms'] — run `hermes pm install --extra sms`); the WhatsApp bridge client needs it. Run `hermes pm install --extra sms` (it ships aiohttp; `hermes pm repair` for a damaged install), then restart `hermes gateway`.
+  ║ =========================== short test summary info ============================
+  ║ FAILED tests/gateway/test_whatsapp_connect.py::TestFileHandleClosedOnError::test_closed_when_bridge_dies_phase1
+  ║ FAILED tests/gateway/test_whatsapp_connect.py::TestConnectCleanup::test_releases_lock_when_npm_install_fails
+  ║ =================== 2 failed, 15 passed, 3 skipped in 1.41s ====================
+  ║
+  ║  Repro: python -m pytest tests/gateway/test_whatsapp_connect.py
+  ╚╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍╍
+
+[ 77.3% |    34/~44 | ✓32 | ✗ 2] ✓ tests/gateway/test_whatsapp_group_gating.py (12✓, 2.1s)
+[100.0% |    44/~44 | ✓42 | ✗ 2] ✓ tests/hermes_cli/test_auth_codex_provider.py (10✓, 2.0s)
+
+=== Summary: 4 files, 42 tests passed, 2 failed, 3 skipped (100% complete) in 4.6s (2 workers) ===
+
+  note: platforms('windows') tests (in 1 file) were SKIPPED on this host (linux); they run on the Windows Python-tests lane.
+  Durations cached to test_durations.json (3 files)
+
+=== Per-file subprocess time distribution ===
+  Files:   4
+  Total subprocess CPU-wall: 8.5s  (runner wall: 4.6s, parallelism: 2x)
+  P50: 2.08s  P90: 2.54s  P95: 2.54s  P99: 2.54s  Max: 2.54s
+  <1s: 0 files (0%)  <2s: 1 files (25%)
+  Top 10 slowest:
+      2.54s  tests/gateway/test_whatsapp_connect.py
+      2.08s  tests/gateway/test_whatsapp_group_gating.py
+      2.00s  tests/hermes_cli/test_auth_codex_provider.py
+      1.87s  tests/gateway/test_whatsapp_allowlist_lid_resolution.py
+
+=== Failure output ===
+
+--- tests/gateway/test_whatsapp_connect.py ---
+============================= test session starts ==============================
+platform linux -- Python 3.14.9, pytest-9.1.1, pluggy-1.6.0
+rootdir: /tmp/haven-h0.1-hermes-v0.22.5
+configfile: pyproject.toml
+plugins: anyio-4.14.2, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 20 items
+
+tests/gateway/test_whatsapp_connect.py .FF......ss..s......              [100%]
+
+=================================== FAILURES ===================================
+_______ TestFileHandleClosedOnError.test_closed_when_bridge_dies_phase1 ________
+
+self = <tests.gateway.test_whatsapp_connect.TestFileHandleClosedOnError object at 0x7f3143559950>
+
+    @pytest.mark.asyncio
+    async def test_closed_when_bridge_dies_phase1(self):
+        """Bridge process exits during Phase 1 health-check loop."""
+        adapter = _make_adapter()
+    
+        mock_proc = MagicMock()
+        mock_proc.poll.return_value = 1  # dead immediately
+        mock_proc.returncode = 1
+    
+        mock_fh = MagicMock()
+        patches = _connect_patches(mock_proc, mock_fh)
+    
+        with patches[0], patches[1], patches[2], patches[3], patches[4], \
+             patches[5], patches[6], patches[7]:
+            result = await adapter.connect()
+    
+        assert result is False
+>       mock_fh.close.assert_called_once()
+
+tests/gateway/test_whatsapp_connect.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <MagicMock name='mock.close' id='139849555206432'>
+
+    def assert_called_once(self):
+        """assert that the mock was called only once.
+        """
+        if not self.call_count == 1:
+            msg = ("Expected '%s' to have been called once. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+>           raise AssertionError(msg)
+E           AssertionError: Expected 'close' to have been called once. Called 0 times.
+
+../haven-h0.1-runtime/python-3.14.9+20261021-linux-x64/lib/python3.14/unittest/mock.py:965: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  plugins.platforms.whatsapp.adapter:adapter.py:601 [Whatsapp] aiohttp is unavailable (pm-runtime: not installed and lazy installs are disabled while enabling ['sms'] — run `hermes pm install --extra sms`); the WhatsApp bridge client needs it. Run `hermes pm install --extra sms` (it ships aiohttp; `hermes pm repair` for a damaged install), then restart `hermes gateway`.
+_________ TestConnectCleanup.test_releases_lock_when_npm_install_fails _________
+
+self = <tests.gateway.test_whatsapp_connect.TestConnectCleanup object at 0x7f3143559a90>
+
+    @pytest.mark.asyncio
+    async def test_releases_lock_when_npm_install_fails(self):
+        adapter = _make_adapter()
+    
+        def _path_exists(path_obj):
+            return not str(path_obj).endswith("node_modules")
+    
+        install_result = MagicMock(returncode=1, stderr="install failed")
+    
+        with patch("plugins.platforms.whatsapp.adapter.check_whatsapp_requirements", return_value=True), \
+             patch.object(Path, "exists", autospec=True, side_effect=_path_exists), \
+             patch("subprocess.run", return_value=install_result), \
+             patch("gateway.status.acquire_scoped_lock", return_value=(True, None)), \
+             patch("gateway.status_scoped_locks.release_scoped_lock") as mock_release:
+            result = await adapter.connect()
+    
+        assert result is False
+>       assert adapter.fatal_error_code == "whatsapp_npm_install_failed"
+E       AssertionError: assert 'whatsapp_aiohttp_missing' == 'whatsapp_npm_install_failed'
+E         
+E         - whatsapp_npm_install_failed
+E         + whatsapp_aiohttp_missing
+
+tests/gateway/test_whatsapp_connect.py:181: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  plugins.platforms.whatsapp.adapter:adapter.py:601 [Whatsapp] aiohttp is unavailable (pm-runtime: not installed and lazy installs are disabled while enabling ['sms'] — run `hermes pm install --extra sms`); the WhatsApp bridge client needs it. Run `hermes pm install --extra sms` (it ships aiohttp; `hermes pm repair` for a damaged install), then restart `hermes gateway`.
+=========================== short test summary info ============================
+FAILED tests/gateway/test_whatsapp_connect.py::TestFileHandleClosedOnError::test_closed_when_bridge_dies_phase1
+FAILED tests/gateway/test_whatsapp_connect.py::TestConnectCleanup::test_releases_lock_when_npm_install_fails
+=================== 2 failed, 15 passed, 3 skipped in 1.41s ====================
+
+=== 1 file with test failures (2 tests failed) ===
+  tests/gateway/test_whatsapp_connect.py  (2 tests failed)

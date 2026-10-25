@@ -1,0 +1,16 @@
+{
+  "name": "haven-docs",
+  "private": true,
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=24 <25 || >=26 <27"
+  },
+  "scripts": {
+    "docs:build": "python3 -m scripts.build_docs"
+  },
+  "devDependencies": {
+    "@antora/cli": "3.2.1",
+    "@antora/site-generator-default": "3.2.1"
+  },
+  "license": "MIT"
+}

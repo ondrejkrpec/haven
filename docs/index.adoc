@@ -1,0 +1,21 @@
+= Haven documentation
+
+Haven is a personal agent system built around Hermes, with WhatsApp text and inbound Czech voice messages as its planned phone interface. The first deployment will use one Ubuntu VPS and bounded automation. Nora is the coordinator's working name.
+
+The local foundation is accepted through a fresh checkout: public sources, a private-instance template, configuration v1 validation and a documentation/check workflow. Hermes deployment, real Codex authentication, WhatsApp pairing and voice quality remain unverified integrations.
+
+== Start here
+
+* link:local-development.adoc[Local development]: prepare the public checkout and a separate private instance.
+* link:configuration.adoc[Configuration v1]: supported inputs, defaults, overrides and credential references.
+* link:documentation.adoc[Documentation and checks]: build this site and run the public checks.
+* link:architecture.adoc[Architecture]: controller/executor boundaries, recovery and milestone scope.
+* link:h1-prerequisites.adoc[H1 prerequisites]: what must be selected and verified before live operation.
+
+== Evidence and limits
+
+link:../research/h0.1/README.adoc[H0.1] established a technical path using synthetic providers and rootless-container probes. link:h0.2-acceptance.adoc[H0.2] verified the local repository/template workflow. H0.3 implements input validation; link:h0.4-acceptance.adoc[H0.4] records documentation and check acceptance. link:h0.5-acceptance.adoc[H0.5] verified the complete setup from a clean checkout and records the H1 handoff.
+
+This site contains only public material. Personal configuration and instructions belong in each user's separate private repository. Runtime sessions, credentials, databases and backups stay outside the public sources and build inputs.
+
+The owner selected MIT; link:h1.1-publication.adoc[GitHub publication and first CI] are in progress. Original Haven material uses link:../LICENSE[MIT]. The retained Hermes patch and license keep their independent upstream attribution.

@@ -1,0 +1,26 @@
+▶ not activated — using HERMES_PYTHON: /tmp/haven-h0.1-transport-testenv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 4 test files (~44 tests) under ['tests/hermes_cli/test_auth_codex_provider.py', 'tests/gateway/test_whatsapp_allowlist_lid_resolution.py', 'tests/gateway/test_whatsapp_group_gating.py', 'tests/gateway/test_whatsapp_connect.py']; running with -j 2
+[ 11.4% |     5/~44 | ✓5 | ✗0] ✓ tests/gateway/test_whatsapp_allowlist_lid_resolution.py (5✓, 1.6s)
+[ 50.0% |    22/~44 | ✓22 | ✗ 0] ✓ tests/gateway/test_whatsapp_connect.py (17✓ 3s, 2.2s)
+[ 77.3% |    34/~44 | ✓34 | ✗ 0] ✓ tests/gateway/test_whatsapp_group_gating.py (12✓, 2.0s)
+[100.0% |    44/~44 | ✓44 | ✗ 0] ✓ tests/hermes_cli/test_auth_codex_provider.py (10✓, 1.9s)
+
+=== Summary: 4 files, 44 tests passed, 0 failed, 3 skipped (100% complete) in 4.2s (2 workers) ===
+
+  note: platforms('windows') tests (in 1 file) were SKIPPED on this host (linux); they run on the Windows Python-tests lane.
+  Durations cached to test_durations.json (4 files)
+
+=== Per-file subprocess time distribution ===
+  Files:   4
+  Total subprocess CPU-wall: 7.7s  (runner wall: 4.2s, parallelism: 2x)
+  P50: 2.03s  P90: 2.20s  P95: 2.20s  P99: 2.20s  Max: 2.20s
+  <1s: 0 files (0%)  <2s: 2 files (50%)
+  Top 10 slowest:
+      2.20s  tests/gateway/test_whatsapp_connect.py
+      2.03s  tests/gateway/test_whatsapp_group_gating.py
+      1.93s  tests/hermes_cli/test_auth_codex_provider.py
+      1.56s  tests/gateway/test_whatsapp_allowlist_lid_resolution.py

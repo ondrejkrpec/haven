@@ -1,0 +1,8 @@
+{
+  "probe": "rootless-container-boundary",
+  "rootless": true,
+  "image": "docker.io/library/busybox@sha256:66a6306db78bf2dbf3487f293aa8d6990d8e506fdffab9cc43fe422becf886e4",
+  "returncode": 0,
+  "result": "PASS: hidden session, hidden host config, no inherited secret, no vault, no socket, read-only root, no route, writable workspace",
+  "limits": "BusyBox filesystem/network probe; Hermes, Codex and Kanban were not run in this container."
+}

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Haven instance configuration v1",
+  "description": "Haven input contract; not native Hermes configuration or deployment authorization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "instance", "host", "model", "whatsapp"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "instance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "timezone"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,62}(?![\\s\\S])"
+        },
+        "timezone": {
+          "type": "string",
+          "format": "iana-timezone",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["address", "service_user"],
+      "properties": {
+        "address": {
+          "type": "string",
+          "format": "host-address",
+          "minLength": 1,
+          "maxLength": 253
+        },
+        "service_user": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_-]{0,31}(?![\\s\\S])",
+          "not": {"const": "root"}
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "name"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,63}(?![\\s\\S])"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^\\S+(?![\\s\\S])"
+        },
+        "credential_ref": {
+          "type": "string",
+          "format": "secret-reference",
+          "maxLength": 4096
+        }
+      }
+    },
+    "whatsapp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "allowed_senders"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "allowed_senders": {
+          "type": "array",
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^\\+[1-9][0-9]{7,14}(?![\\s\\S])"
+          }
+        }
+      },
+      "if": {
+        "required": ["enabled"],
+        "properties": {"enabled": {"const": true}}
+      },
+      "then": {
+        "properties": {"allowed_senders": {"minItems": 1}}
+      }
+    }
+  }
+}

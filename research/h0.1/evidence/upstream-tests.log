@@ -1,0 +1,34 @@
+▶ not activated — using HERMES_PYTHON: /tmp/haven-h0.1-testenv/bin/python
+▶ running per-file parallel test suite via run_tests_parallel.py
+  (TZ=UTC LANG=C.UTF-8 PYTHONHASHSEED=0; clean env)
+▶ pre-compiling bytecode cache
+▶ launching test runner
+Discovered 8 test files (~204 tests) under ['tests/hermes_cli/test_kanban_review_lifecycle.py', 'tests/hermes_cli/test_kanban_review_lifecycle_complete.py', 'tests/hermes_cli/test_kanban_db.py', 'tests/hermes_cli/test_auth_codex_quota_probe.py', 'tests/cron/test_quota_hold.py', 'tests/tools/test_docker_environment.py', 'tests/agent/test_codex_app_server_integration.py', 'tests/tools/test_stt_language_resolution.py']; running with -j 2
+[  2.0% |     4/~204 | ✓4 | ✗0] ✓ tests/cron/test_quota_hold.py (4✓, 3.9s)
+[  6.4% |    13/~204 | ✓13 | ✗ 0] ✓ tests/hermes_cli/test_auth_codex_quota_probe.py (9✓, 2.2s)
+[ 29.9% |    61/~204 | ✓67 | ✗ 0] ✓ tests/hermes_cli/test_kanban_db.py (54✓ 1s, 13.4s)
+[ 43.6% |    89/~204 | ✓98 | ✗ 0] ✓ tests/agent/test_codex_app_server_integration.py (31✓, 21.4s)
+[ 55.4% |   113/~204 | ✓124 | ✗  0] ✓ tests/hermes_cli/test_kanban_review_lifecycle.py (26✓, 10.3s)
+[ 64.2% |   131/~204 | ✓148 | ✗  0] ✓ tests/hermes_cli/test_kanban_review_lifecycle_complete.py (24✓, 11.1s)
+[ 66.7% |   136/~204 | ✓153 | ✗  0] ✓ tests/tools/test_stt_language_resolution.py (5✓, 2.4s)
+[100.0% |   204/~204 | ✓235 | ✗  0] ✓ tests/tools/test_docker_environment.py (82✓, 8.9s)
+
+=== Summary: 8 files, 235 tests passed, 0 failed, 1 skipped (100% complete) in 38.8s (2 workers) ===
+
+  note: platforms('windows') tests (in 1 file) were SKIPPED on this host (linux); they run on the Windows Python-tests lane.
+  Durations cached to test_durations.json (8 files)
+
+=== Per-file subprocess time distribution ===
+  Files:   8
+  Total subprocess CPU-wall: 73.6s  (runner wall: 38.8s, parallelism: 2x)
+  P50: 10.30s  P90: 21.44s  P95: 21.44s  P99: 21.44s  Max: 21.44s
+  <1s: 0 files (0%)  <2s: 0 files (0%)
+  Top 10 slowest:
+     21.44s  tests/agent/test_codex_app_server_integration.py
+     13.41s  tests/hermes_cli/test_kanban_db.py
+     11.08s  tests/hermes_cli/test_kanban_review_lifecycle_complete.py
+     10.30s  tests/hermes_cli/test_kanban_review_lifecycle.py
+      8.88s  tests/tools/test_docker_environment.py
+      3.87s  tests/cron/test_quota_hold.py
+      2.38s  tests/tools/test_stt_language_resolution.py
+      2.22s  tests/hermes_cli/test_auth_codex_quota_probe.py

@@ -1,0 +1,18 @@
+site:
+  title: Haven
+  start_page: haven::index.adoc
+content:
+  sources:
+    - url: .
+      branches: HEAD
+      start_path: docs
+      edit_url: false
+ui:
+  bundle:
+    url: ./docs/ui
+output:
+  dir: ./build/site
+  clean: true
+runtime:
+  log:
+    failure_level: warn

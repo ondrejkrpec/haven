@@ -1,0 +1,72 @@
+{
+  "exported_on": "2026-10-25",
+  "source": "Local H0.1 research archive, not published",
+  "files": [
+    {
+      "file": "pins.json",
+      "original_sha256": "648739c1be0ceb7e2fcd40734b0af793958a905a475d4ea4f1049eabcddd46c3",
+      "action": "byte-for-byte copy"
+    },
+    {
+      "file": "UPSTREAM-LICENSE",
+      "original_sha256": "821556e6336796450ab852d375117b48a4887e71d255794fd6318d99982a5ab6",
+      "action": "byte-for-byte copy"
+    },
+    {
+      "file": "patches/upstream-117820.patch",
+      "original_sha256": "785f2646e94877da9a004744797126175e25b5f6a3007c34c7c6c0f2d0875660",
+      "action": "byte-for-byte copy"
+    },
+    {
+      "file": "probes/isolation.py",
+      "original_sha256": "b2e294d0f1c0561c35e7b82920a562a71dfb0da15de92831375e577a39b8aac4",
+      "action": "portable Codex home path and synthetic vault file replace author-specific paths; requires rerun"
+    },
+    {
+      "file": "probes/dispatch_isolation.py",
+      "original_sha256": "68b34b6ad054e02f0839c23042f4ac45c03458b5454a928615abfee188d3b2f5",
+      "action": "byte-for-byte copy"
+    },
+    {
+      "file": "evidence/auth-whatsapp-complete-tests.log",
+      "original_sha256": "a229da1837c3234e52ee934ef6a2e2577660cfee90e7e1ee0451cde1beb24cca",
+      "action": "replaced local username and hostname; synthetic test content retained"
+    },
+    {
+      "file": "evidence/auth-whatsapp-tests.log",
+      "original_sha256": "87be5524d8a3de7cc1123148bf30b607394e6650ac77686f8ff132ced1904c18",
+      "action": "replaced local username and hostname; synthetic test content retained"
+    },
+    {
+      "file": "evidence/dispatch-isolation.json",
+      "original_sha256": "81b40c33d2bba2ca810fdc5d47fa60f2705bc369bd0b0ce74d914a6e19b0ec52",
+      "action": "replaced local username and hostname; synthetic test content retained"
+    },
+    {
+      "file": "evidence/isolation.json",
+      "original_sha256": "2c7e1f552a0fc1326887cc9d750af36554811ed5ca4c81b9a99c062c2b2c5e53",
+      "action": "replaced local username and hostname; synthetic test content retained"
+    },
+    {
+      "file": "evidence/patched-recovery-tests.log",
+      "original_sha256": "2a73ba87203763b66a4df04e6b708f948efd3c285f3433d210b65e8df8a51f0f",
+      "action": "replaced local username and hostname; synthetic test content retained"
+    },
+    {
+      "file": "evidence/recovery-tests.log",
+      "original_sha256": "d7539349f3c164fae5add5298dd8a119b6f0dec1ce291e88a1c44ef5d46df2cf",
+      "action": "replaced local username and hostname; synthetic test content retained"
+    },
+    {
+      "file": "evidence/transport-env.log",
+      "original_sha256": "823061ff4180b4cf221b061b8bb10f9ab48ffc474951b80f6568a149b9db316a",
+      "action": "replaced local username and hostname; synthetic test content retained"
+    },
+    {
+      "file": "evidence/upstream-tests.log",
+      "original_sha256": "e08a65688bb26e96c4022619840333c0dd2638f202b03a927b192c92d08fb68f",
+      "action": "replaced local username and hostname; synthetic test content retained"
+    }
+  ],
+  "report": "README.md converted to AsciiDoc; local paths replaced by HAVEN_RESEARCH; migration scope added"
+}
