@@ -1,6 +1,6 @@
 = H1.3: Private administration with Tailscale
 
-Status on 2026-10-28: researched rollout plan, not an installed or accepted integration. link:h1.3-first-access.adoc[Administrator SSH and the manual security baseline] are verified. The next target is a personal tailnet joining the VPS and the owner's computer/phone, followed by removal of public SSH access after acceptance.
+Status on 2026-10-28: Tailscale 1.104.4 is installed on the Ubuntu VPS and its service is active/enabled. Enrollment and private-access acceptance remain pending; public SSH is still available. The owner has created the personal account and is installing clients on their computer/phone. link:h1.3-first-access.adoc[Administrator SSH and the manual security baseline] remain verified.
 
 == Intended result
 
@@ -17,7 +17,22 @@ Use the owner's personal account with protected sign-in and independent recovery
 
 == Staged installation
 
-The official stable package page has an Ubuntu 26.04 `resolute` repository. Before changing the VPS, inspect its package candidate/version and an installation simulation. Follow the distribution-specific signed-keyring/repository instructions, record the exact installed version and changes, then enable the service. Add only the required Tailscale packages/dependencies after reviewing the simulation; a broad OS upgrade is a separate task. The owner reserved OS updates as a future Security/Worker test case.
+The official stable package page has an Ubuntu 26.04 `resolute` repository. The executed installation used its dedicated signed keyring and source list. Only this repository's metadata was refreshed, followed by a simulation and installation of the exact candidate:
+
+[source,sh]
+----
+sudo apt-get update \
+  -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/tailscale.list \
+  -o Dir::Etc::sourceparts=- -o APT::Get::List-Cleanup=0
+sudo apt-get -s install --no-install-recommends tailscale
+sudo apt-get install --yes --no-install-recommends --no-upgrade tailscale=1.104.4
+sudo systemctl enable --now tailscaled.service
+tailscale version
+----
+
+The simulation and actual transaction both reported one new package, zero upgrades and zero removals. General OS upgrades reserved for the later Security/Worker use case were not run. `tailscaled` was active/enabled, its state directory was root-owned with mode `0700`, and a new public SSH connection and SSH syntax validation passed after installation. Runtime state was not copied into either repository. Enrollment, network authorization and cutover are separate checks below.
+
+On the administration computer, the observed Manjaro package candidate was `tailscale 1.102.3-1`. Installing it and enabling the service require the owner's local sudo password; the agent did not receive that password or install the local client. Run the distribution package manager in the owner's terminal, then authorize the same personal tailnet in a browser. Do not refresh Arch/Manjaro repositories for a partial system upgrade merely to install this one package.
 
 Use an interactive browser enrollment for the server rather than a reusable token in chat or shell history. Treat the enrollment URL as session material and do not commit it. Record successful enrollment without copying the daemon's `/var/lib/tailscale` state into either repository. On the administration computer, select the documented package source for its actual Linux distribution rather than using the server's Ubuntu repository.
 
@@ -70,8 +85,8 @@ If private access fails, use the retained public path, timed fallback or provide
 * After cutover, a fresh public SSH connection fails and a new private connection succeeds. Check IPv4 and IPv6 where connectivity permits, and document any untested path.
 * The timed public-access fallback is exercised and then cancelled after final checks. Service enablement/reconnection is verified; reboot recovery remains separately pending until tested.
 
-The rollback and policy above are planned. Research and a valid documentation build do not establish installed Tailscale, successful enrollment or safe removal of public SSH.
+The private-access rollback and policy above remain planned. Installation is verified on the server only; research, service enablement and a valid documentation build do not establish successful enrollment or safe removal of public SSH.
 
 == Sources
 
-Official sources checked on 2026-10-28: https://tailscale.com/docs/how-to/quickstart[quickstart], https://tailscale.com/pricing[Personal pricing], https://pkgs.tailscale.com/stable/[stable packages and Ubuntu 26.04], https://tailscale.com/docs/install/ios[iOS setup], https://tailscale.com/docs/reference/syntax/grants[grants], https://tailscale.com/docs/reference/examples/acls[initial allow-all policy], https://tailscale.com/docs/reference/netfilter-modes[Linux netfilter integration], https://tailscale.com/docs/features/tags[tags/key expiry] and https://tailscale.com/docs/how-to/secure-ubuntu-server-with-ufw[UFW cutover]. Context7 returned a monthly quota error; official documentation was used instead. The installation's exact package version is to be resolved before execution.
+Official sources checked on 2026-10-28: https://tailscale.com/docs/how-to/quickstart[quickstart], https://tailscale.com/pricing[Personal pricing], https://pkgs.tailscale.com/stable/[stable packages and Ubuntu 26.04], https://tailscale.com/docs/install/ios[iOS setup], https://tailscale.com/docs/reference/tailscale-cli/up[CLI enrollment flags], https://tailscale.com/docs/reference/syntax/grants[grants], https://tailscale.com/docs/reference/examples/acls[initial allow-all policy], https://tailscale.com/docs/reference/netfilter-modes[Linux netfilter integration], https://tailscale.com/docs/features/tags[tags/key expiry] and https://tailscale.com/docs/how-to/secure-ubuntu-server-with-ufw[UFW cutover]. Context7 returned a monthly quota error; official documentation and installed package-manager metadata were used instead.
