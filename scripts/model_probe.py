@@ -40,8 +40,8 @@ def prepare(source, home):
     # The launcher must select the same profile before any upstream import.
     if os.environ.get("HERMES_HOME") != str(home):
         raise ProbeError("profile_environment_mismatch")
-    import yaml
-    config = yaml.safe_load(private_file(home / "config.yaml").read_text())
+    from ruamel.yaml import YAML
+    config = YAML(typ="safe", pure=True).load(private_file(home / "config.yaml").read_text())
     model = check_native(config)
     try:
         auth = private_file(home / "auth.json")

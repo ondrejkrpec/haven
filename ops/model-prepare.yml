@@ -166,7 +166,7 @@
             argv:
               - "{{ haven_source }}/venv/bin/python"
               - -c
-              - "import sys, openai, yaml, httpx; print('Hermes core imports ready; Python ' + sys.version.split()[0])"
+              - "import sys, openai, httpx; from ruamel.yaml import YAML; print('Hermes core imports ready; Python ' + sys.version.split()[0])"
             chdir: "{{ haven_source }}"
           changed_when: false
           when: not ansible_check_mode
