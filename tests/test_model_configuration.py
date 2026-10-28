@@ -127,6 +127,23 @@ model:
         with self.assertRaises(model_probe.ProbeError):
             model_probe.private_file(link)
 
+    @unittest.skipIf(os.geteuid() == 0, "Service checks intentionally reject root")
+    def test_invalid_auth_store_is_rejected_without_echoing_its_contents(self):
+        home = self.root / "invalid-state"
+        home.mkdir(mode=0o700)
+        for name, value in (("config.yaml", yaml.safe_dump(self.native)),
+                            ("auth.json", "SYNTHETIC_SECRET_SENTINEL invalid JSON")):
+            path = home / name
+            path.write_text(value)
+            path.chmod(0o600)
+        out, err = io.StringIO(), io.StringIO()
+        with patch.dict(os.environ, {"HERMES_HOME": str(home)}):
+            with redirect_stdout(out), redirect_stderr(err):
+                status = model_probe.main(["check-auth", "--source", str(self.root), "--home", str(home)])
+        self.assertEqual(status, 1)
+        self.assertEqual(json.loads(out.getvalue())["code"], "credentials_invalid")
+        self.assertNotIn("SYNTHETIC_SECRET_SENTINEL", out.getvalue() + err.getvalue())
+
     def test_arbitrary_provider_error_text_is_not_printed(self):
         secret = "SYNTHETIC_SECRET_SENTINEL"
         out, err = io.StringIO(), io.StringIO()
@@ -153,6 +170,7 @@ model:
             def __init__(self, **kwargs):
                 captured.update(kwargs)
             def chat(self, message):
+                captured["chat_called"] = True
                 self.message = message
                 return "HAVEN_MODEL_OK"
             def close(self):
@@ -170,6 +188,15 @@ model:
         self.assertFalse(captured["save_trajectories"])
         self.assertTrue(captured["closed"])
         self.assertNotIn("SYNTHETIC_SECRET_SENTINEL", json.dumps(result))
+        for tools, fallback, mode in ((["terminal"], [], "codex_responses"),
+                                       ([], ["paid"], "codex_responses"),
+                                       ([], [], "codex_app_server")):
+            Agent.tools, Agent._fallback_chain, Agent.api_mode = tools, fallback, mode
+            captured["chat_called"] = False
+            with patch.dict("sys.modules", {"hermes_cli.auth_codex": auth, "run_agent": agent}):
+                with self.assertRaisesRegex(model_probe.ProbeError, "unexpected_tools_or_fallback"):
+                    model_probe.run_native("query", "gpt-synthetic")
+            self.assertFalse(captured["chat_called"])
 
 
 if __name__ == "__main__":

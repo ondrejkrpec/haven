@@ -44,9 +44,14 @@ def prepare(source, home):
     config = yaml.safe_load(private_file(home / "config.yaml").read_text())
     model = check_native(config)
     try:
-        private_file(home / "auth.json")
+        auth = private_file(home / "auth.json")
     except FileNotFoundError:
         raise ProbeError("credentials_missing") from None
+    try:
+        if not isinstance(json.loads(auth.read_text()), dict):
+            raise ProbeError("credentials_invalid")
+    except (json.JSONDecodeError, UnicodeError):
+        raise ProbeError("credentials_invalid") from None
     head = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True,
                                    stderr=subprocess.DEVNULL).strip()
     if head != HERMES_COMMIT:
