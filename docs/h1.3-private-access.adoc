@@ -1,6 +1,6 @@
 = H1.3: Private administration with Tailscale
 
-Status on 2026-10-28: Tailscale 1.104.4 is installed on the Ubuntu VPS and its service is active/enabled. Enrollment and private-access acceptance remain pending; public SSH is still available. The owner has created the personal account and is installing clients on their computer/phone. link:h1.3-first-access.adoc[Administrator SSH and the manual security baseline] remain verified.
+Status on 2026-10-28: the VPS, administration computer and phone are enrolled in the owner's tailnet. The owner confirmed saving the restricted policy, the server has `tag:haven`, and new OpenSSH connections over private IPv4/IPv6 pass. A locally working test port is blocked over both private address families. Public SSH remains available pending the mobile-data and provider-console checks; cutover is not accepted yet. link:h1.3-first-access.adoc[Administrator SSH and the manual security baseline] remain verified.
 
 == Intended result
 
@@ -32,11 +32,21 @@ tailscale version
 
 The simulation and actual transaction both reported one new package, zero upgrades and zero removals. General OS upgrades reserved for the later Security/Worker use case were not run. `tailscaled` was active/enabled, its state directory was root-owned with mode `0700`, and a new public SSH connection and SSH syntax validation passed after installation. Runtime state was not copied into either repository. Enrollment, network authorization and cutover are separate checks below.
 
-On the administration computer, the observed Manjaro package candidate was `tailscale 1.102.3-1`. Installing it and enabling the service require the owner's local sudo password; the agent did not receive that password or install the local client. Run the distribution package manager in the owner's terminal, then authorize the same personal tailnet in a browser. Do not refresh Arch/Manjaro repositories for a partial system upgrade merely to install this one package.
+On the administration computer, the observed Manjaro package candidate was `tailscale 1.102.3-1`. The owner completed local installation and browser sign-in in their terminal; CLI version 1.102.3 and backend `Running` were then verified. The agent did not receive the local sudo password. Use the distribution package manager for another installation; do not refresh Arch/Manjaro repositories for a partial system upgrade merely to install this one package.
 
 Use an interactive browser enrollment for the server rather than a reusable token in chat or shell history. Treat the enrollment URL as session material and do not commit it. Record successful enrollment without copying the daemon's `/var/lib/tailscale` state into either repository. On the administration computer, select the documented package source for its actual Linux distribution rather than using the server's Ubuntu repository.
 
-Assign the VPS a server identity such as `tag:haven`. Personal computers and phones retain user identities. Record the server's node-key expiry setting explicitly: tagged devices disable expiry by default. Revocation/re-enrollment after a lost or replaced device still needs an operating procedure.
+Assign the VPS a server identity such as `tag:haven` after the policy permits its owner to apply that tag. Personal computers and phones retain user identities. On the verified 1.104.4 server, use `tailscale up` with the full existing preference set:
+
+[source,sh]
+----
+sudo tailscale up --advertise-tags=tag:haven --ssh=false \
+  --accept-routes=false --accept-dns=false --hostname=haven-vps --timeout=10s
+----
+
+`tailscale set --advertise-tags=...` was rejected by this installed version before changing settings; `up` supports the flag. After the owner saved the policy, private SSH was unavailable until the permitted tag was assigned. The retained public SSH route allowed that transition.
+
+Record the actual server node-key expiry. Initial authentication as a tagged server disables expiry by default, but changing tags on an already authenticated user-owned device does not necessarily change its existing expiry. The inspected node retained an expiration date, which was left unchanged and recorded privately. Revocation/re-enrollment after a lost or replaced device still needs an operating procedure.
 
 Do not enable an exit node, subnet routing, Funnel or Tailscale SSH as part of this step. The required application path is the owner's device to TCP 22 on this server.
 
@@ -44,7 +54,7 @@ Do not enable an exit node, subnet routing, Funnel or Tailscale SSH as part of t
 
 New tailnets can start with a broad allow-all policy. Review the full policy, remove unneeded broad rules, and grant the owner's identity only the intended access. Grants add permissions; a narrow rule does not override a broad rule elsewhere.
 
-The following is a synthetic policy design, not an applied or server-validated file. Substitute the real owner only in the private instance, validate the complete policy in the admin console and add positive/negative policy tests before activation:
+The following is a synthetic example matching the verified policy structure. Substitute the real owner only in the private instance and validate the complete policy, including positive/negative tests, in the admin console before activation:
 
 [source,json]
 ----
@@ -58,17 +68,29 @@ The following is a synthetic policy design, not an applied or server-validated f
       "ip": ["tcp:22"]
     }
   ],
-  "ssh": []
+  "ssh": [],
+  "tests": [
+    {
+      "src": "owner@example.com",
+      "proto": "tcp",
+      "accept": ["tag:haven:22"],
+      "deny": ["tag:haven:80", "tag:haven:443", "tag:haven:40123"]
+    }
+  ]
 }
 ----
 
-The network policy grants reachability, not a Unix login. OpenSSH must still verify the administrator's key and reject root/password login. Dashboard ports require separate grants when those services exist; the example does not expose them.
+The network policy grants reachability, not a Unix login. OpenSSH must still verify the administrator's key and reject root/password login. Dashboard ports require separate grants when those services exist; the example does not expose them. The instance copy was saved with policy tests according to the owner; actual private SSH and port-denial checks independently confirmed the selected live paths.
 
 Tailscale's default Linux netfilter mode manages its own firewall rules, accepts tailnet traffic and can evaluate rules ahead of UFW. Therefore an apparently restrictive UFW interface rule alone is not the tailnet authorization boundary. Inspect the selected iptables/nftables integration on the actual host and enforce allowed users/ports in the tailnet policy. Keep the supported default integration unless a concrete tested requirement calls for another mode.
+
+The inspected host's IPv4 and IPv6 `INPUT` chains jump to `ts-input` before the UFW chains. `ts-input` accepts `tailscale0` traffic and the Tailscale UDP transport. This ordering was read directly; tailnet access control was tested with a separate temporary listener rather than inferred from the UFW summary alone.
 
 == Cutover and recovery
 
 Keep public SSH working during enrollment and policy validation. Before cutover, create a *new* root-only snapshot of the current hardened configuration and UFW state. The older pre-hardening backup intentionally contains the original password-enabled configuration and is not the right automatic recovery target for this operation.
+
+A new verified backup of SSH/UFW, UFW defaults and daemon defaults is prepared on the inspected VPS. No Tailscale identity/runtime state was copied. Its root-only fallback script adds the public TCP 22 allowance without changing SSH authentication or disabling UFW. The timer is not armed and the public rule is not removed while owner-side recovery/mobile checks remain outstanding.
 
 Keep an existing SSH transport open, verify the private path in a fresh connection and arm a host-side timed fallback before removing the public TCP 22 rule for both IPv4/IPv6. The fallback should restore the previous public SSH allowance while retaining key-only authentication, root-login denial and the active firewall. It must not invoke the earlier pre-hardening rollback or disable the whole firewall.
 
@@ -85,7 +107,11 @@ If private access fails, use the retained public path, timed fallback or provide
 * After cutover, a fresh public SSH connection fails and a new private connection succeeds. Check IPv4 and IPv6 where connectivity permits, and document any untested path.
 * The timed public-access fallback is exercised and then cancelled after final checks. Service enablement/reconnection is verified; reboot recovery remains separately pending until tested.
 
-The private-access rollback and policy above remain planned. Installation is verified on the server only; research, service enablement and a valid documentation build do not establish successful enrollment or safe removal of public SSH.
+== Verified enrollment checkpoint
+
+Server version 1.104.4 and computer version 1.102.3 are connected; the phone is also reported online. Fresh administrator SSH connections use the established host-key identity and succeed over both private IPv4 and private IPv6. A temporary dual-stack TCP listener under the unprivileged service identity answered on loopback, while computer-to-server connections to that unallowed port timed out over both private address families. It served only a fixed marker and was stopped afterwards.
+
+These checks establish working private administration and the observed denial. A live unauthorized-user scenario has not been run; policy tests cover the declared deny cases. Mobile-data use and provider-console login still require owner confirmation. Public-SSH removal and the cutover fallback exercise remain pending; no complete private-access acceptance is claimed.
 
 == Sources
 

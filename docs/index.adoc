@@ -12,7 +12,7 @@ The local foundation is accepted through a fresh checkout: public sources, a pri
 * link:architecture.adoc[Architecture]: controller/executor boundaries, recovery and milestone scope.
 * link:h1-prerequisites.adoc[H1 prerequisites]: what must be selected and verified before live operation.
 * link:h1.3-first-access.adoc[VPS access and security]: administrator keys, service account, firewall and verified configuration rollback.
-* link:h1.3-private-access.adoc[Private administration plan]: Tailscale enrollment, access policy, guarded SSH cutover and acceptance.
+* link:h1.3-private-access.adoc[Tailscale private administration]: verified enrollment/private SSH, access policy and remaining guarded cutover.
 
 == Evidence and limits
 
