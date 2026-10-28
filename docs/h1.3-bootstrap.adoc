@@ -1,6 +1,6 @@
 = H1.3: Repeatable host bootstrap and restart
 
-Status on 2026-10-28: implementation and local checks prepared; live adoption, repeatability and restart acceptance are in progress. This guide covers an *already enrolled and manually secured* Ubuntu 26.04 host. It does not provision a provider account, install a fresh OS or deploy Hermes.
+Status on 2026-10-28: bounded adoption, repeatability, access-file restoration and controlled restart are verified on the existing pilot. This guide covers an *already enrolled and manually secured* Ubuntu 26.04 host. It does not provision a provider account, install a fresh OS or deploy Hermes.
 
 == Scope and prerequisites
 
@@ -25,7 +25,7 @@ export ANSIBLE_HOME="$PWD/build/ansible"
 .venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/bootstrap.yml --check
 ----
 
-The config enforces batch key authentication, strict host-key checking, no forwarding and no reused SSH transport. Check mode runs read-only preflight checks but skips snapshots, the rollback timer, firewall write commands and final live acceptance. It is a prediction, not evidence that a changed configuration works. Ansible still creates/removes transient module files while connecting. Avoid `--diff` and verbose logs when using a private inventory; retain any necessary output outside public sources.
+The config enforces batch key authentication, strict host-key checking, no forwarding and no reused SSH transport. Check mode runs read-only preflight checks and predicts account/file/service changes, but skips snapshots, the rollback timer, firewall write commands and final live acceptance. It does not fully predict UFW CLI drift or establish that a changed configuration works. Ansible still creates/removes transient module files while connecting. Avoid `--diff` and verbose logs when using a private inventory; retain any necessary output outside public sources.
 
 == Guarded application
 
@@ -69,6 +69,18 @@ Before reboot, complete the application/verification, confirm the rollback timer
 ----
 
 These explicit flags are operator acknowledgments, not a technical authorization boundary; invoke them only within owner-authorized maintenance. The playbook first verifies the private baseline, requests restart, waits for a changed boot ID and usable private SSH, and runs verification again. SSH authentication and host-key checks are unchanged. Inspect failed systemd units and repeat external public-denial/private-access checks after return. If private networking fails to return, use KVM and the narrow access-recovery procedure; no persistent timer opens public SSH during boot.
+
+== Verified result on the pilot
+
+The clean, pushed implementation revision `a026804ca7055374b5f1983901132483550de2dd` was used for live applications. Two consecutive applications each reported `ok=21 changed=0 unreachable=0 failed=0`. Each created its documented operational snapshot/guard, accepted a fresh private connection and stopped the guard after success.
+
+A separate guarded restoration rehearsal added only an SSH comment, validated syntax and started the same rollback service. It returned `Result=success`, `ExecMainStatus=0`; the original SSH snippet and UFW/defaults contents matched their snapshot afterwards. Snapshot ownership/modes were checked independently. The rehearsal timer was stopped. Timer expiry during a real connection loss was not simulated.
+
+To test the configuration-write path as well, a second harmless comment was added and bootstrap run again. It restored the maintained snippet, passed template validation, reloaded SSH and accepted a fresh connection: `ok=22 changed=2 unreachable=0 failed=0`. The two changes were the file and its reload handler. The guard was stopped before reboot.
+
+The explicitly authorized reboot completed with a changed boot ID and `ok=8 changed=1 unreachable=0 failed=0`. Socket-activated SSH, Tailscale and UFW returned automatically, with no failed systemd units. Before/after comparisons confirmed identical package names/versions, administrator authorized keys, public SSH host-key identity and Tailscale node identity. No VPS package updates were performed. A conservative initial process-name check had stopped on the standard idle unattended-upgrades shutdown helper; it was distinguished from package maintenance and actual lock availability checked before proceeding. Existing update services were not changed.
+
+After reboot, new private IPv4/IPv6 SSH passed, root/password-only attempts were rejected, public IPv4 TCP 22 timed out, and the unallowed temporary listener timed out over both private address families while responding locally. The probe was stopped. A final post-reboot check-mode run reported `ok=12 changed=0 unreachable=0 failed=0`. Public IPv6 remained untestable from the inspection computer; its actual host rules allow SSH only on `tailscale0`.
 
 == Acceptance and remaining limits
 

@@ -1,6 +1,6 @@
 = H1.3: VPS access and security
 
-Status on 2026-10-28: administrator key access, a root-only configuration backup, the restricted service account, key-only SSH and UFW were applied and verified on Ubuntu 26.04 LTS x86_64. A live rollback restored the original SSH/UFW configuration; the security settings were then reapplied and checked again. Hermes compatibility, private networking, reboot recovery and deployment remain unverified.
+Status on 2026-10-28: administrator key access, a root-only configuration backup, the restricted service account, key-only SSH and UFW were applied and verified on Ubuntu 26.04 LTS x86_64. A live rollback restored the original SSH/UFW configuration; the security settings were then reapplied and checked again. Subsequent link:h1.3-private-access.adoc[private administration] and link:h1.3-bootstrap.adoc[bounded automation and restart] are verified separately. Hermes compatibility and application deployment remain unverified.
 
 Actual host addresses, fingerprints, package versions and inspection results belong in the instance's private runbook. Public examples below use a synthetic hostname. Keep passwords, private keys and SSH-agent state outside both repositories.
 
@@ -290,7 +290,7 @@ Keep OVH account recovery material and an encrypted offline backup or an indepen
 
 == Remaining host preparation
 
-Refresh package metadata, review the upgrade simulation and apply compatible package updates under the owner's change policy. Handle the required reboot as a separate controlled step and verify reconnection afterwards. These actions were not performed as part of the security baseline above.
+Refresh package metadata, review the upgrade simulation and apply compatible package updates under the owner's change policy. Handle the required reboot as a separate controlled step and verify reconnection afterwards. These actions were not performed as part of the security baseline above. For this pilot, the owner explicitly deferred OS upgrades to the later Security/Worker use case; the subsequent controlled restart was accepted separately in link:h1.3-bootstrap.adoc[bootstrap verification].
 
 Record any changed file and its recovery command privately. Keep the provider recovery console available. Do not change the SSH port, remove existing authorized keys, enable root access or reboot merely as part of testing the first connection.
 
@@ -300,6 +300,6 @@ link:h1.3-private-access.adoc[Tailscale private administration] needs a separate
 
 The initial access check and subsequent manual security procedure used public source revision `e2f3ce22596ace80b6bdbf92b21fdfcfb5ce13f5` as documentation context; no Haven application release was deployed. Independent SSH checks succeeded with a loaded administrator key and strict host-key checking. The private instance still tracked foundation revision `531e8c2bc2c211036b37f23340be76470739fc87`; no deployed application/configuration pairing is claimed.
 
-The manual security baseline, service-account restrictions and tested access rollback are complete. To finish H1.3, establish private administrative access, handle updates/reboot, and verify a repeatable bootstrap that preserves access. Record the exact deployed automation revision when that exists. These manual checks do not establish an idempotent deployment tool.
+The manual security baseline, service-account restrictions and tested access rollback are complete. Subsequent private administration and link:h1.3-bootstrap.adoc[bounded host automation and restart] complete H1.3 acceptance for the existing pilot; a clean-OS installation remains untested. The owner deferred OS upgrades to the later Security/Worker use case. These manual checks alone do not establish automation; the linked guide records its exact implementation revision and live acceptance.
 
 Sources consulted on 2026-10-28: https://docs.ovhcloud.com/en/guides/bare-metal-cloud/virtual-private-servers/starting-with-a-vps[OVH initial VPS access], https://ubuntu.com/server/docs/how-to/security/openssh-server/[Ubuntu OpenSSH], https://ubuntu.com/server/docs/firewalls/[Ubuntu firewall], https://www.freedesktop.org/software/systemd/man/latest/systemd-run.html[systemd-run] and https://docs.cloud-init.io/en/latest/explanation/return_codes.html[cloud-init return codes]. Context7 had exhausted its monthly quota, so official documentation was used instead; the rollback timer/service was exercised on the installed systemd 259.

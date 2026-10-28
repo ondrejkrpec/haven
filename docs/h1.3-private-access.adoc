@@ -1,6 +1,6 @@
 = H1.3: Private administration with Tailscale
 
-Status on 2026-10-28: private administration is verified. The VPS, computer and phone are enrolled; restricted policy and `tag:haven` permit key-based OpenSSH over private IPv4/IPv6. Public SSH allowances were removed for both address families, a fresh public IPv4 connection timed out, and private connections passed. The owner confirmed console login and phone connectivity over mobile data. The narrow fallback was exercised before reapplying the final configuration. Reboot recovery remains untested; public IPv6 could not be tested from the inspection computer.
+Status on 2026-10-28: private administration is verified. The VPS, computer and phone are enrolled; restricted policy and `tag:haven` permit key-based OpenSSH over private IPv4/IPv6. Public SSH allowances were removed for both address families, a fresh public IPv4 connection timed out, and private connections passed. The owner confirmed console login and phone connectivity over mobile data. The narrow fallback was exercised before reapplying the final configuration. A subsequent link:h1.3-bootstrap.adoc[controlled restart] verified automatic return of private access; public IPv6 could not be tested from the inspection computer.
 
 == Intended result
 
@@ -131,7 +131,7 @@ After final success, stop `haven-tailscale-cutover-rollback.timer`, confirm it i
 * The phone connects from a different network, preferably mobile data. If terminal administration is required, separately verify its SSH client/key; a Tailscale connection alone does not establish an SSH login.
 * A controlled listener confirms an unallowed tailnet port is denied even though the service answers locally. Verify policy denial for an unauthorized source using policy tests and an available independent test identity/device; record any unperformed live scenario.
 * After cutover, a fresh public SSH connection fails and a new private connection succeeds. Check IPv4 and IPv6 where connectivity permits, and document any untested path.
-* The timed public-access fallback is exercised and then cancelled after final checks. Service enablement/reconnection is verified; reboot recovery remains separately pending until tested.
+* The timed public-access fallback is exercised and then cancelled after final checks. Service enablement/reconnection and a separate controlled reboot are verified; see link:h1.3-bootstrap.adoc[bootstrap acceptance].
 
 == Verified private administration
 
@@ -156,7 +156,7 @@ Host haven
 
 Back up the existing client configuration, validate it with `ssh -G haven` and test a fresh connection. The instance's alias was verified after cutover; private values remain outside these public examples.
 
-These checks accept the private-administration step with recorded limits. A live unauthorized-user scenario has not been run; policy tests cover the declared deny cases. Live public IPv6 was unavailable from the inspection computer, although its host rules were verified and private IPv6 SSH passed. Reboot recovery, future key-expiry handling and the remaining H1 services are separate work.
+These checks accept the private-administration step with recorded limits. A live unauthorized-user scenario has not been run; policy tests cover the declared deny cases. Live public IPv6 was unavailable from the inspection computer, although its host rules were verified and private IPv6 SSH passed. The subsequent link:h1.3-bootstrap.adoc[bootstrap/restart acceptance] verifies return after reboot. Future key-expiry handling and the remaining H1 services are separate work.
 
 == Sources
 

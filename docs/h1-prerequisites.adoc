@@ -1,6 +1,6 @@
 = H1 prerequisites and acceptance
 
-H1 is in progress: publication is accepted, and link:h1.3-first-access.adoc[administrator key access, the manual security baseline and configuration rollback] were verified on Ubuntu 26.04 LTS on 2026-10-28. link:h1.3-private-access.adoc[Tailscale private IPv4/IPv6 SSH, public-SSH cutover and narrow access fallback] are verified; updates/reboot, automated bootstrap and application deployment remain pending. These are decisions and acceptance checks, not a complete installation procedure. link:../research/h0.1/README.adoc[H0.1 evidence] comes from local Manjaro tests with synthetic providers; it does not establish live model-account or WhatsApp behavior.
+H1 is in progress: publication is accepted, and link:h1.3-first-access.adoc[administrator key access, the manual security baseline and configuration rollback] were verified on Ubuntu 26.04 LTS on 2026-10-28. link:h1.3-private-access.adoc[Tailscale private IPv4/IPv6 SSH, public-SSH cutover and narrow access fallback] are verified. link:h1.3-bootstrap.adoc[Bounded Ansible adoption, repeatability, access-file restoration and a controlled restart] are also verified for the existing pilot. OS updates remain owner-deferred; application deployment is pending. These are decisions and acceptance checks, not a complete installation procedure. link:../research/h0.1/README.adoc[H0.1 evidence] comes from local Manjaro tests with synthetic providers; it does not establish live model-account or WhatsApp behavior.
 
 == H0 handoff
 
@@ -29,6 +29,6 @@ Before reproducible deployment, establish the intended public-source revision an
 |Documentation |Record the actually verified setup, interactive steps and recovery procedure without credentials, QR codes or session data.
 |===
 
-Tailscale, Ansible, SOPS with age and restic remain proposed implementation choices. H0.3 only checks credential-reference syntax; it does not implement encrypted storage or runtime authorization.
+Tailscale private administration and the bounded Ansible host playbooks are implemented and verified for the pilot. SOPS with age and restic remain proposed implementation choices. H0.3 only checks credential-reference syntax; it does not implement encrypted storage or runtime authorization.
 
 The production controller/executor adapter belongs to H2. Deployment authorization and automatic rollback for the bounded demonstration target belong to H3. Passing foundation CI does not establish these runtime properties.

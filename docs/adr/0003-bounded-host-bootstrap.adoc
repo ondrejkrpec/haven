@@ -1,6 +1,6 @@
 = ADR 0003: Adopt the secured host with bounded Ansible playbooks
 
-Date: 2026-10-28. Status: implementation prepared; live adoption and restart acceptance in progress.
+Date: 2026-10-28. Status: accepted for the existing pilot; live adoption, restoration, repeatability and restart verified.
 
 == Context
 
