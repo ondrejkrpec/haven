@@ -1,6 +1,6 @@
 = H1.3: Private administration with Tailscale
 
-Status on 2026-10-28: the VPS, administration computer and phone are enrolled in the owner's tailnet. The owner confirmed saving the restricted policy, the server has `tag:haven`, and new OpenSSH connections over private IPv4/IPv6 pass. A locally working test port is blocked over both private address families. Public SSH remains available pending the mobile-data and provider-console checks; cutover is not accepted yet. link:h1.3-first-access.adoc[Administrator SSH and the manual security baseline] remain verified.
+Status on 2026-10-28: private administration is verified. The VPS, computer and phone are enrolled; restricted policy and `tag:haven` permit key-based OpenSSH over private IPv4/IPv6. Public SSH allowances were removed for both address families, a fresh public IPv4 connection timed out, and private connections passed. The owner confirmed console login and phone connectivity over mobile data. The narrow fallback was exercised before reapplying the final configuration. Reboot recovery remains untested; public IPv6 could not be tested from the inspection computer.
 
 == Intended result
 
@@ -90,13 +90,39 @@ The inspected host's IPv4 and IPv6 `INPUT` chains jump to `ts-input` before the 
 
 Keep public SSH working during enrollment and policy validation. Before cutover, create a *new* root-only snapshot of the current hardened configuration and UFW state. The older pre-hardening backup intentionally contains the original password-enabled configuration and is not the right automatic recovery target for this operation.
 
-A new verified backup of SSH/UFW, UFW defaults and daemon defaults is prepared on the inspected VPS. No Tailscale identity/runtime state was copied. Its root-only fallback script adds the public TCP 22 allowance without changing SSH authentication or disabling UFW. The timer is not armed and the public rule is not removed while owner-side recovery/mobile checks remain outstanding.
+A new verified backup of SSH/UFW, UFW defaults and daemon defaults was created on the inspected VPS. No Tailscale identity/runtime state was copied. Its root-only fallback script adds the public TCP 22 allowance without changing SSH authentication or disabling UFW. The owner confirmed both outstanding console/mobile checks before the timer was armed or public rules removed.
 
 Keep an existing SSH transport open, verify the private path in a fresh connection and arm a host-side timed fallback before removing the public TCP 22 rule for both IPv4/IPv6. The fallback should restore the previous public SSH allowance while retaining key-only authentication, root-login denial and the active firewall. It must not invoke the earlier pre-hardening rollback or disable the whole firewall.
 
-Retain any interface-specific SSH allowance required by the inspected firewall backend. Validate actual packet filtering rather than relying solely on the UFW summary. Make the cutover only after the computer and phone are enrolled, policy tests pass and the provider-console recovery route is verified.
+The executed fallback script used the following structure, saved under a new root-only backup directory with mode `0700`. The example path is synthetic; use the actual installation's backup path:
 
-If private access fails, use the retained public path, timed fallback or provider console. Recover public reachability before stopping or reconfiguring Tailscale. Once final checks pass, stop the fallback timer and retain the recovery procedure without credentials in the private runbook.
+[source,sh]
+----
+#!/bin/sh
+set -eu
+umask 077
+/usr/sbin/ufw allow 22/tcp
+/usr/bin/date -u +%FT%TZ > /root/haven-private-access-backup/PUBLIC_ACCESS_RESTORED.txt
+----
+
+After checking the script syntax, the guarded cutover used:
+
+[source,sh]
+----
+sudo systemd-run --unit=haven-tailscale-cutover-rollback --on-active=15m \
+  --timer-property=AccuracySec=1s --property=Type=oneshot \
+  /bin/sh /root/haven-private-access-backup/restore-public-ssh.sh
+sudo systemctl is-active haven-tailscale-cutover-rollback.timer
+sudo ufw allow in on tailscale0 to any port 22 proto tcp
+sudo ufw --force delete allow 22/tcp
+sudo ufw status verbose
+----
+
+The explicit UFW allowance is TCP 22 on `tailscale0` for IPv4/IPv6. Tailscale's own early rules and the tailnet policy remain part of the filtering path. Validate actual packet filtering rather than relying solely on the UFW summary. Make the cutover only after the computer and phone are enrolled, policy tests pass and the provider-console recovery route is verified.
+
+If private access fails, use the retained public transport, timed fallback or provider console. Recover public reachability before stopping or reconfiguring Tailscale. In the exercised rehearsal, `systemctl start haven-tailscale-cutover-rollback.service` returned success, a fresh public key-based login worked, and key-only/root-denied SSH plus active UFW were preserved. The timer was restarted and public SSH removed again, followed by repeated private/public checks.
+
+After final success, stop `haven-tailscale-cutover-rollback.timer`, confirm it is inactive, and close the maintenance transport. This was completed on the inspected host; a root-only receipt records the final checks. The recovery script remains available without an armed timer.
 
 == Acceptance
 
@@ -107,11 +133,30 @@ If private access fails, use the retained public path, timed fallback or provide
 * After cutover, a fresh public SSH connection fails and a new private connection succeeds. Check IPv4 and IPv6 where connectivity permits, and document any untested path.
 * The timed public-access fallback is exercised and then cancelled after final checks. Service enablement/reconnection is verified; reboot recovery remains separately pending until tested.
 
-== Verified enrollment checkpoint
+== Verified private administration
 
 Server version 1.104.4 and computer version 1.102.3 are connected; the phone is also reported online. Fresh administrator SSH connections use the established host-key identity and succeed over both private IPv4 and private IPv6. A temporary dual-stack TCP listener under the unprivileged service identity answered on loopback, while computer-to-server connections to that unallowed port timed out over both private address families. It served only a fixed marker and was stopped afterwards.
 
-These checks establish working private administration and the observed denial. A live unauthorized-user scenario has not been run; policy tests cover the declared deny cases. Mobile-data use and provider-console login still require owner confirmation. Public-SSH removal and the cutover fallback exercise remain pending; no complete private-access acceptance is claimed.
+The owner confirmed provider-console login and phone connectivity with Wi-Fi disabled. Fresh private SSH connections passed over both address families after each cutover; root and password-only SSH attempts were rejected. The public IPv4 TCP 22 connection timed out after final closure. UFW and its IPv6 user rules were checked to retain only the `tailscale0` SSH allowances. The original maintenance transport was closed after stopping the fallback timer, and a further fresh private connection succeeded.
+
+An optional local OpenSSH alias can make the new path convenient while preserving the established host-key identity. This example must be adapted to the installation's actual private address and previously trusted host name; do not overwrite existing host definitions:
+
+[source,text]
+----
+Host haven
+    HostName 100.101.102.103
+    User ubuntu
+    IdentityFile ~/.ssh/haven-admin
+    IdentitiesOnly yes
+    HostKeyAlias vps.example.invalid
+    StrictHostKeyChecking yes
+    UpdateHostKeys no
+    ForwardAgent no
+----
+
+Back up the existing client configuration, validate it with `ssh -G haven` and test a fresh connection. The instance's alias was verified after cutover; private values remain outside these public examples.
+
+These checks accept the private-administration step with recorded limits. A live unauthorized-user scenario has not been run; policy tests cover the declared deny cases. Live public IPv6 was unavailable from the inspection computer, although its host rules were verified and private IPv6 SSH passed. Reboot recovery, future key-expiry handling and the remaining H1 services are separate work.
 
 == Sources
 
