@@ -11,6 +11,7 @@ The local foundation is accepted through a fresh checkout: public sources, a pri
 * link:documentation.adoc[Documentation and checks]: build this site and run the public checks.
 * link:architecture.adoc[Architecture]: controller/executor boundaries, recovery and milestone scope.
 * link:h1-prerequisites.adoc[H1 prerequisites]: what must be selected and verified before live operation.
+* link:h1.3-first-access.adoc[VPS access and security]: administrator keys, service account, firewall and verified configuration rollback.
 
 == Evidence and limits
 

@@ -2,6 +2,7 @@
 * Getting started
 ** xref:local-development.adoc[Local development]
 ** xref:configuration.adoc[Configuration v1]
+** xref:h1.3-first-access.adoc[VPS access and security]
 ** xref:documentation.adoc[Documentation and checks]
 * Architecture
 ** xref:architecture.adoc[System boundaries]
