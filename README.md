@@ -43,6 +43,8 @@ Enable the documented local push pipeline with `git config --local core.hooksPat
 
 See [H0.5 acceptance](docs/h0.5-acceptance.adoc) for the clean-checkout result. Next: [H1 prerequisites](docs/h1-prerequisites.adoc), infrastructure choices and live deployment.
 
+[H1.3 first access and security](docs/h1.3-first-access.adoc) records verified key-only SSH, a restricted service account, UFW and a tested configuration rollback on Ubuntu 26.04 LTS. Private networking, updates/reboot and application deployment remain pending.
+
 ## Publication and licensing
 
 Haven's original source, documentation and template use the [MIT License](LICENSE), selected by the owner. Copied Hermes material retains its [upstream MIT notice](research/h0.1/UPSTREAM-LICENSE), attribution and patch author metadata. The public repository is [ondrejkrpec/haven](https://github.com/ondrejkrpec/haven), with a separate private instance repository; [H1.1 publication](docs/h1.1-publication.adoc) records the current migration status.

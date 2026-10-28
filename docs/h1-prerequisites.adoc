@@ -1,6 +1,6 @@
 = H1 prerequisites and acceptance
 
-H1 is planned work. These are decisions and acceptance checks, not an installation procedure. link:../research/h0.1/README.adoc[H0.1 evidence] comes from local Manjaro tests with synthetic providers; it does not establish live Ubuntu, account or WhatsApp behavior.
+H1 is in progress: publication is accepted, and link:h1.3-first-access.adoc[administrator key access, the manual security baseline and configuration rollback] were verified on Ubuntu 26.04 LTS on 2026-10-28. Updates/reboot, private access, automated bootstrap and application deployment remain pending. These are decisions and acceptance checks, not a complete installation procedure. link:../research/h0.1/README.adoc[H0.1 evidence] comes from local Manjaro tests with synthetic providers; it does not establish live model-account or WhatsApp behavior.
 
 == H0 handoff
 
@@ -10,7 +10,7 @@ Before reproducible deployment, establish the intended public-source revision an
 
 == Owner choices before provisioning
 
-* Select a VPS and region within the agreed infrastructure budget. Ubuntu Server 24.04 LTS is the current proposal; verify resources and supported versions before provisioning.
+* Select a VPS and region within the agreed infrastructure budget. The first delivered host runs Ubuntu 26.04 LTS rather than the earlier 24.04 proposal. Initial SSH is verified; broader Hermes/runtime compatibility and the actual billing region still require verification.
 * Select an off-site backup destination, retention policy and recovery-key storage. Git does not back up sessions or databases.
 * Arrange a separate WhatsApp number and choose the initial transport. The bridge is the current proposal; account pairing and allowlisting require interactive steps.
 * Select actual model identifiers and confirm authentication eligibility. The public model and hostname are placeholders. A Codex subscription is not proof that every Hermes integration is supported.
