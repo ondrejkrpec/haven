@@ -1,6 +1,6 @@
 = H1 prerequisites and acceptance
 
-H1 is in progress: publication is accepted, and link:h1.3-first-access.adoc[administrator key access, the manual security baseline and configuration rollback] were verified on Ubuntu 26.04 LTS on 2026-10-28. Updates/reboot, private access, automated bootstrap and application deployment remain pending. These are decisions and acceptance checks, not a complete installation procedure. link:../research/h0.1/README.adoc[H0.1 evidence] comes from local Manjaro tests with synthetic providers; it does not establish live model-account or WhatsApp behavior.
+H1 is in progress: publication is accepted, and link:h1.3-first-access.adoc[administrator key access, the manual security baseline and configuration rollback] were verified on Ubuntu 26.04 LTS on 2026-10-28. link:h1.3-private-access.adoc[Tailscale private IPv4/IPv6 SSH, public-SSH cutover and narrow access fallback] are verified; updates/reboot, automated bootstrap and application deployment remain pending. These are decisions and acceptance checks, not a complete installation procedure. link:../research/h0.1/README.adoc[H0.1 evidence] comes from local Manjaro tests with synthetic providers; it does not establish live model-account or WhatsApp behavior.
 
 == H0 handoff
 
