@@ -83,6 +83,7 @@
             label: "{{ item.item.key }}"
 
         - name: Stage the attributed upstream patch
+          become: true
           become_user: root
           ansible.builtin.copy:
             src: ../research/h0.1/patches/upstream-117820.patch
@@ -139,6 +140,7 @@
           check_mode: false
 
         - name: Build the core Python runtime through upstream PM and its frozen lock
+          become: true
           become_user: root
           ansible.builtin.command:
             argv:
