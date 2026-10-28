@@ -1,6 +1,6 @@
 = Configuration v1
 
-H0.3 implements versioned YAML input validation. The contract is link:../schemas/instance-v1.schema.json[JSON Schema draft 2020-12] with Haven format checks. Passing validation establishes syntax and configuration consistency. H1 must implement translation to the pinned Hermes version and verify actual accounts, model availability and host access before deployment.
+H0.3 implements versioned YAML input validation. The contract is link:../schemas/instance-v1.schema.json[JSON Schema draft 2020-12] with Haven format checks. Passing validation establishes syntax and configuration consistency. link:h1.4-model-configuration.adoc[H1.4] implements a separate bounded translation for the pinned Hermes subscription provider and records live account/model verification. Validation alone does not establish deployment readiness or support for other providers.
 
 link:adr/0001-configuration-validation.adoc[ADR 0001] records the rationale and consequences.
 

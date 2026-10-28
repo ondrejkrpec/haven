@@ -1,0 +1,119 @@
+= H1.4: Native configuration, subscription login and first model request
+
+Status on 2026-10-28: explicit configuration rendering, a separate service-owned browser login, live model discovery and one native Hermes request are verified on the pilot. Missing, malformed and empty credential stores were rejected without exposing their contents; the original session was restored afterwards. A final preparation run passed without changes. No persistent Hermes service is installed by this step.
+
+== Prerequisites and scope
+
+Complete link:h1.3-bootstrap.adoc[the accepted host baseline] and keep working private SSH/provider-console access. Use the documented controller tools and an explicit private `ops/inventory.yml`. H1.4 remains bounded to the `haven` identity on the existing Ubuntu 26.04 pilot. It does not automate a clean operating-system installation.
+
+The runtime is the exact link:../research/h0.1/README.adoc[H0.1 candidate]: Hermes v0.22.5, base commit `bf0203a794a07aac3ff764972ab9087baa4e4f4e`, plus the retained attributed recovery patch. The preparation playbook verifies the release commit, dependency/source hashes, the two patched files and the set of tracked changes before running PM. It builds only the core Python environment through upstream PM and the frozen lock, not raw pip or uv. Python 3.14.9 and the dependencies live under the service account; no APT transaction, OS upgrade or reboot is part of this operation.
+
+Source and runtime paths are fixed for this first candidate:
+
+* Source/environment: `/var/lib/haven/releases/hermes-bf0203a-785f2646` and its `venv`.
+* Native profile: `/var/lib/haven/.hermes`, mode `0700`, owned by `haven`.
+* Public probe code: `/var/lib/haven/haven-tools/scripts`, also under the service identity.
+
+The release remains writable by that trusted service identity. This does not isolate a coding executor: future lower-trust workers must use separate identities/sandboxes and cannot share its source, home, OAuth session or administrator key. H2 remains responsible for that boundary.
+
+== Render the intended private configuration
+
+Set real instance/model values in the private `config/instance.yaml`; do not edit public examples for an installation. This renderer initially supports only explicit `openai-codex` subscription authentication. A concrete `gpt-*` identifier is required, but syntax is not proof that the account can use it. Discover and test the intended model after login. No paid API fallback or credit purchase is configured.
+
+[cols="1,3",options="header"]
+|===
+|Haven input |Native behavior
+|`model.provider`, `model.name` |Explicit subscription route, model and Codex backend URL; default native Hermes transport selected with `model.openai_runtime: auto`.
+|`instance.timezone` |Native `timezone`.
+|`instance.name`, `host.*` |Deployment metadata; not invented Hermes YAML fields. This playbook requires `host.service_user: haven`.
+|`model.credential_ref` |Rejected for this subscription path. Generic reference validation still exists, but runtime API-provider support is not implemented here.
+|`whatsapp.enabled` |Must remain false; WhatsApp runtime translation belongs to H1.6.
+|===
+
+The generated H1.4 profile has no CLI/WhatsApp tools or provider fallback, no external-login adoption, no memory/background title generation and a bounded turn/time budget. This is a first-request profile, not the final coordinator configuration. H1.5 must review its capabilities before starting a persistent service.
+
+From the public checkout, explicitly render the instance to a fresh private temporary file:
+
+[source,sh]
+----
+umask 077
+haven_render_dir=$(mktemp -d)
+.venv/bin/python -m scripts.render_model ../haven-private/config/instance.yaml \
+  --output "$haven_render_dir/config.yaml"
+export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/model-prepare.yml
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/model-configure.yml \
+  -e "haven_model_config=$haven_render_dir/config.yaml"
+----
+
+Rendering applies the existing validator/defaults/explicit overrides and never resolves credentials. It creates mode-`0600` output exclusively and refuses an existing file or symlink. Configuration installation takes the native file explicitly, protects its output and refuses a different existing file. After reviewing an intentional change, `-e haven_replace_model_config=true` permits replacement with a protected on-host backup. Never use that flag merely to suppress a mismatch: the login CLI can legitimately rewrite YAML formatting/metadata while retaining policy.
+
+The generated YAML contains no secret values and need not be committed; version the Haven inputs and their public source revision instead. The profile's `auth.json`, lock files, caches and databases remain runtime state outside both repositories.
+
+== Complete an independent browser login
+
+The pilot uses Hermes's own browser authorization-code/PKCE flow. OpenAI's first-party login documentation describes subscription access, device-code/headless options and loopback forwarding; it does not establish third-party compatibility by itself. Compatibility with this exact native Hermes provider is established only by the live result below.
+
+Create the private SSH alias described in link:h1.3-private-access.adoc[private administration]. In one controller terminal, forward only the loopback callback:
+
+[source,sh]
+----
+ssh -N -T -o ExitOnForwardFailure=yes -o ClearAllForwardings=no \
+  -L 127.0.0.1:1455:127.0.0.1:1455 haven-example
+----
+
+In another terminal, connect to the VPS and start the login under the service account:
+
+[source,sh]
+----
+ssh haven-example
+sudo -H -u haven /bin/sh
+cd /var/lib/haven
+umask 077
+env -i PATH=/usr/bin:/bin \
+  HERMES_HOME=/var/lib/haven/.hermes \
+  HERMES_RUNTIME_DIR=/var/lib/haven/.hermes/tools \
+  /var/lib/haven/releases/hermes-bf0203a-785f2646/venv/bin/hermes \
+  auth add openai-codex --browser --no-browser --timeout 900 --label haven
+----
+
+Open the printed link in a browser *on that controller*, choose the intended personal account and complete consent. The callback URL is fixed at `localhost:1455`; opening it on a phone would point at the phone instead of the SSH tunnel. The owner performs account login/MFA. No extra public listener or firewall allowance is required.
+
+Do not paste passwords, tokens or the returned callback URL into chat. Treat the temporary authorize URL as session material too: do not put it in Git, screenshots, runbooks or saved command logs. Do not copy the workstation's Codex cache. The service receives its own grant in its protected `auth.json`; check ownership/mode `haven:haven 0600` without displaying contents. Stop the SSH tunnel after login completes.
+
+== Check credentials and make the bounded request
+
+In the service shell, run the probe from its package root with the prepared interpreter:
+
+[source,sh]
+----
+cd /var/lib/haven/haven-tools
+env -i PATH=/usr/bin:/bin \
+  HERMES_HOME=/var/lib/haven/.hermes \
+  HERMES_RUNTIME_DIR=/var/lib/haven/.hermes/tools \
+  /var/lib/haven/releases/hermes-bf0203a-785f2646/venv/bin/python \
+  -m scripts.model_probe check-auth \
+  --source /var/lib/haven/releases/hermes-bf0203a-785f2646 \
+  --home /var/lib/haven/.hermes
+----
+
+Use the same command with `catalog` to inspect the backend's visible model identifiers and with `query` for one real request. `check-auth` is a read-only local session/route check; the real request establishes provider acceptance. A query can consume the account's included quota. No live API request is made by the public pipeline.
+
+The probe requires the service identity, private profile/config/auth file metadata, accepted source/patch and explicit native route. It delegates OAuth resolution/refresh to Hermes, builds its native `AIAgent`, and checks zero tools, zero fallback entries and `codex_responses` before sending a fixed harmless prompt. Context files, memory and background review are skipped; trajectory saving is disabled. Only the expected fixed reply establishes success.
+
+It prints a small JSON result or a fixed failure code. Captured upstream output, raw exceptions, provider bodies and credentials are not echoed. `credentials_missing`, `credentials_invalid` and `credentials_unavailable` mean a login/store problem; `private_file_permissions` requires correcting metadata under the service identity. HTTP errors that escape the native call retain distinct authentication, quota/rate-limit and model-request categories. Other native failures remain a bounded generic diagnostic, not a promise to classify every backend failure payload.
+
+Do not revoke a real grant merely to test error handling. A maintenance test can temporarily hold the original auth file *inside the protected profile*, substitute synthetic fixtures and restore the original in a `finally` block while no other client/service uses it. Keep all fixtures and restoration material outside Git. The pilot exercised missing, malformed and empty stores this way; no real account token was revoked.
+
+== Verified result and remaining work
+
+The owner completed a separate browser login; the client reported a new OAuth credential. Live backend discovery listed `gpt-6.1-sol`, and the intended request passed through native Hermes with `tools=0`, `fallbacks=0`, transport `codex_responses`. Negative store tests returned their fixed codes without the synthetic secret marker; the original auth inode/timestamp/size were retained and a local session check passed after restoration. The callback tunnel was closed.
+
+The final preparation recap was `ok=15 changed=0 failed=0`, with two already-applied patch tasks skipped. Configuration installation had passed with `ok=8 changed=3 failed=0`. Final inspection confirmed profile `0700`, config/auth `0600`, service ownership, no held fixture or callback listener, no failed system units and the existing private-only SSH firewall. The OS package/version digest matched the pre-H1.4 receipt. Public behavior checks cover rendering, policy rejection, safe credential diagnostics and native-agent call boundaries; they do not consume account quota.
+
+This verifies one model request and the selected credential/configuration boundaries. It does not establish quota recovery, real token revocation/refresh, unrestricted tool use, WhatsApp or a restart-safe Hermes service. H1.5 will add supervision and recovery; H1.6 introduces messaging. Host updates remain deferred to the owner's Security/Worker use case. Code and instance publication must follow exact-revision checks, PR merge and completed-branch cleanup.
+
+== Sources
+
+Context7's monthly quota was exhausted. Exact upstream https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/hermes_cli/auth_codex_browser.py[browser login], https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/hermes_cli/auth_codex.py[OAuth resolution], https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/configuring-models.md[model configuration] and https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/pm/AGENTS.md[PM ownership] were inspected. See official OpenAI https://learn.chatgpt.com/docs/auth[authentication] and https://learn.chatgpt.com/docs/app-server#auth-endpoints[app-server auth scope]; app-server login is a different integration from the native provider tested here.

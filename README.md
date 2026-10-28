@@ -2,7 +2,7 @@
 
 Haven is a personal agent system built around Hermes, with WhatsApp as its planned phone interface. The first deployment will use one Ubuntu VPS and bounded automation, with separate worker and reviewer roles.
 
-**Status: H0 local foundation accepted through a clean checkout.** Configuration v1, documentation and public checks are available. Deployment, authenticated Codex use and WhatsApp pairing remain untested; GitHub repositories are published; automatic local pre-push checks replace unavailable GitHub Actions.
+**Status: H1.4 verified on the existing Ubuntu pilot.** Private administration, repeatable host adoption, native configuration and one authenticated Hermes model request work. A persistent service, recovery and WhatsApp remain next steps. GitHub repositories are published; automatic local pre-push checks replace unavailable GitHub Actions.
 
 ## Start locally
 
@@ -24,7 +24,7 @@ git -C ../haven-private init -b main
 cp ../haven-private/config/instance.yaml.example ../haven-private/config/instance.yaml
 ```
 
-Read the private README, edit your instance and follow [configuration setup and validation](docs/configuration.adoc). Validation requires Python 3.12+, system time-zone data and the hash-pinned dependencies in an isolated environment. It checks Haven inputs; translation to Hermes and deployment remain H1 work. The public checkout works independently of any private repository.
+Read the private README, edit your instance and follow [configuration setup and validation](docs/configuration.adoc). Validation requires Python 3.12+, system time-zone data and the hash-pinned dependencies in an isolated environment. It checks Haven inputs; the separate [H1.4 guide](docs/h1.4-model-configuration.adoc) covers the bounded subscription-provider renderer and live setup. The public checkout works independently of any private repository.
 
 Enable the documented local push pipeline with `git config --local core.hooksPath .githooks` after [tool setup](docs/documentation.adoc). It checks the clean commit being pushed; configure each new clone separately.
 
@@ -41,9 +41,9 @@ Enable the documented local push pipeline with `git config --local core.hooksPat
 | [Contributing](CONTRIBUTING.md) | Change and verification workflow |
 | [Agent instructions](AGENTS.md) | Rules for coding agents working in this repository |
 
-See [H0.5 acceptance](docs/h0.5-acceptance.adoc) for the clean-checkout result. Next: [H1 prerequisites](docs/h1-prerequisites.adoc), infrastructure choices and live deployment.
+See [H0.5 acceptance](docs/h0.5-acceptance.adoc) for the clean-checkout result and [H1 acceptance](docs/h1-prerequisites.adoc) for live progress and remaining work.
 
-[H1.3 first access and security](docs/h1.3-first-access.adoc) records verified key-only SSH, a restricted service account, UFW and a tested configuration rollback on Ubuntu 26.04 LTS. [Tailscale private administration](docs/h1.3-private-access.adoc) provides verified private IPv4/IPv6 SSH with public SSH allowances removed and a tested access fallback. [Repeatable host bootstrap and restart](docs/h1.3-bootstrap.adoc) are verified for the existing secured pilot. OS updates remain deferred by the owner; application deployment is pending.
+[H1.3 first access and security](docs/h1.3-first-access.adoc) records verified key-only SSH, a restricted service account, UFW and a tested configuration rollback on Ubuntu 26.04 LTS. [Tailscale private administration](docs/h1.3-private-access.adoc) provides verified private IPv4/IPv6 SSH with public SSH allowances removed and a tested access fallback. [Repeatable host bootstrap and restart](docs/h1.3-bootstrap.adoc) are verified for the existing secured pilot. [H1.4 configuration and authentication](docs/h1.4-model-configuration.adoc) adds the pinned core runtime, independent OAuth login, credential failure checks and one native request. OS updates remain deferred by the owner; persistent service deployment is pending.
 
 ## Publication and licensing
 
