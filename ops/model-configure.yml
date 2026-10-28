@@ -1,0 +1,71 @@
+---
+- name: Install an explicitly rendered H1.4 configuration and bounded probe
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  vars:
+    haven_state: /var/lib/haven/.hermes
+    haven_probe_root: /var/lib/haven/haven-tools
+  pre_tasks:
+    - name: Require a single host and an explicit controller-side native file
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_model_config is defined
+        fail_msg: Pass the freshly rendered native configuration explicitly.
+
+    - name: Verify the prepared candidate interpreter exists
+      ansible.builtin.stat:
+        path: /var/lib/haven/releases/hermes-bf0203a-785f2646/venv/bin/python
+      register: haven_python
+
+    - name: Refuse configuration before runtime preparation
+      ansible.builtin.assert:
+        that: haven_python.stat.exists
+
+  tasks:
+    - name: Maintain private probe package directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: haven
+        group: haven
+        mode: '0700'
+      loop:
+        - "{{ haven_probe_root }}"
+        - "{{ haven_probe_root }}/scripts"
+
+    - name: Install the public probe and its fixed policy contract
+      ansible.builtin.copy:
+        src: "../scripts/{{ item }}"
+        dest: "{{ haven_probe_root }}/scripts/{{ item }}"
+        owner: haven
+        group: haven
+        mode: '0600'
+      loop: [model_contract.py, model_probe.py]
+
+    - name: Install the explicit native configuration without implicit replacement
+      ansible.builtin.copy:
+        src: "{{ haven_model_config }}"
+        dest: "{{ haven_state }}/config.yaml"
+        owner: haven
+        group: haven
+        mode: '0600'
+        force: "{{ haven_replace_model_config | default(false) | bool }}"
+        backup: true
+      no_log: true
+
+    - name: Inspect the deployed native configuration checksum
+      ansible.builtin.stat:
+        path: "{{ haven_state }}/config.yaml"
+        checksum_algorithm: sha256
+      register: haven_native
+      no_log: true
+
+    - name: Refuse an unexpected existing configuration
+      ansible.builtin.assert:
+        that: >-
+          haven_native.stat.checksum ==
+          lookup('ansible.builtin.file', haven_model_config, rstrip=false) | hash('sha256')
+        fail_msg: Existing native configuration differs; review it before explicitly replacing it.
+      no_log: true

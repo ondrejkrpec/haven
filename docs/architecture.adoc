@@ -6,6 +6,8 @@ Haven is intended to run a personal assistant on one Ubuntu VPS. Hermes supplies
 
 H0.1 established a candidate based on Hermes v0.22.5 plus an exact upstream patch. Local fake-provider tests and rootless container probes established feasibility. link:../research/h0.1/README.adoc[The report] records versions and limits. H0.2 added this repository and the private-instance template; H0.3 adds link:configuration.adoc[configuration v1 validation]. There is no installed Haven service yet.
 
+link:h1.4-model-configuration.adoc[H1.4] verifies the pinned core runtime, native subscription-provider configuration, independent service-owned OAuth and one request with no tools or fallback on the existing pilot. This first-request profile does not implement the controller/executor boundary or persistent supervision.
+
 Keep common source, general instructions and public examples here. Each instance owns its configuration and personal instructions in a separate private repository. Runtime state, account sessions and databases require a future backup workflow outside Git.
 
 == Controller and executor boundary
@@ -29,7 +31,7 @@ Automatic deployment will initially be limited to the proposed `haven-health` de
 |H0.4 |Implemented locally: Antora documentation build, public check workflow, secret scan and link checks. Automatic local push checks replace unavailable GitHub Actions.
 |H0.5 |Accepted locally: fresh public clone, newly installed dependencies, independent private instance and public build checks. See link:h0.5-acceptance.adoc[acceptance and H1 handoff].
 |H1.1 |MIT selected; public/private GitHub remotes and source history exist. link:h1.1-publication.adoc[Local push checks] replace unavailable Actions with the owner's agreement.
-|H1 |Ubuntu VPS, real authentication, WhatsApp pairing, Czech voice latency/quality, systemd, private access, backups and restore.
+|H1 |Host/private administration and one authenticated model request verified; systemd/recovery, WhatsApp, Czech voice latency/quality, backups and restore remain.
 |H2 |Controller adapter, separate roles, full executor isolation, negative access tests and review lifecycle.
 |H3 |Bounded automated repair and deployment with rollback.
 |===

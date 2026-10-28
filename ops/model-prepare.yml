@@ -1,0 +1,172 @@
+---
+- name: Prepare the pinned Hermes candidate for explicit H1.4 model checks
+  hosts: haven_hosts
+  gather_facts: true
+  gather_subset: [min]
+  become: true
+  vars:
+    haven_pins: "{{ lookup('ansible.builtin.file', '../research/h0.1/pins.json') | from_json }}"
+    haven_source: /var/lib/haven/releases/hermes-bf0203a-785f2646
+    haven_state: /var/lib/haven/.hermes
+    haven_patch: /var/lib/haven/releases/upstream-117820.patch
+    haven_patched_files:
+      hermes_cli/kanban_db_dispatch.py: b411347b0a693422be4fc704974d5dde383de8eeb63b47c7a5139355e71bb056
+      tests/hermes_cli/test_kanban_db.py: aa1366f4cd2a71165d12802ca6608d46a958b677178121ac1f6203b34714db11
+  pre_tasks:
+    - name: Require the accepted host and pinned controller
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - ansible_version.full == '2.21.5'
+          - ansible_facts.distribution == 'Ubuntu'
+          - ansible_facts.distribution_version == '26.04'
+
+    - name: Refuse preparation while an application service is active
+      ansible.builtin.command:
+        argv: [systemctl, is-active, haven.service]
+      register: haven_service
+      changed_when: false
+      failed_when: haven_service.rc not in [3, 4]
+      check_mode: false
+
+  tasks:
+    - name: Create private runtime and source parents
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: haven
+        group: haven
+        mode: '0700'
+      loop:
+        - /var/lib/haven/releases
+        - "{{ haven_state }}"
+
+    - name: Prepare the candidate without administrator privileges
+      become: true
+      become_user: haven
+      environment:
+        HERMES_HOME: "{{ haven_state }}"
+        HERMES_RUNTIME_DIR: "{{ haven_state }}/tools"
+        GIT_TERMINAL_PROMPT: '0'
+        PYTHONUNBUFFERED: '1'
+      block:
+        - name: Clone the exact published release without updating an existing tree
+          ansible.builtin.git:
+            repo: "{{ haven_pins.hermes.repository }}"
+            dest: "{{ haven_source }}"
+            version: "{{ haven_pins.hermes.tag }}"
+            depth: 1
+            update: false
+
+        - name: Verify the release commit
+          ansible.builtin.command:
+            argv: [git, rev-parse, HEAD]
+            chdir: "{{ haven_source }}"
+          register: haven_source_head
+          changed_when: false
+          failed_when: haven_source_head.stdout != haven_pins.hermes.commit
+          check_mode: false
+
+        - name: Inspect the upstream dependency and source locks
+          ansible.builtin.stat:
+            path: "{{ haven_source }}/{{ item.key }}"
+            checksum_algorithm: sha256
+          loop: "{{ haven_pins.hermes.source_hashes_sha256 | dict2items }}"
+          register: haven_source_hashes
+
+        - name: Require the retained exact source hashes
+          ansible.builtin.assert:
+            that: item.stat.checksum == item.item.value
+            quiet: true
+          loop: "{{ haven_source_hashes.results }}"
+          loop_control:
+            label: "{{ item.item.key }}"
+
+        - name: Stage the attributed upstream patch
+          become: true
+          become_user: root
+          ansible.builtin.copy:
+            src: ../research/h0.1/patches/upstream-117820.patch
+            dest: "{{ haven_patch }}"
+            owner: haven
+            group: haven
+            mode: '0600'
+
+        - name: Detect the already applied candidate patch
+          ansible.builtin.command:
+            argv: [git, apply, --reverse, --check, "{{ haven_patch }}"]
+            chdir: "{{ haven_source }}"
+          register: haven_patch_applied
+          failed_when: haven_patch_applied.rc not in [0, 1]
+          changed_when: false
+          check_mode: false
+
+        - name: Require a clean base before the first patch application
+          ansible.builtin.command:
+            argv: [git, diff, --quiet]
+            chdir: "{{ haven_source }}"
+          changed_when: false
+          when: haven_patch_applied.rc == 1
+
+        - name: Apply the selected recovery patch
+          ansible.builtin.command:
+            argv: [git, apply, "{{ haven_patch }}"]
+            chdir: "{{ haven_source }}"
+          changed_when: true
+          when: haven_patch_applied.rc == 1
+
+        - name: Inspect exactly the patched source files
+          ansible.builtin.stat:
+            path: "{{ haven_source }}/{{ item.key }}"
+            checksum_algorithm: sha256
+          loop: "{{ haven_patched_files | dict2items }}"
+          register: haven_patched_hashes
+
+        - name: Require the exact patched file contents
+          ansible.builtin.assert:
+            that: item.stat.checksum == item.item.value
+            quiet: true
+          loop: "{{ haven_patched_hashes.results }}"
+          loop_control:
+            label: "{{ item.item.key }}"
+
+        - name: Inspect other tracked changes before executing the source
+          ansible.builtin.command:
+            argv: [git, diff, --name-only, HEAD]
+            chdir: "{{ haven_source }}"
+          register: haven_changed_files
+          changed_when: false
+          failed_when: haven_changed_files.stdout_lines | sort != haven_patched_files.keys() | sort
+          check_mode: false
+
+        - name: Build the core Python runtime through upstream PM and its frozen lock
+          become: true
+          become_user: root
+          ansible.builtin.command:
+            argv:
+              - /usr/sbin/runuser
+              - -u
+              - haven
+              - --
+              - /usr/bin/python3
+              - -m
+              - pm.build_env
+              - --source
+              - "{{ haven_source }}"
+              - --out
+              - "{{ haven_source }}/venv"
+            chdir: "{{ haven_source }}"
+            creates: "{{ haven_source }}/venv/bin/python"
+          async: 1800
+          poll: 10
+          when: not ansible_check_mode
+
+        - name: Inspect the prepared Python and required provider imports
+          ansible.builtin.command:
+            argv:
+              - "{{ haven_source }}/venv/bin/python"
+              - -c
+              - "import sys, openai, httpx; from ruamel.yaml import YAML; print('Hermes core imports ready; Python ' + sys.version.split()[0])"
+            chdir: "{{ haven_source }}"
+          changed_when: false
+          when: not ansible_check_mode

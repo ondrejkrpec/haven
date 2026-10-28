@@ -5,6 +5,7 @@
 ** xref:h1.3-first-access.adoc[VPS access and security]
 ** xref:h1.3-private-access.adoc[Tailscale private administration]
 ** xref:h1.3-bootstrap.adoc[Repeatable bootstrap and restart]
+** xref:h1.4-model-configuration.adoc[Configuration and first model request]
 ** xref:documentation.adoc[Documentation and checks]
 * Architecture
 ** xref:architecture.adoc[System boundaries]
