@@ -1,0 +1,14 @@
+#!/bin/sh
+# Restore only this operation's accepted SSH/UFW configuration. No identity state.
+set -eu
+umask 077
+backup={{ haven_backup.path | quote }}
+/bin/cp -a "$backup/00-haven.conf" /etc/ssh/sshd_config.d/00-haven.conf
+/usr/sbin/sshd -t
+/bin/cp -a /etc/ufw "$backup/ufw-at-restore-$(date -u +%Y%m%dT%H%M%S)-$$"
+/bin/cp -a "$backup/ufw/." /etc/ufw/
+/bin/cp -a "$backup/ufw-default" /etc/default/ufw
+/usr/sbin/ufw --force enable
+/usr/sbin/ufw reload
+/bin/systemctl reload ssh.service
+/bin/date -u +%FT%TZ > "$backup/RESTORED.txt"

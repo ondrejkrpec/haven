@@ -1,0 +1,81 @@
+= H1.3: Repeatable host bootstrap and restart
+
+Status on 2026-10-28: implementation and local checks prepared; live adoption, repeatability and restart acceptance are in progress. This guide covers an *already enrolled and manually secured* Ubuntu 26.04 host. It does not provision a provider account, install a fresh OS or deploy Hermes.
+
+== Scope and prerequisites
+
+Complete link:h1.3-first-access.adoc[first key access and the manual baseline] and link:h1.3-private-access.adoc[Tailscale enrollment/policy] first. The administrator must have working private SSH, sudo and an independently usable provider console. Preserve the established SSH host-key identity. The manual baseline supplies key-only/root-denied SSH, the managed snippet and active IPv6-enabled UFW. The playbook can create the service identity if absent; an unexpected existing identity or unrelated firewall rules require review.
+
+The checked-in `ops/bootstrap.yml` adopts the account, service home, SSH snippet, private UFW rule and service startup into Ansible management. It does not change authorized keys, Tailscale preferences, tags, node-key expiry, host keys or runtime identity. The saved tailnet policy remains a separate authorization boundary because Tailscale's Linux rules can run before UFW.
+
+No APT update/upgrade, package installation, autoremove or automatic-update service changes occur on the VPS. The owner reserved OS updates for the later Security/Worker use case. Bootstrap never reboots automatically; restart is a separate explicit maintenance invocation.
+
+== Prepare the controller and private inventory
+
+Install the hash-locked development dependencies using link:documentation.adoc[the documented local tool setup]. These include `ansible-core==2.21.5` and `ansible-lint==26.10.1`; no Ansible package is installed on the VPS. The supported controller Python range for this Ansible release is 3.12–3.14. The inspected VPS has `/usr/bin/python3` 3.14.4; local verification uses Python 3.14.
+
+From the public checkout, copy `ops/inventory.example.yml` into your separate private instance as `ops/inventory.yml`. Edit only that private copy. It names a local SSH alias with the actual private address, administrator and established host-key alias. The public example deliberately cannot reach a real installation. Inventory is operational input, not configuration-v1 YAML; do not pass it to the application validator or put Ansible fields into `config/instance.yaml`.
+
+Run all commands from the public checkout, selecting the checked-in SSH configuration explicitly:
+
+[source,sh]
+----
+export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/bootstrap.yml --check
+----
+
+The config enforces batch key authentication, strict host-key checking, no forwarding and no reused SSH transport. Check mode runs read-only preflight checks but skips snapshots, the rollback timer, firewall write commands and final live acceptance. It is a prediction, not evidence that a changed configuration works. Ansible still creates/removes transient module files while connecting. Avoid `--diff` and verbose logs when using a private inventory; retain any necessary output outside public sources.
+
+== Guarded application
+
+[source,sh]
+----
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/bootstrap.yml
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/bootstrap.yml
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/verify.yml
+----
+
+Preflight requires one explicitly selected host, the pinned controller, Ubuntu 26.04, an actual SSH destination matching the enrolled Tailscale node, `tag:haven`, the accepted Tailscale preferences and effective key-only SSH for the administrator/root contexts. It rejects unrelated UFW user rules and an outstanding bootstrap rollback timer before any managed changes. It refuses to overwrite an unexpected existing service account.
+
+Each live application allocates a new mode-`0700` directory under `/root`, copies the current managed SSH snippet, `/etc/ufw` and UFW defaults with `cp -a`, checks copied contents with `diff`, and writes a mode-`0700`, syntax-checked rollback script. No host private keys or Tailscale identity state are needed in this bounded snapshot; all copies remain on the VPS. A host-side `haven-bootstrap-rollback.timer` schedules restoration after fifteen minutes.
+
+The playbook maintains the locked `haven` account without supplementary groups, `/var/lib/haven` mode `0750`, validated key-only SSH and the private TCP 22 UFW allowance for IPv4/IPv6. It removes the recognized global SSH rule if still present. Unrelated rules are not reset. The inspected Ubuntu uses socket activation: `ssh.socket`, `tailscaled.service` and `ufw.service` are maintained as started/enabled. A disabled `ssh.service` alone does not mean SSH will be unavailable after boot.
+
+After applying changes, Ansible drops its connection and verifies through a new private connection before stopping the fallback timer. A reachable task failure invokes the restoration service and reports failure. If the controller loses reachability, rescue tasks cannot run; the host timer is the fallback. The timer is transient and does *not* survive reboot, so never restart with it armed.
+
+Snapshots and guard scheduling are maintenance operations, intentionally excluded from Ansible's configuration-change count. Every application creates a new root-only snapshot even when the recap reports `changed=0`. Desired-state tasks retain their normal change reporting. Compare consecutive recaps and independently check new connections; a zero count alone is insufficient.
+
+== Recovery
+
+Use the current operation's printed root-only snapshot path. From a surviving administrator connection or the provider console, inspect the script and run:
+
+[source,sh]
+----
+sudo /bin/sh /root/haven-bootstrap-EXAMPLE/rollback.sh
+sudo systemctl stop haven-bootstrap-rollback.timer
+----
+
+The script restores the accepted SSH snippet and UFW files, validates SSH, enables/reloads UFW and reloads SSH. Its scope is the access files managed by this operation; account creation and service enablement are not undone. It does not restore the original password-enabled provider setup. If the saved configuration is itself private-only and Tailscale is unavailable, use the separately tested narrow public-SSH fallback from link:h1.3-private-access.adoc[private-access recovery] through the provider console.
+
+== Controlled restart
+
+Before reboot, complete the application/verification, confirm the rollback timer is inactive, verify the provider console is usable and retain its independent login. Inspect failed units, package activity, the current boot ID and the pending-reboot indication. No package transaction should be started for this test. Reboot activates the kernel/packages already present, even though this work does not upgrade them.
+
+[source,sh]
+----
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/reboot.yml \
+  -e haven_reboot_authorized=true -e haven_console_verified=true
+----
+
+These explicit flags are operator acknowledgments, not a technical authorization boundary; invoke them only within owner-authorized maintenance. The playbook first verifies the private baseline, requests restart, waits for a changed boot ID and usable private SSH, and runs verification again. SSH authentication and host-key checks are unchanged. Inspect failed systemd units and repeat external public-denial/private-access checks after return. If private networking fails to return, use KVM and the narrow access-recovery procedure; no persistent timer opens public SSH during boot.
+
+== Acceptance and remaining limits
+
+Record the actual source/configuration revisions, commands, consecutive recap results, root-only backup locations, pre/post boot IDs and service/network results privately. Public documentation keeps synthetic addresses and concise verified findings. Live current-host adoption does not establish clean-OS installation acceptance. The application, model credentials, WhatsApp, off-site backups and controller/executor isolation remain later H1/H2 work.
+
+The public pipeline includes syntax checks using only the synthetic inventory, production-profile offline Ansible lint and negative host-check tests. It never connects to the private host or reads its inventory. Pattern-based secret scans supplement review; they cannot establish the absence of every private value.
+
+== Sources
+
+Context7's monthly quota was exhausted. Versions were checked against official https://pypi.org/project/ansible-core/2.21.5/[ansible-core 2.21.5] and https://pypi.org/project/ansible-lint/26.10.1/[ansible-lint 26.10.1] release metadata. The https://docs.ansible.com/projects/ansible-core/devel/reference_appendices/release_and_maintenance.html[official support matrix] covers Python compatibility. Module behavior was checked in the installed pinned modules and the official https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/template_module.html[template], https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/reboot_module.html[reboot] and https://docs.ansible.com/projects/lint/usage/[lint usage] references. Versioned 2.21 documentation URLs were unavailable during inspection; installed source was used for the exact pin.

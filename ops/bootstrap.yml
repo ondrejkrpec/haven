@@ -1,0 +1,222 @@
+---
+- name: Adopt the enrolled Ubuntu host into a repeatable security baseline
+  hosts: haven_hosts
+  gather_facts: true
+  gather_subset:
+    - min
+  become: true
+  serial: 1
+  environment:
+    LC_ALL: C
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  pre_tasks:
+    - name: Require one explicit host and the pinned Ansible version
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - ansible_version.full == '2.21.5'
+          - ansible_facts.distribution == 'Ubuntu'
+          - ansible_facts.distribution_version == '26.04'
+        fail_msg: Use the pinned tools and one supported Ubuntu 26.04 host.
+
+    - name: Read the actual administrator SSH connection
+      ansible.builtin.command: /usr/bin/printenv SSH_CONNECTION
+      become: false
+      register: haven_connection
+      changed_when: false
+      check_mode: false
+
+    - name: Check prerequisites without printing private Tailscale state
+      ansible.builtin.script:
+        cmd: >-
+          ../scripts/host_checks.py preflight --admin {{ ansible_user | quote }}
+          --connection {{ haven_connection.stdout | quote }}
+        executable: /usr/bin/python3
+      changed_when: false
+      check_mode: false
+
+    - name: Refuse an outstanding access rollback
+      ansible.builtin.command:
+        argv: [systemctl, is-active, haven-bootstrap-rollback.timer]
+      register: haven_old_guard
+      failed_when: haven_old_guard.rc not in [0, 3, 4] or haven_old_guard.stdout == 'active'
+      changed_when: false
+      check_mode: false
+
+  tasks:
+    - name: Prepare an independent access fallback for this application
+      when: not ansible_check_mode
+      block:
+        - name: Allocate a root-only snapshot directory
+          ansible.builtin.tempfile:
+            state: directory
+            path: /root
+            prefix: haven-bootstrap-
+          register: haven_backup
+          changed_when: false
+
+        - name: Snapshot current managed access files locally on the VPS
+          ansible.builtin.command:
+            argv: [cp, -a, '--', "{{ item.source }}", "{{ haven_backup.path }}/{{ item.destination }}"]
+          loop:
+            - {source: /etc/ssh/sshd_config.d/00-haven.conf, destination: 00-haven.conf}
+            - {source: /etc/ufw, destination: ufw}
+            - {source: /etc/default/ufw, destination: ufw-default}
+          changed_when: false
+
+        - name: Check the snapshot file contents
+          ansible.builtin.command:
+            argv: [diff, -qr, '--', "{{ item.source }}", "{{ haven_backup.path }}/{{ item.destination }}"]
+          loop:
+            - {source: /etc/ssh/sshd_config.d/00-haven.conf, destination: 00-haven.conf}
+            - {source: /etc/ufw, destination: ufw}
+            - {source: /etc/default/ufw, destination: ufw-default}
+          changed_when: false
+
+        - name: Write and syntax-check the rollback script
+          ansible.builtin.template:
+            src: templates/rollback.sh.j2
+            dest: "{{ haven_backup.path }}/rollback.sh"
+            owner: root
+            group: root
+            mode: '0700'
+            validate: /bin/sh -n %s
+          changed_when: false
+
+        - name: Arm a host-side fifteen-minute rollback
+          ansible.builtin.command:
+            argv:
+              - systemd-run
+              - --unit=haven-bootstrap-rollback
+              - --on-active=15m
+              - --timer-property=AccuracySec=1s
+              - --property=Type=oneshot
+              - /bin/sh
+              - "{{ haven_backup.path }}/rollback.sh"
+          changed_when: false
+
+    - name: Apply and verify the managed baseline under the fallback
+      block:
+        - name: Create the service group
+          ansible.builtin.group:
+            name: haven
+            system: true
+
+        - name: Maintain the locked service identity without administrator groups
+          ansible.builtin.user:
+            name: haven
+            group: haven
+            groups: ''
+            append: false
+            system: true
+            home: /var/lib/haven
+            shell: /usr/sbin/nologin
+            password_lock: true
+            create_home: true
+
+        - name: Maintain private service home permissions
+          ansible.builtin.file:
+            path: /var/lib/haven
+            state: directory
+            owner: haven
+            group: haven
+            mode: '0750'
+
+        - name: Maintain the validated SSH snippet
+          ansible.builtin.template:
+            src: templates/00-haven.conf.j2
+            dest: /etc/ssh/sshd_config.d/00-haven.conf
+            owner: root
+            group: root
+            mode: '0644'
+            validate: /usr/sbin/sshd -t -f %s
+          notify: Reload validated SSH
+
+        - name: Read firewall defaults and active state
+          ansible.builtin.command: ufw status verbose
+          register: haven_ufw
+          changed_when: false
+          check_mode: false
+
+        - name: Maintain the incoming deny policy
+          ansible.builtin.command: ufw default deny incoming
+          when: "'deny (incoming)' not in haven_ufw.stdout"
+          changed_when: true
+
+        - name: Maintain the outgoing allow policy
+          ansible.builtin.command: ufw default allow outgoing
+          when: "'allow (outgoing)' not in haven_ufw.stdout"
+          changed_when: true
+
+        - name: Maintain the private SSH allowance for both address families
+          ansible.builtin.command: ufw allow in on tailscale0 to any port 22 proto tcp
+          register: haven_allow
+          changed_when: "'Rule added' in haven_allow.stdout or 'Rules updated' in haven_allow.stdout"
+
+        - name: Inspect explicit user rules before removing public SSH
+          ansible.builtin.command: ufw show added
+          register: haven_added
+          changed_when: false
+          check_mode: false
+
+        - name: Remove a pre-existing global SSH allowance
+          ansible.builtin.command: ufw --force delete allow 22/tcp
+          when: "'ufw allow 22/tcp' in haven_added.stdout_lines"
+          changed_when: true
+
+        - name: Maintain automatic startup of the existing access services
+          ansible.builtin.systemd_service:
+            name: "{{ item }}"
+            state: started
+            enabled: true
+          loop: [ssh.socket, tailscaled.service, ufw.service]
+
+        - name: Apply a validated SSH reload if its snippet changed
+          ansible.builtin.meta: flush_handlers
+
+        - name: Drop the reused SSH transport before acceptance
+          ansible.builtin.meta: reset_connection
+
+        - name: Verify the effective result over fresh private SSH
+          ansible.builtin.script:
+            cmd: >-
+              ../scripts/host_checks.py verify --admin {{ ansible_user | quote }}
+              --connection {{ haven_connection.stdout | quote }}
+            executable: /usr/bin/python3
+          changed_when: false
+          when: not ansible_check_mode
+
+        - name: Disarm the access fallback after fresh-connection success
+          ansible.builtin.systemd_service:
+            name: haven-bootstrap-rollback.timer
+            state: stopped
+          changed_when: false
+          when: not ansible_check_mode
+
+        - name: Record the successful snapshot location for the private runbook
+          ansible.builtin.debug:
+            msg: "Verified configuration; fallback stopped; root-only snapshot: {{ haven_backup.path }}"
+          when: not ansible_check_mode
+
+      rescue:
+        - name: Restore the accepted access configuration on a reachable host
+          ansible.builtin.command:
+            argv: [systemctl, start, haven-bootstrap-rollback.service]
+          changed_when: true
+          when: not ansible_check_mode
+
+        - name: Stop the fallback timer after immediate restoration
+          ansible.builtin.systemd_service:
+            name: haven-bootstrap-rollback.timer
+            state: stopped
+          when: not ansible_check_mode
+
+        - name: Fail the application after restoring access
+          ansible.builtin.fail:
+            msg: Baseline application failed. Inspect the private output and root-only snapshot.
+
+  handlers:
+    - name: Reload validated SSH
+      ansible.builtin.systemd_service:
+        name: ssh.service
+        state: reloaded

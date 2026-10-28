@@ -1,0 +1,9 @@
+# Copy into your PRIVATE repository; replace the synthetic SSH alias there.
+all:
+  children:
+    haven_hosts:
+      hosts:
+        haven_example:
+          ansible_host: haven-example
+          ansible_user: ubuntu
+          ansible_python_interpreter: /usr/bin/python3

@@ -1,0 +1,24 @@
+---
+- name: Verify the bounded host baseline through a new private connection
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  environment:
+    LC_ALL: C
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  tasks:
+    - name: Read the actual administrator SSH connection
+      ansible.builtin.command: /usr/bin/printenv SSH_CONNECTION
+      become: false
+      register: haven_connection
+      changed_when: false
+      check_mode: false
+
+    - name: Verify private access, authentication, account and firewall
+      ansible.builtin.script:
+        cmd: >-
+          ../scripts/host_checks.py verify --admin {{ ansible_user | quote }}
+          --connection {{ haven_connection.stdout | quote }}
+        executable: /usr/bin/python3
+      changed_when: false
+      check_mode: false

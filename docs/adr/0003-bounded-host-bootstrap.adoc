@@ -1,0 +1,21 @@
+= ADR 0003: Adopt the secured host with bounded Ansible playbooks
+
+Date: 2026-10-28. Status: implementation prepared; live adoption and restart acceptance in progress.
+
+== Context
+
+Manual first access and Tailscale cutover are verified, but repeating the host setup requires maintained automation. The public project must remain independent of private inventory and runtime identity. The owner authorized bootstrap, repeatability checks and a controlled restart, while reserving OS updates for a later Security/Worker use case.
+
+== Decision
+
+Use pinned ansible-core with builtin modules and a small read-only host verifier. Keep bootstrap, verification and explicit reboot as separate playbooks under `ops/`; keep real inventory in the private instance. Do not introduce the proposed general-purpose `havenctl` CLI yet.
+
+Bound this first implementation to an already enrolled, manually secured Ubuntu 26.04 host reached over private OpenSSH. Refuse unfamiliar identity/firewall state before mutation. Preserve the administrator key, host keys, Tailscale preferences and authentication lifecycle. Manage only the service identity/home, SSH snippet, recognized UFW rules and existing access services.
+
+Arm a host-side access-file rollback for every live application and stop it only after fresh-connection verification. Use the independent provider console for reboot recovery; the transient bootstrap timer is not reboot protection. Keep host updates, application deployment and future worker privileges outside this operation.
+
+== Consequences
+
+The existing pilot can be adopted and checked without copying private state into public sources. The automatic public pipeline can lint/parse the same playbooks using a synthetic inventory without accessing a VPS. Operational snapshot/timer tasks do not count as desired-state drift; actual configuration tasks do.
+
+Initial provider provisioning, installing/enrolling Tailscale and first SSH hardening remain documented interactive/manual prerequisites. This is not evidence of a fresh-OS installation. A future clean-host path needs its own acceptance rather than silently widening this playbook's preconditions. See link:../h1.3-bootstrap.adoc[bootstrap and restart] for commands, recovery scope and evidence.

@@ -1,6 +1,7 @@
 """Run the public foundation checks used locally and by GitHub Actions."""
 
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -29,6 +30,14 @@ def main():
     run(python, "-m", "ruff", "check", "scripts", "tests")
     yaml_files = [str(path) for path in files if path.suffix in {".yaml", ".yml"} or path.name.endswith(".yaml.example")]
     run(python, "-m", "yamllint", "--strict", *yaml_files)
+    ansible_env = {**os.environ, "ANSIBLE_CONFIG": str(ROOT / "ops/ansible.cfg"),
+                   "ANSIBLE_HOME": str(ROOT / "build/ansible"),
+                   "PATH": str(Path(python).parent) + os.pathsep + os.environ.get("PATH", "")}
+    for playbook in ("bootstrap", "verify", "reboot"):
+        run(Path(python).parent / "ansible-playbook", "-i", "ops/inventory.example.yml",
+            f"ops/{playbook}.yml", "--syntax-check", env=ansible_env)
+    run(Path(python).parent / "ansible-lint", "--offline", "ops/bootstrap.yml",
+        "ops/verify.yml", "ops/reboot.yml", env=ansible_env)
     run(ROOT / "build/tools/actionlint", "-shellcheck=", "-pyflakes=", ".github/workflows/checks.yml")
     run(python, "scripts/validate_config.py", "examples/instance.yaml")
     run(python, "scripts/validate_config.py", "templates/private/config/instance.yaml.example")
