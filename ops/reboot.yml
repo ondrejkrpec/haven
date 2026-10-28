@@ -1,0 +1,39 @@
+---
+- name: Check private access before maintenance
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Reboot only on an explicit maintenance invocation
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - name: Require explicit maintenance and console confirmations
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_reboot_authorized | default(false) | bool
+          - haven_console_verified | default(false) | bool
+        fail_msg: Explicit reboot authorization and a verified provider console are required.
+  tasks:
+    - name: Refuse to reboot with a transient access rollback armed
+      ansible.builtin.command:
+        argv: [systemctl, is-active, haven-bootstrap-rollback.timer]
+      register: haven_reboot_guard
+      failed_when: haven_reboot_guard.rc not in [3, 4]
+      changed_when: false
+      check_mode: false
+
+    - name: Verify SSH is usable before restarting
+      ansible.builtin.wait_for_connection:
+        connect_timeout: 10
+        timeout: 30
+
+    - name: Restart and wait for the same private SSH identity
+      ansible.builtin.reboot:
+        reboot_timeout: 300
+        connect_timeout: 10
+        post_reboot_delay: 10
+        test_command: /usr/bin/true
+
+- name: Check the baseline after the authorized restart
+  ansible.builtin.import_playbook: verify.yml

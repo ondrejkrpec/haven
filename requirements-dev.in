@@ -1,3 +1,5 @@
 -r requirements.in
 ruff==0.17.2
 yamllint==1.38.0
+ansible-core==2.21.5
+ansible-lint==26.10.1

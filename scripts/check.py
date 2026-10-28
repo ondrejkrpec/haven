@@ -1,6 +1,7 @@
 """Run the public foundation checks used locally and by GitHub Actions."""
 
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -10,9 +11,17 @@ import tempfile
 from scripts.public_files import ROOT, public_files
 
 
-def run(*command, **kwargs):
+def run(*command, buffer_output=False, **kwargs):
     print("+ " + " ".join(map(str, command)), flush=True)
-    subprocess.run(list(map(str, command)), cwd=kwargs.pop("cwd", ROOT), check=True, **kwargs)
+    # Git's hook output descriptors can be nonblocking. Ansible refuses those;
+    # give it independent blocking pipes without altering Git's descriptors.
+    if buffer_output:
+        kwargs.update(stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                      stderr=subprocess.STDOUT, text=True)
+    result = subprocess.run(list(map(str, command)), cwd=kwargs.pop("cwd", ROOT), check=False, **kwargs)
+    if buffer_output:
+        print(result.stdout, end="", flush=True)
+    result.check_returncode()
 
 
 def main():
@@ -29,6 +38,14 @@ def main():
     run(python, "-m", "ruff", "check", "scripts", "tests")
     yaml_files = [str(path) for path in files if path.suffix in {".yaml", ".yml"} or path.name.endswith(".yaml.example")]
     run(python, "-m", "yamllint", "--strict", *yaml_files)
+    ansible_env = {**os.environ, "ANSIBLE_CONFIG": str(ROOT / "ops/ansible.cfg"),
+                   "ANSIBLE_HOME": str(ROOT / "build/ansible"),
+                   "PATH": str(Path(python).parent) + os.pathsep + os.environ.get("PATH", "")}
+    for playbook in ("bootstrap", "verify", "reboot"):
+        run(Path(python).parent / "ansible-playbook", "-i", "ops/inventory.example.yml",
+            f"ops/{playbook}.yml", "--syntax-check", env=ansible_env, buffer_output=True)
+    run(Path(python).parent / "ansible-lint", "--offline", "ops/bootstrap.yml",
+        "ops/verify.yml", "ops/reboot.yml", env=ansible_env, buffer_output=True)
     run(ROOT / "build/tools/actionlint", "-shellcheck=", "-pyflakes=", ".github/workflows/checks.yml")
     run(python, "scripts/validate_config.py", "examples/instance.yaml")
     run(python, "scripts/validate_config.py", "templates/private/config/instance.yaml.example")

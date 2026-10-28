@@ -12,7 +12,7 @@ The copied template contains README, agent rules, ignore rules, a versioned YAML
 
 Follow link:configuration.adoc[configuration v1] to install dependencies, validate the example or your private configuration, and apply explicit overrides. The file is Haven input, not native Hermes configuration. A renderer and live deployment remain H1 work. Validation never needs real credentials.
 
-The local private workspace was migrated from the unchanged H0.2 example to configuration v1. It still contains only synthetic values. The public template remains the source for creating another user's workspace; changes to an existing private instance must be intentional and must not overwrite personal edits.
+The local private workspace was migrated from the unchanged H0.2 example to configuration v1. That initial migration used synthetic values; real installations subsequently maintain their own private configuration. The public template remains the source for creating another user's workspace; changes to an existing private instance must be intentional and must not overwrite personal edits.
 
 == Work on a change
 

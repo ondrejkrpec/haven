@@ -13,6 +13,7 @@ The local foundation is accepted through a fresh checkout: public sources, a pri
 * link:h1-prerequisites.adoc[H1 prerequisites]: what must be selected and verified before live operation.
 * link:h1.3-first-access.adoc[VPS access and security]: administrator keys, service account, firewall and verified configuration rollback.
 * link:h1.3-private-access.adoc[Tailscale private administration]: verified enrollment, policy, private-only SSH and guarded access recovery.
+* link:h1.3-bootstrap.adoc[Repeatable bootstrap and restart]: verified adoption of the secured pilot, restoration and post-boot access.
 
 == Evidence and limits
 

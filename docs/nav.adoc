@@ -4,12 +4,14 @@
 ** xref:configuration.adoc[Configuration v1]
 ** xref:h1.3-first-access.adoc[VPS access and security]
 ** xref:h1.3-private-access.adoc[Tailscale private administration]
+** xref:h1.3-bootstrap.adoc[Repeatable bootstrap and restart]
 ** xref:documentation.adoc[Documentation and checks]
 * Architecture
 ** xref:architecture.adoc[System boundaries]
 ** xref:h1-prerequisites.adoc[H1 prerequisites]
 ** xref:adr/0001-configuration-validation.adoc[ADR 0001: Configuration validation]
 ** xref:adr/0002-documentation-and-checks.adoc[ADR 0002: Documentation and checks]
+** xref:adr/0003-bounded-host-bootstrap.adoc[ADR 0003: Bounded host bootstrap]
 * Verification
 ** xref:research/h0.1/README.adoc[H0.1 feasibility]
 ** xref:h0.2-acceptance.adoc[H0.2 foundation]

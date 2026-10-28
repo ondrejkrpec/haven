@@ -14,7 +14,7 @@ npm ci --ignore-scripts --no-audit --no-fund
 .venv/bin/python -m scripts.install_check_tools
 ----
 
-Installation downloads public packages and release archives. `requirements-dev.txt` includes the runtime dependencies, Ruff and yamllint. It is compiled with the runtime lock as a constraint. `package-lock.json` fixes the npm dependency tree and archive integrity. No npm lifecycle scripts are needed. The binary installer verifies the archive SHA-256 from `scripts/check-tools.json` before extracting only the named Gitleaks/actionlint binary to ignored `build/tools`. It supports Linux x86_64 and aarch64; other operating systems need a separately verified setup before claiming parity.
+Installation downloads public packages and release archives. `requirements-dev.txt` includes the runtime dependencies, Ruff, yamllint and pinned Ansible/core lint tools. It is compiled with the runtime lock as a constraint. `package-lock.json` fixes the npm dependency tree and archive integrity. No npm lifecycle scripts are needed. The binary installer verifies the archive SHA-256 from `scripts/check-tools.json` before extracting only the named Gitleaks/actionlint binary to ignored `build/tools`. It supports Linux x86_64 and aarch64; other operating systems need a separately verified setup before claiming parity.
 
 == Run the public checks
 
@@ -27,7 +27,8 @@ The command fails at the first unsuccessful check. It runs:
 
 * Ruff for Python import/name/syntax errors in maintained scripts and tests; historical H0.1 probes retain their original bytes.
 * Strict yamllint for Git-eligible YAML and the private template example; actionlint for workflow syntax, expressions and action inputs. ShellCheck/Pyflakes integration is disabled explicitly; workflow shell steps contain only literal tool invocations.
-* Configuration validation for the public example and private template, followed by behavior tests.
+* Ansible syntax checks and production-profile offline lint for the bounded host playbooks, using only the synthetic inventory. These do not contact a VPS.
+* Configuration validation for the public example and private template, followed by behavior tests including fail-closed host preconditions.
 * The retained H0.1 checksum manifest.
 * Gitleaks with default rules, full redaction and no inline allow markers. A disposable snapshot includes tracked and untracked Git-eligible candidates, excluding ignored local files. Available Git history is scanned with `--all`; an unborn repository explicitly skips only the history scan. CI fetches full history. No broad secret exclusions or baseline are configured.
 * The documentation build and offline source/generated-link checks, including HTML fragments.
