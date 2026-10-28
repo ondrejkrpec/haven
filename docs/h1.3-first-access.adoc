@@ -294,7 +294,7 @@ Refresh package metadata, review the upgrade simulation and apply compatible pac
 
 Record any changed file and its recovery command privately. Keep the provider recovery console available. Do not change the SSH port, remove existing authorized keys, enable root access or reboot merely as part of testing the first connection.
 
-Tailscale enrollment needs a separate interactive owner login and verification before moving administration to private access. Installing Hermes, model credentials and WhatsApp remain later H1 tickets. A full isolated executor belongs to H2.
+link:h1.3-private-access.adoc[Tailscale private administration] needs a separate interactive owner login, policy validation and guarded cutover before removing public SSH. Installing Hermes, model credentials and WhatsApp remain later H1 tickets. A full isolated executor belongs to H2.
 
 == Evidence and remaining acceptance
 

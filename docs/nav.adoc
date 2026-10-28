@@ -3,6 +3,7 @@
 ** xref:local-development.adoc[Local development]
 ** xref:configuration.adoc[Configuration v1]
 ** xref:h1.3-first-access.adoc[VPS access and security]
+** xref:h1.3-private-access.adoc[Private administration plan]
 ** xref:documentation.adoc[Documentation and checks]
 * Architecture
 ** xref:architecture.adoc[System boundaries]
