@@ -40,6 +40,7 @@ class ServiceRuntimeTests(unittest.TestCase):
     def test_service_refuses_injected_capabilities_and_unbounded_budgets(self):
         cases = [("kanban", "dispatch_in_gateway", True), ("agent", "max_turns", 100),
                  ("gateway", "multiplex_profiles", True), ("hooks", "synthetic", ["shell"]),
+                 ("onboarding", "profile_build", "ask"), ("onboarding", "seen", {}),
                  ("mcp_servers", "synthetic", {"command": "sh"}),
                  ("platform_toolsets", "cron", ["terminal"]),
                  ("cron", "require_restart_safe_scope", False),

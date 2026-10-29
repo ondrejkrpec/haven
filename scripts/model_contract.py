@@ -85,6 +85,12 @@ def service_config(config):
     native["mcp_servers"] = {}
     native["hooks"] = {}
     native["hooks_auto_accept"] = False
+    # First-contact profile building and one-shot busy/tool hints persist flags
+    # into config.yaml. Their prompts offer capabilities outside this pilot;
+    # declare them handled so ordinary messaging cannot change the contract.
+    native["onboarding"] = {"profile_build": "off", "seen": {
+        "busy_input_prompt": True, "tool_progress_prompt": True,
+    }}
     telegram = config.get("telegram", {})
     if telegram.get("enabled") and config["whatsapp"]["enabled"]:
         raise ModelConfigError("The pilot accepts only one messaging transport at a time")

@@ -3,6 +3,7 @@
 import asyncio
 import importlib.util
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -21,6 +22,7 @@ def policy(tmp_path, monkeypatch):
     root = Path(__file__).resolve().parents[2]
     spec = importlib.util.spec_from_file_location("haven_telegram_contract", root / "scripts/model_contract.py")
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     native = module.service_config({
         "model": {"provider": "openai-codex", "name": "gpt-synthetic"},
@@ -90,3 +92,19 @@ def test_actual_tool_resolver_and_stt_keep_text_pilot_bounded(policy):
     assert config.stt_enabled is False
     assert native["fallback_providers"] == []
     assert native["kanban"]["dispatch_in_gateway"] is False
+
+
+def test_first_contact_and_seen_hints_leave_the_bounded_profile_unchanged(policy):
+    from agent.onboarding import (BUSY_INPUT_FLAG, PLAIN_INTRO_NOTE, TOOL_PROGRESS_FLAG,
+                                  first_contact_turn_note, mark_seen)
+    from hermes_constants import get_hermes_home
+
+    path = get_hermes_home() / "config.yaml"
+    before = path.read_bytes()
+    config = YAML(typ="safe", pure=True).load(before)
+    note = first_contact_turn_note(config, path, session_history_empty=True, install_has_prior_sessions=False)
+    assert note == PLAIN_INTRO_NOTE
+    for flag in (BUSY_INPUT_FLAG, TOOL_PROGRESS_FLAG):
+        assert mark_seen(path, flag)
+    sys.modules["haven_telegram_contract"].check_service(YAML(typ="safe", pure=True).load(path.read_text()))
+    assert path.read_bytes() == before

@@ -10,6 +10,8 @@ The optional Haven input is `telegram.enabled` and a quoted numeric `telegram.ow
 
 CLI/local/API/cron/Telegram/WhatsApp model toolsets are empty. Coding dispatch, fallback, MCP/hooks, community plugins and lazy installs stay disabled. Automatic speech transcription is off; full attachment behavior and Czech voice quality are not accepted here. Strict outgoing media paths do not trust fresh arbitrary host files. Cold boot does not deliberately discard pending Telegram updates; this is not an exactly-once message-delivery guarantee.
 
+The service explicitly disables first-contact profile building and predeclares the busy/tool-progress hints as seen. Those native hints otherwise write `onboarding.seen` into the guarded YAML after a message. They offer settings/tools outside this pilot, so they are suppressed rather than allowing arbitrary runtime configuration edits. The first-contact regression test exercises the actual pinned handler and confirms that the rendered profile remains unchanged.
+
 == Prepare without activating
 
 Use the checked public commit, pinned Ansible dependencies and explicit private inventory from link:h1.3-bootstrap.adoc[H1.3]:
@@ -68,7 +70,7 @@ Do not run a second unmanaged gateway or `getUpdates` poller beside the service.
 
 The foundation suite covers schema rejection, bounded runtime policy, token permissions/symlink rejection, supervised token injection, private-challenge enrollment and fixed diagnostics. Full public checks also run production Ansible lint/syntax, secret scans and the documentation build/links.
 
-A separate fresh test environment was built through the exact upstream PM lock with `--group dev --group test --extra telegram`. The previous H1.5 environment lacked PTB; the first research run failed two cases for that missing dependency. After building the declared extra, all 81 tests across the nine selected files passed with no retries. Four of those tests are the retained Haven probe; the rest are upstream tests. No live account, model or production profile was used.
+A separate fresh test environment was built through the exact upstream PM lock with `--group dev --group test --extra telegram`. The previous H1.5 environment lacked PTB; the first research run failed two cases for that missing dependency. The original complete run passed 81 tests. Adding the first-contact regression brings the selection to 82 passing tests across nine files, with no retries; five are retained Haven scenarios and the rest are upstream tests. No live account, model or production profile was used in these test runs.
 
 From the pinned patched Hermes checkout, set `HERMES_PYTHON` to that disposable interpreter and `HAVEN_ROOT` to the public Haven checkout:
 
