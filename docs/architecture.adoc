@@ -10,6 +10,8 @@ link:h1.4-model-configuration.adoc[H1.4] verifies the pinned core runtime, nativ
 
 Keep common source, general instructions and public examples here. Each instance owns its configuration and personal instructions in a separate private repository. Runtime state, account sessions and databases require a future backup workflow outside Git.
 
+The selected link:family-conversations.adoc[family design] has separate personal conversations and explicitly shared family objects. Each person's authenticated connection and private state stay separate; a narrow service must enforce ownership and family membership before returning data to the model. This access layer is not implemented by selecting Hermes profiles. link:adr/0006-personal-and-family-data.adoc[ADR 0006] records the decision and pending acceptance.
+
 == Controller and executor boundary
 
 The trusted controller owns the durable board and admits narrowly scoped results bound to the current run. A worker and an independent reviewer will run as full isolated executor processes with only their workspace and required role-specific credentials. Neither receives Nora's home, WhatsApp session, personal vault or direct access to the board.

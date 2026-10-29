@@ -2,7 +2,7 @@
 
 H1 is in progress: publication is accepted, and link:h1.3-first-access.adoc[administrator key access, the manual security baseline and configuration rollback] were verified on Ubuntu 26.04 LTS on 2026-10-28. link:h1.3-private-access.adoc[Tailscale private IPv4/IPv6 SSH, public-SSH cutover and narrow access fallback] are verified. link:h1.3-bootstrap.adoc[Bounded Ansible adoption, repeatability, access-file restoration and a controlled restart] are also verified for the existing pilot. link:h1.4-model-configuration.adoc[Native configuration, independent subscription login and one Hermes model request] are verified. link:h1.5-service-recovery.adoc[The bounded coordinator, native worker user bus, application rollback and restart/reboot recovery] are verified. OS updates remain owner-deferred; coding dispatch stays disabled until H2. These are decisions and acceptance checks, not a complete clean-host installation procedure. link:../research/h0.1/README.adoc[H0.1 evidence] retains its historical local/synthetic scope; WhatsApp remains unverified.
 
-link:h1.6-whatsapp.adoc[H1.6 text messaging] now has a locally verified optional Baileys implementation. Transport confirmation, owner-supplied account/allowlist, live pairing and restart acceptance are still required before enabling it on the pilot.
+H1.6 targets link:family-conversations.adoc[personal conversations with an explicitly shared family space]. Agent Platform eligibility must first be confirmed for both intended accounts. The link:h1.6-agent-platform-assessment.adoc[community connector assessment] passed locally with mocked responses; live messaging, a bounded runtime contract and family authorization remain unverified. The earlier optional Baileys implementation remains inactive.
 
 == H0 handoff
 
@@ -14,7 +14,7 @@ Before reproducible deployment, establish the intended public-source revision an
 
 * Select a VPS and region within the agreed infrastructure budget. The first delivered host runs Ubuntu 26.04 LTS rather than the earlier 24.04 proposal. The pinned core/service is verified on this existing pilot; clean-host installation, broader integrations and the actual billing region still require verification.
 * Select an off-site backup destination, retention policy and recovery-key storage. Git does not back up sessions or databases.
-* Arrange a separate WhatsApp number and choose the initial transport. The bridge is the current proposal; account pairing and allowlisting require interactive steps.
+* Check `WhatsApp -> Settings -> Agents` on each intended account. Agent Platform needs no separate bot number, but account/country availability is limited. If unavailable, choose another transport before obtaining a number or pairing an account.
 * Select actual model identifiers and confirm authentication eligibility. The public model and hostname are placeholders. H1.4 verified the pilot's selected model through live discovery and a native request; a subscription alone does not prove other integrations are supported.
 
 == Technical work and evidence required
@@ -25,7 +25,7 @@ Before reproducible deployment, establish the intended public-source revision an
 |Host |Document admin access, updates, firewall and service account; restrict internal services through the selected private access mechanism.
 |Hermes |Install the exact candidate and patch, translate Haven configuration to native inputs, supervise with systemd and survive a restart.
 |Credentials |Resolve references only for authorized services, reject missing credentials, and protect OAuth/WhatsApp runtime state outside Git.
-|WhatsApp |Pair interactively, accept only allowed senders and verify unauthorized messages are rejected. Measure Czech voice transcription quality and latency.
+|Messaging and family access |Enroll eligible accounts privately, bind each connection to its verified owner, and test replies/restart recovery and negative cross-user access. Accept shared objects only after ownership/membership checks pass. Measure Czech voice quality and latency separately in H1.7.
 |Recovery |Exercise quota deferral/resumption and distinguish transient quota limits from revoked authentication; deterministic recovery must work without Nora's model.
 |Backup |Restore the necessary configuration and runtime state on a clean target. Prevent a second simultaneously active WhatsApp session.
 |Documentation |Record the actually verified setup, interactive steps and recovery procedure without credentials, QR codes or session data.

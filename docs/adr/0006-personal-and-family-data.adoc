@@ -1,0 +1,19 @@
+= ADR 0006: personal conversations and explicit family sharing
+
+Date: 2026-10-29
+
+Status: accepted product direction and access constraints; transport eligibility and implementation remain unverified.
+
+== Context
+
+The owner selected personal conversations for both household members with a shared family space. Agent Platform can provide creator-bound personal chats without a dedicated bot number, but offers no group chat and is not available on every account. The earlier Baileys preparation remains inactive; it is not the selected deployment path.
+
+== Decision
+
+Use separate authenticated personal entry points and separate private conversation state. Share only explicitly created/shared family objects through a service that enforces ownership and membership outside model prompts. A shared Nora identity does not grant access to another member's private history, files, credentials or integrations.
+
+Treat Agent Platform as the candidate transport, gated on both accounts' actual eligibility. Each connection owns its token and polling state; replies/notifications use that recipient's own connection. Keep family storage and its authorization independent of transport. Profiles alone are not an access boundary. No private-message relay or native WhatsApp group is included in this decision.
+
+== Consequences
+
+The existing single-profile no-tools coordinator is retained until a bounded multi-user runtime and negative privacy tests pass. Extra agent connections do not automatically create shared memory or a family application. Missing Agents UI blocks live enrollment but not design or mocked transport assessment. See link:../family-conversations.adoc[the design, evidence boundaries and acceptance order].

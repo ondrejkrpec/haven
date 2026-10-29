@@ -1,0 +1,58 @@
+= Personal conversations and a shared family space
+
+Status, 2026-10-29: the pilot owner selected personal conversations for each household member with an explicitly shared family space. This is the implementation target; the family service and two live connections are not deployed. WhatsApp Agent Platform is the candidate transport, conditional on availability for both accounts. H1.5 remains the accepted VPS service.
+
+== Two personal entry points
+
+Each member creates a personal agent under their own existing WhatsApp account. Each connection has its own API key, verified creator identity, polling cursor and conversation state. Meta currently lets an agent reply only to its creator; outgoing notifications must therefore use the intended member's own connection. Agent Platform provides no native WhatsApp group.
+
+The same logical Nora can serve both entry points. Shared identity and operating rules do not imply shared transcripts. Separate Hermes profiles carry separate native state, but profiles alone are not an authorization boundary. Never run two writers against one Hermes home/database or copy one member's credential store into another profile.
+
+The initial family design does not relay private chat messages between members. A later explicit family-chat mode would need separate acceptance. Both users would still see their individual agent chat in WhatsApp.
+
+== Data ownership
+
+[cols="1,2,2",options="header"]
+|===
+|Data |Who can access it |How it becomes shared
+|Personal conversation and personal notes |The authenticated member who owns them |A separate explicit sharing action; membership alone grants no access.
+|Family shopping items, tasks and notes |The approved members of that family |The user explicitly creates the object in the family space.
+|Account keys, provider authentication, polling state and operational logs |The responsible runtime/operator |They are never family content or model-visible shared memory.
+|Other application data, including personal vaults and calendars |Only separately authorized integrations |Selecting the family design does not connect them or grant access.
+|===
+
+For example, one member can add milk to a family shopping list and the other can read that list through their own Nora chat. A private work discussion stays in its owner's conversation. These are acceptance scenarios for future implementation, not working shopping/calendar integrations.
+
+== Enforcement required before activation
+
+The runtime binds each connection to the creator identity verified through Meta. Display names, user-written names and model output cannot select the caller or grant permissions. Message/run identifiers must include the connection identity so equal external message IDs from different agents cannot collide.
+
+A narrow data service must check caller, family membership, object ownership and action on every operation. It returns only authorized records to the model. Sharing is an explicit authenticated user action; the model can propose it but cannot promote a private record to family visibility by itself. Unknown or inconsistent identities fail closed. Updates need atomic conflict handling and replay protection.
+
+Access also needs enforcement on file/media/tool paths so a caller cannot bypass the data service to read another member's home or cached attachments. Until that is implemented and tested, separate profiles establish routing/state separation only. The text pilot keeps broad tools, coding dispatch, arbitrary attachments and external integrations disabled. New transport keys must have an explicit empty native toolset; an unknown platform must never inherit Hermes's default tools.
+
+Notifications require an authorized event and an explicit recipient set. Deliver separately through each recipient's own agent, with independent status and uncertainty handling. An ambiguous external send is reconciled before retrying; a shared notification is not an exactly-once transaction across two WhatsApp chats.
+
+== Agent Platform availability gate
+
+Meta's developer manual specifies `WhatsApp -> Settings -> Agents -> Create an agent`. Each intended member must have this feature available on their own account. Meta says availability is limited by account/country. The pilot owner's iPhone availability is currently unconfirmed; a missing menu is not a Haven configuration error and cannot be enabled from the VPS. Do not buy a second number or treat a general WhatsApp Business AI menu as proof of Agent Platform eligibility.
+
+Once an account is eligible, the owner creates the agent and stores its API key privately through the agreed terminal/credential flow. Do not send keys through chat or Git. Agent chats are not end-to-end encrypted according to Meta. If the feature is unavailable, keep the selected personal/family data model and choose a different available transport with the owner.
+
+The pinned catalog contains community `whatsapp-agent-platform` v0.2.0 at `4d8fc1c482ed06a34b6609b1dcdf59e370de7d40`, compatible by declaration with Hermes >=0.21.4. Its adapter has a key per connection and separate polling state. This does not make it a complete multi-user family application. The current Haven guard refuses third-party plugins, multiplexing and `.env`; installing the upstream wizard into production would conflict with that guard. A reviewed contract and credential/deployment path must be added first.
+
+The link:h1.6-agent-platform-assessment.adoc[local assessment] passed 137 connector tests and three additional scoped two-connection scenarios against the exact Hermes candidate using mocked API responses. It does not establish live account access, gateway-level user routing, two deployed connections or the family authorization boundary.
+
+== Acceptance order
+
+. Confirm Agent Platform availability on the first account, then the second.
+. Review the exact plugin against pinned Hermes, using synthetic API responses and disposable profiles. Verify distinct credentials, creator checks, replies, cursors, deduplication and duplicate-poller refusal.
+. Implement the bounded runtime/credential contract and accept one live personal text conversation, including restart recovery.
+. Accept the second independent connection. Verify that each reply and notification reaches only the intended creator and that private state is not returned to the other member.
+. Implement the first narrow shared family objects. Verify cross-member access to shared objects, denial of private/foreign objects, explicit sharing, conflicting updates and replay handling before enabling model-driven use.
+
+Speech remains H1.7 work. Coding executors and wider controller/executor authorization remain H2. Off-site backup/restore remains H1.9. Neither a passing mocked plugin test nor an accepted product design proves live WhatsApp access or privacy enforcement.
+
+== Sources
+
+The official https://www.whatsapp.com/developer/WhatsApp-Agent-Platform-Developer-Manual.pdf[Agent Platform manual] (version 1, dated 2026-08-25) was downloaded and inspected on 2026-10-29. The https://faq.whatsapp.com/1050934623978152[WhatsApp availability and privacy help] and the https://github.com/ahtishamdilawar/hermes-whatsapp-agent-platform/blob/4d8fc1c482ed06a34b6609b1dcdf59e370de7d40/README.md[pinned plugin README/source] describe creator-only access, separate tokens and platform limits. Hermes's https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/profiles.md[pinned profiles guide] warns against sharing one home between writers. Context7 remains unavailable because its monthly quota is exhausted.

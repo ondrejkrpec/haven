@@ -1,6 +1,6 @@
 = H1.6 WhatsApp text and access rules
 
-Status, 2026-10-29: the optional Baileys implementation passes local synthetic acceptance. Transport confirmation, the dedicated account, live pairing and pilot acceptance are pending. H1.5 remains the accepted running profile until explicit activation.
+Status, 2026-10-29: this guide retains the earlier optional Baileys preparation, which passed local synthetic acceptance but was never paired or deployed. The owner subsequently selected link:family-conversations.adoc[personal conversations with an explicitly shared family space]. Agent Platform is now the candidate transport, subject to account availability and a new runtime contract. Do not follow the dedicated-number/pairing procedure below unless the owner chooses Baileys again. H1.5 remains the accepted running profile.
 
 == Scope and policy
 

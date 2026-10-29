@@ -2,7 +2,7 @@
 
 Date: 2026-10-29
 
-Status: proposed transport; implementation verified locally, live acceptance pending owner confirmation and pairing.
+Status: superseded proposal. The optional implementation was verified locally but never paired or deployed. link:0006-personal-and-family-data.adoc[ADR 0006] records the later selected personal/family direction and conditional Agent Platform transport. The decision below is retained as historical context.
 
 == Context
 
