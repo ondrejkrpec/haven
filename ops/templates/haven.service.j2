@@ -1,0 +1,46 @@
+[Unit]
+Description=Haven pinned Hermes coordinator (H1.5)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=notify
+NotifyAccess=main
+WatchdogSec=120
+User=haven
+Group=haven
+WorkingDirectory={{ haven_source }}
+Environment=HOME=/var/lib/haven
+Environment=USER=haven
+Environment=LOGNAME=haven
+Environment=HERMES_HOME={{ haven_state }}
+Environment=HERMES_RUNTIME_DIR={{ haven_state }}/tools
+Environment=HERMES_SUPERVISED_CHILD=1
+Environment=PYTHONPATH={{ haven_tools }}
+Environment=PATH={{ haven_source }}/venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart={{ haven_source }}/venv/bin/python -m scripts.service_runtime run --source {{ haven_source }} --home {{ haven_state }}
+Restart=always
+RestartSec=10
+RestartPreventExitStatus=78
+SuccessExitStatus=75
+KillMode=mixed
+TimeoutStartSec=180
+TimeoutStopSec=180
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictSUIDSGID=yes
+ReadWritePaths=/var/lib/haven
+ReadOnlyPaths={{ haven_source }} {{ haven_tools }}
+MemoryMax=2G
+TasksMax=128
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

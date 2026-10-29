@@ -1,0 +1,21 @@
+= ADR 0004: Supervised coordinator before executor deployment
+
+Date: 2026-10-29. Status: accepted for H1.5 implementation; live acceptance is recorded separately.
+
+== Context
+
+H1.4 verified one native model request, with no tools or persistent process. Recovery cannot depend on Nora having quota. The pinned Hermes already contains a supervised gateway, durable stores, quota holds and a Kanban dispatcher. Its default worker runs with the controller's identity; Haven's isolated executor adapter is H2 work.
+
+== Decision
+
+Run the exact patched candidate as `haven.service`, using the native foreground gateway and systemd's readiness/watchdog protocol. A small guard checks the bounded configuration and source before replacing itself with the native process. Exit 78 parks invalid configuration instead of looping. Missing credentials do not prevent the scheduler from starting.
+
+The headless H1.5 profile has zero toolsets for CLI, local, API, cron and WhatsApp. Coding dispatch, decomposition, third-party hooks/MCP and lazy installation are disabled. Native stores remain private runtime state. Configuration and code have a separate root-only rollback receipt; OAuth and databases are never copied by deployment rollback.
+
+Exercise quota, terminal authentication failure, run identity, crash recovery and duplicate suppression with the pinned upstream runner and synthetic providers. Repeat the process tests on the pilot in a temporary systemd unit whose filesystem excludes the production profile and whose network permits only loopback.
+
+== Consequences
+
+H1.5 establishes service supervision and the tested recovery path; it does not admit coding work or enable messaging. There is no second production dispatcher or replacement task database. Production queue execution remains gated until the H2 adapter can isolate workers and reconcile ambiguous external effects. Reboot, a killed coordinator and application rollback are explicit live acceptance checks.
+
+See link:../h1.5-service-recovery.adoc[the operational procedure and evidence].
