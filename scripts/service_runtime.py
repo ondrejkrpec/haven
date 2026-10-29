@@ -51,6 +51,19 @@ def health(source, home):
     return {"result": "passed", "check": "health", "pid": pid}
 
 
+def check_worker_bus():
+    """ProtectHome also hides /run/user; admit only this identity's bound user bus."""
+    runtime = Path(f"/run/user/{os.getuid()}")
+    if (os.environ.get("XDG_RUNTIME_DIR") != str(runtime)
+            or os.environ.get("DBUS_SESSION_BUS_ADDRESS") != f"unix:path={runtime}/bus"):
+        raise ProbeError("worker_bus_environment_mismatch")
+    directory, bus = runtime.lstat(), (runtime / "bus").lstat()
+    if (not stat.S_ISDIR(directory.st_mode) or directory.st_uid != os.getuid()
+            or directory.st_mode & 0o022 or not stat.S_ISSOCK(bus.st_mode)
+            or bus.st_uid != os.getuid()):
+        raise ProbeError("worker_bus_unavailable")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("check", "health", "run"))
@@ -63,6 +76,7 @@ def main(argv=None):
         else:
             check(args.source, args.home)
             if args.mode == "run":
+                check_worker_bus()
                 # Stay systemd's main PID: exit 78 from this guard must park the
                 # service; RestartPreventExitStatus does not cover ExecStartPre.
                 os.chdir(args.source)

@@ -69,7 +69,8 @@ def service_config(config):
     native["gateway"] = {"multiplex_profiles": False, "systemd_watchdog_seconds": 120,
                          "max_concurrent_sessions": 1, "delivery_ledger": True}
     native["kanban"] = {"dispatch_in_gateway": False, "auto_decompose": False}
-    native["cron"] = {"max_parallel_jobs": 1, "allow_agent_scheduling": False}
+    native["cron"] = {"max_parallel_jobs": 1, "allow_agent_scheduling": False,
+                      "require_restart_safe_scope": True}
     native["updates"] = {"check": False}
     native["security"] = {"allow_lazy_installs": False}
     native["plugins"] = {"enabled": []}

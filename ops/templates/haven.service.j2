@@ -16,6 +16,8 @@ WorkingDirectory={{ haven_source }}
 Environment=HOME=/var/lib/haven
 Environment=USER=haven
 Environment=LOGNAME=haven
+Environment=XDG_RUNTIME_DIR=/run/user/{{ haven_uid.stdout }}
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{ haven_uid.stdout }}/bus
 Environment=HERMES_HOME={{ haven_state }}
 Environment=HERMES_RUNTIME_DIR={{ haven_state }}/tools
 Environment=HERMES_SUPERVISED_CHILD=1
@@ -33,7 +35,8 @@ UMask=0077
 NoNewPrivileges=yes
 CapabilityBoundingSet=
 ProtectSystem=strict
-ProtectHome=yes
+ProtectHome=tmpfs
+BindReadOnlyPaths=/run/user/{{ haven_uid.stdout }}
 PrivateTmp=yes
 PrivateDevices=yes
 RestrictSUIDSGID=yes

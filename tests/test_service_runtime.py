@@ -42,6 +42,7 @@ class ServiceRuntimeTests(unittest.TestCase):
                  ("gateway", "multiplex_profiles", True), ("hooks", "synthetic", ["shell"]),
                  ("mcp_servers", "synthetic", {"command": "sh"}),
                  ("platform_toolsets", "cron", ["terminal"]),
+                 ("cron", "require_restart_safe_scope", False),
                  ("platform_toolsets", "api_server", ["terminal"])]
         for section, key, value in cases:
             with self.subTest(section=section, key=key):
@@ -102,13 +103,23 @@ class ServiceRuntimeTests(unittest.TestCase):
         self.assertNotIn("SYNTHETIC_SECRET_SENTINEL", out.getvalue())
 
     def test_guard_executes_native_gateway_in_the_same_process_after_validation(self):
-        with patch.object(service_runtime, "check") as guard, patch.object(service_runtime.os, "chdir"):
+        with patch.object(service_runtime, "check") as guard, patch.object(service_runtime.os, "chdir"), \
+                patch.object(service_runtime, "check_worker_bus") as bus:
             with patch.object(service_runtime.os, "execv", side_effect=SystemExit(0)) as execute:
                 with self.assertRaises(SystemExit):
                     service_runtime.main(["run", "--source", str(self.home), "--home", str(self.home)])
         guard.assert_called_once_with(self.home, self.home)
+        bus.assert_called_once_with()
         self.assertEqual(execute.call_args.args[1][1:],
                          ["-m", "hermes_cli.main", "--profile", "default", "gateway", "run", "--quiet"])
+
+    def test_missing_worker_bus_prevents_native_start(self):
+        with patch.object(service_runtime, "check"), patch.object(service_runtime.os, "execv") as execute:
+            with patch.dict(os.environ, {"XDG_RUNTIME_DIR": "/unavailable-synthetic-runtime"}):
+                with redirect_stdout(io.StringIO()):
+                    rc = service_runtime.main(["run", "--source", str(self.home), "--home", str(self.home)])
+        self.assertEqual(rc, 78)
+        execute.assert_not_called()
 
 
 if __name__ == "__main__":
