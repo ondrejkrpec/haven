@@ -70,7 +70,7 @@ The unit selects the separate SMS environment only for an enabled WhatsApp profi
 Complete the following live checks before calling H1.6 accepted:
 
 * The owner sends a bounded text request and receives the intended reply. Check the native tool count and lack of fallback without exporting message contents or account identifiers.
-* A consenting sender outside the allowlist receives no reply and cannot invoke commands/tools. If no second account is available, report this live check as unverified; the synthetic denial test is separate evidence.
+* A consenting sender outside the allowlist receives no reply and creates no gateway/model turn while the bridge remains connected. The owner can cover both roles: temporarily replace the personal sender with the dedicated bot account's own number in a protected test override, send from the now-excluded personal account, then restore the accepted profile and confirm another permitted reply. Restore even if the negative check fails. This needs no third account. Report the live check as unverified if it cannot be performed; synthetic denial is separate evidence.
 * Administrative slash commands are denied to an allowed chat sender, while the permitted chat commands work.
 * Restart the service, confirm the session persists and send another text request. Repeat the preparation/deployment without effective changes.
 * If an owner-authorized host reboot is performed, verify a fresh private connection, automatic coordinator/bridge recovery and another reply without re-pairing. H1.5's previous reboot is not evidence for a newly linked account.
