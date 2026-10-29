@@ -2,7 +2,7 @@
 
 Date: 2026-10-29
 
-Status: accepted owner choice; live account acceptance pending.
+Status: accepted owner choice; owner-only Telegram text and live restart/access acceptance verified on the existing pilot. Speech and family activation remain separate work.
 
 == Context
 
