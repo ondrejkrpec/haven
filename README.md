@@ -4,7 +4,7 @@ Haven is a personal agent system built around Hermes, with WhatsApp as its plann
 
 **Status: H1.5 coordinator service verified on the existing Ubuntu pilot.** Private administration, repeatable host adoption, model access, supervised startup and application/state recovery work. Coding dispatch stays disabled until H2; WhatsApp is the next integration. GitHub repositories are published; automatic local pre-push checks replace unavailable GitHub Actions.
 
-[H1.6 WhatsApp text](docs/h1.6-whatsapp.adoc) has a locally verified optional bridge, explicit sender rules and an owner-terminal pairing procedure. Transport confirmation and live account acceptance are pending; messaging remains disabled on the pilot.
+H1.6 now targets [personal conversations and an explicitly shared family space](docs/family-conversations.adoc). WhatsApp Agent Platform is the candidate transport, subject to availability on both accounts; its community connector passed local mocked compatibility tests. The earlier [Baileys preparation](docs/h1.6-whatsapp.adoc) remains inactive. Live messaging and family access controls are not yet accepted.
 
 ## Start locally
 
