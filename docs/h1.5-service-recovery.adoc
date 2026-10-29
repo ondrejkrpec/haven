@@ -8,7 +8,7 @@ The runtime remains the exact H1.4 core and retained recovery patch: Hermes v0.2
 
 `haven.service` uses native READY/watchdog notifications, a 120-second watchdog, ten-second restart spacing and a 180-second start/stop budget. The launcher validates the private profile and candidate, then uses `exec` to retain systemd's main PID. Exit 78 stops automatic restart for a policy/configuration failure; transient failures restart. Credential presence is deliberately outside the launch guard so a missing model login cannot stop deterministic scheduling.
 
-The unit drops capabilities and privilege escalation, hides user homes/devices, makes the OS read-only and bounds memory/process count. Its writable service home holds OAuth, native stores, logs and caches. The source and trusted guard are read-only inside the service. These restrictions do not provide a lower-trust executor: that separation belongs to H2.
+The unit drops capabilities and privilege escalation, hides user homes/devices, makes the OS read-only and bounds memory/process count. Its writable service home holds OAuth, native stores, logs and caches. The source and trusted guard are read-only inside the service. Deployment enables linger for `haven` and orders the coordinator after its `user@UID.service`, following the pinned native installer: restart-safe cron workers require that user bus. These restrictions do not provide a lower-trust executor: that separation belongs to H2.
 
 The explicit H1.5 profile has no tools on CLI/local/API/cron/WhatsApp, no paid fallback, no third-party hooks/MCP and no automatic coding dispatch or decomposition. Cron scheduling is native and independent of the model; H1.5 does not create recurring production jobs. WhatsApp stays disabled. Hermes's own runtime listener binds loopback; no firewall change or external dashboard is introduced here.
 
@@ -30,7 +30,7 @@ service_dir=$(mktemp -d)
 
 The flag records an already authorized deployment; it is not an authorization mechanism. The playbook verifies private access, creates a root-only application snapshot, installs the explicit configuration/guard/unit, validates the unit, starts/enables the service and checks a live process plus a fresh event-loop heartbeat. A failed deployment restores its application snapshot. Repeating the same invocation should make no effective changes. Remove the temporary rendered file after successful acceptance.
 
-The snapshot manifest covers only `haven.service`, native `config.yaml` and the three deployed guard/probe modules. Each present file has a digest, mode and owner; absence is recorded too. Restore stops the service, restores those files and the previous active/enabled state, then reloads systemd. It leaves OAuth, session/database state, OS packages, firewall and SSH untouched. It is an application rollback, not an off-site backup.
+The snapshot manifest covers `haven.service`, native `config.yaml` and the three deployed guard/probe modules, plus the previous linger/user-manager state. Each present file has a digest, mode and owner; absence is recorded too. Restore stops the service, restores those files and the previous active/enabled/linger state, then reloads systemd. It leaves OAuth, session/database state, OS packages, firewall and SSH untouched. It is an application rollback, not an off-site backup.
 
 Inspect service status without printing configuration or session data:
 
@@ -58,7 +58,7 @@ Prepare a separate test environment through upstream PM with `--group dev --grou
 * `tests/cron/test_quota_hold.py`, `tests/cron/test_restart_safe_worker.py`: persisted provider windows and restart-safe worker bookkeeping.
 * `tests/gateway/test_systemd_watchdog_lifecycle.py`: native watchdog lifecycle.
 
-Run with `HERMES_E2E_STRICT_ACCEPTANCE=1`, `HERMES_TEST_FILE_RETRIES=0` and the explicit test interpreter. On the VPS, use a temporary systemd unit with a fresh HOME, `PrivateTmp=yes`, `ProtectHome=yes`, `InaccessiblePaths=/var/lib/haven/.hermes`, `IPAddressDeny=any`, `IPAddressAllow=localhost` and a bounded runtime. Its fake provider is the only HTTP server; no live credential or paid fallback is supplied. This checks native recovery on Ubuntu without enabling production coding executors.
+Run with `HERMES_E2E_STRICT_ACCEPTANCE=1`, `HERMES_TEST_FILE_RETRIES=0` and the explicit test interpreter. On the VPS, use a temporary systemd unit with a fresh HOME, `PrivateTmp=yes`, `ProtectHome=yes`, `InaccessiblePaths=/var/lib/haven/.hermes`, `PrivateNetwork=yes` and a bounded runtime. The private network remains in force when a worker moves into a user-manager scope. Its fake provider is the only HTTP server; no live credential or paid fallback is supplied. The test Python must also live outside the masked production profile. This checks native recovery on Ubuntu without enabling production coding executors.
 
 Live service acceptance additionally requires a healthy startup, an idempotent repeat, restoration of a deliberately changed application file, SIGKILL/restart with retained native state, and an authorized host reboot followed by a fresh private connection and healthy service. Compare package and access-identity receipts before/after. Do not trigger real quota exhaustion or revoke an account grant to simulate failure.
 

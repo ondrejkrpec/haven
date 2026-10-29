@@ -28,6 +28,13 @@
       ansible.builtin.assert:
         that: haven_existing_config.stat.isreg | default(false)
 
+    - name: Resolve the fixed service identity for its native worker manager
+      ansible.builtin.command:
+        argv: [id, -u, haven]
+      register: haven_uid
+      changed_when: false
+      check_mode: false
+
   tasks:
     - name: Snapshot only application configuration and service code
       ansible.builtin.script:
@@ -39,6 +46,16 @@
 
     - name: Install and accept the bounded application
       block:
+        - name: Provide the native restart-safe worker user manager
+          ansible.builtin.command:
+            argv: [loginctl, enable-linger, haven]
+            creates: /var/lib/systemd/linger/haven
+
+        - name: Ensure the service user bus is available before starting Hermes
+          ansible.builtin.systemd_service:
+            name: "user@{{ haven_uid.stdout }}.service"
+            state: started
+
         - name: Protect the trusted service code directories
           ansible.builtin.file:
             path: "{{ item }}"

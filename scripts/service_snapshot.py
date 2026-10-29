@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import pwd
 import shutil
 import stat
 import subprocess
@@ -27,6 +28,10 @@ def snapshot():
     root = Path(tempfile.mkdtemp(prefix="haven-service-", dir="/root"))
     manifest = {"active": systemctl("is-active").returncode == 0,
                 "enabled": systemctl("is-enabled").stdout.strip() == "enabled", "files": []}
+    manifest["linger"] = Path("/var/lib/systemd/linger/haven").exists()
+    user_manager = f"user@{pwd.getpwnam('haven').pw_uid}.service"
+    manifest["user_manager_active"] = subprocess.run(
+        ["systemctl", "is-active", user_manager], capture_output=True, check=False).returncode == 0
     for index, name in enumerate(FILES):
         path = Path(name)
         row = {"path": name, "present": path.exists()}
@@ -81,6 +86,11 @@ def restore(root):
             path.unlink(missing_ok=True)
     subprocess.run(["systemctl", "daemon-reload"], check=True, capture_output=True)
     systemctl("reset-failed")
+    subprocess.run(["loginctl", "enable-linger" if manifest.get("linger") else "disable-linger", "haven"],
+                   check=True, capture_output=True)
+    if not manifest.get("user_manager_active") and not manifest["active"]:
+        subprocess.run(["systemctl", "stop", f"user@{pwd.getpwnam('haven').pw_uid}.service"],
+                       check=True, capture_output=True)
     if manifest["enabled"]:
         systemctl("enable").check_returncode()
     if manifest["active"]:

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import subprocess
 import tempfile
+import types
 import unittest
 from unittest.mock import patch
 
@@ -26,7 +27,9 @@ class ServiceSnapshotTests(unittest.TestCase):
         inactive = subprocess.CompletedProcess([], 3, stdout="inactive", stderr="")
         with patch.object(service_snapshot, "FILES", self.scope):
             with patch.object(service_snapshot.tempfile, "mkdtemp", return_value=str(self.saved)):
-                with patch.object(service_snapshot, "systemctl", return_value=inactive):
+                with patch.object(service_snapshot, "systemctl", return_value=inactive), \
+                        patch.object(service_snapshot.pwd, "getpwnam", return_value=types.SimpleNamespace(pw_uid=123)), \
+                        patch.object(service_snapshot.subprocess, "run", return_value=inactive):
                     service_snapshot.snapshot()
 
     def test_snapshot_preserves_contents_permissions_and_absence_without_auth(self):

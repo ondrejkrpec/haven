@@ -2,6 +2,8 @@
 Description=Haven pinned Hermes coordinator (H1.5)
 After=network-online.target
 Wants=network-online.target
+After=user@{{ haven_uid.stdout }}.service
+Wants=user@{{ haven_uid.stdout }}.service
 StartLimitIntervalSec=0
 
 [Service]
