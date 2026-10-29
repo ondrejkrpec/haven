@@ -1,6 +1,6 @@
 = H1.6: private Telegram text
 
-Status, 2026-10-29: the bounded implementation passes local synthetic acceptance. The separate Telegram runtime and disabled service guard/helper are prepared on the existing pilot; repeat deployment and application rollback pass. The owner selected Telegram for themselves only after confirming WhatsApp Agent Platform is unavailable on their account. Bot enrollment and live text/restart acceptance are pending.
+Status, 2026-10-29: accepted on the existing Ubuntu pilot. Private bot enrollment, owner text replies, denied-sender intake, remote-command restriction and enabled-transport restart recovery are verified. The owner selected Telegram for themselves only after confirming WhatsApp Agent Platform is unavailable on their account. Voice, the second member and family data remain outside this text milestone.
 
 == Bounded pilot
 
@@ -98,7 +98,25 @@ The application was prepared from public implementation revision `0d8c0551a0ef9f
 
 A separate application rollback check appended a harmless comment to the deployed Telegram helper, then restored all nine fixed files with their hashes, modes and owners. Service health passed afterwards. OAuth inode/size/mtime were unchanged across preparation/deployment and rollback. The baseline core interpreter remains selected until Telegram activation; the prepared optional environment is retained read-only. No OS update, firewall change, bot enrollment, live Telegram message or model request was performed by these preparation checks.
 
-These results establish the application preparation path. Live owner/denied-sender messages and reconnect after an enabled-transport restart remain unverified.
+These initial results establish the application preparation path. The subsequent live acceptance below uses the enrolled account.
+
+== Live pilot result
+
+The first enabled deployment connected and delivered a no-tools reply, but native first-contact onboarding wrote `onboarding.seen.profile_build_offered` into YAML. The strict guard rejected that unexpected field and automatic application rollback restored healthy disabled service. The first-contact regression reproduced the write; the explicit onboarding settings described above fixed it without relaxing policy comparison. The corrected application deployed from `191849494b5417129306b95703b2277470b4ac7e`.
+
+[cols="1,3",options="header"]
+|===
+|Check |Verified outcome
+|Enrollment and connection |Owner-terminal challenge completed, protected token accepted, no webhook; the native adapter connects in the supervised process.
+|Personal text |The owner confirmed an actual answer on the phone; persisted final-response obligations record successful delivery and model tool counts remain zero.
+|Denied sender |Temporarily allowed only the owned bot's ID, excluding the real human owner. The owner sent a synthetic marker. The native auth log records its rejection; user/model/message counters did not increase and the marker never entered the conversation.
+|Safe test cleanup |A root-only application snapshot and a four-minute automatic restore were armed before the temporary denial. The restore returned the accepted profile; snapshot hashes were verified and the temporary timer/code directory removed.
+|Restart |A controlled restart of the enabled service reconnects without token entry. The owner confirmed the subsequent synthetic reply.
+|Remote administration |The owner confirmed `/model` is rejected. Native configuration remained unchanged; the no-tools/no-fallback profile remains enforced.
+|Active deployment repeat |The same enabled profile passed `ok=19 changed=0 failed=0`; the service stayed healthy under the same process without a restart.
+|===
+
+Read-only acceptance audits selected only Telegram rows and returned aggregate counts or synthetic-marker matches, never transcripts or credentials. Local checks cover 75 project tests and 82 pinned native Telegram tests; live outcomes are separate evidence. This accepts one owner's text pilot, not exactly-once external delivery, speech or a multi-user family authorization service.
 
 == Sources
 
