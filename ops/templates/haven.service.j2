@@ -1,5 +1,5 @@
 [Unit]
-Description=Haven pinned Hermes coordinator (H1.5)
+Description=Haven pinned Hermes coordinator (H1.5/H1.6)
 After=network-online.target
 Wants=network-online.target
 After=user@{{ haven_uid.stdout }}.service
@@ -22,8 +22,8 @@ Environment=HERMES_HOME={{ haven_state }}
 Environment=HERMES_RUNTIME_DIR={{ haven_state }}/tools
 Environment=HERMES_SUPERVISED_CHILD=1
 Environment=PYTHONPATH={{ haven_tools }}
-Environment=PATH={{ haven_source }}/venv/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart={{ haven_source }}/venv/bin/python -m scripts.service_runtime run --source {{ haven_source }} --home {{ haven_state }}
+Environment=PATH={{ haven_python | dirname }}:/usr/local/bin:/usr/bin:/bin
+ExecStart={{ haven_python }} -m scripts.service_runtime run --source {{ haven_source }} --home {{ haven_state }}
 Restart=always
 RestartSec=10
 RestartPreventExitStatus=78
@@ -42,6 +42,7 @@ PrivateDevices=yes
 RestrictSUIDSGID=yes
 ReadWritePaths=/var/lib/haven
 ReadOnlyPaths={{ haven_source }} {{ haven_tools }}
+ReadOnlyPaths=-/var/lib/haven/whatsapp
 MemoryMax=2G
 TasksMax=128
 StandardOutput=journal

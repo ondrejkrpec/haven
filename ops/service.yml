@@ -2,7 +2,7 @@
 - name: Verify private access before application deployment
   ansible.builtin.import_playbook: verify.yml
 
-- name: Deploy the bounded H1.5 coordinator from an explicit native profile
+- name: Deploy the bounded coordinator from an explicit native profile
   hosts: haven_hosts
   gather_facts: false
   become: true
@@ -10,6 +10,8 @@
     haven_source: /var/lib/haven/releases/hermes-bf0203a-785f2646
     haven_state: /var/lib/haven/.hermes
     haven_tools: /var/lib/haven/haven-tools
+    haven_whatsapp_enabled: "{{ (lookup('ansible.builtin.file', haven_model_config) | from_yaml).get('platforms', {}).get('whatsapp', {}).get('enabled', false) }}"
+    haven_python: "{{ '/var/lib/haven/whatsapp/venv/bin/python' if haven_whatsapp_enabled | bool else haven_source + '/venv/bin/python' }}"
   pre_tasks:
     - name: Require an explicit deployment and native configuration
       ansible.builtin.assert:
@@ -17,7 +19,7 @@
           - ansible_play_hosts_all | length == 1
           - haven_service_authorized | default(false) | bool
           - haven_model_config is defined
-        fail_msg: Explicit H1.5 deployment and a freshly rendered service profile are required.
+        fail_msg: Explicit service deployment and a freshly rendered service profile are required.
 
     - name: Inspect existing native configuration
       ansible.builtin.stat:
@@ -63,7 +65,7 @@
             owner: root
             group: haven
             mode: '0750'
-          loop: ["{{ haven_tools }}", "{{ haven_tools }}/scripts"]
+          loop: ["{{ haven_tools }}", "{{ haven_tools }}/scripts", "{{ haven_tools }}/config"]
 
         - name: Install the fixed service contract and guard
           ansible.builtin.copy:
@@ -72,7 +74,16 @@
             owner: root
             group: haven
             mode: '0640'
-          loop: [model_contract.py, model_probe.py, service_runtime.py]
+          loop: [model_contract.py, model_probe.py, service_runtime.py, whatsapp_runtime.py]
+          notify: Restart Haven
+
+        - name: Install the exact WhatsApp dependency pins
+          ansible.builtin.copy:
+            src: ../config/whatsapp-runtime.json
+            dest: "{{ haven_tools }}/config/whatsapp-runtime.json"
+            owner: root
+            group: haven
+            mode: '0640'
           notify: Restart Haven
 
         - name: Install the explicitly rendered native service configuration
@@ -96,7 +107,7 @@
               - /usr/bin/env
               - "HERMES_HOME={{ haven_state }}"
               - "PYTHONPATH={{ haven_tools }}"
-              - "{{ haven_source }}/venv/bin/python"
+              - "{{ haven_python }}"
               - -m
               - scripts.service_runtime
               - check
@@ -142,7 +153,7 @@
               - /usr/bin/env
               - "HERMES_HOME={{ haven_state }}"
               - "PYTHONPATH={{ haven_tools }}"
-              - "{{ haven_source }}/venv/bin/python"
+              - "{{ haven_python }}"
               - -m
               - scripts.service_runtime
               - health
@@ -168,7 +179,7 @@
 
         - name: Report the failed application deployment
           ansible.builtin.fail:
-            msg: H1.5 deployment failed; the previous application snapshot was restored.
+            msg: Service deployment failed; the previous application snapshot was restored.
 
   handlers:
     - name: Restart Haven

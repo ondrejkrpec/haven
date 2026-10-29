@@ -1,0 +1,201 @@
+---
+- name: Verify private access before optional WhatsApp preparation
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Prepare the exact private WhatsApp runtime without pairing or enabling it
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  vars:
+    haven_source: /var/lib/haven/releases/hermes-bf0203a-785f2646
+    haven_whatsapp_root: /var/lib/haven/whatsapp
+    haven_whatsapp_pins: "{{ lookup('ansible.builtin.file', '../config/whatsapp-runtime.json') | from_json }}"
+  pre_tasks:
+    - name: Require explicit preparation of the existing pilot
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_whatsapp_prepare_authorized | default(false) | bool
+          - ansible_version.full == '2.21.5'
+
+    - name: Verify the accepted pinned source before executing PM
+      ansible.builtin.command:
+        argv: [git, -C, "{{ haven_source }}", rev-parse, HEAD]
+      become_user: haven
+      become: true
+      register: haven_whatsapp_head
+      changed_when: false
+      failed_when: haven_whatsapp_head.stdout != 'bf0203a794a07aac3ff764972ab9087baa4e4f4e'
+      check_mode: false
+
+    - name: Inspect the pinned PM lock before preparing any tool
+      ansible.builtin.stat:
+        path: "{{ haven_source }}/pm/lock.json"
+        checksum_algorithm: sha256
+      register: haven_whatsapp_pm_lock
+
+    - name: Require the unchanged upstream tool lock
+      ansible.builtin.assert:
+        that: haven_whatsapp_pm_lock.stat.checksum == haven_whatsapp_pins.pm_lock_sha256
+        quiet: true
+
+    - name: Inspect the completed optional runtime
+      ansible.builtin.stat:
+        path: "{{ haven_whatsapp_root }}/.prepared"
+      register: haven_whatsapp_prepared
+
+    - name: Read only the public dependency receipt of an existing runtime
+      ansible.builtin.slurp:
+        src: "{{ haven_whatsapp_root }}/.prepared"
+      register: haven_whatsapp_receipt
+      when: haven_whatsapp_prepared.stat.exists
+
+    - name: Refuse silent reuse of different dependency pins
+      ansible.builtin.assert:
+        that: (haven_whatsapp_receipt.content | b64decode | from_json) == haven_whatsapp_pins
+        quiet: true
+      when: haven_whatsapp_prepared.stat.exists
+
+  tasks:
+    - name: Build an optional runtime independently of the running core
+      when: not haven_whatsapp_prepared.stat.exists
+      block:
+        - name: Create private staging and installation directories
+          ansible.builtin.file:
+            path: "{{ haven_whatsapp_root }}/{{ item }}"
+            state: directory
+            owner: haven
+            group: haven
+            mode: '0700'
+          loop: ['', bridge, install-home]
+
+        - name: Prepare pinned Node and npm through upstream PM without a venv sync
+          ansible.builtin.command:
+            argv: ["{{ haven_source }}/venv/bin/python", -c, "import pm; pm.ensure('npm', explicit=True); print('node_npm_prepared')"]
+            chdir: "{{ haven_source }}"
+          become: true
+          become_user: haven
+          environment:
+            HOME: "{{ haven_whatsapp_root }}/install-home"
+            HERMES_HOME: "{{ haven_whatsapp_root }}/install-home/profile"
+            HERMES_RUNTIME_DIR: "{{ haven_whatsapp_root }}/tools"
+          changed_when: true
+
+        - name: Resolve only the PM-selected Node binary
+          ansible.builtin.command:
+            argv: ["{{ haven_source }}/venv/bin/python", -c, "import pm; print(pm.installed_package('node').binary)"]
+            chdir: "{{ haven_source }}"
+          become: true
+          become_user: haven
+          environment:
+            HERMES_RUNTIME_DIR: "{{ haven_whatsapp_root }}/tools"
+          register: haven_whatsapp_node
+          changed_when: false
+
+        - name: Copy the pinned bridge source and dependency lock
+          ansible.builtin.copy:
+            src: "{{ haven_source }}/scripts/whatsapp-bridge/{{ item.key }}"
+            dest: "{{ haven_whatsapp_root }}/bridge/{{ item.key }}"
+            remote_src: true
+            owner: haven
+            group: haven
+            mode: '0600'
+          loop: "{{ haven_whatsapp_pins.bridge_sha256 | dict2items }}"
+          loop_control:
+            label: "{{ item.key }}"
+
+        - name: Inspect each copied source hash
+          ansible.builtin.stat:
+            path: "{{ haven_whatsapp_root }}/bridge/{{ item.key }}"
+            checksum_algorithm: sha256
+          loop: "{{ haven_whatsapp_pins.bridge_sha256 | dict2items }}"
+          register: haven_whatsapp_hashes
+          loop_control:
+            label: "{{ item.key }}"
+
+        - name: Require the retained bridge source and exact dependency lock
+          ansible.builtin.assert:
+            that: item.stat.checksum == item.item.value
+            quiet: true
+          loop: "{{ haven_whatsapp_hashes.results }}"
+          loop_control:
+            label: "{{ item.item.key }}"
+
+        - name: Install frozen npm dependencies without lifecycle scripts
+          ansible.builtin.command:
+            argv:
+              - "{{ haven_source }}/venv/bin/python"
+              - -c
+              - "import pm, subprocess; subprocess.run([str(pm.installed_package('npm').binary), 'ci', '--ignore-scripts', '--no-audit', '--no-fund'], env=pm.env_for('npm'), check=True)"
+            chdir: "{{ haven_whatsapp_root }}/bridge"
+            creates: "{{ haven_whatsapp_root }}/bridge/node_modules/.hermes-pkg-hash"
+          become_user: haven
+          become: true
+          environment:
+            HOME: "{{ haven_whatsapp_root }}/install-home"
+            HERMES_RUNTIME_DIR: "{{ haven_whatsapp_root }}/tools"
+            PYTHONPATH: "{{ haven_source }}"
+
+        - name: Record the upstream dependency stamp after successful frozen installation
+          ansible.builtin.copy:
+            content: "{{ haven_whatsapp_pins.bridge_sha256['package.json'][:16] }}\n"
+            dest: "{{ haven_whatsapp_root }}/bridge/node_modules/.hermes-pkg-hash"
+            owner: haven
+            group: haven
+            mode: '0600'
+
+        - name: Build a separate frozen Python runtime with only the sms extra
+          ansible.builtin.command:
+            argv:
+              - /usr/sbin/runuser
+              - -u
+              - haven
+              - --
+              - /usr/bin/env
+              - "HOME={{ haven_whatsapp_root }}/install-home"
+              - "HERMES_HOME={{ haven_whatsapp_root }}/install-home/profile"
+              - "HERMES_RUNTIME_DIR={{ haven_whatsapp_root }}/tools"
+              - /usr/bin/python3
+              - -m
+              - pm.build_env
+              - --source
+              - "{{ haven_source }}"
+              - --out
+              - "{{ haven_whatsapp_root }}/venv"
+              - --extra
+              - sms
+            chdir: "{{ haven_source }}"
+            creates: "{{ haven_whatsapp_root }}/venv/bin/python"
+          async: 1800
+          poll: 10
+
+        - name: Verify the actual bridge imports without connecting to WhatsApp
+          ansible.builtin.command:
+            argv: ["{{ haven_whatsapp_node.stdout }}", --input-type=module, -e, "await import('@whiskeysockets/baileys'); await import('express'); console.log('bridge_imports_ready')"]
+            chdir: "{{ haven_whatsapp_root }}/bridge"
+          become_user: haven
+          become: true
+          changed_when: false
+
+        - name: Verify the frozen Python transport dependency
+          ansible.builtin.command:
+            argv: ["{{ haven_whatsapp_root }}/venv/bin/python", -c, "import aiohttp; print('whatsapp_python_ready')"]
+          become_user: haven
+          become: true
+          changed_when: false
+
+        - name: Protect prepared application files from runtime modification
+          ansible.builtin.file:
+            path: "{{ haven_whatsapp_root }}"
+            owner: root
+            group: haven
+            mode: u=rwX,g=rX,o=
+            recurse: true
+
+        - name: Mark only a fully prepared runtime as reusable
+          ansible.builtin.copy:
+            content: "{{ haven_whatsapp_pins | to_json }}\n"
+            dest: "{{ haven_whatsapp_root }}/.prepared"
+            owner: root
+            group: haven
+            mode: '0640'

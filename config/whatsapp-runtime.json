@@ -1,0 +1,15 @@
+{
+  "node_version": "26.12.1",
+  "node_sha256": "6170b2d474e1c626f43cff3adc118df9fe3b573258a4fc3d850c8dbc6b079bbd",
+  "bridge_sha256": {
+    "allowlist.js": "ac7b015ddbb2bfdfcb652d3c414dc626edcf62691740513916c5252a3487f27e",
+    "bridge.js": "607a82525c938bd9c97f687239e32cd024d426ef65e0ffd1f8c46dcb382ace9f",
+    "bridge_helpers.js": "11177266c889c3a0873f3293b9054f9a42633319ea5166ab7610e35d8c81510c",
+    "outbound_ids.js": "d022374c0a055eb4b8b60232ee4a6b1c749b78fe828e0b67bcb864e2917d8680",
+    "owner_message_gate.js": "c1388cfa100d662ca04bca72e003e94c5ec56d87288a7a27ccbbaf6bd8b5f8af",
+    "package-lock.json": "fd22e0823315c936e9b1b034a437f6b776b27899083e5e0a691345f6d18d3bb6",
+    "package.json": "9c5eb2f59af8bfba4582ba1c9f50eda11a2e67c771fcf1e9a65dd8a7f2dc6f27"
+  },
+  "npm_version": "12.0.2",
+  "pm_lock_sha256": "0ede00c6ee83d3cf7a93fe1b569b31c705cd274d83050547511b2d8c2f244e04"
+}

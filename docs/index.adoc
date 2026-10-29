@@ -15,6 +15,7 @@ The local foundation is accepted through a fresh checkout: public sources, a pri
 * link:h1.3-private-access.adoc[Tailscale private administration]: verified enrollment, policy, private-only SSH and guarded access recovery.
 * link:h1.3-bootstrap.adoc[Repeatable bootstrap and restart]: verified adoption of the secured pilot, restoration and post-boot access.
 * link:h1.5-service-recovery.adoc[Supervised service and recovery]: bounded native gateway, application rollback, restart-safe cron workers and recovery evidence.
+* link:h1.6-whatsapp.adoc[WhatsApp text and access rules]: optional bridge preparation, private pairing and pending live acceptance.
 
 == Evidence and limits
 
