@@ -1,6 +1,6 @@
 # Haven repository instructions
 
-This repository contains Haven's public source, English documentation, configuration validator, synthetic examples and H0.1 feasibility probes. Read `README.md` and `docs/local-development.adoc` before changing it. Deployment and the executor adapter are future work.
+This repository contains Haven's public source, English documentation, configuration validator, bounded pilot operations, synthetic examples and H0.1 feasibility probes. Read `README.md` and `docs/local-development.adoc` before changing it. The isolated production executor adapter remains H2 work.
 
 - Keep technical documentation in AsciiDoc under `docs/`; README, contribution rules and agent instructions use Markdown. Do not add a documentation generator, dependency framework or CLI without a concrete task requiring it.
 - Keep each installation in a separate private repository created from `templates/private/`. Do not read a neighboring private repository unless the task needs it. Never copy its contents into public sources or build inputs.

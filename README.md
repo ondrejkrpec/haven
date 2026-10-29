@@ -2,7 +2,7 @@
 
 Haven is a personal agent system built around Hermes, with WhatsApp as its planned phone interface. The first deployment will use one Ubuntu VPS and bounded automation, with separate worker and reviewer roles.
 
-**Status: H1.4 verified on the existing Ubuntu pilot.** Private administration, repeatable host adoption, native configuration and one authenticated Hermes model request work. A persistent service, recovery and WhatsApp remain next steps. GitHub repositories are published; automatic local pre-push checks replace unavailable GitHub Actions.
+**Status: H1.5 coordinator service verified on the existing Ubuntu pilot.** Private administration, repeatable host adoption, model access, supervised startup and application/state recovery work. Coding dispatch stays disabled until H2; WhatsApp is the next integration. GitHub repositories are published; automatic local pre-push checks replace unavailable GitHub Actions.
 
 ## Start locally
 
@@ -43,7 +43,7 @@ Enable the documented local push pipeline with `git config --local core.hooksPat
 
 See [H0.5 acceptance](docs/h0.5-acceptance.adoc) for the clean-checkout result and [H1 acceptance](docs/h1-prerequisites.adoc) for live progress and remaining work.
 
-[H1.3 first access and security](docs/h1.3-first-access.adoc) records verified key-only SSH, a restricted service account, UFW and a tested configuration rollback on Ubuntu 26.04 LTS. [Tailscale private administration](docs/h1.3-private-access.adoc) provides verified private IPv4/IPv6 SSH with public SSH allowances removed and a tested access fallback. [Repeatable host bootstrap and restart](docs/h1.3-bootstrap.adoc) are verified for the existing secured pilot. [H1.4 configuration and authentication](docs/h1.4-model-configuration.adoc) adds the pinned core runtime, independent OAuth login, credential failure checks and one native request. OS updates remain deferred by the owner; persistent service deployment is pending.
+[H1.3 first access and security](docs/h1.3-first-access.adoc) records verified key-only SSH, a restricted service account, UFW and a tested configuration rollback on Ubuntu 26.04 LTS. [Tailscale private administration](docs/h1.3-private-access.adoc) provides verified private IPv4/IPv6 SSH with public SSH allowances removed and a tested access fallback. [Repeatable host bootstrap and restart](docs/h1.3-bootstrap.adoc) are verified for the existing secured pilot. [H1.4 configuration and authentication](docs/h1.4-model-configuration.adoc) adds the pinned core runtime, independent OAuth login, credential failure checks and one native request. [H1.5 service and recovery](docs/h1.5-service-recovery.adoc) adds the bounded systemd coordinator, a required worker user bus, tested application rollback and recovery after a killed process/reboot. OS updates remain deferred by the owner.
 
 ## Publication and licensing
 

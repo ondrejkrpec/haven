@@ -1,6 +1,6 @@
 = H1.5: Supervised Hermes and recovery
 
-Status on 2026-10-29: implementation and local synthetic recovery tests pass; live service acceptance is pending. The procedure targets the existing accepted Ubuntu 26.04 pilot. It does not provision a clean OS or install updates.
+Status on 2026-10-29: the bounded coordinator, required worker bus, application rollback, process restart, post-boot state recovery and a native model request are verified. The complete isolated host suite passes; the temporary identity and its runtime configuration are removed. The procedure targets the existing accepted Ubuntu 26.04 pilot. It does not provision a clean OS or install updates.
 
 == Service and state
 
@@ -58,15 +58,33 @@ Prepare a separate test environment through upstream PM with `--group dev --grou
 * `tests/cron/test_quota_hold.py`, `tests/cron/test_restart_safe_worker.py`: persisted provider windows and restart-safe worker bookkeeping.
 * `tests/gateway/test_systemd_watchdog_lifecycle.py`: native watchdog lifecycle.
 
-Run with `HERMES_E2E_STRICT_ACCEPTANCE=1`, `HERMES_TEST_FILE_RETRIES=0` and the explicit test interpreter. On the VPS, use a temporary systemd unit with a fresh HOME, `PrivateTmp=yes`, `ProtectHome=tmpfs`, a read-only bind of the service user's `/run/user/UID`, `InaccessiblePaths=/var/lib/haven/.hermes`, `PrivateNetwork=yes` and a bounded runtime. The private network remains in force when a worker moves into a user-manager scope. Its fake provider is the only HTTP server; no live credential or paid fallback is supplied. The test Python must also live outside the masked production profile. This checks native recovery on Ubuntu without enabling production coding executors.
+Run with `HERMES_E2E_STRICT_ACCEPTANCE=1`, `HERMES_TEST_FILE_RETRIES=0` and the explicit test interpreter. CLI recovery scenarios can use a temporary unit with a fresh HOME, masked production profile and private network. The complete suite with live user scopes needs a dedicated disposable OS identity: its own locked account/home, no supplementary privileges or access to the production profile, and a user manager. Bind that disposable identity's `/run/user/UID` writable through `ProtectHome=tmpfs`: long synthetic profile paths need to create a short Unix-socket fallback there. The production profile has a short direct socket path and keeps its runtime bind read-only.
+
+For that complete host run, give only the disposable identity's `user@UID.service` a temporary `PrivateNetwork=yes` override, and run the test unit with `PrivateNetwork=yes`, `JoinsNamespaceOf=user@UID.service` and startup ordering after that manager. Also enforce `IPAddressDeny=any` and `IPAddressAllow=localhost` on its `user-UID.slice` and place the test unit there. This covers manager-spawned daemons and scopes as well as the original process. Remove the temporary manager override during cleanup. The test and manager must share the provider's loopback namespace. The provider remains local, credentials are synthetic and the test Python lives outside the production profile. Creating this temporary identity is a separately authorized host test operation; always stop its units/manager, remove linger and delete the account/home in a cleanup block. The production service playbook does not create test accounts.
 
 Live service acceptance additionally requires a healthy startup, an idempotent repeat, restoration of a deliberately changed application file, SIGKILL/restart with retained native state, and an authorized host reboot followed by a fresh private connection and healthy service. Compare package and access-identity receipts before/after. Do not trigger real quota exhaustion or revoke an account grant to simulate failure.
 
 == Results and limits
 
-Local pinned upstream result: 107 passed, one Windows-only skip, six selected files. The two process scenarios use synthetic providers and actual child processes. Public tests check the launcher, fail-closed policy, fixed diagnostics, fresh heartbeat/process identity and credential-independent startup. Public checks never start a gateway or contact the VPS.
+The implementation deployed from `5628cb7c3c199bd8a317e5d0c5dbb01826c5b340`. Later documentation commits record the receipts without changing runtime code.
 
-Live installation, restoration, crash and post-boot receipts will be recorded after verification. Real subscription quota payloads and token expiry/refresh are separate from synthetic recovery. Outbound message delivery and non-idempotent tools stay outside H1.5: after an ambiguous external effect, H2 must reconcile the target before authorizing a new attempt. A task/run key alone cannot make an external action exactly once.
+[cols="1,3",options="header"]
+|===
+|Check |Verified result
+|Public checks |61 behavior tests, Ansible syntax/production lint, configuration, secret scans, documentation build and links pass. Public checks never contact a VPS or start Hermes.
+|Local pinned upstream |107 passed and one Windows-only skip across the six selected files.
+|Isolated Ubuntu upstream |The same six files pass: 107 tests, no failures, one Windows-only skip, strict acceptance and no file retries. The complete run took 170.3 seconds. The disposable account/home/linger/manager override were removed in cleanup.
+|Pilot installation |The final bus/scoped-worker configuration installs successfully; the repeat is `ok=17 changed=0 failed=0`.
+|Invalid configuration and rollback |The main process exits 78 without an automatic restart loop; the root-only snapshot restores healthy service. OAuth inode/mtime/size are retained.
+|Coordinator crash |SIGKILL of the main process triggers an automatic restart and a new healthy native gateway.
+|In-flight cron worker |An actual synthetic no-agent task stays in its own user scope through a coordinator restart, finishes successfully and writes its marker once. Its job/script/markers are then removed.
+|Host reboot |The final unit starts automatically with its user bus, accepts health checks and completes the queued one-shot on the new boot exactly once. Packages and the private access baseline remain unchanged.
+|Model after reboot |One native authenticated request passes with zero tools/fallbacks. No account grant is revoked or quota deliberately exhausted.
+|===
+
+An early parallel VPS test run exceeded the chaos test's timing window; a sequential CLI recovery run passed (106 tests, with Windows and unavailable user-scope skips). The hidden user bus was then reproduced by a real harmless cron job and corrected in the unit/guard; the formerly skipped standalone native scope test passed. The extended host runs exposed another harness constraint: long pytest profile paths require the native Unix-socket fallback. A read-only test runtime bind prevented its creation (`EROFS`) before any provider call. The dedicated test identity's runtime is therefore writable; this leaves the fixed short production profile's read-only bind intact. The final suite uses the separate identity and shared private network described above and passes all 107 selected tests. No Hermes source change was needed for this harness correction.
+
+Real subscription quota payloads and deliberate token expiry/revocation/refresh remain outside these synthetic results. Outbound messaging and non-idempotent tools stay outside H1.5: after an ambiguous external effect, H2 must reconcile the target before authorizing another attempt. A task/run key cannot make an external action exactly once. Coding dispatch stays disabled, and H1.6 introduces messaging.
 
 == Sources
 
