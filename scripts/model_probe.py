@@ -52,6 +52,12 @@ def prepare(source, home):
             raise ProbeError("credentials_invalid")
     except (json.JSONDecodeError, UnicodeError):
         raise ProbeError("credentials_invalid") from None
+    check_candidate(source)
+    sys.path.insert(0, str(source))
+    return model
+
+
+def check_candidate(source):
     head = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True,
                                    stderr=subprocess.DEVNULL).strip()
     if head != HERMES_COMMIT:
@@ -59,8 +65,6 @@ def prepare(source, home):
     for name, digest in PATCHED_FILES.items():
         if hashlib.sha256((source / name).read_bytes()).hexdigest() != digest:
             raise ProbeError("candidate_patch_mismatch")
-    sys.path.insert(0, str(source))
-    return model
 
 
 def run_native(mode, model):

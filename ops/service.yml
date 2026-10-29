@@ -1,0 +1,178 @@
+---
+- name: Verify private access before application deployment
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Deploy the bounded H1.5 coordinator from an explicit native profile
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  vars:
+    haven_source: /var/lib/haven/releases/hermes-bf0203a-785f2646
+    haven_state: /var/lib/haven/.hermes
+    haven_tools: /var/lib/haven/haven-tools
+  pre_tasks:
+    - name: Require an explicit deployment and native configuration
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_service_authorized | default(false) | bool
+          - haven_model_config is defined
+        fail_msg: Explicit H1.5 deployment and a freshly rendered service profile are required.
+
+    - name: Inspect existing native configuration
+      ansible.builtin.stat:
+        path: "{{ haven_state }}/config.yaml"
+      register: haven_existing_config
+
+    - name: Require the accepted runtime profile
+      ansible.builtin.assert:
+        that: haven_existing_config.stat.isreg | default(false)
+
+    - name: Resolve the fixed service identity for its native worker manager
+      ansible.builtin.command:
+        argv: [id, -u, haven]
+      register: haven_uid
+      changed_when: false
+      check_mode: false
+
+  tasks:
+    - name: Snapshot only application configuration and service code
+      ansible.builtin.script:
+        cmd: ../scripts/service_snapshot.py snapshot
+        executable: /usr/bin/python3
+      register: haven_snapshot
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: Install and accept the bounded application
+      block:
+        - name: Provide the native restart-safe worker user manager
+          ansible.builtin.command:
+            argv: [loginctl, enable-linger, haven]
+            creates: /var/lib/systemd/linger/haven
+
+        - name: Ensure the service user bus is available before starting Hermes
+          ansible.builtin.systemd_service:
+            name: "user@{{ haven_uid.stdout }}.service"
+            state: started
+
+        - name: Protect the trusted service code directories
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: directory
+            owner: root
+            group: haven
+            mode: '0750'
+          loop: ["{{ haven_tools }}", "{{ haven_tools }}/scripts"]
+
+        - name: Install the fixed service contract and guard
+          ansible.builtin.copy:
+            src: "../scripts/{{ item }}"
+            dest: "{{ haven_tools }}/scripts/{{ item }}"
+            owner: root
+            group: haven
+            mode: '0640'
+          loop: [model_contract.py, model_probe.py, service_runtime.py]
+          notify: Restart Haven
+
+        - name: Install the explicitly rendered native service configuration
+          ansible.builtin.copy:
+            src: "{{ haven_model_config }}"
+            dest: "{{ haven_state }}/config.yaml"
+            owner: haven
+            group: haven
+            mode: '0600'
+            backup: true
+          no_log: true
+          notify: Restart Haven
+
+        - name: Validate the service policy without resolving credentials
+          ansible.builtin.command:
+            argv:
+              - /usr/sbin/runuser
+              - -u
+              - haven
+              - --
+              - /usr/bin/env
+              - "HERMES_HOME={{ haven_state }}"
+              - "PYTHONPATH={{ haven_tools }}"
+              - "{{ haven_source }}/venv/bin/python"
+              - -m
+              - scripts.service_runtime
+              - check
+              - --source
+              - "{{ haven_source }}"
+              - --home
+              - "{{ haven_state }}"
+          changed_when: false
+          when: not ansible_check_mode
+
+        - name: Install the supervised system service
+          ansible.builtin.template:
+            src: haven.service.j2
+            dest: /etc/systemd/system/haven.service
+            owner: root
+            group: root
+            mode: '0644'
+          notify: Restart Haven
+
+        - name: Validate the installed unit before loading it
+          ansible.builtin.command:
+            argv: [systemd-analyze, verify, /etc/systemd/system/haven.service]
+          changed_when: false
+          when: not ansible_check_mode
+
+        - name: Apply pending service changes
+          ansible.builtin.meta: flush_handlers
+
+        - name: Enable the coordinator at boot and ensure it is running
+          ansible.builtin.systemd_service:
+            name: haven.service
+            daemon_reload: true
+            enabled: true
+            state: started
+
+        - name: Accept a live gateway and a fresh event loop heartbeat
+          ansible.builtin.command:
+            argv:
+              - /usr/sbin/runuser
+              - -u
+              - haven
+              - --
+              - /usr/bin/env
+              - "HERMES_HOME={{ haven_state }}"
+              - "PYTHONPATH={{ haven_tools }}"
+              - "{{ haven_source }}/venv/bin/python"
+              - -m
+              - scripts.service_runtime
+              - health
+              - --source
+              - "{{ haven_source }}"
+              - --home
+              - "{{ haven_state }}"
+          register: haven_health
+          changed_when: false
+          until: haven_health.rc == 0
+          retries: 6
+          delay: 5
+          when: not ansible_check_mode
+
+      rescue:
+        - name: Restore the previous application state after deployment failure
+          ansible.builtin.script:
+            cmd: >-
+              ../scripts/service_snapshot.py restore
+              --snapshot {{ (haven_snapshot.stdout | from_json).snapshot | quote }}
+            executable: /usr/bin/python3
+          when: not ansible_check_mode
+
+        - name: Report the failed application deployment
+          ansible.builtin.fail:
+            msg: H1.5 deployment failed; the previous application snapshot was restored.
+
+  handlers:
+    - name: Restart Haven
+      ansible.builtin.systemd_service:
+        name: haven.service
+        daemon_reload: true
+        state: restarted

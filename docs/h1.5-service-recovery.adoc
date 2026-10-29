@@ -1,0 +1,91 @@
+= H1.5: Supervised Hermes and recovery
+
+Status on 2026-10-29: the bounded coordinator, required worker bus, application rollback, process restart, post-boot state recovery and a native model request are verified. The complete isolated host suite passes; the temporary identity and its runtime configuration are removed. The procedure targets the existing accepted Ubuntu 26.04 pilot. It does not provision a clean OS or install updates.
+
+== Service and state
+
+The runtime remains the exact H1.4 core and retained recovery patch: Hermes v0.22.5, base `bf0203a794a07aac3ff764972ab9087baa4e4f4e`. Read link:h1.4-model-configuration.adoc[H1.4] and link:adr/0004-supervised-coordinator.adoc[ADR 0004] first. The service runs as the existing `haven` identity, from `/var/lib/haven/releases/hermes-bf0203a-785f2646`, with `HERMES_HOME=/var/lib/haven/.hermes`.
+
+`haven.service` uses native READY/watchdog notifications, a 120-second watchdog, ten-second restart spacing and a 180-second start/stop budget. The launcher validates the private profile and candidate, then uses `exec` to retain systemd's main PID. Exit 78 stops automatic restart for a policy/configuration failure; transient failures restart. Credential presence is deliberately outside the launch guard so a missing model login cannot stop deterministic scheduling.
+
+The unit drops capabilities and privilege escalation, hides user homes/devices, makes the OS read-only and bounds memory/process count. Its writable service home holds OAuth, native stores, logs and caches. The source and trusted guard are read-only inside the service. Deployment enables linger for `haven` and orders the coordinator after its `user@UID.service`, following the pinned native installer: restart-safe cron workers require that user bus. `ProtectHome=tmpfs` hides homes and `/run/user`; only `/run/user/UID` is bound back read-only for that identity's socket. The launcher rejects a missing bus and `cron.require_restart_safe_scope: true` refuses unscoped fallback. These restrictions do not provide a lower-trust executor: that separation belongs to H2.
+
+The explicit H1.5 profile has no tools on CLI/local/API/cron/WhatsApp, no paid fallback, no third-party hooks/MCP and no automatic coding dispatch or decomposition. Cron scheduling is native and independent of the model; H1.5 does not create recurring production jobs. WhatsApp stays disabled. Hermes's own runtime listener binds loopback; no firewall change or external dashboard is introduced here.
+
+== Deploy from checked sources
+
+Use the pinned controller dependencies and explicit private inventory from link:h1.3-bootstrap.adoc[H1.3]. Work from a committed source revision that passed the public checks. Render a fresh protected output from the intended private instance:
+
+[source,sh]
+----
+export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+umask 077
+service_dir=$(mktemp -d)
+.venv/bin/python -m scripts.render_model ../haven-private/config/instance.yaml \
+  --service --output "$service_dir/config.yaml"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/service.yml \
+  -e haven_service_authorized=true -e "haven_model_config=$service_dir/config.yaml"
+----
+
+The flag records an already authorized deployment; it is not an authorization mechanism. The playbook verifies private access, creates a root-only application snapshot, installs the explicit configuration/guard/unit, validates the unit, starts/enables the service and checks a live process plus a fresh event-loop heartbeat. A failed deployment restores its application snapshot. Repeating the same invocation should make no effective changes. Remove the temporary rendered file after successful acceptance.
+
+The snapshot manifest covers `haven.service`, native `config.yaml` and the three deployed guard/probe modules, plus the previous linger/user-manager state. Each present file has a digest, mode and owner; absence is recorded too. Restore stops the service, restores those files and the previous active/enabled/linger state, then reloads systemd. It leaves OAuth, session/database state, OS packages, firewall and SSH untouched. It is an application rollback, not an off-site backup.
+
+Inspect service status without printing configuration or session data:
+
+[source,sh]
+----
+ssh haven-example 'sudo systemctl show haven.service \
+  -p ActiveState -p SubState -p MainPID -p NRestarts -p Result -p WatchdogUSec'
+ssh haven-example 'sudo -H -u haven env \
+  HERMES_HOME=/var/lib/haven/.hermes PYTHONPATH=/var/lib/haven/haven-tools \
+  /var/lib/haven/releases/hermes-bf0203a-785f2646/venv/bin/python \
+  -m scripts.service_runtime health \
+  --source /var/lib/haven/releases/hermes-bf0203a-785f2646 \
+  --home /var/lib/haven/.hermes'
+----
+
+Use `sudo systemctl stop/start/restart haven.service` for maintenance. Do not launch an unmanaged `hermes gateway` beside it or use a second dispatcher. Journals and native logs can contain private activity; inspect locally and keep raw logs outside public artifacts.
+
+== Recovery acceptance
+
+Prepare a separate test environment through upstream PM with `--group dev --group test --extra sms`; never add pytest dependencies to the production venv. Use a disposable checkout of the same base and patch and the canonical `scripts/run_tests.sh`, following upstream agent instructions. The selected tests are:
+
+* `tests/e2e/core/kanban/test_kanban_rate_limit_review.py`: real processes and an HTTP 429 fake provider; a deferred implementation retries and reaches review without being trapped by an old quota stamp.
+* `tests/e2e/core/kanban/test_kanban_dispatcher_restart.py`: kill dispatchers at claim/spawn boundaries, retain the exact cards and suppress duplicate completion; live workers retain claims through a slow provider call.
+* `tests/hermes_cli/test_kanban_db.py`: cooldowns, sticky terminal-provider exits, current-run guards and failure accounting.
+* `tests/cron/test_quota_hold.py`, `tests/cron/test_restart_safe_worker.py`: persisted provider windows and restart-safe worker bookkeeping.
+* `tests/gateway/test_systemd_watchdog_lifecycle.py`: native watchdog lifecycle.
+
+Run with `HERMES_E2E_STRICT_ACCEPTANCE=1`, `HERMES_TEST_FILE_RETRIES=0` and the explicit test interpreter. CLI recovery scenarios can use a temporary unit with a fresh HOME, masked production profile and private network. The complete suite with live user scopes needs a dedicated disposable OS identity: its own locked account/home, no supplementary privileges or access to the production profile, and a user manager. Bind that disposable identity's `/run/user/UID` writable through `ProtectHome=tmpfs`: long synthetic profile paths need to create a short Unix-socket fallback there. The production profile has a short direct socket path and keeps its runtime bind read-only.
+
+For that complete host run, give only the disposable identity's `user@UID.service` a temporary `PrivateNetwork=yes` override, and run the test unit with `PrivateNetwork=yes`, `JoinsNamespaceOf=user@UID.service` and startup ordering after that manager. Also enforce `IPAddressDeny=any` and `IPAddressAllow=localhost` on its `user-UID.slice` and place the test unit there. This covers manager-spawned daemons and scopes as well as the original process. Remove the temporary manager override during cleanup. The test and manager must share the provider's loopback namespace. The provider remains local, credentials are synthetic and the test Python lives outside the production profile. Creating this temporary identity is a separately authorized host test operation; always stop its units/manager, remove linger and delete the account/home in a cleanup block. The production service playbook does not create test accounts.
+
+Live service acceptance additionally requires a healthy startup, an idempotent repeat, restoration of a deliberately changed application file, SIGKILL/restart with retained native state, and an authorized host reboot followed by a fresh private connection and healthy service. Compare package and access-identity receipts before/after. Do not trigger real quota exhaustion or revoke an account grant to simulate failure.
+
+== Results and limits
+
+The implementation deployed from `5628cb7c3c199bd8a317e5d0c5dbb01826c5b340`. Later documentation commits record the receipts without changing runtime code.
+
+[cols="1,3",options="header"]
+|===
+|Check |Verified result
+|Public checks |61 behavior tests, Ansible syntax/production lint, configuration, secret scans, documentation build and links pass. Public checks never contact a VPS or start Hermes.
+|Local pinned upstream |107 passed and one Windows-only skip across the six selected files.
+|Isolated Ubuntu upstream |The same six files pass: 107 tests, no failures, one Windows-only skip, strict acceptance and no file retries. The complete run took 170.3 seconds. The disposable account/home/linger/manager override were removed in cleanup.
+|Pilot installation |The final bus/scoped-worker configuration installs successfully; the repeat is `ok=17 changed=0 failed=0`.
+|Invalid configuration and rollback |The main process exits 78 without an automatic restart loop; the root-only snapshot restores healthy service. OAuth inode/mtime/size are retained.
+|Coordinator crash |SIGKILL of the main process triggers an automatic restart and a new healthy native gateway.
+|In-flight cron worker |An actual synthetic no-agent task stays in its own user scope through a coordinator restart, finishes successfully and writes its marker once. Its job/script/markers are then removed.
+|Host reboot |The final unit starts automatically with its user bus, accepts health checks and completes the queued one-shot on the new boot exactly once. Packages and the private access baseline remain unchanged.
+|Model after reboot |One native authenticated request passes with zero tools/fallbacks. No account grant is revoked or quota deliberately exhausted.
+|===
+
+An early parallel VPS test run exceeded the chaos test's timing window; a sequential CLI recovery run passed (106 tests, with Windows and unavailable user-scope skips). The hidden user bus was then reproduced by a real harmless cron job and corrected in the unit/guard; the formerly skipped standalone native scope test passed. The extended host runs exposed another harness constraint: long pytest profile paths require the native Unix-socket fallback. A read-only test runtime bind prevented its creation (`EROFS`) before any provider call. The dedicated test identity's runtime is therefore writable; this leaves the fixed short production profile's read-only bind intact. The final suite uses the separate identity and shared private network described above and passes all 107 selected tests. No Hermes source change was needed for this harness correction.
+
+Real subscription quota payloads and deliberate token expiry/revocation/refresh remain outside these synthetic results. Outbound messaging and non-idempotent tools stay outside H1.5: after an ambiguous external effect, H2 must reconcile the target before authorizing another attempt. A task/run key cannot make an external action exactly once. Coding dispatch stays disabled, and H1.6 introduces messaging.
+
+== Sources
+
+Context7 returned a monthly quota error. The exact pinned `gateway/run_startup.py`, `gateway/systemd_notify.py`, `gateway/kanban_watchers.py`, `hermes_cli/kanban_db_dispatch.py` and `cron/quota_hold.py` were inspected. The VPS uses systemd 259; the https://github.com/systemd/systemd/blob/v259/man/systemd.service.xml[service] and https://github.com/systemd/systemd/blob/v259/man/systemd.exec.xml[execution] references describe notification, restart/exit status and filesystem controls. Ansible's installed 2.21.5 `ansible-doc ansible.builtin.systemd_service` supplies the controller-version reference.

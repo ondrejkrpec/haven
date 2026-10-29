@@ -2,7 +2,7 @@
 
 Haven is a personal agent system built around Hermes, with WhatsApp text and inbound Czech voice messages as its planned phone interface. The first deployment will use one Ubuntu VPS and bounded automation. Nora is the coordinator's working name.
 
-The local foundation is accepted through a fresh checkout: public sources, a private-instance template, configuration v1 validation and a documentation/check workflow. Hermes deployment, real Codex authentication, WhatsApp pairing and voice quality remain unverified integrations.
+The local foundation is accepted through a fresh checkout: public sources, a private-instance template, configuration v1 validation and a documentation/check workflow. The existing Ubuntu pilot also has accepted private administration, independent model authentication and a supervised coordinator. WhatsApp pairing, voice quality and off-site restore remain later H1 work.
 
 == Start here
 
@@ -14,6 +14,7 @@ The local foundation is accepted through a fresh checkout: public sources, a pri
 * link:h1.3-first-access.adoc[VPS access and security]: administrator keys, service account, firewall and verified configuration rollback.
 * link:h1.3-private-access.adoc[Tailscale private administration]: verified enrollment, policy, private-only SSH and guarded access recovery.
 * link:h1.3-bootstrap.adoc[Repeatable bootstrap and restart]: verified adoption of the secured pilot, restoration and post-boot access.
+* link:h1.5-service-recovery.adoc[Supervised service and recovery]: bounded native gateway, application rollback, restart-safe cron workers and recovery evidence.
 
 == Evidence and limits
 
