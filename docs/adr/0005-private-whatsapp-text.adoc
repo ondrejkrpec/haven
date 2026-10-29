@@ -1,0 +1,19 @@
+= ADR 0005: bounded private WhatsApp text
+
+Date: 2026-10-29
+
+Status: proposed transport; implementation verified locally, live acceptance pending owner confirmation and pairing.
+
+== Context
+
+H1.6 needs private text conversations using the supervised coordinator. The existing pilot has no messaging runtime. Hermes's pinned version includes a Baileys bridge, native sender policies and a separate slash-command gate. The general WhatsApp wizard writes `.env` and uses a legacy session path, which conflicts with Haven's explicit no-`.env` service guard.
+
+== Proposed decision
+
+Use the existing pinned Baileys transport with a dedicated account once the owner confirms it. Keep Node/npm and the frozen Python SMS environment separate from the original core runtime. Pair only through the owner's terminal into one protected fixed session directory; activation remains an explicit rendered private configuration deployment.
+
+Enforce the same sender allowlist at native adapter and bridge intake, disable groups and speech transcription, silence unknown DMs, and restrict chat commands separately from model tools. Apply strict native attachment paths with recency trust disabled. Retain zero model tools/fallbacks and disabled coding dispatch until later authorized work. No public listener or additional platform plugin is introduced.
+
+== Consequences
+
+Baileys uses unofficial WhatsApp Web access, with account/protocol compatibility risk. The owner must supply the dedicated account and link it interactively; synthetic tests do not establish live delivery. Rollback retains the original core environment and never copies/replaces session credentials. Re-pairing, uncertain external delivery and future session restoration need explicit operator reconciliation. See link:../h1.6-whatsapp.adoc[setup, acceptance and limits].

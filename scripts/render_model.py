@@ -25,7 +25,7 @@ def main(argv=None):
     parser.add_argument("config", type=Path)
     parser.add_argument("--override", type=Path, action="append", default=[])
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--service", action="store_true", help="Render the bounded H1.5 service profile")
+    parser.add_argument("--service", action="store_true", help="Render the bounded supervised service profile")
     args = parser.parse_args(argv)
     try:
         render(args.config, args.output, args.override, service=args.service)

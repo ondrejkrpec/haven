@@ -4,6 +4,8 @@ Haven is a personal agent system built around Hermes, with WhatsApp as its plann
 
 **Status: H1.5 coordinator service verified on the existing Ubuntu pilot.** Private administration, repeatable host adoption, model access, supervised startup and application/state recovery work. Coding dispatch stays disabled until H2; WhatsApp is the next integration. GitHub repositories are published; automatic local pre-push checks replace unavailable GitHub Actions.
 
+[H1.6 WhatsApp text](docs/h1.6-whatsapp.adoc) has a locally verified optional bridge, explicit sender rules and an owner-terminal pairing procedure. Transport confirmation and live account acceptance are pending; messaging remains disabled on the pilot.
+
 ## Start locally
 
 Prerequisites: a POSIX shell, Git 2.28 or newer, and `sha256sum`. Configuration validation needs Python 3.12+; the complete public checks also need Node.js/npm and Linux check tools. Podman is used only by optional H0.1 probes. Use an existing checkout, or clone the public repository:

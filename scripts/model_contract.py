@@ -1,4 +1,7 @@
-"""The deliberately small H1.4 native configuration contract for the pilot."""
+"""Bounded native configuration contracts for the Haven pilot."""
+
+from copy import deepcopy
+import re
 
 CODEX_PROVIDER = "openai-codex"
 CODEX_BASE_URL = "https://chatgpt.com/backend-api/codex"
@@ -25,7 +28,7 @@ def native_config(config):
     if config["host"]["service_user"] != "haven":
         raise ModelConfigError("The current host playbook requires the haven service identity")
     if config["whatsapp"]["enabled"]:
-        raise ModelConfigError("WhatsApp runtime translation is deferred to H1.6")
+        raise ModelConfigError("WhatsApp requires the explicitly supervised service profile")
     return {
         "model": {"default": model["name"], "provider": CODEX_PROVIDER,
                   "base_url": CODEX_BASE_URL, "openai_runtime": "auto"},
@@ -55,7 +58,7 @@ def check_native(config):
             and config["platform_toolsets"]["cli"] == []
             and config["platform_toolsets"]["whatsapp"] == []
         )
-    except (KeyError, TypeError):
+    except (KeyError, TypeError, AttributeError):
         valid = False
     if not valid:
         raise ModelConfigError("Native runtime policy differs from the bounded H1.4 configuration")
@@ -63,8 +66,10 @@ def check_native(config):
 
 
 def service_config(config):
-    """H1.5 has a supervised coordinator, without messaging or coding executors."""
-    native = native_config(config)
+    """Supervised coordinator; optional H1.6 private WhatsApp, no coding executors."""
+    base = deepcopy(config)
+    base["whatsapp"]["enabled"] = False
+    native = native_config(base)
     native["platform_toolsets"] = {name: [] for name in ("cli", "local", "api_server", "cron", "whatsapp")}
     native["gateway"] = {"multiplex_profiles": False, "systemd_watchdog_seconds": 120,
                          "max_concurrent_sessions": 1, "delivery_ledger": True}
@@ -77,6 +82,28 @@ def service_config(config):
     native["mcp_servers"] = {}
     native["hooks"] = {}
     native["hooks_auto_accept"] = False
+    if config["whatsapp"]["enabled"]:
+        senders = config["whatsapp"].get("allowed_senders")
+        if (not isinstance(senders, list) or not senders or len(senders) > 100
+                or any(not isinstance(sender, str) or not re.fullmatch(r"\+[1-9][0-9]{7,14}", sender)
+                       for sender in senders) or len(set(senders)) != len(senders)):
+            raise ModelConfigError("WhatsApp requires an explicit E.164 sender allowlist")
+        native["stt"] = {"enabled": False}
+        native["gateway"].update(strict=True, trust_recent_files=False, media_delivery_allow_dirs=[])
+        native["unauthorized_dm_behavior"] = "ignore"
+        native["platforms"] = {"whatsapp": {"enabled": True, "extra": {
+            "bridge_port": 3000,
+            "bridge_script": "/var/lib/haven/whatsapp/bridge/bridge.js",
+            "session_path": "/var/lib/haven/.hermes/platforms/whatsapp/session",
+            "dm_policy": "allowlist", "allow_from": [sender[1:] for sender in senders],
+            "group_policy": "disabled", "group_allow_from": [],
+            "unauthorized_dm_behavior": "ignore", "send_read_receipts": False,
+            "reply_prefix": "Nora", "text_batch_delay_seconds": 0.3,
+            # Native slash gating is disabled by an empty admin list. This
+            # deliberately nonnumeric sentinel cannot be a WhatsApp principal.
+            "allow_admin_from": ["haven-console-only"],
+            "user_allowed_commands": ["new", "stop", "status"],
+        }}}
     return native
 
 
@@ -84,14 +111,17 @@ def check_service(config):
     """Refuse capability expansion before starting a persistent process."""
     model = check_native(config)
     try:
+        whatsapp = config.get("platforms", {}).get("whatsapp", {})
+        senders = whatsapp.get("extra", {}).get("allow_from", [])
         expected = service_config({"model": {"provider": CODEX_PROVIDER, "name": model},
                                    "host": {"service_user": "haven"},
-                                   "whatsapp": {"enabled": False},
+                                   "whatsapp": {"enabled": whatsapp.get("enabled", False),
+                                                "allowed_senders": ["+" + s for s in senders]},
                                    "instance": {"timezone": config["timezone"]}})
         # Compare the whole bounded profile, permitting only upstream's version marker.
         actual = {key: value for key, value in config.items() if key != "_config_version"}
         if actual != expected:
-            raise ModelConfigError("Native service policy differs from the bounded H1.5 configuration")
-    except (KeyError, TypeError):
+            raise ModelConfigError("Native service policy differs from the bounded configuration")
+    except (KeyError, TypeError, AttributeError):
         raise ModelConfigError("Native service policy is incomplete") from None
     return model

@@ -1,0 +1,93 @@
+= H1.6 WhatsApp text and access rules
+
+Status, 2026-10-29: the optional Baileys implementation passes local synthetic acceptance. Transport confirmation, the dedicated account, live pairing and pilot acceptance are pending. H1.5 remains the accepted running profile until explicit activation.
+
+== Scope and policy
+
+Hermes remains at v0.22.5, commit `bf0203a794a07aac3ff764972ab9087baa4e4f4e`, with the retained attributed recovery patch. The proposed transport is its built-in WhatsApp platform and Baileys `7.0.0-rc13` bridge. This emulates WhatsApp Web; it is an unofficial integration and may be restricted by WhatsApp. Confirm this choice with the owner before pairing a dedicated account. The official Cloud API is a different integration and is not enabled by this implementation.
+
+The service renderer now accepts `whatsapp.enabled: true` only with a nonempty E.164 sender list. It translates that list into the native adapter's `allow_from`, sets `dm_policy: allowlist`, disables all groups, ignores unauthorized DMs, and disables automatic speech transcription. The adapter passes the same policy to the Node bridge. Read receipts and owner-message forwarding are disabled. Reply text uses the `Nora` prefix.
+
+The existing zero-tool, zero-fallback model profile, one concurrent session, no hooks/MCP/third-party plugins, no automatic installs and disabled coding dispatcher remain enforced. WhatsApp slash administration has a separate native gate: only `/help`, `/whoami`, `/new`, `/stop` and `/status` are permitted. Native gating is inactive for an empty administrator list, so `allow_admin_from` contains the deliberately nonnumeric sentinel `haven-console-only`; it cannot match a WhatsApp phone/LID principal. It grants nobody administrative commands.
+
+Model-emitted attachment paths use the native strict media policy with recency trust disabled and no extra allowed directories. This blocks arbitrary host-file uploads, even for newly created files. Native cache attachments keep their upstream handling; full media behavior is not accepted by this milestone.
+
+Voice quality belongs to H1.7. This milestone accepts ordinary text replies; it does not establish autonomous outbound work, executor isolation or exactly-once external delivery. Never blindly resend after an ambiguous WhatsApp delivery.
+
+== Prepare the optional runtime
+
+Use the accepted explicit private inventory and pinned controller dependencies from link:h1.3-bootstrap.adoc[host adoption]. Run from a committed source revision that passed the public checks:
+
+[source,sh]
+----
+export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml \
+  ops/whatsapp-prepare.yml -e haven_whatsapp_prepare_authorized=true
+----
+
+This prepares `/var/lib/haven/whatsapp` without pairing or enabling messaging. It explicitly installs Node.js `26.12.1` and npm `12.0.2` through the unchanged upstream PM lock into its own `tools` store, copies the bridge from the existing pinned source and verifies each retained file hash. PM checks the recorded artifact digests. Hermes deliberately ignores Node copies on `PATH`, so a separately unpacked Node is insufficient. `npm ci --ignore-scripts` uses the unchanged upstream dependency lock. A separate Python environment is built through upstream PM's frozen lock with only the `sms` extra (`aiohttp`); the original core environment is retained for rollback. Actual Baileys/Express and Python transport imports must pass before a root-owned read-only preparation receipt is written. No OS packages, firewall, SSH, model credentials or service configuration are changed by preparation.
+
+The completed runtime is root-owned and readable by group `haven`; neither startup nor pairing installs packages. A repeat reuses the preparation receipt. Do not remove that receipt from an active deployment or repair a partial build by running arbitrary npm updates. Inspect the failed fixed path, stop any adapter using it, and rebuild the optional runtime from the same pins. Dependency upgrades require their own checked change.
+
+Deploy the updated service guard first with the current *disabled* WhatsApp input, using link:h1.5-service-recovery.adoc[the service deployment procedure]. This installs `scripts.whatsapp_runtime` and its public pins under the root-owned Haven tools directory while preserving the H1.5 profile. The application snapshot now also covers those two fixed files; it still excludes account and session state.
+
+== Owner-only pairing
+
+The owner registers a dedicated number in WhatsApp/WhatsApp Business and opens its linked-device screen. Keep the messaging platform disabled during pairing. From the owner's own terminal, outside agent tool output or recorded logs:
+
+[source,sh]
+----
+ssh -t haven-example 'sudo -H -u haven env \
+  HERMES_HOME=/var/lib/haven/.hermes \
+  PYTHONPATH=/var/lib/haven/haven-tools \
+  /var/lib/haven/whatsapp/venv/bin/python -m scripts.whatsapp_runtime pair'
+----
+
+Scan the QR from the dedicated account's *Settings -> Linked Devices -> Link a Device*. The helper requires a terminal, the fixed service identity/profile, verified dependencies and a disabled platform. It invokes the pinned bridge directly in `--pair-only --mode bot`; no gateway, HTTP listener or inbound model call starts in this mode. Unlike the upstream general wizard, this flow writes no `.env` or enable flag and uses the same explicit session directory as the service. Do not paste, screenshot, save or commit the QR.
+
+The session directory is `/var/lib/haven/.hermes/platforms/whatsapp/session`, with directories `0700` and files `0600`, owned by `haven`. Checks inspect metadata without reading credential contents. An existing `creds.json` is never removed or silently replaced by the helper. A failed or partial pairing needs operator review before another attempt; do not delete a potentially live linked identity blindly. To revoke access, unlink the device on the dedicated account's phone, then disable the native platform and review its private state.
+
+== Activate and accept
+
+In the explicitly named private instance, set `whatsapp.enabled: true` and place the owner's sending account in `whatsapp.allowed_senders` using E.164 syntax. The sending account differs from the dedicated bot account. Phone numbers stay in private configuration and never enter public examples or test receipts.
+
+Render a fresh protected profile and deploy it through the existing snapshot/rescue flow:
+
+[source,sh]
+----
+umask 077
+whatsapp_config_dir=$(mktemp -d)
+.venv/bin/python -m scripts.render_model ../haven-private/config/instance.yaml \
+  --service --output "$whatsapp_config_dir/config.yaml"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/service.yml \
+  -e haven_service_authorized=true \
+  -e "haven_model_config=$whatsapp_config_dir/config.yaml"
+----
+
+The unit selects the separate SMS environment only for an enabled WhatsApp profile. Its guarded launcher also selects the prepared PM store without modifying the original core store. Before starting, the guard checks the entire policy, exact bridge and PM lock hashes, PM-selected Node/npm versions and paths, dependency stamp and private paired-session metadata. It strips inherited WhatsApp/gateway/Node policy overrides and sets bot mode without `.env`. Readiness requires the existing live gateway/heartbeat plus a connected bridge reporting the expected session path. Failure restores the previous application snapshot. The bridge listens only on `127.0.0.1:3000`; no public or tailnet port is published.
+
+Complete the following live checks before calling H1.6 accepted:
+
+* The owner sends a bounded text request and receives the intended reply. Check the native tool count and lack of fallback without exporting message contents or account identifiers.
+* A consenting sender outside the allowlist receives no reply and creates no gateway/model turn while the bridge remains connected. The owner can cover both roles: temporarily replace the personal sender with the dedicated bot account's own number in a protected test override, send from the now-excluded personal account, then restore the accepted profile and confirm another permitted reply. Restore even if the negative check fails. This needs no third account. Report the live check as unverified if it cannot be performed; synthetic denial is separate evidence.
+* Administrative slash commands are denied to an allowed chat sender, while the permitted chat commands work.
+* Restart the service, confirm the session persists and send another text request. Repeat the preparation/deployment without effective changes.
+* If an owner-authorized host reboot is performed, verify a fresh private connection, automatic coordinator/bridge recovery and another reply without re-pairing. H1.5's previous reboot is not evidence for a newly linked account.
+* Verify session permissions, loopback bind and absence of QR/session material in Git. Remove protected rendered configuration after acceptance.
+
+To disable messaging, render/deploy the private input with `whatsapp.enabled: false`. This returns the unit to the retained core Python environment and stops the managed bridge; it does not revoke the linked device or delete session state. Application rollback similarly leaves sessions and OAuth untouched. Off-site encrypted session backup and restoration belong to H1.9; never activate two copies of the same restored session.
+
+== Verification so far
+
+The local pinned upstream selection passed 63 tests with three Windows-only skips, covering allowlist/LID handling, group gating, connection failures, native delivery, bridge ownership/recovery, text batching and slash dispatch. Five additional acceptance tests consume Haven's actual renderer through Hermes's native loader and adapter. They verify the bridge policy, early DM/group denial, restricted slash commands, empty native gateway toolsets and refusal of arbitrary fresh host-file attachments. No real account or provider is contacted by these tests.
+
+Reproduce the extra policy tests from the pinned upstream checkout using `scripts/run_tests.sh -j 1 /absolute/path/to/haven/research/h1.6/test_native_policy.py --file-timeout 90`, with `HERMES_PYTHON` pointing to the separately prepared frozen test environment and `HERMES_TEST_FILE_RETRIES=0`. The runner needs its normal writable per-user scratch directory under `/var/tmp`; a filesystem sandbox that denies that path stops before collection and is not a test result.
+
+The PM-selected Node version imports Baileys and Express after frozen installation through its selected npm, with lifecycle scripts disabled. The actual `find_node_executable` resolves this prepared binary, so the check covers Hermes discovery as well as a direct Node invocation. Five upstream JavaScript test files pass (allowlist, native payload helpers, reconnection, outbound IDs and owner-message gating). Public behavior tests cover access/capability expansion, launch-environment overrides, PM binding, private session metadata, terminal-only pairing and fixed secret-free failure messages. Live pairing, replies and persistence remain pending.
+
+The PM-pinned official Node binary also reports `v26.12.1` when executed on the existing Ubuntu pilot from a disposable directory; its dynamic libraries resolve without installing OS packages. That diagnostic directory was removed immediately. It does not establish a deployed bridge or linked account.
+
+== Sources
+
+Context7 returned a monthly quota error. The exact pinned https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/messaging/whatsapp.md[upstream WhatsApp guide], `plugins/platforms/whatsapp`, `gateway/slash_access.py` and `scripts/whatsapp-bridge` were inspected. Node comes from the official https://nodejs.org/dist/v26.12.1/SHASUMS256.txt[26.12.1 checksums]; the https://nodejs.org/en/blog[release listing] was checked on 2026-10-29. This is a new optional application dependency, not an upgrade of the pilot's OS packages or Hermes candidate.

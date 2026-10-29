@@ -83,7 +83,7 @@ class ServiceRuntimeTests(unittest.TestCase):
         heartbeat = self.home / "state/gateway.heartbeat"
         heartbeat.write_text(json.dumps({"pid": 123, "updated_at": datetime.now(timezone.utc).isoformat()}))
         with patch.dict("sys.modules", {"gateway.status": status}):
-            with patch.object(service_runtime, "check"), patch.object(service_runtime.sys, "path", []):
+            with patch.object(service_runtime, "check", return_value=self.config), patch.object(service_runtime.sys, "path", []):
                 self.assertEqual(service_runtime.health(self.home, self.home)["result"], "passed")
                 status.get_process_start_time = lambda pid: 999
                 with self.assertRaisesRegex(service_runtime.ProbeError, "gateway_not_ready"):
@@ -103,18 +103,19 @@ class ServiceRuntimeTests(unittest.TestCase):
         self.assertNotIn("SYNTHETIC_SECRET_SENTINEL", out.getvalue())
 
     def test_guard_executes_native_gateway_in_the_same_process_after_validation(self):
-        with patch.object(service_runtime, "check") as guard, patch.object(service_runtime.os, "chdir"), \
+        with patch.object(service_runtime, "check", return_value=self.config) as guard, patch.object(service_runtime.os, "chdir"), \
                 patch.object(service_runtime, "check_worker_bus") as bus:
-            with patch.object(service_runtime.os, "execv", side_effect=SystemExit(0)) as execute:
+            with patch.object(service_runtime.os, "execve", side_effect=SystemExit(0)) as execute:
                 with self.assertRaises(SystemExit):
                     service_runtime.main(["run", "--source", str(self.home), "--home", str(self.home)])
         guard.assert_called_once_with(self.home, self.home)
         bus.assert_called_once_with()
         self.assertEqual(execute.call_args.args[1][1:],
                          ["-m", "hermes_cli.main", "--profile", "default", "gateway", "run", "--quiet"])
+        self.assertEqual(execute.call_args.args[2]["HERMES_HOME"], str(self.home))
 
     def test_missing_worker_bus_prevents_native_start(self):
-        with patch.object(service_runtime, "check"), patch.object(service_runtime.os, "execv") as execute:
+        with patch.object(service_runtime, "check"), patch.object(service_runtime.os, "execve") as execute:
             with patch.dict(os.environ, {"XDG_RUNTIME_DIR": "/unavailable-synthetic-runtime"}):
                 with redirect_stdout(io.StringIO()):
                     rc = service_runtime.main(["run", "--source", str(self.home), "--home", str(self.home)])

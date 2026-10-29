@@ -1,0 +1,75 @@
+{
+  "date": "2026-10-29",
+  "status": "locally_verified_live_pending_owner",
+  "hermes_commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+  "hermes_patch": "upstream-117820",
+  "toolchain": {
+    "node": "26.12.1",
+    "npm": "12.0.2",
+    "baileys": "7.0.0-rc13",
+    "npm_install": "ci --ignore-scripts --no-audit --no-fund",
+    "npm_packages": 141,
+    "source": "unchanged upstream PM and npm locks"
+  },
+  "checks": {
+    "public_behavior_tests": 68,
+    "public_pipeline": "passed",
+    "upstream_gateway_tests": {
+      "passed": 63,
+      "failed": 0,
+      "skipped_windows": 3,
+      "retries": 0,
+      "files": [
+        "test_whatsapp_allowlist_lid_resolution.py",
+        "test_whatsapp_group_gating.py",
+        "test_whatsapp_group_allowlist_env.py",
+        "test_whatsapp_connect.py",
+        "test_whatsapp_native_delivery.py",
+        "test_whatsapp_stale_bridge.py",
+        "test_whatsapp_bridge_pidfile.py",
+        "test_whatsapp_text_batching.py",
+        "test_slash_access_dispatch.py"
+      ]
+    },
+    "native_policy_tests": {
+      "passed": 5,
+      "failed": 0,
+      "file": "research/h1.6/test_native_policy.py"
+    },
+    "upstream_javascript_files_passed": [
+      "allowlist.test.mjs",
+      "owner_message_gate.test.mjs",
+      "outbound_ids.test.mjs",
+      "bridge.reconnect.test.mjs",
+      "bridge.native.test.mjs"
+    ],
+    "pm_selected_node_discovery": "passed",
+    "baileys_express_imports": "passed",
+    "isolated_service_guard_with_prepared_pm": "passed_without_provider_credentials",
+    "ubuntu_node_binary_probe": "passed_temporary_directory_removed",
+    "ubuntu_disabled_unit_verify": "passed_temporary_directory_removed"
+  },
+  "live_acceptance": {
+    "runtime_deployment": "pending_transport_confirmation",
+    "pairing": "pending_owner_account",
+    "allowed_sender_reply": "not_run",
+    "unauthorized_account_rejection": "not_run",
+    "paired_session_restart": "not_run",
+    "production_messaging_enabled": false,
+    "provider_requests": 0
+  },
+  "source_hashes_sha256": {
+    "config/whatsapp-runtime.json": "ca289a7452788b977f02250185e1f08235402d099f8eaf780c7137b544e42f09",
+    "scripts/model_contract.py": "1186ac6c64e42afc4b83aa8abc137db9b85531e0368c9973fd0ff7b99b9f3882",
+    "scripts/model_probe.py": "920ea3ccaca90a8061dcbc853bea090937e60eb645dd7f8787933dd04b54ca20",
+    "scripts/service_runtime.py": "60641698a4ff9679c81e8924091688d1e53aedfb7d0de64420c088c7150e30d8",
+    "scripts/service_snapshot.py": "1e0cee2cfc8bcdc2ad0812bfc7a973efeb53dcd96285a1743e4102770eaf4605",
+    "scripts/whatsapp_runtime.py": "b1a3984151a735bb3d919282df025242869f54015c5a9cc29189f434263afd57",
+    "ops/service.yml": "a56f0889962c702b32d548c754ae98486436f7b8c10b71fbad3488e1d2c3c9da",
+    "ops/whatsapp-prepare.yml": "e6d17401202f786b5f446a30efcd49400867b9a71265f86f94b40fef86402e0d",
+    "ops/templates/haven.service.j2": "dd2f88f78c080e61ba6cd10b8c67c2416c420ab8cea40b1a40c4d4530b6f5d87",
+    "tests/test_whatsapp_configuration.py": "80c8fcd4cfcad33502f7fece313da8900152513267284a6953d81cb1a0aa7c93",
+    "tests/test_service_runtime.py": "b16e774759c65f06b5c566783caafb57c8c4e30b9fa7e03216d0312a2dd8f689",
+    "research/h1.6/test_native_policy.py": "161049d4804f3768ad3d35a62cd8abff0ea3f6b360a3a7b8bd31fba75fc65c96"
+  }
+}

@@ -1,4 +1,4 @@
-"""Read-only H1.5 service guard and health check. Never resolve account credentials."""
+"""Read-only service guard and health check. Never resolve account credentials."""
 
 import argparse
 from datetime import datetime
@@ -21,7 +21,8 @@ def check(source, home):
             or stat.S_IMODE(info.st_mode) != 0o700):
         raise ProbeError("private_home_permissions")
     from ruamel.yaml import YAML
-    check_service(YAML(typ="safe", pure=True).load(private_file(home / "config.yaml").read_text()))
+    config = YAML(typ="safe", pure=True).load(private_file(home / "config.yaml").read_text())
+    check_service(config)
     check_candidate(source)
     # Profile selection and cron stores are administrator inputs. H1.5 starts empty;
     # do not accidentally adopt other profiles, hooks, schedules or plugin sources.
@@ -32,10 +33,15 @@ def check(source, home):
         path = home / name
         if path.is_symlink() or (path.exists() and any(path.iterdir())):
             raise ProbeError("unexpected_service_input")
+    if config.get("platforms", {}).get("whatsapp", {}).get("enabled"):
+        from scripts.whatsapp_runtime import check_runtime, check_session
+        check_runtime()
+        check_session()
+    return config
 
 
 def health(source, home):
-    check(source, home)
+    config = check(source, home)
     sys.path.insert(0, str(source))
     from gateway.status import get_process_start_time, read_runtime_status
     state = read_runtime_status(home / "gateway_state.json") or {}
@@ -48,6 +54,9 @@ def health(source, home):
     age = time.time() - datetime.fromisoformat(heartbeat["updated_at"]).timestamp()
     if heartbeat.get("pid") != pid or not 0 <= age < 120:
         raise ProbeError("gateway_heartbeat_stale")
+    if config.get("platforms", {}).get("whatsapp", {}).get("enabled"):
+        from scripts.whatsapp_runtime import health as whatsapp_health
+        whatsapp_health()
     return {"result": "passed", "check": "health", "pid": pid}
 
 
@@ -74,14 +83,18 @@ def main(argv=None):
         if args.mode == "health":
             result = health(args.source, args.home)
         else:
-            check(args.source, args.home)
+            config = check(args.source, args.home)
             if args.mode == "run":
                 check_worker_bus()
+                from scripts.whatsapp_runtime import environment
+                # Preserve systemd's notification/bus environment while removing
+                # inherited messaging and Node policy overrides.
+                clean = environment(args.home, whatsapp=bool(config.get("platforms", {}).get("whatsapp", {}).get("enabled")))
                 # Stay systemd's main PID: exit 78 from this guard must park the
                 # service; RestartPreventExitStatus does not cover ExecStartPre.
                 os.chdir(args.source)
-                os.execv(sys.executable, [sys.executable, "-m", "hermes_cli.main",
-                                         "--profile", "default", "gateway", "run", "--quiet"])
+                os.execve(sys.executable, [sys.executable, "-m", "hermes_cli.main",
+                                          "--profile", "default", "gateway", "run", "--quiet"], clean)
             result = {"result": "passed", "check": "service_policy"}
     except Exception:
         # Provider bodies, config values, file contents and exception strings stay private.
