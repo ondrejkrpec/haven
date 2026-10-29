@@ -11,7 +11,10 @@
     haven_state: /var/lib/haven/.hermes
     haven_tools: /var/lib/haven/haven-tools
     haven_whatsapp_enabled: "{{ (lookup('ansible.builtin.file', haven_model_config) | from_yaml).get('platforms', {}).get('whatsapp', {}).get('enabled', false) }}"
-    haven_python: "{{ '/var/lib/haven/whatsapp/venv/bin/python' if haven_whatsapp_enabled | bool else haven_source + '/venv/bin/python' }}"
+    haven_telegram_enabled: "{{ (lookup('ansible.builtin.file', haven_model_config) | from_yaml).get('platforms', {}).get('telegram', {}).get('enabled', false) }}"
+    haven_python: >-
+      {{ '/var/lib/haven/telegram/venv/bin/python' if haven_telegram_enabled | bool else
+         '/var/lib/haven/whatsapp/venv/bin/python' if haven_whatsapp_enabled | bool else haven_source + '/venv/bin/python' }}
   pre_tasks:
     - name: Require an explicit deployment and native configuration
       ansible.builtin.assert:
@@ -74,13 +77,22 @@
             owner: root
             group: haven
             mode: '0640'
-          loop: [model_contract.py, model_probe.py, service_runtime.py, whatsapp_runtime.py]
+          loop: [model_contract.py, model_probe.py, service_runtime.py, whatsapp_runtime.py, telegram_runtime.py]
           notify: Restart Haven
 
         - name: Install the exact WhatsApp dependency pins
           ansible.builtin.copy:
             src: ../config/whatsapp-runtime.json
             dest: "{{ haven_tools }}/config/whatsapp-runtime.json"
+            owner: root
+            group: haven
+            mode: '0640'
+          notify: Restart Haven
+
+        - name: Install the exact Telegram dependency pins
+          ansible.builtin.copy:
+            src: ../config/telegram-runtime.json
+            dest: "{{ haven_tools }}/config/telegram-runtime.json"
             owner: root
             group: haven
             mode: '0640'

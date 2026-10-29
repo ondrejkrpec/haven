@@ -1,5 +1,7 @@
 # Synthetic configuration for validation, not a working service deployment.
 schema_version: 1
+telegram:
+  enabled: false
 instance:
   name: example
 host:

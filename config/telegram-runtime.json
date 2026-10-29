@@ -1,0 +1,9 @@
+{
+  "hermes_commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+  "python_telegram_bot": "22.8",
+  "source_sha256": {
+    "pm/lock.json": "0ede00c6ee83d3cf7a93fe1b569b31c705cd274d83050547511b2d8c2f244e04",
+    "uv.lock": "f1609519f30dac8886b03e60693e36fa75e033fa3e7259c8c8befe8fb6e34460",
+    "pyproject.toml": "68325d6717bd4ebc3a7b015c5150bea4d5600c612259b9b7393e964caa828761"
+  }
+}

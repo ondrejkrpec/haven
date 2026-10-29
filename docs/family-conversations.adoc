@@ -1,6 +1,6 @@
 = Personal conversations and a shared family space
 
-Status, 2026-10-29: the pilot owner selected personal conversations for each household member with an explicitly shared family space. This is the implementation target; the family service and two live connections are not deployed. WhatsApp Agent Platform is the candidate transport, conditional on availability for both accounts. H1.5 remains the accepted VPS service.
+Status, 2026-10-29: retained future product direction. The owner confirmed that Agent Platform is unavailable on their account and selected link:h1.6-telegram.adoc[Telegram for the first owner-only integration]. The second member and family service are deferred. The constraints below apply before any future family activation; they are not implemented by the initial Telegram pilot. link:adr/0007-telegram-first.adoc[ADR 0007] records the revised first milestone.
 
 == Two personal entry points
 

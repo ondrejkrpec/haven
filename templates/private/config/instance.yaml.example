@@ -1,6 +1,8 @@
 # Synthetic instance configuration. Validate through the public Haven repository.
 # The example model is a placeholder; this file does not deploy a service.
 schema_version: 1
+telegram:
+  enabled: false
 instance:
   name: example
   timezone: Etc/UTC

@@ -1,0 +1,19 @@
+= ADR 0007: Telegram for the first personal integration
+
+Date: 2026-10-29
+
+Status: accepted owner choice; live account acceptance pending.
+
+== Context
+
+The owner confirmed that WhatsApp Agent Platform is unavailable on their account. They chose to start with Telegram for themselves only and revisit WhatsApp next year. A general availability date is not established by this decision. The family direction in link:0006-personal-and-family-data.adoc[ADR 0006] remains future work.
+
+== Decision
+
+Use pinned Hermes's native Telegram adapter with outbound Bot API long polling. Accept one numeric owner ID in a private chat, refuse groups/other senders, and retain the supervised no-tools/no-fallback profile. Store the bot token outside Git/native YAML and inject it only into the validated service process. Use an independent PM-frozen Telegram environment; retain the original core for rollback. Do not introduce community plugins, a webhook or a public listener.
+
+Keep coordinator state, model settings, instructions and future domain data independent of the messaging credential. Add a future WhatsApp adapter only after eligibility, owner mapping, authorization and live acceptance are verified. Raw Telegram transcripts are not automatically merged into a WhatsApp session; disable the old intake before cutover and reconcile uncertain outbound deliveries.
+
+== Consequences
+
+No dedicated bot phone number or second household member is needed now. BotFather creation and private enrollment require the owner. The initial milestone accepts text, sender rejection and restart recovery; speech, family authorization and coding executors remain separate work. See link:../h1.6-telegram.adoc[implementation and acceptance].
