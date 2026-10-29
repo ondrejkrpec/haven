@@ -29,6 +29,8 @@ def native_config(config):
         raise ModelConfigError("The current host playbook requires the haven service identity")
     if config["whatsapp"]["enabled"]:
         raise ModelConfigError("WhatsApp requires the explicitly supervised service profile")
+    if config.get("telegram", {}).get("enabled"):
+        raise ModelConfigError("Telegram requires the explicitly supervised service profile")
     return {
         "model": {"default": model["name"], "provider": CODEX_PROVIDER,
                   "base_url": CODEX_BASE_URL, "openai_runtime": "auto"},
@@ -66,11 +68,12 @@ def check_native(config):
 
 
 def service_config(config):
-    """Supervised coordinator; optional H1.6 private WhatsApp, no coding executors."""
+    """Supervised coordinator; one optional private transport, no coding executors."""
     base = deepcopy(config)
     base["whatsapp"]["enabled"] = False
+    base["telegram"] = {"enabled": False}
     native = native_config(base)
-    native["platform_toolsets"] = {name: [] for name in ("cli", "local", "api_server", "cron", "whatsapp")}
+    native["platform_toolsets"] = {name: [] for name in ("cli", "local", "api_server", "cron", "whatsapp", "telegram")}
     native["gateway"] = {"multiplex_profiles": False, "systemd_watchdog_seconds": 120,
                          "max_concurrent_sessions": 1, "delivery_ledger": True}
     native["kanban"] = {"dispatch_in_gateway": False, "auto_decompose": False}
@@ -82,6 +85,27 @@ def service_config(config):
     native["mcp_servers"] = {}
     native["hooks"] = {}
     native["hooks_auto_accept"] = False
+    telegram = config.get("telegram", {})
+    if telegram.get("enabled") and config["whatsapp"]["enabled"]:
+        raise ModelConfigError("The pilot accepts only one messaging transport at a time")
+    if telegram.get("enabled"):
+        owner = telegram.get("owner_id")
+        if not isinstance(owner, str) or not re.fullmatch(r"[1-9][0-9]{0,15}", owner):
+            raise ModelConfigError("Telegram requires one explicit numeric owner ID")
+        native["stt"] = {"enabled": False}
+        native["gateway"].update(strict=True, trust_recent_files=False, media_delivery_allow_dirs=[])
+        native["unauthorized_dm_behavior"] = "ignore"
+        native["platforms"] = {"telegram": {"enabled": True, "extra": {
+            "allow_from": [owner], "allowed_chats": [owner],
+            "dm_policy": "allowlist", "group_policy": "disabled",
+            "group_allow_from": ["haven-console-only"], "group_allowed_chats": [],
+            "allow_admin_from": ["haven-console-only"],
+            "user_allowed_commands": ["new", "stop", "status"],
+            "unauthorized_dm_behavior": "ignore", "guest_mode": False,
+            "allow_bots": "none", "observe_unmentioned_group_messages": False,
+            "disable_link_previews": True, "dm_topic_auto_transfer": False,
+            "drop_pending_on_cold_boot": False,
+        }}}
     if config["whatsapp"]["enabled"]:
         senders = config["whatsapp"].get("allowed_senders")
         if (not isinstance(senders, list) or not senders or len(senders) > 100
@@ -112,11 +136,15 @@ def check_service(config):
     model = check_native(config)
     try:
         whatsapp = config.get("platforms", {}).get("whatsapp", {})
+        telegram = config.get("platforms", {}).get("telegram", {})
+        owners = telegram.get("extra", {}).get("allow_from", [])
         senders = whatsapp.get("extra", {}).get("allow_from", [])
         expected = service_config({"model": {"provider": CODEX_PROVIDER, "name": model},
                                    "host": {"service_user": "haven"},
                                    "whatsapp": {"enabled": whatsapp.get("enabled", False),
                                                 "allowed_senders": ["+" + s for s in senders]},
+                                   "telegram": {"enabled": telegram.get("enabled", False),
+                                                "owner_id": owners[0] if len(owners) == 1 else None},
                                    "instance": {"timezone": config["timezone"]}})
         # Compare the whole bounded profile, permitting only upstream's version marker.
         actual = {key: value for key, value in config.items() if key != "_config_version"}

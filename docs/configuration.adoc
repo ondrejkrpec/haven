@@ -67,7 +67,11 @@ Do not pass the public synthetic example as a deployment fallback. Once real dep
 |`model.credential_ref` |Optional `env:VARIABLE_NAME` or `file:/absolute/path` reference. |Absent.
 |`whatsapp.enabled` |Boolean. If true, the effective allowlist must be non-empty. |`false`
 |`whatsapp.allowed_senders` |Unique quoted strings, `+` followed by 8–15 digits, first digit nonzero; at most 100 items. Syntax only, not proof of ownership. |`[]`
+|`telegram.enabled` |Optional boolean; service activation requires one numeric owner. |`false`
+|`telegram.owner_id` |Quoted positive decimal string, at most 16 digits. Required when enabled; not a username. |Absent.
 |===
+
+link:h1.6-telegram.adoc[Telegram H1.6] supports one owner-only text transport in the supervised profile. Telegram and WhatsApp cannot be enabled together in that pilot renderer. The bot token has a fixed protected runtime file and never belongs in these YAML inputs.
 
 No field grants runtime authority. WhatsApp group policy, STT, role permissions, schedules, execution/expense limits, Tailscale, backups and deployment targets are not part of this initial contract. Unknown fields are rejected. Add fields with corresponding validation, examples and runtime behavior when their milestone needs them.
 

@@ -98,7 +98,7 @@ def check_session(*, paired=True):
 def environment(home=HOME, *, whatsapp=False):
     """Do not inherit policy overrides from a pairing shell or service environment."""
     env = {key: value for key, value in os.environ.items()
-           if not key.startswith(("WHATSAPP_", "GATEWAY_", "NODE_", "NPM_", "npm_", "HERMES_MEDIA_"))}
+           if not key.startswith(("WHATSAPP_", "TELEGRAM_", "GATEWAY_", "NODE_", "NPM_", "npm_", "HERMES_MEDIA_"))}
     env.update(WHATSAPP_MODE="bot", WHATSAPP_DEBUG="false",
                WHATSAPP_FORWARD_OWNER_MESSAGES="false", WHATSAPP_ALLOW_ALL_USERS="false",
                GATEWAY_ALLOW_ALL_USERS="false", HOME=str(home.parent), HERMES_HOME=str(home))

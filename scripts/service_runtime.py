@@ -37,6 +37,10 @@ def check(source, home):
         from scripts.whatsapp_runtime import check_runtime, check_session
         check_runtime()
         check_session()
+    if config.get("platforms", {}).get("telegram", {}).get("enabled"):
+        from scripts.telegram_runtime import check_dependency, credential_path
+        check_dependency(source)
+        credential_path(home)
     return config
 
 
@@ -57,6 +61,10 @@ def health(source, home):
     if config.get("platforms", {}).get("whatsapp", {}).get("enabled"):
         from scripts.whatsapp_runtime import health as whatsapp_health
         whatsapp_health()
+    if config.get("platforms", {}).get("telegram", {}).get("enabled"):
+        telegram = state.get("platforms", {}).get("telegram", {})
+        if telegram.get("state") != "connected" or telegram.get("writer_pid") != pid:
+            raise ProbeError("telegram_not_connected")
     return {"result": "passed", "check": "health", "pid": pid}
 
 
@@ -90,6 +98,9 @@ def main(argv=None):
                 # Preserve systemd's notification/bus environment while removing
                 # inherited messaging and Node policy overrides.
                 clean = environment(args.home, whatsapp=bool(config.get("platforms", {}).get("whatsapp", {}).get("enabled")))
+                if config.get("platforms", {}).get("telegram", {}).get("enabled"):
+                    from scripts.telegram_runtime import environment as telegram_environment
+                    clean = telegram_environment(args.home, clean)
                 # Stay systemd's main PID: exit 78 from this guard must park the
                 # service; RestartPreventExitStatus does not cover ExecStartPre.
                 os.chdir(args.source)

@@ -1,6 +1,6 @@
 = Haven documentation
 
-Haven is a personal agent system built around Hermes, with WhatsApp text and inbound Czech voice messages as its planned phone interface. The first deployment will use one Ubuntu VPS and bounded automation. Nora is the coordinator's working name.
+Haven is a personal agent system built around Hermes, with Telegram as its first phone interface and WhatsApp as a future option. Text comes first; inbound Czech voice is later H1 work. The first deployment uses one Ubuntu VPS and bounded automation. Nora is the coordinator's working name.
 
 The local foundation is accepted through a fresh checkout: public sources, a private-instance template, configuration v1 validation and a documentation/check workflow. The existing Ubuntu pilot also has accepted private administration, independent model authentication and a supervised coordinator. WhatsApp pairing, voice quality and off-site restore remain later H1 work.
 
@@ -15,7 +15,8 @@ The local foundation is accepted through a fresh checkout: public sources, a pri
 * link:h1.3-private-access.adoc[Tailscale private administration]: verified enrollment, policy, private-only SSH and guarded access recovery.
 * link:h1.3-bootstrap.adoc[Repeatable bootstrap and restart]: verified adoption of the secured pilot, restoration and post-boot access.
 * link:h1.5-service-recovery.adoc[Supervised service and recovery]: bounded native gateway, application rollback, restart-safe cron workers and recovery evidence.
-* link:family-conversations.adoc[Personal conversations and family sharing]: selected H1.6 direction, access constraints and account availability gate.
+* link:h1.6-telegram.adoc[Telegram private text]: current H1.6 implementation, owner enrollment and pending live acceptance.
+* link:family-conversations.adoc[Personal conversations and family sharing]: deferred family design and access constraints.
 * link:h1.6-agent-platform-assessment.adoc[Agent Platform assessment]: exact community connector revision and local mocked compatibility results.
 * link:h1.6-whatsapp.adoc[Earlier WhatsApp bridge preparation]: retained optional Baileys procedure; inactive and not the selected path.
 

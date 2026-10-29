@@ -1,6 +1,6 @@
 = Architecture and implementation boundaries
 
-Haven is intended to run a personal assistant on one Ubuntu VPS. Hermes supplies conversations, a durable Kanban board and scheduling. WhatsApp text and inbound Czech voice messages are the planned phone interface. The coordinator's working name is Nora.
+Haven is intended to run a personal assistant on one Ubuntu VPS. Hermes supplies conversations, a durable Kanban board and scheduling. Telegram text is the first phone interface; WhatsApp and inbound Czech voice remain later work. The coordinator's working name is Nora.
 
 == Current foundation
 
@@ -10,7 +10,7 @@ link:h1.4-model-configuration.adoc[H1.4] verifies the pinned core runtime, nativ
 
 Keep common source, general instructions and public examples here. Each instance owns its configuration and personal instructions in a separate private repository. Runtime state, account sessions and databases require a future backup workflow outside Git.
 
-The selected link:family-conversations.adoc[family design] has separate personal conversations and explicitly shared family objects. Each person's authenticated connection and private state stay separate; a narrow service must enforce ownership and family membership before returning data to the model. This access layer is not implemented by selecting Hermes profiles. link:adr/0006-personal-and-family-data.adoc[ADR 0006] records the decision and pending acceptance.
+The retained link:family-conversations.adoc[family design] has separate personal conversations and explicitly shared family objects. It is deferred beyond the link:h1.6-telegram.adoc[initial owner-only Telegram pilot]. Future members need separate authenticated identities and private state; a narrow service must enforce ownership and family membership before returning data to the model. This access layer is not implemented by selecting Hermes profiles.
 
 == Controller and executor boundary
 

@@ -1,0 +1,122 @@
+---
+- name: Verify private access before optional Telegram preparation
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Prepare frozen Telegram dependencies without enabling messaging
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  vars:
+    haven_source: /var/lib/haven/releases/hermes-bf0203a-785f2646
+    haven_telegram_root: /var/lib/haven/telegram
+    haven_telegram_pins: "{{ lookup('ansible.builtin.file', '../config/telegram-runtime.json') | from_json }}"
+  pre_tasks:
+    - name: Require explicit preparation of the existing pilot
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_telegram_prepare_authorized | default(false) | bool
+          - ansible_version.full == '2.21.5'
+
+    - name: Verify the exact accepted source revision
+      ansible.builtin.command:
+        argv: [git, -C, "{{ haven_source }}", rev-parse, HEAD]
+      become_user: haven
+      become: true
+      register: haven_telegram_head
+      changed_when: false
+      failed_when: haven_telegram_head.stdout != haven_telegram_pins.hermes_commit
+      check_mode: false
+
+    - name: Inspect the frozen source and dependency locks
+      ansible.builtin.stat:
+        path: "{{ haven_source }}/{{ item.key }}"
+        checksum_algorithm: sha256
+      loop: "{{ haven_telegram_pins.source_sha256 | dict2items }}"
+      register: haven_telegram_hashes
+
+    - name: Refuse dependency drift before executing PM
+      ansible.builtin.assert:
+        that: item.stat.checksum == item.item.value
+        quiet: true
+      loop: "{{ haven_telegram_hashes.results }}"
+      loop_control:
+        label: "{{ item.item.key }}"
+
+    - name: Inspect the preparation receipt
+      ansible.builtin.stat:
+        path: "{{ haven_telegram_root }}/.prepared"
+      register: haven_telegram_prepared
+
+    - name: Read only the public dependency receipt
+      ansible.builtin.slurp:
+        src: "{{ haven_telegram_root }}/.prepared"
+      register: haven_telegram_receipt
+      when: haven_telegram_prepared.stat.exists
+
+    - name: Refuse reuse of a runtime with different dependency pins
+      ansible.builtin.assert:
+        that: (haven_telegram_receipt.content | b64decode | from_json) == haven_telegram_pins
+        quiet: true
+      when: haven_telegram_prepared.stat.exists
+
+  tasks:
+    - name: Build an independent runtime with only the frozen Telegram extra
+      when: not haven_telegram_prepared.stat.exists
+      block:
+        - name: Create private installation directories
+          ansible.builtin.file:
+            path: "{{ haven_telegram_root }}/{{ item }}"
+            state: directory
+            owner: haven
+            group: haven
+            mode: '0700'
+          loop: ['', install-home]
+
+        - name: Build through the exact upstream PM lock
+          ansible.builtin.command:
+            argv:
+              - /usr/sbin/runuser
+              - -u
+              - haven
+              - --
+              - /usr/bin/env
+              - "HOME={{ haven_telegram_root }}/install-home"
+              - "HERMES_HOME={{ haven_telegram_root }}/install-home/profile"
+              - "HERMES_RUNTIME_DIR={{ haven_telegram_root }}/tools"
+              - /usr/bin/python3
+              - -m
+              - pm.build_env
+              - --source
+              - "{{ haven_source }}"
+              - --out
+              - "{{ haven_telegram_root }}/venv"
+              - --extra
+              - telegram
+            chdir: "{{ haven_source }}"
+            creates: "{{ haven_telegram_root }}/venv/bin/python"
+          async: 1800
+          poll: 10
+
+        - name: Verify the actual pinned Telegram import
+          ansible.builtin.command:
+            argv: ["{{ haven_telegram_root }}/venv/bin/python", -c, "import telegram; assert telegram.__version__ == '22.8'; print('telegram_dependency_ready')"]
+          become_user: haven
+          become: true
+          changed_when: false
+
+        - name: Protect prepared code from runtime modification
+          ansible.builtin.file:
+            path: "{{ haven_telegram_root }}"
+            recurse: true
+            owner: root
+            group: haven
+            mode: 'u=rwX,g=rX,o='
+
+        - name: Record successful frozen preparation
+          ansible.builtin.copy:
+            content: "{{ haven_telegram_pins | to_json }}\n"
+            dest: "{{ haven_telegram_root }}/.prepared"
+            owner: root
+            group: haven
+            mode: '0640'

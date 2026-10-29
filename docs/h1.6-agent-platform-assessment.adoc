@@ -2,6 +2,8 @@
 
 Assessment date: 2026-10-29. This is a local review of a candidate community connector for the link:family-conversations.adoc[selected personal/family design]. No plugin was installed into the pilot, no real API key was used and no live WhatsApp/model request was made.
 
+Later owner decision on the same date: Agent Platform is unavailable on their account. This assessment is retained as historical evidence; the current first integration is link:h1.6-telegram.adoc[owner-only Telegram]. No WhatsApp release date is assumed.
+
 == Exact inputs
 
 * Hermes v0.22.5, commit `bf0203a794a07aac3ff764972ab9087baa4e4f4e`, with the attributed upstream recovery patch recorded in link:../research/h0.1/README.adoc[H0.1].

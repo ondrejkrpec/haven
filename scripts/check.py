@@ -41,12 +41,12 @@ def main():
     ansible_env = {**os.environ, "ANSIBLE_CONFIG": str(ROOT / "ops/ansible.cfg"),
                    "ANSIBLE_HOME": str(ROOT / "build/ansible"),
                    "PATH": str(Path(python).parent) + os.pathsep + os.environ.get("PATH", "")}
-    for playbook in ("bootstrap", "verify", "reboot", "model-prepare", "model-configure", "service", "whatsapp-prepare"):
+    for playbook in ("bootstrap", "verify", "reboot", "model-prepare", "model-configure", "service", "whatsapp-prepare", "telegram-prepare"):
         run(Path(python).parent / "ansible-playbook", "-i", "ops/inventory.example.yml",
             f"ops/{playbook}.yml", "--syntax-check", env=ansible_env, buffer_output=True)
     run(Path(python).parent / "ansible-lint", "--offline", "ops/bootstrap.yml",
         "ops/verify.yml", "ops/reboot.yml", "ops/model-prepare.yml", "ops/model-configure.yml", "ops/service.yml",
-        "ops/whatsapp-prepare.yml",
+        "ops/whatsapp-prepare.yml", "ops/telegram-prepare.yml",
         env=ansible_env, buffer_output=True)
     run(ROOT / "build/tools/actionlint", "-shellcheck=", "-pyflakes=", ".github/workflows/checks.yml")
     run(python, "scripts/validate_config.py", "examples/instance.yaml")

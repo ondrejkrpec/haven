@@ -16,8 +16,9 @@ FILES = (
     "/etc/systemd/system/haven.service",
     "/var/lib/haven/.hermes/config.yaml",
     *(f"/var/lib/haven/haven-tools/scripts/{name}.py"
-      for name in ("model_contract", "model_probe", "service_runtime", "whatsapp_runtime")),
+      for name in ("model_contract", "model_probe", "service_runtime", "whatsapp_runtime", "telegram_runtime")),
     "/var/lib/haven/haven-tools/config/whatsapp-runtime.json",
+    "/var/lib/haven/haven-tools/config/telegram-runtime.json",
 )
 
 

@@ -1,10 +1,10 @@
 # Haven
 
-Haven is a personal agent system built around Hermes, with WhatsApp as its planned phone interface. The first deployment will use one Ubuntu VPS and bounded automation, with separate worker and reviewer roles.
+Haven is a personal agent system built around Hermes. Telegram is the first phone interface; WhatsApp is a future transport option. The first deployment uses one Ubuntu VPS and bounded automation, with separate worker and reviewer roles.
 
-**Status: H1.5 coordinator service verified on the existing Ubuntu pilot.** Private administration, repeatable host adoption, model access, supervised startup and application/state recovery work. Coding dispatch stays disabled until H2; WhatsApp is the next integration. GitHub repositories are published; automatic local pre-push checks replace unavailable GitHub Actions.
+**Status: H1.5 coordinator service verified on the existing Ubuntu pilot.** Private administration, repeatable host adoption, model access, supervised startup and application/state recovery work. Coding dispatch stays disabled until H2; Telegram text is the next integration. GitHub repositories are published; automatic local pre-push checks replace unavailable GitHub Actions.
 
-H1.6 now targets [personal conversations and an explicitly shared family space](docs/family-conversations.adoc). WhatsApp Agent Platform is the candidate transport, subject to availability on both accounts; its community connector passed local mocked compatibility tests. The earlier [Baileys preparation](docs/h1.6-whatsapp.adoc) remains inactive. Live messaging and family access controls are not yet accepted.
+H1.6 targets [one owner's private Telegram text conversation](docs/h1.6-telegram.adoc). Agent Platform is unavailable on the pilot owner's account, so WhatsApp and [family sharing](docs/family-conversations.adoc) are deferred. The native Telegram implementation uses a numeric owner allowlist, protected token and outbound long polling. Live account acceptance remains pending; the earlier Baileys and Agent Platform assessments stay inactive.
 
 ## Start locally
 

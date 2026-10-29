@@ -2,7 +2,7 @@
 
 Date: 2026-10-29
 
-Status: accepted product direction and access constraints; transport eligibility and implementation remain unverified.
+Status: accepted future product direction and access constraints; deferred beyond the initial owner-only Telegram integration in link:0007-telegram-first.adoc[ADR 0007]. The owner confirmed Agent Platform is unavailable on their account. No family service or two-account deployment is accepted.
 
 == Context
 
