@@ -1,6 +1,6 @@
 = H1.6: private Telegram text
 
-Status, 2026-10-29: the bounded implementation passes local synthetic acceptance. The owner selected Telegram for themselves only after confirming WhatsApp Agent Platform is unavailable on their account. Bot enrollment and live text/restart acceptance are pending. No delivery or family-access result is inferred from mocked tests.
+Status, 2026-10-29: the bounded implementation passes local synthetic acceptance. The separate Telegram runtime and disabled service guard/helper are prepared on the existing pilot; repeat deployment and application rollback pass. The owner selected Telegram for themselves only after confirming WhatsApp Agent Platform is unavailable on their account. Bot enrollment and live text/restart acceptance are pending.
 
 == Bounded pilot
 
@@ -89,6 +89,14 @@ HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 2 \
 == Future WhatsApp migration
 
 The owner wants to reconsider WhatsApp next year; no availability date or automatic migration is scheduled. Keep the same coordinator/model/instructions and canonical domain data. Review the then-supported adapter and permissions, map the authenticated owner explicitly, enroll credentials separately and accept the new channel before disabling the old intake. Telegram/WhatsApp histories have different native session identities and are not silently merged. Decide history retention and reconcile queued/outbound work at cutover. The second member and link:family-conversations.adoc[family authorization] need their own acceptance.
+
+== Existing pilot preparation
+
+The application was prepared from public implementation revision `0d8c0551a0ef9fde26098ba0f5fdfd35aab668e6`. Frozen dependency preparation passed; repeating it made no changes. The service guard/helper/unit were deployed with both messaging transports disabled, and the repeat made no effective changes. The actual PTB import and source-pin helper check passed. Noninteractive enrollment was refused before token entry or API use.
+
+A separate application rollback check appended a harmless comment to the deployed Telegram helper, then restored all nine fixed files with their hashes, modes and owners. Service health passed afterwards. OAuth inode/size/mtime were unchanged across preparation/deployment and rollback. The baseline core interpreter remains selected until Telegram activation; the prepared optional environment is retained read-only. No OS update, firewall change, bot enrollment, live Telegram message or model request was performed by these preparation checks.
+
+These results establish the application preparation path. Live owner/denied-sender messages and reconnect after an enabled-transport restart remain unverified.
 
 == Sources
 
