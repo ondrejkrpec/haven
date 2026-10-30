@@ -1,6 +1,6 @@
 = H1.6.1: Explicit deterministic operations
 
-Status, 2026-10-30: deployed on the Ubuntu pilot; rollback, idempotent repeat, restart and synthetic native boundaries are verified. The four owner-message checks remain pending. The owner selected a deterministic capability profile in place of ordinary AI conversation. H1.6's owner allowlist, protected Telegram token and native long polling remain the transport boundary. Voice and coding dispatch remain disabled.
+Status, 2026-10-30: accepted on the Ubuntu pilot. Owner replies/refusals, zero model usage, rollback, idempotent repeat, restart and synthetic native boundaries are verified. The owner selected a deterministic capability profile in place of ordinary AI conversation. H1.6's owner allowlist, protected Telegram token and native long polling remain the transport boundary. Voice and coding dispatch remain disabled.
 
 == Supported behavior
 
@@ -71,7 +71,7 @@ The repeated active deployment passed `ok=25 changed=0 failed=0`, retaining the 
 
 Read-only Telegram aggregates show no additional native model calls or conversation rows during deployment/rollback/restart; the new capability usage counters remain zero. Telegram token metadata is unchanged. OAuth-store metadata changed during service starts; its contents were not inspected, copied or restored. A zero model-call count does not assert zero OAuth/catalog networking.
 
-Owner replies and refusal remain pending: the owner has been asked to send `system.status`, `system.capabilities`, `wishlist.check_deals` and `HAVEN_H161_DENY_1` as separate Telegram messages. At the last audit there were no capability requests yet. Do not infer end-to-end message acceptance from synthetic tests.
+The owner sent `system.status`, `system.capabilities`, `wishlist.check_deals` and `HAVEN_H161_DENY_1` as separate Telegram messages and confirmed both expected replies and both refusals. Read-only audit found exactly two allowed explicit operations, one disabled-capability refusal and one unknown-operation refusal matching the synthetic marker hash. All capability model/token/cost counters are zero; native Telegram API-call and conversation-row aggregates are unchanged. The status request occurred after the controlled restart, confirming the real transport's return. This accepts the bounded owner-text profile; future integrations, voice, family data and isolated executors need their own acceptance.
 
 == Sources and scope
 

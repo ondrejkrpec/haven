@@ -4,7 +4,7 @@ H1 is in progress: publication is accepted, and link:h1.3-first-access.adoc[admi
 
 link:h1.6-telegram.adoc[H1.6 owner-only Telegram text] is accepted on the existing pilot: private enrollment, owner replies, denied-sender intake, blocked remote administration and enabled-service restart recovery are verified. The owner deferred WhatsApp, the second member and family sharing after confirming Agent Platform is unavailable on their account. The earlier Baileys/Agent Platform work remains inactive.
 
-The owner subsequently selected link:h1.6.1-capabilities.adoc[H1.6.1 deterministic operations] instead of ordinary AI chat. This profile is deployed with verified application rollback, idempotent repeat, restart and native execution guards. Its four owner-message acceptance checks remain pending; H1.6's earlier text acceptance does not establish those new outcomes.
+The owner subsequently selected link:h1.6.1-capabilities.adoc[H1.6.1 deterministic operations] instead of ordinary AI chat. This profile is accepted with verified application rollback, idempotent repeat, restart and native execution guards. Four real owner messages produced two expected replies and two refusals without additional model calls or conversation rows; a live status reply after restart confirms transport recovery.
 
 == H0 handoff
 
