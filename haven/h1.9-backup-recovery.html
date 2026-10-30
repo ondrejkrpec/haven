@@ -74,6 +74,10 @@
     
   </li>
   <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
     <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
     
   </li>
@@ -139,6 +143,10 @@
     <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
     
   </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -179,7 +187,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-10-30: preparation implemented; production off-site backup and monitoring are not enabled. This increment supplies a bounded metadata inventory, a pinned synthetic restic experiment and the implementation/acceptance plan below. Provider selection, real credentials, an external notification channel and clean-host recovery remain open. No installation, service restart or production secret copy is part of this increment.</p>
+<p>Status, 2026-10-30: preparation implemented; production off-site backup and monitoring are not enabled. This increment supplies a bounded metadata inventory, a pinned synthetic restic experiment and the implementation/acceptance plan below. The owner selected <a href="h1.9-scaleway-healthchecks.html" class="xref page">Scaleway + Healthchecks.io</a>; account enrollment, real credentials, an external notification destination and clean-host recovery remain open. No installation, service restart or production secret copy is part of this increment.</p>
 </div>
 </div>
 </div>
@@ -260,10 +268,10 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_storage_and_monitoring_candidates"><a class="anchor" href="#_storage_and_monitoring_candidates"></a>Storage and monitoring candidates</h2>
+<h2 id="_selected_storage_and_monitoring"><a class="anchor" href="#_selected_storage_and_monitoring"></a>Selected storage and monitoring</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="h1.9-provider-options.html" class="xref page">Provider options</a> compares current official prices, locations and monitoring limits. No candidate is selected automatically. Before provisioning confirm the owner&#8217;s account price/tax, restricted credentials, recovery-key storage and notification destination.</p>
+<p>The owner selected Scaleway Object Storage and hosted Healthchecks.io after reviewing <a href="h1.9-provider-options.html" class="xref page">provider options</a>. The <a href="h1.9-scaleway-healthchecks.html" class="xref page">setup plan</a> specifies enrollment, proposed storage/access boundaries and two external checks. Before provisioning confirm the owner&#8217;s account price/tax, restricted credentials and notification destination. The independent repository password belongs in the owner&#8217;s password manager.</p>
 </div>
 <div class="paragraph">
 <p>Restic encrypts content, but encryption does not prevent repository deletion by an attacker with storage credentials. Verify protection for old recovery points using provider versioning/immutability, separately controlled snapshots or an actually tested append-only path. Keep destructive retention/maintenance authorization separate where the selected backend permits it. Do not claim that an untested bucket policy is append-only: lock removal and normal backend operations must still work.</p>
@@ -285,7 +293,7 @@
 <p>Finish the explicit path manifest, extension/identity review and cross-file consistency strategy from the private metadata inventory.</p>
 </li>
 <li>
-<p>Confirm storage/monitor choices. The owner enrolls accounts/MFA, notification address and password-manager recovery material through private procedures; no credentials are supplied in chat.</p>
+<p>Enroll the selected Scaleway/Healthchecks accounts, MFA, notification destination and password-manager recovery material through private procedures; no credentials are supplied in chat.</p>
 </li>
 <li>
 <p>Implement the bounded production runner and systemd units, with a verified tool pin, least-privilege storage access, fixed diagnostics, staging cleanup and a lock. Validate against synthetic fixtures before deployment.</p>

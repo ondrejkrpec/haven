@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.9: Scaleway and Healthchecks.io setup · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery preparation</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.9: Scaleway and Healthchecks.io setup</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-10-30: the owner selected Scaleway Object Storage and hosted Healthchecks.io after the <a href="h1.9-provider-options.html" class="xref page">provider comparison</a>. Account enrollment, credentials, notification destination and live acceptance remain pending. This is a provisioning and verification plan, not an installed backup service. See <a href="adr/0010-offsite-backup-providers.html" class="xref page">ADR 0010</a> and the <a href="h1.9-backup-recovery.html" class="xref page">backup implementation plan</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_owner_enrollment"><a class="anchor" href="#_owner_enrollment"></a>Owner enrollment</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Sign in to <a href="https://console.scaleway.com/">Scaleway</a> or create the account, complete its required verification/payment setup, and enable MFA. Confirm the actual account price and billing details before creating billable resources. Keep recovery codes outside the VPS.</p>
+</li>
+<li>
+<p>Sign in to <a href="https://healthchecks.io/">hosted Healthchecks.io</a>, verify the notification email and enable account two-factor authentication. The proposed first channel is the account email; the owner still needs to confirm this choice. The monitor must remain accessible when Haven is unavailable.</p>
+</li>
+<li>
+<p>In the owner&#8217;s password manager, reserve an entry for the restic repository password and a recovery record for the account/project, region, bucket, repository prefix and source revisions. Generate a unique repository password locally when enrollment starts; retain it before initializing the repository. Do not reuse a Scaleway password or API secret as the restic password.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Account registration, billing acceptance, MFA and notification verification require the owner&#8217;s interaction. Do not send passwords, API secrets, recovery codes or heartbeat URLs through chat. Merely report which enrollment steps are complete. No third-party account or resource was created by this preparation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_proposed_storage_layout"><a class="anchor" href="#_proposed_storage_layout"></a>Proposed storage layout</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Setting</th>
+<th class="tableblock halign-left valign-top">Initial implementation target, subject to live verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Project</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A dedicated backup Project, containing no unrelated resources. Project-scoped IAM is not itself a bucket-level boundary.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Region / class</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Paris (<code>fr-par</code>), Standard Multi-AZ. Keep data online for recovery; do not add Glacier transitions to an active restic repository.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bucket / prefix</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One private bucket with a unique non-personal name; one <code>haven</code> repository prefix. A public example name is not the real bucket name. Disable website/public access and do not grant a wildcard principal access.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Versions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable bucket versioning before the first repository write. Keep non-current versions during initial acceptance; no automatic version expiration or retention/prune until its recovery behavior is tested. Previous versions add billable storage.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Repository</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pinned restic 0.19.1, repository format 2, native S3 backend. Use the endpoint displayed for the actual Paris bucket and a repository-location file. No credentials in a repository URL.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Object Lock</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Do not apply blanket default retention in this preparation. Object Lock has lasting bucket consequences and default retention affects new lock/index objects too. Decide its use only after a disposable backend test proves normal locking, backup, maintenance and recovery behavior.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The <a href="https://www.scaleway.com/en/docs/object-storage/how-to/create-a-bucket/">bucket guide</a> describes visibility and versioning at creation. Restic encryption is independent of optional provider-side encryption; introducing a separately managed KMS key would add another recovery dependency and is not part of this initial plan.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_access_contract_to_implement_and_test"><a class="anchor" href="#_access_contract_to_implement_and_test"></a>Access contract to implement and test</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Create a dedicated IAM application for the VPS, not an owner API key. Combine Project-scoped IAM with a bucket policy naming the exact application. Review the <a href="https://www.scaleway.com/en/docs/iam/policies-permissions/permission-sets/">current permission sets</a> and <a href="https://www.scaleway.com/en/docs/object-storage/reference-content/s3-iam-permissions-equivalence/">S3 operation mapping</a> when constructing the policy. An IAM delete permission can cover more than lock deletion, so the bucket policy must supply the narrower resource/action restriction. The following is the required behavior, not an already tested policy:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Principal</th>
+<th class="tableblock halign-left valign-top">Required boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VPS backup application</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List the repository, read/write its objects, perform needed multipart operations, and remove restic objects under <code>haven/locks/</code>. Deny deleting snapshot/data/key/index objects during normal backup, deleting particular object versions, changing policies/versioning/lifecycle/retention, or accessing another bucket/prefix. Do not grant IAM or account administration.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maintenance / recovery operator</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Separate credentials outside the VPS. Review and run retention/prune and any recovery of object versions from the trusted administrative workstation. Keep a way for the account owner to repair policy mistakes. These credentials must not be supplied to routine timers.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unauthenticated caller</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No bucket listing or object reads.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Scaleway <a href="https://www.scaleway.com/en/docs/object-storage/api-cli/bucket-policy/">bucket policies</a> use an allowlist; do not assume AWS-style explicit Deny statements provide enforcement. Preserve the intended owner/recovery access when replacing the one bucket policy. Project-wide IAM may allow access to another bucket without an appropriate policy, so a real negative-access test is mandatory. Never broaden to full access just to make a test pass.</p>
+</div>
+<div class="paragraph">
+<p>Versioning plus restricted credentials is a proposed recovery layer, not proof of immutable or append-only backups. An overwrite may hide an older object; repository deletion may require recovery of many related versions to a consistent point. Test that process in a separate disposable repository. Permanent version deletion and disabling the protection must be unavailable with the VPS key. Separately controlled version cleanup must leave a documented recovery window and account for storage growth. See the provider&#8217;s <a href="https://www.scaleway.com/en/docs/object-storage/how-to/use-bucket-versioning/">versioning</a> and <a href="https://www.scaleway.com/en/docs/object-storage/how-to/use-object-lock/">Object Lock</a> behavior.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_two_external_checks"><a class="anchor" href="#_two_external_checks"></a>Two external checks</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use a separate Healthchecks project and individual UUID ping URLs, rather than an account management key or a shared project ping key on the VPS. Keep each URL in a protected credential file. Neither descriptions nor ping bodies should contain paths, conversations, command output or credentials.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 50.0002%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Check</th>
+<th class="tableblock halign-left valign-top">Proposed schedule</th>
+<th class="tableblock halign-left valign-top">Grace</th>
+<th class="tableblock halign-left valign-top">When to send success</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>haven-backup</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Simple, 24 hours</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 hour</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">After a complete exit-zero backup, confirmation of its exact snapshot and the required integrity checks. A proposed daily UTC timer and these settings permit a late alert after about 25 hours without success; they do not establish the 24-hour recovery objective.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>haven-service</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Simple, 5 minutes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5 minutes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">After the independent probe confirms the coordinator is running, its existing operational snapshot is fresh, and the last accepted backup is no older than 24 hours. This does not prove end-to-end Telegram reply delivery.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>For backup, <code>/start</code> begins the execution window, normal success ends it and <code>/fail</code> reports a failed/incomplete run. A crash or failed network request must still lead to a missed-heartbeat alert. Configure timer/runtime limits to finish or fail within the backup grace window; persistent catch-up runs must not race another run. The short-period service probe is independent of both Nora and the backup process, with bounded HTTPS requests and no failure output attached. Missing initial backup must fail freshness once monitoring is armed, not silently pass.</p>
+</div>
+<div class="paragraph">
+<p>The proposed settings follow Healthchecks' <a href="https://healthchecks.io/docs/configuring_checks/">schedule semantics</a> and <a href="https://healthchecks.io/docs/signaling_failures/">failure signaling</a>. Leave checks paused until their runner and notification integration are ready. Merely creating checks or sending a manual success ping is not acceptance. Test the <a href="https://healthchecks.io/docs/configuring_notifications/">chosen notification integration</a>, then a deliberately missed heartbeat and its recovery without stopping the production coordinator. Do not send that external notification without the owner&#8217;s selected destination and authorized live test.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_private_handoff_and_next_deployable_increment"><a class="anchor" href="#_private_handoff_and_next_deployable_increment"></a>Private handoff and next deployable increment</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Enrollment will place separate storage credentials, the restic password and per-check URLs in root-controlled files on the VPS, outside checkouts and routine logs; exact paths and transfer commands belong to the reviewed runner/deployment change. Use a hidden terminal prompt or protected-file transfer, not shell arguments/history. The owner&#8217;s password manager holds the independent recovery copies. Do not create a plaintext credentials template inside a repository, even if ignored. No enrollment command or production runner is supplied by this documentation-only change.</p>
+</div>
+<div class="paragraph">
+<p>After accounts are ready, record only non-secret resource identifiers privately. Before initializing the production repository, test the actual policy with synthetic data: read/write/list, normal lock cleanup and multipart failure cleanup; rejected snapshot/data/version deletion; rejected policy/versioning changes and access outside the repository; exact restore and protected-version recovery with the separate operator. Clean up only disposable test resources and retain the evidence. Backend compatibility and policy failure remain blockers for production activation.</p>
+</div>
+<div class="paragraph">
+<p>In parallel, finish the instance path manifest and coordinated consistency procedure, then implement and test the bounded runner and systemd units. Deploy only after local checks and secret enrollment. Finally run a real encrypted backup, an external alarm and isolated recovery onto a separate target, with Telegram polling/model/scheduler disabled. H1.9 remains open until those live tests and the owner recovery runbook pass.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>
