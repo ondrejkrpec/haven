@@ -1,0 +1,15 @@
+= ADR 0008: Deterministic capability profile
+
+Date: 2026-10-30. Status: accepted by the owner; operational acceptance is tracked in link:../h1.6.1-capabilities.adoc[H1.6.1].
+
+== Context
+
+H1.6 accepts owner-only Telegram conversation with no tools. The owner now wants only explicitly implemented operations, with no ordinary AI conversation or model cost. The native post-admission consumer hook deliberately fails open, so a plugin alone cannot enforce that restriction.
+
+== Decision
+
+Add an explicit deterministic service profile. A trusted launcher validates pinned sources and arms a process policy before loading Hermes or its plugin. Native entrypoints refuse model construction, auxiliary calls, tool execution and cron dispatch. A small plugin maps exact aliases to two read-only handlers and writes bounded private audit receipts. No model interprets permission or selects an operation.
+
+== Consequences
+
+Plugin failure cannot authorize a model call. A policy/audit failure refuses work. Source drift or an altered/missing plugin parks startup. A future Hermes update must revalidate this version-bound patch; the normal H1.6 profile remains separately selectable. This does not isolate hostile code in the same interpreter or implement H2 executors. New integrations and external effects require their own authorization, budgets and recovery acceptance.

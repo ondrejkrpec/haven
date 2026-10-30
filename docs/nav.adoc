@@ -8,6 +8,7 @@
 ** xref:h1.4-model-configuration.adoc[Configuration and first model request]
 ** xref:h1.5-service-recovery.adoc[Supervised service and recovery]
 ** xref:h1.6-telegram.adoc[Telegram private text]
+** xref:h1.6.1-capabilities.adoc[Deterministic capability guardrails]
 ** xref:h1.6-whatsapp.adoc[WhatsApp text and access rules]
 ** xref:h1.6-agent-platform-assessment.adoc[Agent Platform compatibility assessment]
 ** xref:documentation.adoc[Documentation and checks]
@@ -22,6 +23,7 @@
 ** xref:adr/0005-private-whatsapp-text.adoc[ADR 0005: Private WhatsApp text]
 ** xref:adr/0006-personal-and-family-data.adoc[ADR 0006: Personal and family data]
 ** xref:adr/0007-telegram-first.adoc[ADR 0007: Telegram first]
+** xref:adr/0008-deterministic-capabilities.adoc[ADR 0008: Deterministic capabilities]
 * Verification
 ** xref:research/h0.1/README.adoc[H0.1 feasibility]
 ** xref:h0.2-acceptance.adoc[H0.2 foundation]

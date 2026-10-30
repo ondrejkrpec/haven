@@ -1,0 +1,119 @@
+diff --git a/agent/agent_init.py b/agent/agent_init.py
+index 59006475..b162df8d 100644
+--- a/agent/agent_init.py
++++ b/agent/agent_init.py
+@@ -2286,6 +2286,8 @@ def init_agent(
+     side_agent: bool = False, memory_manager=None,
+     tool_result_metadata_callback: Optional[Callable[..., dict]] = None,
+ ):
++    from agent.deterministic_policy import require_nondeterministic_access
++    require_nondeterministic_access("model")
+     from agent.safe_worker_policy import safe_worker_enabled
+ 
+     if safe_worker_enabled():
+diff --git a/agent/auxiliary_client.py b/agent/auxiliary_client.py
+index 88f1fa59..736c1e6c 100644
+--- a/agent/auxiliary_client.py
++++ b/agent/auxiliary_client.py
+@@ -8023,6 +8023,8 @@ def call_llm(
+     latency_info: Optional[dict[str, int]] = None,
+ ) -> Any:
+     """Run an auxiliary LLM request, applying the configured task limit."""
++    from agent.deterministic_policy import require_nondeterministic_access
++    require_nondeterministic_access("auxiliary_model")
+     queue_started_at = time.monotonic()
+     semaphore = _acquire_sync_aux_semaphore(task)
+     if semaphore is not None:
+@@ -8318,6 +8320,8 @@ async def async_call_llm(
+     route_info: Optional[dict[str, str]] = None,
+ ) -> Any:
+     """Run an asynchronous auxiliary LLM request under the configured limit."""
++    from agent.deterministic_policy import require_nondeterministic_access
++    require_nondeterministic_access("auxiliary_model")
+     semaphore = _acquire_async_aux_semaphore(task)
+     if semaphore is not None:
+         await semaphore.acquire()
+diff --git a/cron/scheduler.py b/cron/scheduler.py
+index 6e711cff..4750b5a7 100644
+--- a/cron/scheduler.py
++++ b/cron/scheduler.py
+@@ -2577,6 +2577,8 @@ def run_job(
+     ``extra_prompt``: optional per-run context from ``cronjob(action='run', prompt=...)`` (#57331). Appended
+     to the stored prompt for this fire only — never persisted to the job definition.
+     """
++    from agent.deterministic_policy import require_nondeterministic_access
++    require_nondeterministic_access("tool")
+     from gateway.session_cron import current_execution
+     owner_execution = current_execution()
+     if owner_execution is not None and owner_execution[2:] != (job['id'], execution_id):
+@@ -2822,6 +2824,8 @@ def run_one_job(
+     claim (callers use the store CAS) but keeps it alive. True if processed (a job failure is
+     recorded via ``mark_job_run``), False only if processing raised. ``cancel_event``: optional
+     transport-level cancel (dashboard drain)."""
++    from agent.deterministic_policy import require_nondeterministic_access
++    require_nondeterministic_access("tool")
+     # Every gateway path (built-in scheduler, external providers, and direct
+     # API fires) crosses this seam.  Ensure the detached worker has a durable
+     # attempt to adopt before any launch can occur.
+diff --git a/model_tools.py b/model_tools.py
+index 011d32dc..76fa1246 100644
+--- a/model_tools.py
++++ b/model_tools.py
+@@ -886,6 +886,8 @@ def handle_function_call(
+     it (single-fire contract). enabled/disabled_toolsets scope the Tool Search
+     bridge catalog to this session's grant (None = unrestricted).
+     """
++    from agent.deterministic_policy import require_nondeterministic_access
++    require_nondeterministic_access("tool")
+     function_args = coerce_tool_args(function_name, function_args)
+     if not isinstance(function_args, dict):
+         function_args = {}
+diff --git a/tools/registry.py b/tools/registry.py
+index bc6e1ab7..536a7bbb 100644
+--- a/tools/registry.py
++++ b/tools/registry.py
+@@ -947,6 +947,8 @@ class ToolRegistry:
+         self, name: str, args: dict, *, scope: Optional[str] = None, **kwargs) -> str | dict:
+         """Execute a tool handler by name: async handlers bridged via ``_run_async()``,
+         results normalized, every exception returned as ``{"error": ...}``."""
++        from agent.deterministic_policy import require_nondeterministic_access
++        require_nondeterministic_access("tool")
+         entry = self.get_entry(name, scope=scope)
+         if not entry:
+             return tool_error(f"Unknown tool: {name}")
+diff --git a/agent/deterministic_policy.py b/agent/deterministic_policy.py
+new file mode 100644
+index 00000000..e2c9cb8a
+--- /dev/null
++++ b/agent/deterministic_policy.py
+@@ -0,0 +1,30 @@
++"""Irreversible process policy for hosts serving deterministic operations only.
++
++A trusted launcher arms this before loading plugins or constructing agents. The
++consumer hook remains fail-open; model and tool execution cannot cross this gate.
++This is not isolation against arbitrary Python code running in this process.
++"""
++from __future__ import annotations
++
++from typing import Callable
++
++_armed = False
++_observer: Callable[[str], None] | None = None
++
++
++def arm_deterministic_policy(observer: Callable[[str], None]) -> None:
++    """Latch the host policy for this process; no unarm or replacement API."""
++    global _armed, _observer
++    if _armed or not callable(observer):
++        raise RuntimeError("deterministic policy cannot be replaced")
++    _observer = observer
++    _armed = True
++
++
++def require_nondeterministic_access(action: str) -> None:
++    if not _armed:
++        return
++    try:
++        _observer(action)
++    finally:
++        raise PermissionError("Deterministic host: model and tool execution are disabled")

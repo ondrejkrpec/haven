@@ -9,7 +9,7 @@ import stat
 import sys
 import time
 
-from scripts.model_contract import check_service
+from scripts.model_contract import capability_mode, check_service
 from scripts.model_probe import ProbeError, check_candidate, private_file
 
 
@@ -31,6 +31,10 @@ def check(source, home):
             raise ProbeError("unexpected_service_input")
     for name in ("profiles", "plugins"):
         path = home / name
+        if name == "plugins" and capability_mode(config):
+            from scripts.capability_runtime import check_runtime
+            check_runtime(source, home)
+            continue
         if path.is_symlink() or (path.exists() and any(path.iterdir())):
             raise ProbeError("unexpected_service_input")
     if config.get("platforms", {}).get("whatsapp", {}).get("enabled"):
@@ -104,8 +108,15 @@ def main(argv=None):
                 # Stay systemd's main PID: exit 78 from this guard must park the
                 # service; RestartPreventExitStatus does not cover ExecStartPre.
                 os.chdir(args.source)
-                os.execve(sys.executable, [sys.executable, "-m", "hermes_cli.main",
-                                          "--profile", "default", "gateway", "run", "--quiet"], clean)
+                if capability_mode(config):
+                    from scripts.capability_gateway import BOOTSTRAP
+                    clean["PYTHONDONTWRITEBYTECODE"] = "1"
+                    command = [sys.executable, "-c", BOOTSTRAP,
+                               "--source", str(args.source), "--home", str(args.home)]
+                else:
+                    command = [sys.executable, "-m", "hermes_cli.main",
+                               "--profile", "default", "gateway", "run", "--quiet"]
+                os.execve(sys.executable, command, clean)
             result = {"result": "passed", "check": "service_policy"}
     except Exception:
         # Provider bodies, config values, file contents and exception strings stay private.

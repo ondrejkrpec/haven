@@ -10,6 +10,7 @@
     haven_source: /var/lib/haven/releases/hermes-bf0203a-785f2646
     haven_state: /var/lib/haven/.hermes
     haven_tools: /var/lib/haven/haven-tools
+    haven_capabilities_enabled: "{{ (lookup('ansible.builtin.file', haven_model_config) | from_yaml).get('plugins', {}).get('enabled', []) == ['haven-capabilities'] }}"
     haven_whatsapp_enabled: "{{ (lookup('ansible.builtin.file', haven_model_config) | from_yaml).get('platforms', {}).get('whatsapp', {}).get('enabled', false) }}"
     haven_telegram_enabled: "{{ (lookup('ansible.builtin.file', haven_model_config) | from_yaml).get('platforms', {}).get('telegram', {}).get('enabled', false) }}"
     haven_python: >-
@@ -108,6 +109,111 @@
             backup: true
           no_log: true
           notify: Restart Haven
+
+        - name: Prepare the explicitly selected deterministic capability mode
+          when: haven_capabilities_enabled | bool
+          block:
+            - name: Install the capability policy and guarded launcher
+              ansible.builtin.copy:
+                src: "../scripts/{{ item }}.py"
+                dest: "{{ haven_tools }}/scripts/{{ item }}.py"
+                owner: root
+                group: haven
+                mode: '0640'
+              loop: [capability_policy, capability_runtime, capability_gateway, prepare_capabilities]
+              notify: Restart Haven
+
+            - name: Install the exact capability registry and source pins
+              ansible.builtin.copy:
+                src: "../config/{{ item }}"
+                dest: "{{ haven_tools }}/config/{{ item }}"
+                owner: root
+                group: haven
+                mode: '0640'
+              loop: [capabilities.json, capability-runtime.json]
+              notify: Restart Haven
+
+            - name: Stage the bounded native host policy patch
+              ansible.builtin.copy:
+                src: ../research/h1.6.1/deterministic-policy.patch
+                dest: "{{ haven_tools }}/config/deterministic-policy.patch"
+                owner: root
+                group: haven
+                mode: '0640'
+
+            - name: Check the exact native capability patch before stopping the service
+              ansible.builtin.command:
+                argv:
+                  - /usr/sbin/runuser
+                  - -u
+                  - haven
+                  - --
+                  - /usr/bin/env
+                  - "PYTHONPATH={{ haven_tools }}"
+                  - "{{ haven_python }}"
+                  - -m
+                  - scripts.prepare_capabilities
+                  - --source
+                  - "{{ haven_source }}"
+                  - --patch
+                  - "{{ haven_tools }}/config/deterministic-policy.patch"
+              register: haven_capability_patch
+              changed_when: false
+              when: not ansible_check_mode
+
+            - name: Stop the coordinator before modifying its native code
+              ansible.builtin.systemd_service:
+                name: haven.service
+                state: stopped
+              when:
+                - not ansible_check_mode
+                - (haven_capability_patch.stdout | from_json).changed
+
+            - name: Apply the verified native policy patch
+              ansible.builtin.command:
+                argv:
+                  - /usr/sbin/runuser
+                  - -u
+                  - haven
+                  - --
+                  - /usr/bin/env
+                  - "PYTHONPATH={{ haven_tools }}"
+                  - "{{ haven_python }}"
+                  - -m
+                  - scripts.prepare_capabilities
+                  - --source
+                  - "{{ haven_source }}"
+                  - --patch
+                  - "{{ haven_tools }}/config/deterministic-policy.patch"
+                  - --apply
+              changed_when: true
+              when:
+                - not ansible_check_mode
+                - (haven_capability_patch.stdout | from_json).changed
+              notify: Restart Haven
+
+            - name: Protect the fixed trusted and instance plugin directories
+              ansible.builtin.file:
+                path: "{{ item }}"
+                state: directory
+                owner: root
+                group: haven
+                mode: '0750'
+              loop:
+                - "{{ haven_tools }}/plugins"
+                - "{{ haven_tools }}/plugins/haven-capabilities"
+                - "{{ haven_state }}/plugins"
+                - "{{ haven_state }}/plugins/haven-capabilities"
+
+            - name: Install only the two declared plugin files
+              ansible.builtin.copy:
+                src: "../plugins/haven-capabilities/{{ item.1 }}"
+                dest: "{{ item.0 }}/{{ item.1 }}"
+                owner: root
+                group: haven
+                mode: '0640'
+              loop: "{{ [haven_tools + '/plugins/haven-capabilities', haven_state + '/plugins/haven-capabilities'] | product(['plugin.yaml', '__init__.py']) | list }}"
+              notify: Restart Haven
 
         - name: Validate the service policy without resolving credentials
           ansible.builtin.command:
