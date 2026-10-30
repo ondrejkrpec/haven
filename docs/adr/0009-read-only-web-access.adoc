@@ -1,6 +1,6 @@
 = ADR 0009: Separate public publication and read-only private web access
 
-Date: 2026-10-30. Status: owner selected the read-only scope; implementation and live acceptance in progress.
+Date: 2026-10-30. Status: accepted for the owner-only pilot; public/private HTTPS, read-only runtime, repeatability, release rollback and client access with/without the corporate VPN are verified. Publication provenance and acceptance limits are recorded in the guide.
 
 == Context
 
