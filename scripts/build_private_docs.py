@@ -68,13 +68,15 @@ def build(instance, root=ROOT):
         shutil.copyfile(root / "docs/ui/css/site.css", staging / "site.css")
         hashes = {p.relative_to(staging).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in sorted(staging.rglob("*")) if p.is_file()}
-        release_id = hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()
-        (staging / "publication.json").write_text(json.dumps({
+        provenance = {
             "visibility": "private", "public_revision": git(root, "rev-parse", "HEAD"),
             "instance_revision": git(instance, "rev-parse", "HEAD"),
-            "documents": selection["documents"], "release_id": release_id,
-            "source_dirty": bool(git(instance, "status", "--porcelain")),
             "files_sha256": hashes,
+        }
+        release_id = hashlib.sha256(json.dumps(provenance, sort_keys=True).encode()).hexdigest()
+        (staging / "publication.json").write_text(json.dumps({
+            **provenance, "documents": selection["documents"], "release_id": release_id,
+            "source_dirty": bool(git(instance, "status", "--porcelain")),
         }, indent=2) + "\n", encoding="utf-8")
         check_site(staging)
         if output.exists():

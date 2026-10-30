@@ -21,8 +21,9 @@ def verify(site, revision):
             raise ValueError("Private artifact must not contain symlinks")
         if source.is_file() and source != metadata:
             actual[source.relative_to(site).as_posix()] = hashlib.sha256(source.read_bytes()).hexdigest()
+    provenance = {key: manifest[key] for key in ("visibility", "public_revision", "instance_revision", "files_sha256")}
     if (actual != manifest["files_sha256"] or "index.html" not in actual
-            or hashlib.sha256(json.dumps(actual, sort_keys=True).encode()).hexdigest() != manifest["release_id"]):
+            or hashlib.sha256(json.dumps(provenance, sort_keys=True).encode()).hexdigest() != manifest["release_id"]):
         raise ValueError("Private artifact contents differ from its manifest")
     print("Private artifact integrity verified.")
 

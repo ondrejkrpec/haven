@@ -89,6 +89,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--if-configured", action="store_true")
     args = parser.parse_args()
+    # Hooks may inherit repository-local Git variables; the artifact repository
+    # must resolve its own metadata, just like the existing pre-push fixtures.
+    for name in subprocess.check_output(["git", "rev-parse", "--local-env-vars"], text=True).splitlines():
+        import os
+        os.environ.pop(name, None)
     if args.if_configured:
         setting = subprocess.run(["git", "config", "--local", "--bool", "haven.publishDocs"],
                                  cwd=ROOT, capture_output=True, text=True, check=False)
