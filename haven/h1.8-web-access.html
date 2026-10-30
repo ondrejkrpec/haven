@@ -167,7 +167,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status on 2026-10-30: implementation and live acceptance in progress. The owner selected a read-only dashboard; administrative controls are deferred. This guide separates public publication, private build inputs and tailnet access. <a href="adr/0009-read-only-web-access.html" class="xref page">ADR 0009</a> records the boundaries.</p>
+<p>Status on 2026-10-30: H1.8 is accepted for this owner-only pilot. Public Pages hosting, private HTTPS, read-only snapshots, repeat deployment and private-release rollback are verified. The owner confirmed ordinary browser access with the corporate VPN both enabled and disabled. The final source merge exercises the configured automatic publisher; verify its live <code>publication.json</code> before handoff. Administrative controls are deferred. <a href="adr/0009-read-only-web-access.html" class="xref page">ADR 0009</a> records the boundaries.</p>
 </div>
 </div>
 </div>
@@ -191,7 +191,7 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Public documentation</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Only the existing bounded public Antora exporter</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Prebuilt GitHub Pages branch, subject to live account acceptance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Verified prebuilt GitHub Pages branch</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Private documentation</p></td>
@@ -218,6 +218,9 @@
 </div>
 <div class="paragraph">
 <p>Publication updates only <code>gh-pages</code>, preserving its artifact history and protecting the previous remote tip with an explicit lease. It never commits or pushes the source primary branch. A changed source/remote or concurrent artifact publisher aborts the operation. There is a final remote read immediately before push, not an atomic cross-ref transaction with a concurrent GitHub merge; a later source merge needs its own successful publication. The artifact branch is persistent hosting state, not an unfinished topic branch.</p>
+</div>
+<div class="paragraph">
+<p>The versioned publication manifest separates each <code>path</code> from its <code>sha256</code> field in a <code>files</code> array. The exact generated artifact is secret-scanned before push. A successful push writes a local receipt in Git metadata at <code>haven-docs/last-success.json</code>, naming source and artifact revisions. Check this receipt and the live manifest: Git&#8217;s <code>post-merge</code> hook cannot make the already completed source merge fail when its publisher exits unsuccessfully.</p>
 </div>
 <div class="paragraph">
 <p>Configure GitHub Pages once with source branch <code>gh-pages</code>, path <code>/</code>, build type <code>legacy</code>, and HTTPS. Do not select a custom Actions workflow. GitHub documents direct prebuilt deployment with <code>.nojekyll</code> when Actions is unavailable; only a successful HTTPS request with matching metadata establishes that it works on the actual account.</p>
@@ -311,6 +314,15 @@ sudo tailscale serve status --json</code></pre>
 <div class="paragraph">
 <p>No public firewall rule, public HTTP listener, OS update, service-account change or Nora restart is part of this operation. Tailscale&#8217;s policy, together with authenticated tailnet devices, controls access; UFW alone is not that boundary. Funnel must remain absent from the resulting Serve configuration.</p>
 </div>
+<div class="sect2">
+<h3 id="_workstation_with_corporate_dns"><a class="anchor" href="#_workstation_with_corporate_dns"></a>Workstation with corporate DNS</h3>
+<div class="paragraph">
+<p>Check the client separately: tailnet-wide MagicDNS does not mean a workstation accepts Tailscale DNS. Do not change an existing corporate VPN, its resolvers, routes, NSS order or Tailscale DNS preference to make this site work. An owner-approved exact <code>/etc/hosts</code> mapping for the one node&#8217;s current tailnet IP is a narrow alternative. Keep a byte-for-byte copy of the original file and check for an existing mapping before adding one. Ensure a newline separates the new record from the previous last line; some existing files have no trailing newline.</p>
+</div>
+<div class="paragraph">
+<p>After the owner installs the single mapping, verify <code>getent hosts</code> and ordinary HTTPS with certificate verification enabled. Compare corporate DNS/NSS files before and after. This mapping bypasses DNS only for that exact hostname and must be updated if the node&#8217;s tailnet IP changes. Keep Tailscale connected. Testing both corporate-VPN states requires the owner to switch their VPN; the deployment agent must not toggle it. An explicit <code>curl --resolve</code> is useful for diagnosis but does not establish ordinary browser acceptance.</p>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -355,6 +367,40 @@ sudo systemctl disable --now haven-dashboard-snapshot.timer</code></pre>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Context7 returned a monthly quota error. Official <a href="https://github.blog/changelog/2024-07-08-pages-legacy-worker-sunset/">GitHub prebuilt Pages deployment</a>, <a href="https://docs.github.com/en/rest/pages/pages">Pages API</a>, <a href="https://tailscale.com/docs/reference/tailscale-cli/serve">Serve CLI</a> and <a href="https://markdown-it.github.io/markdown-it/">Markdown-it documentation</a> were checked on 2026-10-30. The installed Tailscale help and pinned Hermes dashboard parser were inspected directly. Live acceptance results follow separately; planned commands are not deployment evidence.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verified_public_hosting_on_the_pilot_account"><a class="anchor" href="#_verified_public_hosting_on_the_pilot_account"></a>Verified public hosting on the pilot account</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="https://github.com/ondrejkrpec/haven/pull/17">PR 17</a> merged as <code>2a286745d3baa3b51d6751e96124a0db1eeeb74e</code>. The full local pipeline passed 98 behavior tests, Ansible syntax/offline production lint, configuration checks, source/history secret scans, retained checksums and the 31-page Antora build. Public source and generated links passed. These are local checks, not GitHub Actions results.</p>
+</div>
+<div class="paragraph">
+<p>The first artifact <code>df081128cfcd02661362b0d2a6e0d72343c6a6e9</code> published from that exact remote <code>main</code>. Pushing the prebuilt <code>gh-pages</code> branch enabled Pages automatically on this account; a subsequent create request returned HTTP 409 because it already existed. Read-back confirmed <code>build_type: legacy</code>, branch <code>gh-pages</code>, path <code>/</code> and enforced HTTPS. The Pages build API reached <code>built</code> without a custom Actions workflow.</p>
+</div>
+<div class="paragraph">
+<p>Actual HTTPS requests to <a href="https://ondrejkrpec.github.io/haven/">the public site</a>, <code>publication.json</code>, the H1.8/configuration guides and the CSS returned the expected source revision and four exact file hashes. An initial request during deployment returned 404; it was accepted only after the build completed and the files matched. The configured local clone now enables <code>haven.publishDocs=true</code>; automatic publication after the next accepted source merge remains to be verified.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verified_private_runtime_and_recovery"><a class="anchor" href="#_verified_private_runtime_and_recovery"></a>Verified private runtime and recovery</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Two separately built 13-runbook releases were deployed through the explicit private inventory. Both private HTTPS roots, a real rendered runbook and the snapshot/publication JSON returned HTTP 200 with valid TLS. Six attempts to fetch configuration, credentials or paths outside the static roots returned 404. The effective installed packet filter contains only individual device prefixes and TCP 22, 443 and 8443; no broad source range was present. Serve configuration contains exactly the two intended HTTPS paths and no Funnel. From the inspection computer, public TCP 443/8443 and the unused native dashboard port were inaccessible.</p>
+</div>
+<div class="paragraph">
+<p>The real snapshot reads the existing aggregate counters; the uninitialized default board is correctly unavailable. Restarting only the snapshot oneshot produced a later timestamp with an active timer. The coordinator&#8217;s PID/start timestamp and all aggregate model-call/token/cost totals exactly matched the baseline taken before H1.8 deployment. Effective systemd properties confirmed the <code>haven</code> identity, empty capability set, AF_UNIX-only sockets, network denial, strict filesystem protection, the single writable snapshot path and inaccessible credentials/configuration.</p>
+</div>
+<div class="paragraph">
+<p>The private release was switched back to the first verified version, its HTTPS metadata was checked, then the second accepted version was restored and checked again. The installed Serve version follows the <code>current</code> symlink on each request. No Nora restart, database initialization, credential copy or model call was needed. Live access from a separate unauthorized tailnet identity and a public IPv6 path were not available for this acceptance; effective-filter inspection and tested public/source-path denials do not replace those scenarios. Full off-site recovery and external stale-snapshot monitoring remain H1.9.</p>
+</div>
+<div class="paragraph">
+<p>An identical final deployment left every installed file, directory, unit and timer unchanged; the only reported change was the explicitly requested fresh oneshot snapshot (<code>ok=13</code>, <code>changed=1</code>, <code>failed=0</code>). Ordinary workstation lookup and both TLS sites passed after the owner installed the single hosts mapping. All original hosts bytes were retained, and corporate DNS/NSS checksums were unchanged. An initially missing final newline joined the appended mapping to the last existing record; a guarded correction separated it before browser acceptance. The owner subsequently confirmed both sites work with the corporate VPN on and off. The agent never changed or toggled that VPN, its DNS, routing or Tailscale DNS preferences.</p>
+</div>
+<div class="paragraph">
+<p>The first automatic post-merge attempt after PR 18 correctly stopped before publishing: fetching <code>gh-pages</code> brought the initial artifact into the full-history scan, where four filename/digest pairs resembled generic API credentials. Each reported value was independently recomputed from its HTML blob and proved to be its SHA-256. Their exact immutable commit/file/rule/line fingerprints are documented in <code>.gitleaksignore</code>; no branch, path, rule, token format or whole commit is excluded, and artifact history is retained. The new manifest representation avoids that ambiguity; regression tests require clean generated manifests and continued detection of a new synthetic credential in <code>publication.json</code>. The source merge itself succeeded despite the failed hook, so publication is accepted only after a successful receipt and live revision/hash verification.</p>
 </div>
 </div>
 </div>

@@ -8,7 +8,7 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 [H1.6.1 guardrails](docs/h1.6.1-capabilities.adoc) add an explicitly selected deterministic profile: status/capability replies, bounded private audit and an independent native model/tool/cron guard. Local verification and live acceptance are recorded separately in that guide.
 
-[H1.8 web access](docs/h1.8-web-access.adoc) adds a read-only operational snapshot, a separately built private runbook site and prebuilt public documentation publication. Live hosting and access acceptance are tracked in that guide. Administrative dashboard controls remain deferred.
+[H1.8 web access](docs/h1.8-web-access.adoc) adds a verified read-only operational snapshot, separate private runbooks and the [public documentation site](https://ondrejkrpec.github.io/haven/). The guide records hosting, access and recovery evidence and remaining acceptance limits. Administrative dashboard controls remain deferred.
 
 ## Start locally
 

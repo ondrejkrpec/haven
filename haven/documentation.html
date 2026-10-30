@@ -232,6 +232,9 @@ npm ci --ignore-scripts --no-audit --no-fund
 <div class="paragraph">
 <p>This does not validate your private instance, access any credentials, run Hermes or test upstream integrations. Explicit private validation remains a separate operation in <a href="configuration.html" class="xref page">the configuration guide</a>. Pattern scanning cannot establish the absence of all sensitive data; review the exact publication candidates before publishing.</p>
 </div>
+<div class="paragraph">
+<p>H1.8 retains four narrowly reviewed historical false-positive fingerprints in <code>.gitleaksignore</code>: each is an independently verified file digest in the first prebuilt Pages manifest. All other findings, including new values in <code>publication.json</code>, remain blocking. No whole artifact branch/commit or file path is excluded; see <a href="h1.8-web-access.html" class="xref page">publication acceptance</a>.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
