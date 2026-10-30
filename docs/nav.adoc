@@ -13,6 +13,7 @@
 ** xref:h1.8-web-access.adoc[Read-only dashboard and documentation hosting]
 ** xref:h1.9-backup-recovery.adoc[Backup and recovery preparation]
 ** xref:h1.9-provider-options.adoc[Backup storage and monitoring options]
+** xref:h1.9-scaleway-healthchecks.adoc[Scaleway and Healthchecks.io setup]
 ** xref:h1.6-whatsapp.adoc[WhatsApp text and access rules]
 ** xref:h1.6-agent-platform-assessment.adoc[Agent Platform compatibility assessment]
 ** xref:documentation.adoc[Documentation and checks]
@@ -29,6 +30,7 @@
 ** xref:adr/0007-telegram-first.adoc[ADR 0007: Telegram first]
 ** xref:adr/0008-deterministic-capabilities.adoc[ADR 0008: Deterministic capabilities]
 ** xref:adr/0009-read-only-web-access.adoc[ADR 0009: Read-only private web access]
+** xref:adr/0010-offsite-backup-providers.adoc[ADR 0010: Off-site backup providers]
 * Verification
 ** xref:research/h0.1/README.adoc[H0.1 feasibility]
 ** xref:h0.2-acceptance.adoc[H0.2 foundation]
