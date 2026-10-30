@@ -4,7 +4,9 @@ Status, 2026-10-30: accepted on the Ubuntu pilot. Owner replies/refusals, zero m
 
 == Supported behavior
 
-`system.status` (also `stav systému`) checks the current gateway PID, fresh heartbeat and connected Telegram writer. `system.capabilities` (also `co umíš`) lists enabled operations. Matching accepts case/spacing differences and a final question mark; it never asks a model to classify intent. Other requests receive a fixed refusal. `wishlist.check_deals` is explicitly disabled and has no implementation.
+`system.status` (also `stav systému`) checks the current gateway PID, fresh heartbeat and connected Telegram writer. `system.capabilities` (also `co umíš`) lists enabled operations. Matching accepts case/spacing differences and final question marks, periods or exclamation marks; it never asks a model to classify intent. Other requests receive a fixed refusal. `wishlist.check_deals` is explicitly disabled and has no implementation.
+
+The text usability update adds explicit natural Czech questions, including `Jaký je stav systému?`, `Jaký je aktuální stav systému?`, `Jak se má systém?`, `Jak je na tom systém?`, `Co všechno umíš?` and `Jaké máš funkce?`, with unaccented equivalents. Capability replies show Czech examples. The whole normalized message must match an alias; a quoted question, negation or appended instruction is not a match. This source update does not establish live deployment or enable transcription; link:h1.7-czech-voice.adoc[H1.7 voice] is deferred by the owner.
 
 Both enabled operations have a zero model-call, token and monetary budget and a limit of 60 accepted requests per owner/operation/hour. The registry is deployment input, not chat-editable configuration. Enabling a future integration requires implementing its handler and authorization and accepting its effects separately. The current validator rejects nonzero model budgets and unknown handlers.
 

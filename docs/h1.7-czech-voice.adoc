@@ -1,0 +1,46 @@
+= H1.7: Deferred Czech voice
+
+Status, 2026-10-30: deferred by the owner because voice is not a current priority. Provider selection and voice implementation are stopped. The independent natural Czech text questions are implemented in the explicit capability registry. Live voice intake remains disabled; no provider was selected and no Czech quality or latency measurements were made. H1.9 off-site backup and recovery is the next planned operational milestone. The notes below retain the initial findings for a future return to H1.7.
+
+== Intended behavior
+
+The first voice increment should reach the same owner-only, read-only operations as text. `Jaký je stav systému?` maps to `system.status`; `Co všechno umíš?` maps to `system.capabilities`. Text matching uses complete explicit aliases, accepts normal sentence punctuation and does not call a model to classify intent. Additional requests remain unsupported. Voice replies are outside H1.7.
+
+The existing link:h1.6.1-capabilities.adoc[native guard] continues to block ordinary model/tool/cron execution. Adding speech recognition requires its own bounded path and tests; enabling a generic AI fallback is not part of this milestone.
+
+Source inspection of the pinned Hermes base `bf0203a794a07aac3ff764972ab9087baa4e4f4e` found that the current `post_gateway_admission` hook supplies text and identity, without media paths. It consumes the message before normal turn-context transcription. The built-in enrichment also wraps recognized text in quotes and can attempt a local fallback after provider failure. Merely setting `stt.enabled: true` would not connect voice to the current capability dispatcher. The selected integration must explicitly bridge admitted audio to plain recognized text and enforce the chosen provider/failure policy.
+
+== Why Telegram is not the transcription provider
+
+Telegram's https://core.telegram.org/bots/api#voice[Bot API Voice object] supplies a file identifier and audio metadata, not a transcript. Telegram provides https://core.telegram.org/api/transcribe[voice transcription] to its user clients, but https://core.telegram.org/method/messages.transcribeAudio[messages.transcribeAudio] is explicitly restricted to users. The existing bot token cannot invoke it. A client-visible transcript does not establish that the bot receives text. H1.7 does not introduce an authenticated personal Telegram user session.
+
+== Provider candidates
+
+These are candidates checked against primary documentation on 2026-10-30, not installed dependencies or verified Czech benchmarks. Context7 was unavailable because its monthly quota was exhausted.
+
+[cols="1,2,2",options="header"]
+|===
+|Candidate |Benefit |What remains to verify
+|Local multilingual Whisper through https://github.com/SYSTRAN/faster-whisper[faster-whisper]
+|CPU/int8 operation; audio need not leave the host for recognition; no per-minute API fee.
+|Pin the release, model and dependencies; measure Czech accuracy, cold/warm latency and CPU/RAM with a small model. Published eight-thread benchmarks do not establish performance on the two-vCPU pilot.
+|Local multilingual Whisper through https://github.com/ggml-org/whisper.cpp[whisper.cpp]
+|Native CPU implementation with quantization and a possible future Apple Silicon path.
+|Pin the build/model; verify audio decoding, Czech quality, resource limits and integration. It is an alternative to compare, not a second required production backend.
+|Cloud https://developers.openai.com/api/docs/models/gpt-transcribe[gpt-transcribe]
+|Recorded-file transcription without hosting inference on the VPS. The https://developers.openai.com/api/docs/pricing[current listed price] is USD 0.0045/minute, or USD 0.45 per 100 minutes before taxes and other charges.
+|Explicit cloud choice, separate API credentials/billing, Czech samples, upload formats, timeout and spending limits. This does not use Nora's existing subscription OAuth credentials.
+|===
+
+OpenAI's https://developers.openai.com/api/docs/guides/speech-to-text[current guide] recommends `gpt-transcribe` and marks older `whisper-1`/`gpt-4o-*-transcribe` API models for shutdown on 2027-02-26. That API deprecation is distinct from running an open-source Whisper model locally. No fallback provider is selected automatically.
+
+== Next implementation and acceptance
+
+. Choose a local experiment or an explicit cloud provider. Agree on Czech sample expectations and acceptable response latency before live acceptance.
+. Inspect the pinned Hermes intake/transcription path, including whether recognition precedes the deterministic post-admission hook. Verify owner/private-chat admission before any download or transcription, not only before the final handler.
+. Bound audio type, declared and decoded duration, actual download size, concurrency and processing time. Remove temporary audio on success and error; keep transcripts out of ordinary logs and capability audit.
+. Send recognized text through the existing authorization and explicit-operation dispatcher. A partial match, uncertain result, unavailable recognizer or unsupported audio must produce a clear fixed response without conversational fallback.
+. Measure representative Czech recordings, silence/noise, unsupported requests, invalid audio, length/size limits and recognizer failure. Verify unauthorized senders, duplicate delivery, restart and continued text operation. Account for recognition usage separately from the zero-budget capability handlers.
+. After checked deployment, verify a real owner voice message, repeat deployment, restart and rollback. Record exact revisions, measured quality/latency and remaining limitations, then update the private owner guide.
+
+H1.7 is accepted only after these live outcomes are recorded. Local text tests or provider documentation alone do not accept Czech voice.

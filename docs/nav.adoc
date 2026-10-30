@@ -9,6 +9,7 @@
 ** xref:h1.5-service-recovery.adoc[Supervised service and recovery]
 ** xref:h1.6-telegram.adoc[Telegram private text]
 ** xref:h1.6.1-capabilities.adoc[Deterministic capability guardrails]
+** xref:h1.7-czech-voice.adoc[Czech voice (deferred)]
 ** xref:h1.8-web-access.adoc[Read-only dashboard and documentation hosting]
 ** xref:h1.6-whatsapp.adoc[WhatsApp text and access rules]
 ** xref:h1.6-agent-platform-assessment.adoc[Agent Platform compatibility assessment]

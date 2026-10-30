@@ -6,7 +6,7 @@ link:h1.6-telegram.adoc[H1.6 owner-only Telegram text] is accepted on the existi
 
 The owner subsequently selected link:h1.6.1-capabilities.adoc[H1.6.1 deterministic operations] instead of ordinary AI chat. This profile is accepted with verified application rollback, idempotent repeat, restart and native execution guards. Four real owner messages produced two expected replies and two refusals without additional model calls or conversation rows; a live status reply after restart confirms transport recovery.
 
-link:h1.8-web-access.adoc[H1.8] adds verified prebuilt public Pages hosting, separately generated owner-only private runbooks and a static read-only operational snapshot. Private HTTPS, negative source-path checks, effective network filtering and release rollback are verified. The coordinator remains unchanged with no additional model calls. The guide records client/update acceptance and unperformed identity/IPv6 scenarios; Czech voice and off-site backup remain H1.7/H1.9 work.
+link:h1.8-web-access.adoc[H1.8] adds verified prebuilt public Pages hosting, separately generated owner-only private runbooks and a static read-only operational snapshot. Private HTTPS, negative source-path checks, effective network filtering and release rollback are verified. The coordinator remains unchanged with no additional model calls. The guide records client/update acceptance and unperformed identity/IPv6 scenarios. The owner deferred link:h1.7-czech-voice.adoc[H1.7 Czech voice] on 2026-10-30; H1.9 off-site backup and recovery is the next planned operational milestone.
 
 == H0 handoff
 

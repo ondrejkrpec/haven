@@ -17,7 +17,7 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 POLICY = ROOT / "config/capabilities.json"
-REFUSAL = "Tento požadavek není povolený. Povolené operace zjistíš zprávou system.capabilities."
+REFUSAL = "Tento požadavek zatím neumím. Dostupné funkce zjistíš otázkou „Co umíš?“."
 UNAVAILABLE = "Požadavek teď nelze bezpečně provést. Model ani nástroje nebyly spuštěné."
 APP_ID = 0x48415643
 
@@ -33,7 +33,7 @@ def digest(value):
 def normalized(text):
     if not isinstance(text, str) or len(text) > 256 or any(ord(c) < 32 for c in text):
         return None
-    return " ".join(text.strip().casefold().split()).removesuffix("?").strip()
+    return " ".join(text.strip().casefold().split()).rstrip("?.!").strip()
 
 
 def load_registry(path=POLICY):
@@ -184,8 +184,10 @@ class CapabilityService:
         if entry["handler"] == "status":
             return self.status_handler()
         if entry["handler"] == "capabilities":
-            names = [name for name, item in self.registry["capabilities"].items() if item["enabled"]]
-            return "Povolené operace: " + ", ".join(names) + ". Pošli přesný název; například system.status."
+            examples = {"status": "Jaký je stav systému?", "capabilities": "Co umíš?"}
+            phrases = [examples[item["handler"]] for item in self.registry["capabilities"].values()
+                       if item["enabled"]]
+            return "Můžeš se zeptat: " + " · ".join(phrases)
         raise PolicyError("handler_unavailable")
 
     def consume(self, session_key, platform, source, message_id, text, **kwargs):

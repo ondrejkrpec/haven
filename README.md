@@ -2,7 +2,7 @@
 
 Haven is a personal agent system built around Hermes. Telegram is the first phone interface; WhatsApp is a future transport option. The first deployment uses one Ubuntu VPS and bounded automation, with separate worker and reviewer roles.
 
-**Status: H1.6.1 deterministic Telegram operations verified on the Ubuntu pilot.** Owner status/capability replies, refusal, zero model usage, native execution guards, rollback, restart and idempotent deployment are accepted. Private administration and supervised recovery work. Coding dispatch stays disabled until H2; Czech voice is the next H1 integration. Automatic local pre-push checks replace unavailable GitHub Actions.
+**Status: H1.6.1 deterministic Telegram operations verified on the Ubuntu pilot.** Owner status/capability replies, refusal, zero model usage, native execution guards, rollback, restart and idempotent deployment are accepted. Private administration and supervised recovery work. Coding dispatch stays disabled until H2; Czech voice work is deferred by the owner, and H1.9 off-site backup/recovery is the next planned operational milestone. Automatic local pre-push checks replace unavailable GitHub Actions.
 
 H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegram.adoc), with live owner/denied-sender checks, blocked remote administration and verified reconnect after restart. It uses a numeric owner allowlist, protected token and outbound long polling. Agent Platform is unavailable on the pilot owner's account, so WhatsApp and [family sharing](docs/family-conversations.adoc) are deferred; the earlier Baileys and Agent Platform assessments stay inactive.
 

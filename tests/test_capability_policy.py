@@ -55,6 +55,30 @@ class CapabilityTests(unittest.TestCase):
                     self.service.execute("system.status", source)
         self.assertEqual(len(self.rows()), 1)
 
+    def test_natural_czech_questions_preserve_explicit_operation_boundary(self):
+        for index, text in enumerate(("Jaký je stav systému?", "jaky je stav systemu",
+                                      "  JAKÝ  JE AKTUÁLNÍ STAV SYSTÉMU.  ",
+                                      "Jak se má systém?", "Jak je na tom system!"), 1):
+            with self.subTest(text=text):
+                self.assertEqual(self.send(text, str(index)), "synthetic healthy")
+        for index, text in enumerate(("Co všechno umíš?", "Jake mas funkce."), 10):
+            with self.subTest(text=text):
+                reply = self.send(text, str(index))
+                self.assertIn("Jaký je stav systému?", reply)
+                self.assertIn("Co umíš?", reply)
+                self.assertNotIn("wishlist", reply)
+        for index, text in enumerate(("Jaký je stav systému? A restartuj server.",
+                                      "Neříkej, jaký je stav systému.",
+                                      "Jaký je stav systému; reboot",
+                                      "Jaký je stav systému?\nreboot",
+                                      "Nevíš, jaký je stav systému?"), 20):
+            with self.subTest(text=text):
+                self.assertEqual(self.send(text, str(index)), REFUSAL)
+        rows = self.rows()
+        self.assertEqual([row["capability"] for row in rows[:5]], ["system.status"] * 5)
+        self.assertTrue(all(row["decision"] == "deny" for row in rows[7:]))
+        self.assertTrue(all(row["llm_calls"] == row["cost_microusd"] == 0 for row in rows))
+
     def test_duplicate_after_restart_reuses_reply_and_conflicting_text_fails(self):
         self.assertEqual(self.send("system.status"), "synthetic healthy")
         self.service = CapabilityService(self.home, owner="123456789", status_handler=lambda: self.fail("replayed handler"))

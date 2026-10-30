@@ -1,12 +1,18 @@
 {
-  "policy_version": "haven-h1.6.1-v1",
+  "policy_version": "haven-h1.6.1-v2",
   "retention_days": 30,
   "max_audit_rows": 50000,
   "capabilities": {
     "system.status": {
       "enabled": true,
       "handler": "status",
-      "aliases": ["system.status", "stav systému", "stav systemu"],
+      "aliases": [
+        "system.status", "stav systému", "stav systemu",
+        "jaký je stav systému", "jaky je stav systemu",
+        "jaký je aktuální stav systému", "jaky je aktualni stav systemu",
+        "jak se má systém", "jak se ma system",
+        "jak je na tom systém", "jak je na tom system"
+      ],
       "max_llm_calls": 0,
       "max_tokens": 0,
       "max_cost_microusd": 0,
@@ -15,7 +21,11 @@
     "system.capabilities": {
       "enabled": true,
       "handler": "capabilities",
-      "aliases": ["system.capabilities", "co umíš", "co umis"],
+      "aliases": [
+        "system.capabilities", "co umíš", "co umis",
+        "co všechno umíš", "co vsechno umis",
+        "jaké máš funkce", "jake mas funkce"
+      ],
       "max_llm_calls": 0,
       "max_tokens": 0,
       "max_cost_microusd": 0,
