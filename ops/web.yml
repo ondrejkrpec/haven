@@ -1,0 +1,109 @@
+---
+- name: Verify private access before installing the internal web artifacts
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Install read-only dashboard and a separately built private site
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  vars:
+    haven_web_metadata: "{{ lookup('ansible.builtin.file', haven_private_site + '/publication.json') | from_json }}"
+    haven_web_release: "/var/lib/haven/web/private-docs/releases/{{ haven_web_metadata.release_id }}"
+  pre_tasks:
+    - name: Require the explicit web deployment and private artifact
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_web_authorized | default(false) | bool
+          - haven_private_site is defined
+        fail_msg: Explicit web deployment and private documentation artifact are required.
+
+    - name: Inspect the separately generated private publication metadata
+      ansible.builtin.assert:
+        that:
+          - haven_web_metadata.visibility == 'private'
+          - not haven_web_metadata.source_dirty
+          - haven_web_metadata.release_id is match('^[0-9a-f]{64}$')
+          - haven_web_metadata.public_revision == lookup('ansible.builtin.pipe', 'git rev-parse HEAD')
+
+    - name: Verify the exact local artifact before transfer
+      ansible.builtin.command:
+        argv:
+          - "{{ ansible_playbook_python }}"
+          - "{{ playbook_dir }}/../scripts/verify_private_site.py"
+          - "{{ haven_private_site }}"
+          - "{{ haven_web_metadata.public_revision }}"
+      delegate_to: localhost
+      become: false
+      changed_when: false
+
+  tasks:
+    - name: Protect internal web output and trusted snapshot code
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: "{{ item.owner }}"
+        group: haven
+        mode: '0750'
+      loop:
+        - {path: /var/lib/haven/web, owner: root}
+        - {path: /var/lib/haven/web/dashboard, owner: haven}
+        - {path: /var/lib/haven/web/private-docs, owner: root}
+        - {path: /var/lib/haven/web/private-docs/releases, owner: root}
+        - {path: "{{ haven_web_release }}", owner: root}
+        - {path: /var/lib/haven/web-tools, owner: root}
+
+    - name: Install the bounded snapshot exporter
+      ansible.builtin.copy:
+        src: ../scripts/dashboard_snapshot.py
+        dest: /var/lib/haven/web-tools/dashboard_snapshot.py
+        owner: root
+        group: haven
+        mode: '0640'
+
+    - name: Install local dashboard styling
+      ansible.builtin.copy:
+        src: ../docs/ui/css/site.css
+        dest: /var/lib/haven/web/dashboard/site.css
+        owner: root
+        group: haven
+        mode: '0640'
+
+    - name: Install the separately built private documentation
+      ansible.builtin.copy:
+        src: "{{ haven_private_site }}/"
+        dest: "{{ haven_web_release }}/"
+        owner: root
+        group: haven
+        mode: preserve
+        directory_mode: '0750'
+
+    - name: Switch the private site after the complete release is installed
+      ansible.builtin.file:
+        src: "{{ haven_web_release }}"
+        dest: /var/lib/haven/web/private-docs/current
+        state: link
+        owner: root
+        group: haven
+
+    - name: Install independent read-only dashboard units
+      ansible.builtin.template:
+        src: "templates/{{ item }}.j2"
+        dest: "/etc/systemd/system/{{ item }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: [haven-dashboard-snapshot.service, haven-dashboard-snapshot.timer]
+      register: haven_web_units
+
+    - name: Refresh the read-only dashboard
+      ansible.builtin.systemd_service:
+        name: haven-dashboard-snapshot.service
+        state: started
+        daemon_reload: "{{ haven_web_units.changed }}"
+
+    - name: Enable independent periodic refresh
+      ansible.builtin.systemd_service:
+        name: haven-dashboard-snapshot.timer
+        enabled: true
+        state: started

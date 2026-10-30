@@ -1,4 +1,5 @@
 # Generated and local runtime files
+/build/
 .DS_Store
 __pycache__/
 /.runtime/
