@@ -254,6 +254,9 @@ git config --local haven.publishDocs true
 <div class="paragraph">
 <p>The private template includes this initial manifest. Build only with an explicitly named instance:</p>
 </div>
+<div class="paragraph">
+<p>An owner guide can additionally select <code>home</code> (one of the declared documents) and a <code>navigation</code> tree. Items have a <code>title</code> and a selected <code>document</code>, <code>children</code>, or both. The tree must expose each selected document exactly once; it does not admit additional inputs. Categories are expandable without JavaScript and the active category opens automatically. The selected home is rendered at <code>/</code> with working site-relative links. Existing manifests containing only <code>documents</code> retain flat navigation and the default landing page.</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.build_private_docs /absolute/path/to/private-instance</code></pre>

@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "source_revision": "332da5e3243312c4c5d1b47471fbf210f90ce900",
-  "checked_at_utc": "2026-10-30T10:50:28.991058+00:00",
+  "source_revision": "28d6a5b9c0b33204f9280f6192af59e8a512aa6c",
+  "checked_at_utc": "2026-10-30T12:42:38.989231+00:00",
   "files": [
     {
       "path": "_/css/site.css",
-      "sha256": "8078516ef319b05f8602a1bddc753108ab7952014c8f1d5fcaf722093302ede1"
+      "sha256": "7603520d03490be6818add2e7a4723d3987c1d57ded1976b80d19f17fc2715ff"
     },
     {
       "path": "haven/_attachments/AGENTS.md",
@@ -177,7 +177,7 @@
     },
     {
       "path": "haven/h1.8-web-access.html",
-      "sha256": "858005ec2abeaad058aaa64726baf3c8511b213f7d0c135b1891f0e19d9ae86d"
+      "sha256": "3918d7ffffc31e040b7c56631f4e5255ae31e9c359183883b67816408d4eb3b4"
     },
     {
       "path": "haven/index.html",
