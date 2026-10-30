@@ -1,6 +1,6 @@
 = H1.6.1: Explicit deterministic operations
 
-Status, 2026-10-30: implementation and local acceptance; live acceptance is recorded separately below. The owner selected a deterministic capability profile in place of ordinary AI conversation. H1.6's owner allowlist, protected Telegram token and native long polling remain the transport boundary. Voice and coding dispatch remain disabled.
+Status, 2026-10-30: deployed on the Ubuntu pilot; rollback, idempotent repeat, restart and synthetic native boundaries are verified. The four owner-message checks remain pending. The owner selected a deterministic capability profile in place of ordinary AI conversation. H1.6's owner allowlist, protected Telegram token and native long polling remain the transport boundary. Voice and coding dispatch remain disabled.
 
 == Supported behavior
 
@@ -42,7 +42,7 @@ capability_dir=$(mktemp -d)
   -e haven_service_authorized=true -e "haven_model_config=$capability_dir/config.yaml"
 ----
 
-The application snapshot now also includes the fixed capability modules/configuration/plugin files and six native patch targets. It never copies the audit database, conversations, OAuth or Telegram credentials. The exact base hashes and patch checksum must match before the coordinator is stopped and the patch applied. Repeating a matching deployment does not reapply the patch or restart the service. Unknown source drift fails closed.
+The application snapshot now also includes the fixed capability modules/configuration/plugin files and six native patch targets. It never copies the audit database, conversations, OAuth or Telegram credentials. The exact base hashes and patch checksum must match before the coordinator is stopped and the patch applied. Repeating a matching deployment does not reapply the patch or restart the service. Unknown drift in these patch targets fails closed.
 
 For rollback use the *new snapshot taken before this operation* with the matching `scripts/service_snapshot.py`. Restore returns code/configuration and active/enabled state, and removes an empty newly introduced instance plugin directory. Older nine-file snapshots remain readable for their historical scope; they do not cover H1.6.1's additional files. Do not use them to undo this upgrade. The audit database remains private and is not discarded by application rollback.
 
@@ -63,7 +63,15 @@ Use the existing PM environment with `--group dev --group test --extra sms` for 
 
 == Live acceptance
 
-Pending until deployment, deterministic owner requests, refusal, zero model/tool usage, restart recovery, idempotent deployment and application rollback have been checked on the pilot. Do not infer production acceptance from local tests.
+The first deployment from merge `cd4ce7711673e416d8b2d4ed55d5cedb5588cdb9` passed (`ok=28 changed=10 failed=0`). A real rollback to the accepted H1.6 restored all 26 application files, including content hashes, owners/modes and absence of newly introduced files; the original service passed health checks. The same H1.6.1 profile was then selected again.
+
+A separate synthetic profile on the Ubuntu pilot, using its existing Telegram interpreter, blocked all seven actual agent/auxiliary/tool/cron entrypoints and recorded seven denials. Its temporary state was removed; it never started a gateway or used real credentials. Local verification comprises 88 public tests, 49 pinned native core tests and five retained Telegram scenarios.
+
+The repeated active deployment passed `ok=25 changed=0 failed=0`, retaining the same live process. A subsequent controlled restart returned a new healthy gateway/connected Telegram and retained the audit database inode and existing receipts. No token entry was needed.
+
+Read-only Telegram aggregates show no additional native model calls or conversation rows during deployment/rollback/restart; the new capability usage counters remain zero. Telegram token metadata is unchanged. OAuth-store metadata changed during service starts; its contents were not inspected, copied or restored. A zero model-call count does not assert zero OAuth/catalog networking.
+
+Owner replies and refusal remain pending: the owner has been asked to send `system.status`, `system.capabilities`, `wishlist.check_deals` and `HAVEN_H161_DENY_1` as separate Telegram messages. At the last audit there were no capability requests yet. Do not infer end-to-end message acceptance from synthetic tests.
 
 == Sources and scope
 

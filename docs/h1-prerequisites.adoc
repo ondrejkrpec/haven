@@ -4,6 +4,8 @@ H1 is in progress: publication is accepted, and link:h1.3-first-access.adoc[admi
 
 link:h1.6-telegram.adoc[H1.6 owner-only Telegram text] is accepted on the existing pilot: private enrollment, owner replies, denied-sender intake, blocked remote administration and enabled-service restart recovery are verified. The owner deferred WhatsApp, the second member and family sharing after confirming Agent Platform is unavailable on their account. The earlier Baileys/Agent Platform work remains inactive.
 
+The owner subsequently selected link:h1.6.1-capabilities.adoc[H1.6.1 deterministic operations] instead of ordinary AI chat. This profile is deployed with verified application rollback, idempotent repeat, restart and native execution guards. Its four owner-message acceptance checks remain pending; H1.6's earlier text acceptance does not establish those new outcomes.
+
 == H0 handoff
 
 link:h0.5-acceptance.adoc[H0.5 acceptance] establishes the local foundation from a clean public clone with freshly installed dependencies. Configuration validation, instance creation and public documentation/checks work without the original private repository. The synthetic model and host are not deployment inputs, and the tested fixture commit is not a real Haven release.
