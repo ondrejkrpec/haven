@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ADR 0003: Adopt the secured host with bounded Ansible playbooks · Haven</title>
+  <link rel="stylesheet" href="../../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="../index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="../index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="../local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="../configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="../h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="../h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="../h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="../documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="../architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="../family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="../h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="../research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="../h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="../h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="../h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="../h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>ADR 0003: Adopt the secured host with bounded Ansible playbooks</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Date: 2026-10-28. Status: accepted for the existing pilot; live adoption, restoration, repeatability and restart verified.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_context"><a class="anchor" href="#_context"></a>Context</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Manual first access and Tailscale cutover are verified, but repeating the host setup requires maintained automation. The public project must remain independent of private inventory and runtime identity. The owner authorized bootstrap, repeatability checks and a controlled restart, while reserving OS updates for a later Security/Worker use case.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_decision"><a class="anchor" href="#_decision"></a>Decision</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use pinned ansible-core with builtin modules and a small read-only host verifier. Keep bootstrap, verification and explicit reboot as separate playbooks under <code>ops/</code>; keep real inventory in the private instance. Do not introduce the proposed general-purpose <code>havenctl</code> CLI yet.</p>
+</div>
+<div class="paragraph">
+<p>Bound this first implementation to an already enrolled, manually secured Ubuntu 26.04 host reached over private OpenSSH. Refuse unfamiliar identity/firewall state before mutation. Preserve the administrator key, host keys, Tailscale preferences and authentication lifecycle. Manage only the service identity/home, SSH snippet, recognized UFW rules and existing access services.</p>
+</div>
+<div class="paragraph">
+<p>Arm a host-side access-file rollback for every live application and stop it only after fresh-connection verification. Use the independent provider console for reboot recovery; the transient bootstrap timer is not reboot protection. Keep host updates, application deployment and future worker privileges outside this operation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_consequences"><a class="anchor" href="#_consequences"></a>Consequences</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The existing pilot can be adopted and checked without copying private state into public sources. The automatic public pipeline can lint/parse the same playbooks using a synthetic inventory without accessing a VPS. Operational snapshot/timer tasks do not count as desired-state drift; actual configuration tasks do.</p>
+</div>
+<div class="paragraph">
+<p>Initial provider provisioning, installing/enrolling Tailscale and first SSH hardening remain documented interactive/manual prerequisites. This is not evidence of a fresh-OS installation. A future clean-host path needs its own acceptance rather than silently widening this playbook&#8217;s preconditions. See <a href="../h1.3-bootstrap.html" class="xref page">bootstrap and restart</a> for commands, recovery scope and evidence.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

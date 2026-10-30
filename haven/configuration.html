@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuration v1 · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Configuration v1</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>H0.3 implements versioned YAML input validation. The contract is <a href="_attachments/schemas/instance-v1.schema.json" class="xref attachment">JSON Schema draft 2020-12</a> with Haven format checks. Passing validation establishes syntax and configuration consistency. <a href="h1.4-model-configuration.html" class="xref page">H1.4</a> implements a separate bounded translation for the pinned Hermes subscription provider and records live account/model verification. The optional <a href="h1.6-whatsapp.html" class="xref page">H1.6 service translation</a> now supports the existing WhatsApp fields; activation also requires prepared dependencies, protected pairing state and live acceptance. Validation alone does not establish deployment readiness or support for other providers.</p>
+</div>
+<div class="paragraph">
+<p><a href="adr/0001-configuration-validation.html" class="xref page">ADR 0001</a> records the rationale and consequences.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_validate_locally"><a class="anchor" href="#_validate_locally"></a>Validate locally</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>From the public Haven checkout, create an isolated Python 3.12+ environment with system IANA time-zone data and install the hash-pinned dependencies. PyYAML 6.0.3 parses YAML; jsonschema 4.26.0 checks the contract. <code>uv</code> is optional; the standard setup is:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">python3 -m venv .venv
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements.txt
+.venv/bin/python scripts/validate_config.py examples/instance.yaml
+.venv/bin/python -m unittest discover -s tests -v</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An existing <code>uv</code> installation can create the environment with <code>uv venv --python python3 .venv</code> and install the same lock with <code>uv pip sync --python .venv/bin/python --require-hashes --only-binary :all: requirements.txt</code>. Ubuntu may require the OS <code>python3-venv</code> package. No system Python packages are modified.</p>
+</div>
+<div class="paragraph">
+<p>Validate your own private configuration by explicitly naming its path:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python scripts/validate_config.py ../haven-private/config/instance.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Exit status is <code>0</code> for valid input, <code>1</code> for invalid/unreadable configuration and <code>2</code> for incorrect command arguments. Success prints only the supported schema version. Errors identify the layer and schema field without values, source excerpts or file paths. Unknown keys are reported at their containing object. The validator does not start services, resolve DNS or read credentials. Do not put secrets in command arguments or filenames; argument-parsing errors follow Python&#8217;s normal CLI behavior.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_layers_and_overrides"><a class="anchor" href="#_layers_and_overrides"></a>Layers and overrides</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Layer order is <a href="_attachments/config/defaults.yaml" class="xref attachment">public defaults</a>, the explicitly supplied base file, then each repeated <code>--override</code> in command-line order. No neighboring private repository, environment variable or working-directory configuration is discovered automatically.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python scripts/validate_config.py examples/instance.yaml \
+  --override ../haven-private/config/instance.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Every layer must declare <code>schema_version: 1</code>. A layer may omit other fields, but any supplied field must already have a supported type, value and name. A later override cannot hide an invalid earlier value. After all layers merge, required fields and cross-field constraints are checked.</p>
+</div>
+<div class="paragraph">
+<p>Mappings merge recursively. Scalars and lists replace the previous value completely; allowlists are never concatenated. An empty mapping preserves existing values, and <code>[]</code> clears a list. <code>null</code> is rejected and cannot delete or reset a field. Omit an override to inherit a value, or set an explicit valid replacement.</p>
+</div>
+<div class="paragraph">
+<p>For example, this override changes the time zone while retaining the base instance name:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schema_version: 1
+instance:
+  timezone: Europe/Prague</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Do not pass the public synthetic example as a deployment fallback. Once real deployment exists, its required fields must come from the intended instance. The example deliberately contains an unreachable placeholder host and an unverified placeholder model.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_supported_fields"><a class="anchor" href="#_supported_fields"></a>Supported fields</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 42.8571%;">
+<col style="width: 28.5715%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Field</th>
+<th class="tableblock halign-left valign-top">Constraint</th>
+<th class="tableblock halign-left valign-top">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>schema_version</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Integer, supported version <code>1</code>; required in every layer.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Each file declares it.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>instance.name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lowercase letter followed by lowercase letters, digits or hyphens; at most 63 characters.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Required input.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>instance.timezone</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IANA time-zone key recognized by local <code>zoneinfo</code> data.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Etc/UTC</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>host.address</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ASCII hostname, IPv4 or IPv6 address; no URL, username or port. No network lookup.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Required input.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>host.service_user</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unix-style lowercase account name, at most 32 characters; <code>root</code> rejected. Does not establish OS permissions.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>haven</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>model.provider</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Lowercase identifier, at most 64 characters. No provider-support or account-eligibility check.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Required input.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>model.name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Non-empty string without whitespace, at most 128 characters. No live model query.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Required input.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>model.credential_ref</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Optional <code>env:VARIABLE_NAME</code> or <code>file:/absolute/path</code> reference.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Absent.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>whatsapp.enabled</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boolean. If true, the effective allowlist must be non-empty.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>whatsapp.allowed_senders</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique quoted strings, <code>+</code> followed by 8–15 digits, first digit nonzero; at most 100 items. Syntax only, not proof of ownership.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>[]</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>telegram.enabled</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Optional boolean; service activation requires one numeric owner.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>telegram.owner_id</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Quoted positive decimal string, at most 16 digits. Required when enabled; not a username.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Absent.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><a href="h1.6-telegram.html" class="xref page">Telegram H1.6</a> supports one owner-only text transport in the supervised profile. Telegram and WhatsApp cannot be enabled together in that pilot renderer. The bot token has a fixed protected runtime file and never belongs in these YAML inputs.</p>
+</div>
+<div class="paragraph">
+<p>No field grants runtime authority. WhatsApp group policy, STT, role permissions, schedules, execution/expense limits, Tailscale, backups and deployment targets are not part of this initial contract. Unknown fields are rejected. Add fields with corresponding validation, examples and runtime behavior when their milestone needs them.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_secrets"><a class="anchor" href="#_secrets"></a>Secrets</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>YAML contains references, never secret values. For a provider needing an API key, the optional field can be:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schema_version: 1
+model:
+  credential_ref: env:HAVEN_MODEL_API_KEY</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Alternatively use a reference such as <code>file:/run/credentials/haven/model-api-key</code>. Environment names use uppercase letters, digits and underscores and cannot start with a digit. File paths are absolute POSIX paths with letters, digits, underscores, dots, hyphens and slashes; empty, <code>.</code> and <code>..</code> components are rejected. Variables and <code>~</code> are not expanded.</p>
+</div>
+<div class="paragraph">
+<p>References are checked structurally; the validator neither reads the environment variable nor opens the referenced file, and an unset or nonexistent reference can validate. H1 must resolve the reference only for its authorized service and reject missing credentials then. Subscription OAuth and WhatsApp sessions are separate runtime state; do not embed them in YAML. A credential reference does not imply that subscription authentication needs an API key.</p>
+</div>
+<div class="paragraph">
+<p>Keep plaintext credential files and all decryption/recovery keys outside both Git repositories. SOPS with age remains a proposal; this milestone adds no encryption or decryption workflow. The template&#8217;s <code>*.sops.yaml</code> ignore exception does not prove a file is encrypted. The validator is not a general secret scanner.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_yaml_dialect_and_migration"><a class="anchor" href="#_yaml_dialect_and_migration"></a>YAML dialect and migration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Files must be a single UTF-8 mapping, at most 64 KiB and 32 collection levels deep, with at most 10,000 parser events. Keys must be unique strings. Anchors, aliases, merge keys, explicit tags and multiple documents are unsupported. Boolean values are lowercase <code>true</code> or <code>false</code>; <code>yes</code>, <code>no</code>, <code>on</code>, <code>off</code>, <code>True</code> and <code>False</code> remain strings. Dates remain strings. Quote phone identifiers so they remain strings.</p>
+</div>
+<div class="paragraph">
+<p>The H0.2 draft had no supported contract. To migrate a personal copy, preserve its name/time zone, add <code>schema_version: 1</code>, supply <code>host.address</code> and <code>model.provider</code>/<code>model.name</code>, then validate. The local unchanged synthetic draft was migrated this way. The template provides the complete example. There is no automatic version inference; a future incompatible contract requires a new schema version and explicit migration instructions.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verification_and_dependencies"><a class="anchor" href="#_verification_and_dependencies"></a>Verification and dependencies</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>On 2026-10-25, the same 16-test behavior suite passed under Python 3.14.7 and 3.12.14 on Manjaro Linux. It covers valid examples, required/version/unknown-field rejection, ordered map/list merging, WhatsApp gating, secret-reference non-resolution, safe errors and unsupported/resource-heavy YAML. A disposable public source snapshot also validated the example without a private sibling. This is not Ubuntu or live integration acceptance.</p>
+</div>
+<div class="paragraph">
+<p><code>requirements.in</code> pins direct dependencies; <code>requirements.txt</code> pins the resolved dependencies and distribution hashes. The lock was generated using uv 0.12.5 for Python 3.12. Regenerate intentionally with:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">uv pip compile requirements.in --python-version 3.12 --generate-hashes \
+  --no-header --output-file requirements.txt --default-index https://pypi.org/simple</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Sources: <a href="https://pyyaml.org/wiki/PyYAMLDocumentation">PyYAML safe loading and parser API</a>, <a href="https://github.com/yaml/pyyaml/tree/6.0.3">PyYAML 6.0.3 source</a>, <a href="https://python-jsonschema.readthedocs.io/en/v4.26.0/validate/">jsonschema 4.26.0 validation and format checks</a>, <a href="https://docs.astral.sh/uv/pip/compile/">uv dependency locking</a>. Context7 returned a monthly quota error, so official documentation and pinned packages were used.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H0.2 foundation acceptance · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H0.2 foundation acceptance</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Verified locally on 2026-10-25 with Git 2.55.0 and a POSIX shell. The public and private working repositories use <code>main</code> and have no commits or remotes. License selection and GitHub name availability remain publication prerequisites.</p>
+</div>
+<div class="paragraph">
+<p>This is the historical H0.2 snapshot, before the YAML contract existed. Current validation and migration instructions are in <a href="configuration.html" class="xref page">configuration v1</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_procedure_and_result"><a class="anchor" href="#_procedure_and_result"></a>Procedure and result</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To test cloning without committing the owner&#8217;s work, the acceptance check copied Git-eligible public files into a temporary repository and made one synthetic fixture commit there. It cloned that snapshot with <code>git clone --no-local</code> under a fresh <code>HOME</code>, with system and global Git configuration disabled. The fixture repository and clone were deleted after verification.</p>
+</div>
+<div class="paragraph">
+<p>The clone had no object alternates and no private repository dependency. The setup block was extracted from <a href="_attachments/README.md" class="xref attachment">README</a> and executed verbatim. All research checksums passed, and a separate private Git repository was created with an editable instance draft. Repeating setup rejected the existing destination and preserved a synthetic private instruction file.</p>
+</div>
+<div class="paragraph">
+<p>Git ignore checks passed for representative dotenv files, Hermes/Codex authentication paths, sessions, credentials, backups, database files and private keys on both sides. The private YAML draft remained eligible for its private Git repository. The public clone stayed clean and contained no synthetic private marker.</p>
+</div>
+<div class="paragraph">
+<p>Local documentation links, Python syntax and JSON were checked. The upstream patch and MIT notice matched the H0.1 originals byte-for-byte; the patch also matched its pinned SHA-256. Log redactions and the portable-probe change are recorded in <a href="_attachments/research/h0.1/provenance.json" class="xref attachment">provenance</a>. The portable rootless isolation probe was rerun successfully; its result is retained in <a href="_attachments/research/h0.1/evidence/h0.2-portable-isolation.json" class="xref attachment">evidence</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_acceptance_boundary"><a class="anchor" href="#_acceptance_boundary"></a>Acceptance boundary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This establishes the local H0.2 repository/template workflow. No real credentials, paid inference or deployed services were used. The YAML file remains an illustrative draft. Schema validation, a documentation build and CI belong to H0.3–H0.4; complete H0 acceptance remains H0.5. Remote creation and publication remain pending the owner&#8217;s license decision and name checks.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.6.1: Explicit deterministic operations · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.6.1: Explicit deterministic operations</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-10-30: accepted on the Ubuntu pilot. Owner replies/refusals, zero model usage, rollback, idempotent repeat, restart and synthetic native boundaries are verified. The owner selected a deterministic capability profile in place of ordinary AI conversation. H1.6&#8217;s owner allowlist, protected Telegram token and native long polling remain the transport boundary. Voice and coding dispatch remain disabled.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_supported_behavior"><a class="anchor" href="#_supported_behavior"></a>Supported behavior</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>system.status</code> (also <code>stav systému</code>) checks the current gateway PID, fresh heartbeat and connected Telegram writer. <code>system.capabilities</code> (also <code>co umíš</code>) lists enabled operations. Matching accepts case/spacing differences and a final question mark; it never asks a model to classify intent. Other requests receive a fixed refusal. <code>wishlist.check_deals</code> is explicitly disabled and has no implementation.</p>
+</div>
+<div class="paragraph">
+<p>Both enabled operations have a zero model-call, token and monetary budget and a limit of 60 accepted requests per owner/operation/hour. The registry is deployment input, not chat-editable configuration. Enabling a future integration requires implementing its handler and authorization and accepting its effects separately. The current validator rejects nonzero model budgets and unknown handlers.</p>
+</div>
+<div class="paragraph">
+<p>The ordinary <code>--service</code> renderer retains the accepted H1.6 AI chat. The explicit <code>--service --capabilities</code> combination selects this narrower profile. The two are intentional operator choices; never infer the active mode from a branch name.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_independent_host_enforcement"><a class="anchor" href="#_independent_host_enforcement"></a>Independent host enforcement</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The trusted same-PID launcher validates the bounded native profile, exact patched Hermes source hashes and the two declared plugin files before arming an irreversible process policy. It then loads Hermes. The native patch gates agent construction, synchronous/asynchronous auxiliary LLM calls, both tool-dispatch boundaries and cron execution before scripts or external workers can start.</p>
+</div>
+<div class="paragraph">
+<p>The <code>post_gateway_admission</code> plugin implements deterministic replies and audit. Hermes deliberately treats a missing, throwing or malformed consumer hook as fail-open. The independent native gates still refuse model/tool execution in that case. An audit failure also produces a fixed unavailable reply, never an AI fallback. A missing or altered deployed plugin/source fails startup with exit 78.</p>
+</div>
+<div class="paragraph">
+<p>This is a bounded application policy, not an isolation boundary against arbitrary Python code or the service administrator. Other independently started interpreters do not inherit the latch. No lower-trust executor is enabled; H2 still owns that isolation. Native informational slash commands retain H1.6&#8217;s existing access policy and are outside this capability audit.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_private_audit_and_replay"><a class="anchor" href="#_private_audit_and_replay"></a>Private audit and replay</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>state/capability-audit.sqlite3</code> lives in the private Hermes home, with directory <code>0700</code> and database <code>0600</code>. It contains hashed actor/request identity, request hash/byte length, operation, decision/reason, fixed reply/result, policy version/hash and zero usage/cost counters. Raw request text, Telegram IDs and credentials are not stored there. Unsalted hashes are pseudonymous metadata, not anonymization.</p>
+</div>
+<div class="paragraph">
+<p>An immediate SQLite transaction serializes rate checks, execution and the receipt. A repeated transport message ID with matching text returns its stored reply, including after restart; conflicting reuse is refused. Handler authorization is repeated independently, before replay and at the handler boundary. Receipts expire after 30 days on a subsequent audited operation; the 50,000-row ceiling refuses further work until maintenance/retention frees space. SQLite secure deletion is enabled for removed rows; no claim is made about storage snapshots or backups.</p>
+</div>
+<div class="paragraph">
+<p>The two handlers are read-only. Receipt replay does not guarantee exactly-once Telegram delivery and does not authorize future non-idempotent operations. Invalid intake rejected by native authorization is outside this post-admission database; an unavailable audit cannot record its own failure reliably.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_deploy_and_restore"><a class="anchor" href="#_deploy_and_restore"></a>Deploy and restore</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use checked, committed public sources and an explicit private inventory as in <a href="h1.5-service-recovery.html" class="xref page">service deployment</a>. No OS package, access, account or firewall change is needed.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+umask 077
+capability_dir=$(mktemp -d)
+.venv/bin/python -m scripts.render_model ../haven-private/config/instance.yaml \
+  --service --capabilities --output "$capability_dir/config.yaml"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/service.yml \
+  -e haven_service_authorized=true -e "haven_model_config=$capability_dir/config.yaml"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The application snapshot now also includes the fixed capability modules/configuration/plugin files and six native patch targets. It never copies the audit database, conversations, OAuth or Telegram credentials. The exact base hashes and patch checksum must match before the coordinator is stopped and the patch applied. Repeating a matching deployment does not reapply the patch or restart the service. Unknown drift in these patch targets fails closed.</p>
+</div>
+<div class="paragraph">
+<p>For rollback use the <strong>new snapshot taken before this operation</strong> with the matching <code>scripts/service_snapshot.py</code>. Restore returns code/configuration and active/enabled state, and removes an empty newly introduced instance plugin directory. Older nine-file snapshots remain readable for their historical scope; they do not cover H1.6.1&#8217;s additional files. Do not use them to undo this upgrade. The audit database remains private and is not discarded by application rollback.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_local_acceptance"><a class="anchor" href="#_local_acceptance"></a>Local acceptance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Public behavior tests exercise exact-operation matching, zero budgets, owner/transport checks, replay/conflict handling after recreation, rate/capacity limits, audit permissions/corruption, source/plugin drift and guarded launcher selection. The public check pipeline never contacts the VPS, Telegram or a model.</p>
+</div>
+<div class="paragraph">
+<p>The research test <code>research/h1.6.1/test_native_capabilities.py</code> runs fresh subprocesses through the real pinned Hermes APIs. It verifies agent/auxiliary/tool/cron refusal, an irreplaceable host latch, fail-open hook failure with the model still blocked, and actual plugin discovery plus a deterministic reply. Run from the pinned patched checkout with the PM-prepared test interpreter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 2 \
+  "$HAVEN_ROOT/research/h1.6.1/test_native_capabilities.py" \
+  tests/gateway/test_post_gateway_admission.py tests/cron/test_restart_safe_worker.py</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Use the existing PM environment with <code>--group dev --group test --extra sms</code> for these native core tests (<code>aiohttp</code> is required by the upstream webhook case). The separate <code>--extra telegram</code> environment covers the retained H1.6 Telegram tests. An initial run used the Telegram-only environment and failed the webhook case for missing <code>aiohttp</code>; it was rerun with the declared SMS extra. A sandbox-only runner attempt failed before collecting tests due to its read-only filesystem; neither failure is counted as a pass. No dependency was installed into production for these tests.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_live_acceptance"><a class="anchor" href="#_live_acceptance"></a>Live acceptance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The first deployment from merge <code>cd4ce7711673e416d8b2d4ed55d5cedb5588cdb9</code> passed (<code>ok=28 changed=10 failed=0</code>). A real rollback to the accepted H1.6 restored all 26 application files, including content hashes, owners/modes and absence of newly introduced files; the original service passed health checks. The same H1.6.1 profile was then selected again.</p>
+</div>
+<div class="paragraph">
+<p>A separate synthetic profile on the Ubuntu pilot, using its existing Telegram interpreter, blocked all seven actual agent/auxiliary/tool/cron entrypoints and recorded seven denials. Its temporary state was removed; it never started a gateway or used real credentials. Local verification comprises 88 public tests, 49 pinned native core tests and five retained Telegram scenarios.</p>
+</div>
+<div class="paragraph">
+<p>The repeated active deployment passed <code>ok=25 changed=0 failed=0</code>, retaining the same live process. A subsequent controlled restart returned a new healthy gateway/connected Telegram and retained the audit database inode and existing receipts. No token entry was needed.</p>
+</div>
+<div class="paragraph">
+<p>Read-only Telegram aggregates show no additional native model calls or conversation rows during deployment/rollback/restart; the new capability usage counters remain zero. Telegram token metadata is unchanged. OAuth-store metadata changed during service starts; its contents were not inspected, copied or restored. A zero model-call count does not assert zero OAuth/catalog networking.</p>
+</div>
+<div class="paragraph">
+<p>The owner sent <code>system.status</code>, <code>system.capabilities</code>, <code>wishlist.check_deals</code> and <code>HAVEN_H161_DENY_1</code> as separate Telegram messages and confirmed both expected replies and both refusals. Read-only audit found exactly two allowed explicit operations, one disabled-capability refusal and one unknown-operation refusal matching the synthetic marker hash. All capability model/token/cost counters are zero; native Telegram API-call and conversation-row aggregates are unchanged. The status request occurred after the controlled restart, confirming the real transport&#8217;s return. This accepts the bounded owner-text profile; future integrations, voice, family data and isolated executors need their own acceptance.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sources_and_scope"><a class="anchor" href="#_sources_and_scope"></a>Sources and scope</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Context7 returned a monthly quota error. The implementation uses the exact v0.22.5 source at <code>bf0203a794a07aac3ff764972ab9087baa4e4f4e</code>: <code>gateway/run_inbound_consumer.py</code>, <code>hermes_cli/plugins.py</code>, <code>agent/agent_init.py</code>, <code>agent/auxiliary_client.py</code>, <code>model_tools.py</code>, <code>tools/registry.py</code> and <code>cron/scheduler.py</code>. The retained H0.1 upstream patch/author metadata and MIT notice are unchanged. The H1.6.1 policy patch is Haven-owned and separately pinned in <code>config/capability-runtime.json</code>.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H0.5 clean-checkout acceptance and H1 handoff · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H0.5 clean-checkout acceptance and H1 handoff</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Historical acceptance record from before GitHub publication. Current repository, licensing and CI status is in <a href="h1.1-publication.html" class="xref page">H1.1</a>.</p>
+</div>
+<div class="paragraph">
+<p>Verified on 2026-10-25 on Manjaro Linux x86_64. The local H0 foundation is accepted: a fresh public clone can install its dependencies, validate configuration, create another synthetic private instance and build documentation using the documented workflow. GitHub publication/execution and live Ubuntu services remain pending.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_revision_and_environment"><a class="anchor" href="#_revision_and_environment"></a>Revision and environment</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The working repositories still have no commits or remotes. To test a real clone, Git-eligible public files were copied into a disposable repository under <code>/tmp</code>, given one synthetic fixture commit and cloned with <code>git clone --no-local</code>. No working repository was committed, staged or pushed. The clone had no Git object alternates and started clean.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Fixture commit: <code>ecba71a1d54d1901bbc1afce17f206b5c90b591f</code>.</p>
+</li>
+<li>
+<p>Fixture tree: <code>8441bbe5b7b909291b1b303813bf02d005806061</code>.</p>
+</li>
+<li>
+<p><a href="_attachments/research/h0.5/source-manifest.json" class="xref attachment">Source manifest</a>: SHA-256 for the 68 public input files, captured before this acceptance report and status updates were added. No configuration/runtime logic or dependency lock changed in H0.5; the documentation exporter gained two declared evidence attachments.</p>
+</li>
+<li>
+<p><a href="_attachments/research/h0.5/acceptance.json" class="xref attachment">Structured result</a>: versions, expected exit codes, installed Python packages and boundary checks. Fixture identifiers describe the disposable test source, not a published Haven revision.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Subprocesses received an allowlisted environment with a newly created home directory, empty package/configuration caches and no inherited account/authentication variables. Git system/global configuration and user package configuration were disabled or replaced with empty test locations. No original private files, project environments or user configuration were supplied to the cloned workflow.</p>
+</div>
+<div class="paragraph">
+<p>Declared prerequisites were existing Python 3.12.14, Node.js 24.22.1 with npm 11.19.1, Git 2.55.0, a POSIX shell, <code>sha256sum</code> and system time-zone data. Project <code>.venv</code>, <code>node_modules</code>, tools and build output were absent from the snapshot and clone. They were created or downloaded afresh; no project environment or dependency cache was copied from H0.3/H0.4.</p>
+</div>
+<div class="paragraph">
+<p>This is a fresh checkout and dependency installation on the existing host, not a clean operating-system, container or Ubuntu/VPS test. Installing the declared language/system prerequisites was outside the acceptance procedure.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_documented_setup_and_checks"><a class="anchor" href="#_documented_setup_and_checks"></a>Documented setup and checks</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The first shell block in <a href="configuration.html" class="xref page">configuration setup</a> and the first shell block in <a href="documentation.html" class="xref page">documentation tooling</a> were extracted from the cloned guides and executed unchanged, in order. Their effective setup was:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">python3 -m venv .venv
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements.txt
+.venv/bin/python scripts/validate_config.py examples/instance.yaml
+.venv/bin/python -m unittest discover -s tests -v
+python3 -m venv .venv
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements-dev.txt
+npm ci --ignore-scripts --no-audit --no-fund
+.venv/bin/python -m scripts.install_check_tools
+.venv/bin/python -m pip check
+.venv/bin/python -m scripts.check</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Both pip installs used the checked-in distribution hashes and binary-only policy. npm installed from the lock without lifecycle scripts. The binary installer downloaded Gitleaks/actionlint and verified their pinned archive hashes. <code>pip check</code> reported no broken requirements. No real credentials or private package registries were needed.</p>
+</div>
+<div class="paragraph">
+<p>The complete checks passed before any private sibling existed: Ruff, strict yamllint, actionlint, configuration examples, all 23 behavior tests, all 16 retained H0.1 checksums, candidate-file and fixture-history secret scans, the Antora build and offline source/generated links. The initial site had 11 documentation pages plus its root redirect. H0.1 integration experiments were not rerun; their retained evidence was checked for integrity.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_another_private_instance"><a class="anchor" href="#_another_private_instance"></a>Another private instance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The instance-creation shell block in <a href="_attachments/README.md" class="xref attachment">README</a> was executed unchanged in the clone. It created a separate private Git repository from the public template. Its synthetic configuration was edited to use an independent instance name, time zone, reserved example hostname and placeholder model, then checked explicitly:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python scripts/validate_config.py ../haven-private/config/instance.yaml
+.venv/bin/python scripts/validate_config.py examples/instance.yaml \
+  --override ../haven-private/config/instance.yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Both validations passed, and assertions confirmed the edited fields survived defaults/layering. Repeating the README setup exited with status <code>1</code> at its existing-destination check; hashes of every file in the synthetic private repository were unchanged. The public clone remained clean.</p>
+</div>
+<div class="paragraph">
+<p>Ignore checks covered representative dotenv, authentication/session, credential, key and database paths in both repositories. Instance YAML was ignored by the public repository and remained eligible for the private repository. These checks establish the current Git rules, not encryption or runtime access controls.</p>
+</div>
+<div class="paragraph">
+<p>Next, the synthetic private YAML was deliberately made invalid and given a synthetic marker. Running the complete public checks again still passed. The marker was absent from every generated site file, including attachments. The valid private YAML was restored afterwards. This complements the maintained tests for symlinks, escaping paths, undeclared targets and ignored inputs; it does not grant executors access to private data.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_h0_acceptance_and_remaining_boundaries"><a class="anchor" href="#_h0_acceptance_and_remaining_boundaries"></a>H0 acceptance and remaining boundaries</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Milestone</th>
+<th class="tableblock halign-left valign-top">Accepted local result</th>
+<th class="tableblock halign-left valign-top">Deferred work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">H0.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pinned Hermes candidate/patch, synthetic recovery and isolation evidence</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Real account, Ubuntu and production-adapter acceptance in H1–H2</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">H0.2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Independent public/private source layout and instance template</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Owner-authorized source commits, remote creation and publication</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">H0.3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Versioned YAML contract, layering, safe diagnostics and secret references</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Native Hermes rendering and authorized credential resolution in H1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">H0.4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Antora site and shared local/CI checks</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">First GitHub Actions execution and hosting</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">H0.5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fresh clone, fresh dependencies, independent instance and public/private build checks</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Live deployment acceptance in H1</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The installation commands required no project changes. Only acceptance evidence, handoff/status documentation and the exporter&#8217;s two evidence-attachment declarations were added/updated. GitHub repository-name availability, the owner&#8217;s Haven license choice and the first actual Actions run remain open. No license was inferred from the retained upstream MIT material.</p>
+</div>
+<div class="paragraph">
+<p>The first manifest format used file paths as JSON keys and triggered Gitleaks' generic API-key rule on an authentication-test log&#8217;s SHA-256. The retained manifest uses separate <code>path</code> and <code>sha256</code> fields; the scan then passed without any rule exclusions or baseline.</p>
+</div>
+<div class="paragraph">
+<p>Proceed to <a href="h1-prerequisites.html" class="xref page">H1 prerequisites</a>: choose infrastructure and backup storage, prepare the intended source/configuration revisions, confirm actual models/authentication and arrange the WhatsApp number/transport. Provisioning, interactive account authorization and production changes require their own authorized H1 work.</p>
+</div>
+<div class="paragraph">
+<p>Primary setup references consulted on 2026-10-25: <a href="https://docs.python.org/3.12/library/venv.html">Python 3.12 virtual environments</a>, <a href="https://pip.pypa.io/en/stable/topics/secure-installs/">pip hash-checked installs</a>, <a href="https://docs.npmjs.com/cli/v11/commands/npm-ci/">npm 11 clean installation</a> and <a href="https://git-scm.com/docs/git-clone">Git clone</a>. Context7 returned a monthly quota error; official documentation was used.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

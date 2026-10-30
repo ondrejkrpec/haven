@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Documentation and public checks · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Documentation and public checks</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>H0.4 added an Antora site and shared checks. H1.1 uses automatic local pre-push checks as the primary pipeline because GitHub Actions is unavailable for the owner&#8217;s account. The build consumes public sources only. <a href="adr/0002-documentation-and-checks.html" class="xref page">ADR 0002</a> records the choice; <a href="h0.4-acceptance.html" class="xref page">acceptance</a> separates local verification from pending GitHub execution.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prepare_tools"><a class="anchor" href="#_prepare_tools"></a>Prepare tools</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use Linux x86_64 or aarch64, Git 2.28+, <code>sha256sum</code>, Python 3.12+ with system IANA time-zone data, and Node.js 24 LTS with npm. Node.js 26 is also accepted for local work; CI selects 24. A VPS and live accounts are unnecessary. Create a virtual environment as described in <a href="configuration.html" class="xref page">configuration setup</a>, then install the check dependencies:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">python3 -m venv .venv
+.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements-dev.txt
+npm ci --ignore-scripts --no-audit --no-fund
+.venv/bin/python -m scripts.install_check_tools</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Installation downloads public packages and release archives. <code>requirements-dev.txt</code> includes the runtime dependencies, Ruff, yamllint and pinned Ansible/core lint tools. It is compiled with the runtime lock as a constraint. <code>package-lock.json</code> fixes the npm dependency tree and archive integrity. No npm lifecycle scripts are needed. The binary installer verifies the archive SHA-256 from <code>scripts/check-tools.json</code> before extracting only the named Gitleaks/actionlint binary to ignored <code>build/tools</code>. It supports Linux x86_64 and aarch64; other operating systems need a separately verified setup before claiming parity.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_run_the_public_checks"><a class="anchor" href="#_run_the_public_checks"></a>Run the public checks</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.check</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The command fails at the first unsuccessful check. It runs:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Ruff for Python import/name/syntax errors in maintained scripts and tests; historical H0.1 probes retain their original bytes.</p>
+</li>
+<li>
+<p>Strict yamllint for Git-eligible YAML and the private template example; actionlint for workflow syntax, expressions and action inputs. ShellCheck/Pyflakes integration is disabled explicitly; workflow shell steps contain only literal tool invocations.</p>
+</li>
+<li>
+<p>Ansible syntax checks and production-profile offline lint for the bounded host playbooks, using only the synthetic inventory. These do not contact a VPS.</p>
+</li>
+<li>
+<p>Configuration validation for the public example and private template, followed by behavior tests including fail-closed host preconditions.</p>
+</li>
+<li>
+<p>The retained H0.1 checksum manifest.</p>
+</li>
+<li>
+<p>Gitleaks with default rules, full redaction and no inline allow markers. A disposable snapshot includes tracked and untracked Git-eligible candidates, excluding ignored local files. Available Git history is scanned with <code>--all</code>; an unborn repository explicitly skips only the history scan. CI fetches full history. No broad secret exclusions or baseline are configured.</p>
+</li>
+<li>
+<p>The documentation build and offline source/generated-link checks, including HTML fragments.</p>
+</li>
+<li>
+<p><code>git diff --check</code> for tracked changes. New untracked files still need review before the first commit.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This does not validate your private instance, access any credentials, run Hermes or test upstream integrations. Explicit private validation remains a separate operation in <a href="configuration.html" class="xref page">the configuration guide</a>. Pattern scanning cannot establish the absence of all sensitive data; review the exact publication candidates before publishing.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_build_and_view_documentation"><a class="anchor" href="#_build_and_view_documentation"></a>Build and view documentation</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.build_docs
+.venv/bin/python -m scripts.check_links
+.venv/bin/python -m http.server 8000 --bind 127.0.0.1 --directory build/site</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Open <code><a href="http://127.0.0.1:8000/" class="bare">http://127.0.0.1:8000/</a></code> and stop the local server with Ctrl-C. The last command serves only the generated site, bound to loopback. Alternatively, activate <code>.venv</code> and run <code>npm run docs:build</code>; npm uses <code>python3</code> from your PATH.</p>
+</div>
+<div class="paragraph">
+<p>Canonical guides remain in <code>docs/</code>, with navigation in <code>docs/nav.adoc</code>. The exporter creates a native Antora component in a temporary directory from Git-eligible <code>.adoc</code> guides and the retained H0.1 report. Relative <code>link:</code> file references become Antora <code>xref:</code> resources. The explicit <code>ATTACHMENTS</code> tuple in <code>scripts/build_docs.py</code> bounds downloadable public files; new targets must be declared. Raw Markdown attachments are downloads, not rendered site pages. Includes are unsupported, and escaping links or symlink inputs fail the build. Use repository-relative <code>link:</code> references in guides and native <code>xref:</code> references in navigation.</p>
+</div>
+<div class="paragraph">
+<p>The exporter never discovers sibling repositories. It copies only selected public inputs and the Git-eligible local UI, initializes a temporary Git repository without commits, runs Antora with warning-level failure, then removes the temporary sources. Generated output replaces ignored <code>build/site</code>. Existing source paths, research evidence and working Git indexes are preserved. Once dependencies are installed, generation needs no network, external UI or private source. Antora 3.2 supports repositories without commits; no first-commit workaround is needed.</p>
+</div>
+<div class="paragraph">
+<p>The repository-owned UI uses HTML/CSS and system fonts, with navigation, responsive layout, dark mode and a keyboard skip link. It requires no browser JavaScript. <a href="h1.8-web-access.html" class="xref page">H1.8</a> adds a checked prebuilt Pages publisher and a separate, explicitly selected private Markdown build. No GitHub Actions publication workflow or private input is added to the public build.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_automatic_local_push_pipeline"><a class="anchor" href="#_automatic_local_push_pipeline"></a>Automatic local push pipeline</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>After preparing the tools, enable the versioned public hook in each checkout:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">git config --local core.hooksPath .githooks</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Commit your intended changes before pushing. The hook requires a clean checkout, including untracked source files, and the pushed commit must be the checked-out HEAD. It runs the complete <code>scripts.check</code> command and rejects the push on failure or a checkout change during checks. A successful receipt records the exact public revision, timestamp and result in Git metadata at <code>haven-checks/last-success.json</code>. It is not a tracked source or documentation input. Deletions and pushes with no new source revision do not run source checks.</p>
+</div>
+<div class="paragraph">
+<p>For an instance created from the template, configure its independent private hook from the public checkout:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">git -C ../haven-private config --local core.hooksPath .githooks
+git -C ../haven-private config --local haven.publicRoot "$PWD"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Record the public HEAD in the private <code>HAVEN_REVISION</code> file and commit the instance before pushing. Its hook requires both checkouts to be clean and that revision to match the public HEAD. It reruns the public checks, explicitly validates the instance and scans private files and history with redacted Gitleaks output. Private receipts stay in that repository&#8217;s Git metadata; private source never enters the public build. Configure <code>haven.publicRoot</code> for the actual installation path; it is local Git configuration.</p>
+</div>
+<div class="paragraph">
+<p>These are client-side checks on the configured checkouts. GitHub web edits and other clones do not automatically use them; every development clone needs setup. They are not a server-side permission boundary. An independent runner after VPS provisioning can add remote enforcement without depending on GitHub Actions. Do not use <code>--no-verify</code> as the normal publication path.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_github_workflow_and_publication"><a class="anchor" href="#_github_workflow_and_publication"></a>GitHub workflow and publication</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="_attachments/github/workflows/checks.yml" class="xref attachment">GitHub Actions</a> retains a manual <code>workflow_dispatch</code> definition for possible future use, without push/PR triggers. The owner selected the local pipeline after GitHub rejected the first job at account level before runner allocation. A successful Actions run is no longer required for H1.1 acceptance. No claim is made that GitHub-hosted checks passed.</p>
+</div>
+<div class="paragraph">
+<p>The manual workflow selects Ubuntu 24.04, Python 3.12 and Node.js 24, with Actions pinned to full commits, read-only repository permissions and no instance secrets. Both source remotes are configured and MIT is selected. <a href="h1.1-publication.html" class="xref page">H1.1</a> records publication and local-pipeline acceptance. Hosting and private Tailscale documentation remain later work. <a href="h0.5-acceptance.html" class="xref page">H0.5</a> records the clean-checkout dependency installation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dependency_updates_and_references"><a class="anchor" href="#_dependency_updates_and_references"></a>Dependency updates and references</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Update pins intentionally and rerun the full workflow. Regenerate the development lock while preserving runtime versions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">uv pip compile requirements-dev.in --python-version 3.12 --constraint requirements.txt \
+  --generate-hashes --output-file requirements-dev.txt</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For npm updates, change exact direct versions, regenerate <code>package-lock.json</code>, review dependency changes, then use <code>npm ci --ignore-scripts</code>. For binary updates, verify the upstream release archives/checksums and update both supported architectures. For Action updates, resolve the release tag to its full commit and review the release notes. Do not substitute mutable <code>latest</code> URLs for checked-in pins.</p>
+</div>
+<div class="paragraph">
+<p>Primary references consulted on 2026-10-25: <a href="https://docs.antora.org/antora/latest/whats-new/">Antora 3.2 release notes</a>, <a href="https://docs.antora.org/antora/latest/playbook/content-source-url/">local sources</a>, <a href="https://docs.antora.org/antora/latest/playbook/ui-bundle-url/">local UI bundles</a>, <a href="https://docs.antora.org/antora/latest/playbook/runtime-log-failure-level/">failure thresholds</a>, <a href="https://github.com/gitleaks/gitleaks/tree/v8.30.1">Gitleaks 8.30.1</a>, <a href="https://github.com/rhysd/actionlint/tree/v1.7.12">actionlint 1.7.12</a>, <a href="https://docs.astral.sh/ruff/configuration/">Ruff configuration</a>, <a href="https://yamllint.readthedocs.io/en/stable/configuration.html">yamllint configuration</a> and <a href="https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions">Actions security</a>. Context7 was unavailable because its monthly quota was exhausted; official documentation and public package/release metadata were used instead.</p>
+</div>
+<div class="paragraph">
+<p>The local pipeline follows Git&#8217;s official <a href="https://git-scm.com/docs/githooks#_pre_push">pre-push contract</a> and <a href="https://git-scm.com/docs/git-config#Documentation/git-config.txt-corehooksPath">repository-local hook configuration</a>.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

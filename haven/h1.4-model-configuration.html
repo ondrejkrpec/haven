@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.4: Native configuration, subscription login and first model request · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.4: Native configuration, subscription login and first model request</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status on 2026-10-28: explicit configuration rendering, a separate service-owned browser login, live model discovery and one native Hermes request are verified on the pilot. Missing, malformed and empty credential stores were rejected without exposing their contents; the original session was restored afterwards. A final preparation run passed without changes. No persistent Hermes service is installed by this step.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prerequisites_and_scope"><a class="anchor" href="#_prerequisites_and_scope"></a>Prerequisites and scope</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Complete <a href="h1.3-bootstrap.html" class="xref page">the accepted host baseline</a> and keep working private SSH/provider-console access. Use the documented controller tools and an explicit private <code>ops/inventory.yml</code>. H1.4 remains bounded to the <code>haven</code> identity on the existing Ubuntu 26.04 pilot. It does not automate a clean operating-system installation.</p>
+</div>
+<div class="paragraph">
+<p>The runtime is the exact <a href="research/h0.1/README.html" class="xref page">H0.1 candidate</a>: Hermes v0.22.5, base commit <code>bf0203a794a07aac3ff764972ab9087baa4e4f4e</code>, plus the retained attributed recovery patch. The preparation playbook verifies the release commit, dependency/source hashes, the two patched files and the set of tracked changes before running PM. It builds only the core Python environment through upstream PM and the frozen lock, not raw pip or uv. Python 3.14.9 and the dependencies live under the service account; no APT transaction, OS upgrade or reboot is part of this operation.</p>
+</div>
+<div class="paragraph">
+<p>Source and runtime paths are fixed for this first candidate:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Source/environment: <code>/var/lib/haven/releases/hermes-bf0203a-785f2646</code> and its <code>venv</code>.</p>
+</li>
+<li>
+<p>Native profile: <code>/var/lib/haven/.hermes</code>, mode <code>0700</code>, owned by <code>haven</code>.</p>
+</li>
+<li>
+<p>Public probe code: <code>/var/lib/haven/haven-tools/scripts</code>, also under the service identity.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The release remains writable by that trusted service identity. This does not isolate a coding executor: future lower-trust workers must use separate identities/sandboxes and cannot share its source, home, OAuth session or administrator key. H2 remains responsible for that boundary.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_render_the_intended_private_configuration"><a class="anchor" href="#_render_the_intended_private_configuration"></a>Render the intended private configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Set real instance/model values in the private <code>config/instance.yaml</code>; do not edit public examples for an installation. This renderer initially supports only explicit <code>openai-codex</code> subscription authentication. A concrete <code>gpt-*</code> identifier is required, but syntax is not proof that the account can use it. Discover and test the intended model after login. No paid API fallback or credit purchase is configured.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Haven input</th>
+<th class="tableblock halign-left valign-top">Native behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>model.provider</code>, <code>model.name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Explicit subscription route, model and Codex backend URL; default native Hermes transport selected with <code>model.openai_runtime: auto</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>instance.timezone</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Native <code>timezone</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>instance.name</code>, <code>host.*</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Deployment metadata; not invented Hermes YAML fields. This playbook requires <code>host.service_user: haven</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>model.credential_ref</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rejected for this subscription path. Generic reference validation still exists, but runtime API-provider support is not implemented here.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>whatsapp.enabled</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Must remain false; WhatsApp runtime translation belongs to H1.6.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The generated H1.4 profile has no CLI/WhatsApp tools or provider fallback, no external-login adoption, no memory/background title generation and a bounded turn/time budget. This is a first-request profile, not the final coordinator configuration. H1.5 must review its capabilities before starting a persistent service.</p>
+</div>
+<div class="paragraph">
+<p>From the public checkout, explicitly render the instance to a fresh private temporary file:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">umask 077
+haven_render_dir=$(mktemp -d)
+.venv/bin/python -m scripts.render_model ../haven-private/config/instance.yaml \
+  --output "$haven_render_dir/config.yaml"
+export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/model-prepare.yml
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/model-configure.yml \
+  -e "haven_model_config=$haven_render_dir/config.yaml"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Rendering applies the existing validator/defaults/explicit overrides and never resolves credentials. It creates mode-<code>0600</code> output exclusively and refuses an existing file or symlink. Configuration installation takes the native file explicitly, protects its output and refuses a different existing file. After reviewing an intentional change, <code>-e haven_replace_model_config=true</code> permits replacement with a protected on-host backup. Never use that flag merely to suppress a mismatch: the login CLI can legitimately rewrite YAML formatting/metadata while retaining policy.</p>
+</div>
+<div class="paragraph">
+<p>The generated YAML contains no secret values and need not be committed; version the Haven inputs and their public source revision instead. The profile&#8217;s <code>auth.json</code>, lock files, caches and databases remain runtime state outside both repositories.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_complete_an_independent_browser_login"><a class="anchor" href="#_complete_an_independent_browser_login"></a>Complete an independent browser login</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The pilot uses Hermes&#8217;s own browser authorization-code/PKCE flow. OpenAI&#8217;s first-party login documentation describes subscription access, device-code/headless options and loopback forwarding; it does not establish third-party compatibility by itself. Compatibility with this exact native Hermes provider is established only by the live result below.</p>
+</div>
+<div class="paragraph">
+<p>Create the private SSH alias described in <a href="h1.3-private-access.html" class="xref page">private administration</a>. In one controller terminal, forward only the loopback callback:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">ssh -N -T -o ExitOnForwardFailure=yes -o ClearAllForwardings=no \
+  -L 127.0.0.1:1455:127.0.0.1:1455 haven-example</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In another terminal, connect to the VPS and start the login under the service account:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">ssh haven-example
+sudo -H -u haven /bin/sh
+cd /var/lib/haven
+umask 077
+env -i PATH=/usr/bin:/bin \
+  HERMES_HOME=/var/lib/haven/.hermes \
+  HERMES_RUNTIME_DIR=/var/lib/haven/.hermes/tools \
+  /var/lib/haven/releases/hermes-bf0203a-785f2646/venv/bin/hermes \
+  auth add openai-codex --browser --no-browser --timeout 900 --label haven</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Open the printed link in a browser <strong>on that controller</strong>, choose the intended personal account and complete consent. The callback URL is fixed at <code>localhost:1455</code>; opening it on a phone would point at the phone instead of the SSH tunnel. The owner performs account login/MFA. No extra public listener or firewall allowance is required.</p>
+</div>
+<div class="paragraph">
+<p>Do not paste passwords, tokens or the returned callback URL into chat. Treat the temporary authorize URL as session material too: do not put it in Git, screenshots, runbooks or saved command logs. Do not copy the workstation&#8217;s Codex cache. The service receives its own grant in its protected <code>auth.json</code>; check ownership/mode <code>haven:haven 0600</code> without displaying contents. Stop the SSH tunnel after login completes.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_check_credentials_and_make_the_bounded_request"><a class="anchor" href="#_check_credentials_and_make_the_bounded_request"></a>Check credentials and make the bounded request</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the service shell, run the probe from its package root with the prepared interpreter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">cd /var/lib/haven/haven-tools
+env -i PATH=/usr/bin:/bin \
+  HERMES_HOME=/var/lib/haven/.hermes \
+  HERMES_RUNTIME_DIR=/var/lib/haven/.hermes/tools \
+  /var/lib/haven/releases/hermes-bf0203a-785f2646/venv/bin/python \
+  -m scripts.model_probe check-auth \
+  --source /var/lib/haven/releases/hermes-bf0203a-785f2646 \
+  --home /var/lib/haven/.hermes</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Use the same command with <code>catalog</code> to inspect the backend&#8217;s visible model identifiers and with <code>query</code> for one real request. <code>check-auth</code> is a read-only local session/route check; the real request establishes provider acceptance. A query can consume the account&#8217;s included quota. No live API request is made by the public pipeline.</p>
+</div>
+<div class="paragraph">
+<p>The probe requires the service identity, private profile/config/auth file metadata, accepted source/patch and explicit native route. It delegates OAuth resolution/refresh to Hermes, builds its native <code>AIAgent</code>, and checks zero tools, zero fallback entries and <code>codex_responses</code> before sending a fixed harmless prompt. Context files, memory and background review are skipped; trajectory saving is disabled. Only the expected fixed reply establishes success.</p>
+</div>
+<div class="paragraph">
+<p>It prints a small JSON result or a fixed failure code. Captured upstream output, raw exceptions, provider bodies and credentials are not echoed. <code>credentials_missing</code>, <code>credentials_invalid</code> and <code>credentials_unavailable</code> mean a login/store problem; <code>private_file_permissions</code> requires correcting metadata under the service identity. HTTP errors that escape the native call retain distinct authentication, quota/rate-limit and model-request categories. Other native failures remain a bounded generic diagnostic, not a promise to classify every backend failure payload.</p>
+</div>
+<div class="paragraph">
+<p>Do not revoke a real grant merely to test error handling. A maintenance test can temporarily hold the original auth file <strong>inside the protected profile</strong>, substitute synthetic fixtures and restore the original in a <code>finally</code> block while no other client/service uses it. Keep all fixtures and restoration material outside Git. The pilot exercised missing, malformed and empty stores this way; no real account token was revoked.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verified_result_and_remaining_work"><a class="anchor" href="#_verified_result_and_remaining_work"></a>Verified result and remaining work</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The owner completed a separate browser login; the client reported a new OAuth credential. Live backend discovery listed <code>gpt-6.1-sol</code>, and the intended request passed through native Hermes with <code>tools=0</code>, <code>fallbacks=0</code>, transport <code>codex_responses</code>. Negative store tests returned their fixed codes without the synthetic secret marker; the original auth inode/timestamp/size were retained and a local session check passed after restoration. The callback tunnel was closed.</p>
+</div>
+<div class="paragraph">
+<p>The final preparation recap was <code>ok=15 changed=0 failed=0</code>, with two already-applied patch tasks skipped. Configuration installation had passed with <code>ok=8 changed=3 failed=0</code>. Final inspection confirmed profile <code>0700</code>, config/auth <code>0600</code>, service ownership, no held fixture or callback listener, no failed system units and the existing private-only SSH firewall. The OS package/version digest matched the pre-H1.4 receipt. Public behavior checks cover rendering, policy rejection, safe credential diagnostics and native-agent call boundaries; they do not consume account quota.</p>
+</div>
+<div class="paragraph">
+<p>This verifies one model request and the selected credential/configuration boundaries. It does not establish quota recovery, real token revocation/refresh, unrestricted tool use, WhatsApp or a restart-safe Hermes service. H1.5 will add supervision and recovery; H1.6 introduces messaging. Host updates remain deferred to the owner&#8217;s Security/Worker use case. Code and instance publication must follow exact-revision checks, PR merge and completed-branch cleanup.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sources"><a class="anchor" href="#_sources"></a>Sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Context7&#8217;s monthly quota was exhausted. Exact upstream <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/hermes_cli/auth_codex_browser.py">browser login</a>, <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/hermes_cli/auth_codex.py">OAuth resolution</a>, <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/configuring-models.md">model configuration</a> and <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/pm/AGENTS.md">PM ownership</a> were inspected. See official OpenAI <a href="https://learn.chatgpt.com/docs/auth">authentication</a> and <a href="https://learn.chatgpt.com/docs/app-server#auth-endpoints">app-server auth scope</a>; app-server login is a different integration from the native provider tested here.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

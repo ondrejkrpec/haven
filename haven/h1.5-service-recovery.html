@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.5: Supervised Hermes and recovery · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.5: Supervised Hermes and recovery</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status on 2026-10-29: the bounded coordinator, required worker bus, application rollback, process restart, post-boot state recovery and a native model request are verified. The complete isolated host suite passes; the temporary identity and its runtime configuration are removed. The procedure targets the existing accepted Ubuntu 26.04 pilot. It does not provision a clean OS or install updates.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_service_and_state"><a class="anchor" href="#_service_and_state"></a>Service and state</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The runtime remains the exact H1.4 core and retained recovery patch: Hermes v0.22.5, base <code>bf0203a794a07aac3ff764972ab9087baa4e4f4e</code>. Read <a href="h1.4-model-configuration.html" class="xref page">H1.4</a> and <a href="adr/0004-supervised-coordinator.html" class="xref page">ADR 0004</a> first. The service runs as the existing <code>haven</code> identity, from <code>/var/lib/haven/releases/hermes-bf0203a-785f2646</code>, with <code>HERMES_HOME=/var/lib/haven/.hermes</code>.</p>
+</div>
+<div class="paragraph">
+<p><code>haven.service</code> uses native READY/watchdog notifications, a 120-second watchdog, ten-second restart spacing and a 180-second start/stop budget. The launcher validates the private profile and candidate, then uses <code>exec</code> to retain systemd&#8217;s main PID. Exit 78 stops automatic restart for a policy/configuration failure; transient failures restart. Credential presence is deliberately outside the launch guard so a missing model login cannot stop deterministic scheduling.</p>
+</div>
+<div class="paragraph">
+<p>The unit drops capabilities and privilege escalation, hides user homes/devices, makes the OS read-only and bounds memory/process count. Its writable service home holds OAuth, native stores, logs and caches. The source and trusted guard are read-only inside the service. Deployment enables linger for <code>haven</code> and orders the coordinator after its <code>user@UID.service</code>, following the pinned native installer: restart-safe cron workers require that user bus. <code>ProtectHome=tmpfs</code> hides homes and <code>/run/user</code>; only <code>/run/user/UID</code> is bound back read-only for that identity&#8217;s socket. The launcher rejects a missing bus and <code>cron.require_restart_safe_scope: true</code> refuses unscoped fallback. These restrictions do not provide a lower-trust executor: that separation belongs to H2.</p>
+</div>
+<div class="paragraph">
+<p>The explicit H1.5 profile has no tools on CLI/local/API/cron/WhatsApp, no paid fallback, no third-party hooks/MCP and no automatic coding dispatch or decomposition. Cron scheduling is native and independent of the model; H1.5 does not create recurring production jobs. WhatsApp stays disabled. Hermes&#8217;s own runtime listener binds loopback; no firewall change or external dashboard is introduced here.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_deploy_from_checked_sources"><a class="anchor" href="#_deploy_from_checked_sources"></a>Deploy from checked sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use the pinned controller dependencies and explicit private inventory from <a href="h1.3-bootstrap.html" class="xref page">H1.3</a>. Work from a committed source revision that passed the public checks. Render a fresh protected output from the intended private instance:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+umask 077
+service_dir=$(mktemp -d)
+.venv/bin/python -m scripts.render_model ../haven-private/config/instance.yaml \
+  --service --output "$service_dir/config.yaml"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/service.yml \
+  -e haven_service_authorized=true -e "haven_model_config=$service_dir/config.yaml"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The flag records an already authorized deployment; it is not an authorization mechanism. The playbook verifies private access, creates a root-only application snapshot, installs the explicit configuration/guard/unit, validates the unit, starts/enables the service and checks a live process plus a fresh event-loop heartbeat. A failed deployment restores its application snapshot. Repeating the same invocation should make no effective changes. Remove the temporary rendered file after successful acceptance.</p>
+</div>
+<div class="paragraph">
+<p>The snapshot manifest covers <code>haven.service</code>, native <code>config.yaml</code> and the three deployed guard/probe modules, plus the previous linger/user-manager state. Each present file has a digest, mode and owner; absence is recorded too. Restore stops the service, restores those files and the previous active/enabled/linger state, then reloads systemd. It leaves OAuth, session/database state, OS packages, firewall and SSH untouched. It is an application rollback, not an off-site backup.</p>
+</div>
+<div class="paragraph">
+<p>Inspect service status without printing configuration or session data:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">ssh haven-example 'sudo systemctl show haven.service \
+  -p ActiveState -p SubState -p MainPID -p NRestarts -p Result -p WatchdogUSec'
+ssh haven-example 'sudo -H -u haven env \
+  HERMES_HOME=/var/lib/haven/.hermes PYTHONPATH=/var/lib/haven/haven-tools \
+  /var/lib/haven/releases/hermes-bf0203a-785f2646/venv/bin/python \
+  -m scripts.service_runtime health \
+  --source /var/lib/haven/releases/hermes-bf0203a-785f2646 \
+  --home /var/lib/haven/.hermes'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Use <code>sudo systemctl stop/start/restart haven.service</code> for maintenance. Do not launch an unmanaged <code>hermes gateway</code> beside it or use a second dispatcher. Journals and native logs can contain private activity; inspect locally and keep raw logs outside public artifacts.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_recovery_acceptance"><a class="anchor" href="#_recovery_acceptance"></a>Recovery acceptance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Prepare a separate test environment through upstream PM with <code>--group dev --group test --extra sms</code>; never add pytest dependencies to the production venv. Use a disposable checkout of the same base and patch and the canonical <code>scripts/run_tests.sh</code>, following upstream agent instructions. The selected tests are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>tests/e2e/core/kanban/test_kanban_rate_limit_review.py</code>: real processes and an HTTP 429 fake provider; a deferred implementation retries and reaches review without being trapped by an old quota stamp.</p>
+</li>
+<li>
+<p><code>tests/e2e/core/kanban/test_kanban_dispatcher_restart.py</code>: kill dispatchers at claim/spawn boundaries, retain the exact cards and suppress duplicate completion; live workers retain claims through a slow provider call.</p>
+</li>
+<li>
+<p><code>tests/hermes_cli/test_kanban_db.py</code>: cooldowns, sticky terminal-provider exits, current-run guards and failure accounting.</p>
+</li>
+<li>
+<p><code>tests/cron/test_quota_hold.py</code>, <code>tests/cron/test_restart_safe_worker.py</code>: persisted provider windows and restart-safe worker bookkeeping.</p>
+</li>
+<li>
+<p><code>tests/gateway/test_systemd_watchdog_lifecycle.py</code>: native watchdog lifecycle.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Run with <code>HERMES_E2E_STRICT_ACCEPTANCE=1</code>, <code>HERMES_TEST_FILE_RETRIES=0</code> and the explicit test interpreter. CLI recovery scenarios can use a temporary unit with a fresh HOME, masked production profile and private network. The complete suite with live user scopes needs a dedicated disposable OS identity: its own locked account/home, no supplementary privileges or access to the production profile, and a user manager. Bind that disposable identity&#8217;s <code>/run/user/UID</code> writable through <code>ProtectHome=tmpfs</code>: long synthetic profile paths need to create a short Unix-socket fallback there. The production profile has a short direct socket path and keeps its runtime bind read-only.</p>
+</div>
+<div class="paragraph">
+<p>For that complete host run, give only the disposable identity&#8217;s <code>user@UID.service</code> a temporary <code>PrivateNetwork=yes</code> override, and run the test unit with <code>PrivateNetwork=yes</code>, <code>JoinsNamespaceOf=user@UID.service</code> and startup ordering after that manager. Also enforce <code>IPAddressDeny=any</code> and <code>IPAddressAllow=localhost</code> on its <code>user-UID.slice</code> and place the test unit there. This covers manager-spawned daemons and scopes as well as the original process. Remove the temporary manager override during cleanup. The test and manager must share the provider&#8217;s loopback namespace. The provider remains local, credentials are synthetic and the test Python lives outside the production profile. Creating this temporary identity is a separately authorized host test operation; always stop its units/manager, remove linger and delete the account/home in a cleanup block. The production service playbook does not create test accounts.</p>
+</div>
+<div class="paragraph">
+<p>Live service acceptance additionally requires a healthy startup, an idempotent repeat, restoration of a deliberately changed application file, SIGKILL/restart with retained native state, and an authorized host reboot followed by a fresh private connection and healthy service. Compare package and access-identity receipts before/after. Do not trigger real quota exhaustion or revoke an account grant to simulate failure.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_results_and_limits"><a class="anchor" href="#_results_and_limits"></a>Results and limits</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The implementation deployed from <code>5628cb7c3c199bd8a317e5d0c5dbb01826c5b340</code>. Later documentation commits record the receipts without changing runtime code.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Check</th>
+<th class="tableblock halign-left valign-top">Verified result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Public checks</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">61 behavior tests, Ansible syntax/production lint, configuration, secret scans, documentation build and links pass. Public checks never contact a VPS or start Hermes.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Local pinned upstream</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">107 passed and one Windows-only skip across the six selected files.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Isolated Ubuntu upstream</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The same six files pass: 107 tests, no failures, one Windows-only skip, strict acceptance and no file retries. The complete run took 170.3 seconds. The disposable account/home/linger/manager override were removed in cleanup.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pilot installation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The final bus/scoped-worker configuration installs successfully; the repeat is <code>ok=17 changed=0 failed=0</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Invalid configuration and rollback</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The main process exits 78 without an automatic restart loop; the root-only snapshot restores healthy service. OAuth inode/mtime/size are retained.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Coordinator crash</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SIGKILL of the main process triggers an automatic restart and a new healthy native gateway.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">In-flight cron worker</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">An actual synthetic no-agent task stays in its own user scope through a coordinator restart, finishes successfully and writes its marker once. Its job/script/markers are then removed.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Host reboot</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The final unit starts automatically with its user bus, accepts health checks and completes the queued one-shot on the new boot exactly once. Packages and the private access baseline remain unchanged.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Model after reboot</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One native authenticated request passes with zero tools/fallbacks. No account grant is revoked or quota deliberately exhausted.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>An early parallel VPS test run exceeded the chaos test&#8217;s timing window; a sequential CLI recovery run passed (106 tests, with Windows and unavailable user-scope skips). The hidden user bus was then reproduced by a real harmless cron job and corrected in the unit/guard; the formerly skipped standalone native scope test passed. The extended host runs exposed another harness constraint: long pytest profile paths require the native Unix-socket fallback. A read-only test runtime bind prevented its creation (<code>EROFS</code>) before any provider call. The dedicated test identity&#8217;s runtime is therefore writable; this leaves the fixed short production profile&#8217;s read-only bind intact. The final suite uses the separate identity and shared private network described above and passes all 107 selected tests. No Hermes source change was needed for this harness correction.</p>
+</div>
+<div class="paragraph">
+<p>Real subscription quota payloads and deliberate token expiry/revocation/refresh remain outside these synthetic results. Outbound messaging and non-idempotent tools stay outside H1.5: after an ambiguous external effect, H2 must reconcile the target before authorizing another attempt. A task/run key cannot make an external action exactly once. Coding dispatch stays disabled, and H1.6 introduces messaging.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sources"><a class="anchor" href="#_sources"></a>Sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Context7 returned a monthly quota error. The exact pinned <code>gateway/run_startup.py</code>, <code>gateway/systemd_notify.py</code>, <code>gateway/kanban_watchers.py</code>, <code>hermes_cli/kanban_db_dispatch.py</code> and <code>cron/quota_hold.py</code> were inspected. The VPS uses systemd 259; the <a href="https://github.com/systemd/systemd/blob/v259/man/systemd.service.xml">service</a> and <a href="https://github.com/systemd/systemd/blob/v259/man/systemd.exec.xml">execution</a> references describe notification, restart/exit status and filesystem controls. Ansible&#8217;s installed 2.21.5 <code>ansible-doc ansible.builtin.systemd_service</code> supplies the controller-version reference.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local development · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Local development</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status: H0.5, verified locally on 2026-10-25. The foundation requires a POSIX shell, Git 2.28+ (<code>git init -b</code>) and <code>sha256sum</code>. Configuration validation needs Python 3.12+, system IANA time-zone data and hash-pinned Python dependencies. The complete check workflow also needs Node.js/npm and pinned Linux check binaries; see <a href="documentation.html" class="xref page">documentation and checks</a>. Optional research reproduction needs Linux and rootless Podman. A VPS and paid API access are unnecessary for local work.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_separate_the_public_project_and_each_instance"><a class="anchor" href="#_separate_the_public_project_and_each_instance"></a>Separate the public project and each instance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use a parent workspace such as <code>project-haven</code> with sibling Git repositories <code>haven</code> and <code>haven-private</code>. The parent is an ordinary directory. Maintained research evidence belongs in <code>haven/research</code>; disposable experiment directories belong under <code>/tmp</code> and are not required for development.</p>
+</div>
+<div class="paragraph">
+<p>Clone the public repository into <code>haven</code>, then follow the setup block in <a href="_attachments/README.md" class="xref attachment">README</a>. It copies only <code>templates/private</code> to a new sibling directory, initializes an independent Git repository and creates <code>config/instance.yaml</code>. It refuses an existing destination. For another instance, use a different new directory name.</p>
+</div>
+<div class="paragraph">
+<p>The copied template contains README, agent rules, ignore rules, a versioned YAML example and directories for personal instructions, runbooks and future encrypted secrets. Edit the copy. Keep the public example synthetic. The validator reads private files only when explicitly named; no Git submodule or private dependency is required.</p>
+</div>
+<div class="paragraph">
+<p>Follow <a href="configuration.html" class="xref page">configuration v1</a> to install dependencies, validate the example or your private configuration, and apply explicit overrides. The file is Haven input, not native Hermes configuration. <a href="h1.4-model-configuration.html" class="xref page">H1.4</a> supplies the separate subscription-provider renderer and explicit live preparation/probes. Public checks use synthetic inputs and never contact the host or model provider. Validation never needs real credentials.</p>
+</div>
+<div class="paragraph">
+<p>The local private workspace was migrated from the unchanged H0.2 example to configuration v1. That initial migration used synthetic values; real installations subsequently maintain their own private configuration. The public template remains the source for creating another user&#8217;s workspace; changes to an existing private instance must be intentional and must not overwrite personal edits.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_work_on_a_change"><a class="anchor" href="#_work_on_a_change"></a>Work on a change</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use a focused local branch once project history exists. Review public/private boundaries, update the relevant guide and run checks appropriate to the change:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">git diff --check
+git status --short
+(cd research/h0.1 &amp;&amp; sha256sum -c SHA256SUMS)
+.venv/bin/python scripts/validate_config.py examples/instance.yaml
+.venv/bin/python -m unittest discover -s tests -v</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The checksum manifest covers the retained H0.1 report, pins, patch, MIT notice, probes and sanitized evidence. It detects accidental changes; it is not a signature. The behavior suite checks configuration and public documentation boundaries; it does not run Hermes or paid services. After installing the <a href="documentation.html" class="xref page">H0.4 check tools</a>, run <code>.venv/bin/python -m scripts.check</code> for the full local/CI workflow. The first GitHub run was attempted; automatic local push checks replace unavailable Actions, recorded in <a href="h1.1-publication.html" class="xref page">H1.1</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_primary_branch_and_merge_policy"><a class="anchor" href="#_primary_branch_and_merge_policy"></a>Primary branch and merge policy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The default branch is <code>main</code>; the repository has not been renamed to <code>master</code>. The active <a href="https://github.com/ondrejkrpec/haven/rules/25829239">owner-only ruleset</a> restricts creation, updates and deletion of the default branch, <code>main</code> and <code>master</code>. Its only bypass actor is user <code>ondrejkrpec</code> (GitHub user ID <code>8884243</code>), with no role-wide, team or application exception. This also prevents another writer from merging pull requests into those branches.</p>
+</div>
+<div class="paragraph">
+<p>The owner can push directly or merge reviewed changes. Coding agents, including Codex or a future Nora integration, may merge pull requests through the owner account within work authorized by the owner. Prepare changes on topic branches, validate against the current target branch and confirm that the PR head still matches the checked revision before merging. A GitHub API or web merge does not invoke a local pre-push hook, so the merging agent must perform those checks explicitly. Direct primary-branch commits or pushes by an agent need an explicit owner request. This policy does not grant general production autonomy.</p>
+</div>
+<div class="paragraph">
+<p>The server rule controls the authenticated GitHub actor, not a commit&#8217;s author field. The owner account already permits both human and delegated-agent merges; no additional bypass role, bot account or application is needed for that identity. Future Nora credential delivery remains implementation work. Lower-trust coding executors must not receive the owner&#8217;s credentials; keep any delegated merge operation on the trusted side of the controller/executor boundary.</p>
+</div>
+<div class="paragraph">
+<p>This server-side access rule is independent of GitHub Actions and complements the local pre-push checks. It was read back from the ruleset API and the effective rules for <code>main</code> on 2026-10-25. The only repository collaborator at verification was the owner. See GitHub&#8217;s <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets">restriction semantics</a> and <a href="https://github.blog/changelog/2026-05-07-repository-rulesets-user-bypass-and-branch-renaming/">individual-user bypass support</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_optional_h0_1_reproduction"><a class="anchor" href="#_optional_h0_1_reproduction"></a>Optional H0.1 reproduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The complete historical procedure and its limitations are in <a href="research/h0.1/README.html" class="xref page">the research report</a>. It builds Hermes through its own pinned package manager and uses the upstream test runner. This can download substantial dependencies and images; it is separate from foundation setup.</p>
+</div>
+<div class="paragraph">
+<p>Never reuse an active Hermes home, runtime or Podman store for an experiment. Do not supply real credentials. The report uses disposable paths and synthetic provider responses. Rootless probes still execute container processes; they do not establish production security on Ubuntu.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_github_and_publication"><a class="anchor" href="#_github_and_publication"></a>GitHub and publication</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The project and instance repositories use <code>main</code>, have real commits and track their GitHub remotes. The public README clone command is usable; the instance remote is private. H0.2 acceptance uses a disposable snapshot repository to exercise a real clone without committing the owner&#8217;s working repositories.</p>
+</div>
+<div class="paragraph">
+<p><a href="h0.2-acceptance.html" class="xref page">H0.2 acceptance</a> records the initial local check; <a href="h0.5-acceptance.html" class="xref page">H0.5 acceptance</a> verifies the complete foundation from a fresh clone and newly installed dependencies. Neither fixture establishes a published project revision.</p>
+</div>
+<div class="paragraph">
+<p>H1.1 verified the names and created public <code>ondrejkrpec/haven</code> and private <code>ondrejkrpec/haven-private</code>. The owner selected MIT; retain the root license and independent upstream notices. Keep the instance repository private. For future publication changes, review the exact files and stay within the user&#8217;s commit/push authorization.</p>
+</div>
+<div class="paragraph">
+<p><a href="h1.1-publication.html" class="xref page">H1.1 publication</a> records the current remote/CI status; earlier acceptance reports retain their historical scope.</p>
+</div>
+<div class="paragraph">
+<p>Git behavior follows the official <a href="https://git-scm.com/docs/git-init">init</a>, <a href="https://git-scm.com/docs/git-clone">clone</a> and <a href="https://git-scm.com/docs/gitignore">ignore</a> references. Context7 was unavailable because its monthly quota was exhausted; Git 2.55.0 was available for local verification.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

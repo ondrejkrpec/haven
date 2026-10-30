@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.3: VPS access and security · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.3: VPS access and security</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status on 2026-10-28: administrator key access, a root-only configuration backup, the restricted service account, key-only SSH and UFW were applied and verified on Ubuntu 26.04 LTS x86_64. A live rollback restored the original SSH/UFW configuration; the security settings were then reapplied and checked again. Subsequent <a href="h1.3-private-access.html" class="xref page">private administration</a> and <a href="h1.3-bootstrap.html" class="xref page">bounded automation and restart</a> are verified separately. Hermes compatibility and application deployment remain unverified.</p>
+</div>
+<div class="paragraph">
+<p>Actual host addresses, fingerprints, package versions and inspection results belong in the instance&#8217;s private runbook. Public examples below use a synthetic hostname. Keep passwords, private keys and SSH-agent state outside both repositories.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_confirm_the_delivered_host"><a class="anchor" href="#_confirm_the_delivered_host"></a>Confirm the delivered host</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Obtain the hostname, IPv4/IPv6 addresses and initial username from the provider. Verify DNS against those addresses. OVH&#8217;s initial Ubuntu account is normally <code>ubuntu</code>; use the name in the delivery email. A hostname ending in a country suffix does not establish the datacentre or billing region.</p>
+</div>
+<div class="paragraph">
+<p>Compare the server&#8217;s SSH host-key fingerprint with an independently obtained value where possible. The provider console can display the ED25519 fingerprint:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>ssh-keyscan</code> obtains the key presented over the network; it does not independently authenticate the server. Do not disable host-key checking or replace a recorded key merely because SSH reports a mismatch.</p>
+</div>
+<div class="paragraph">
+<p>From the administrator&#8217;s local computer:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">ssh -o HostKeyAlgorithms=ssh-ed25519 ubuntu@vps.example.invalid</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Enter the initial password directly in the terminal. OVH may require a password change and close the first session afterwards. Reconnect with the new password and inspect <code>/etc/os-release</code>. Record the installed release rather than treating the earlier Ubuntu 24.04 proposal as the actual system.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_install_a_separate_administrator_key"><a class="anchor" href="#_install_a_separate_administrator_key"></a>Install a separate administrator key</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Keep the existing session open. Run these commands in a second terminal on the administrator&#8217;s local computer, not inside the VPS. The key destination must not already exist; if it does, inspect it before choosing another name or reusing it.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">(
+set -eu
+test ! -e ~/.ssh/haven-admin
+test ! -e ~/.ssh/haven-admin.pub
+ssh-keygen -t ed25519 -a 64 -f ~/.ssh/haven-admin -C haven-admin
+ssh-copy-id -i ~/.ssh/haven-admin.pub ubuntu@vps.example.invalid
+ssh-add ~/.ssh/haven-admin
+)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Choose a passphrase when creating the key. <code>ssh-copy-id</code> needs the server-account password; <code>ssh-add</code> needs the local key&#8217;s passphrase. Neither belongs in a chat, command argument or runbook. An agent can use an unlocked local key without receiving its passphrase; do not forward the SSH agent to the server.</p>
+</div>
+<div class="paragraph">
+<p>Test a new connection that cannot fall back to the server password:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">ssh -o IdentitiesOnly=yes \
+    -o PasswordAuthentication=no \
+    -o KbdInteractiveAuthentication=no \
+    -i ~/.ssh/haven-admin ubuntu@vps.example.invalid</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For unattended verification, also require <code>BatchMode=yes</code>, <code>StrictHostKeyChecking=yes</code>, <code>UpdateHostKeys=no</code>, <code>ForwardAgent=no</code>, <code>ForwardX11=no</code> and <code>ClearAllForwardings=yes</code>. A locked key or missing agent should fail rather than prompt for or record credentials. A private-key passphrase prompt is different from a server-password prompt.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_inspect_before_changing_the_host"><a class="anchor" href="#_inspect_before_changing_the_host"></a>Inspect before changing the host</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Run the following on the server and retain a concise private result. These checks do not apply host configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">date -u +%FT%TZ
+cat /etc/os-release
+uname -m
+id
+nproc
+free -h
+df -h /
+lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS
+python3 --version
+systemctl --failed --no-legend --no-pager
+systemctl is-active ssh.service
+ss -lntup
+sudo -n /usr/sbin/sshd -T
+sudo -n ufw status verbose</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Inspect <code>cloud-init status --long</code> separately and record its exit status. Exit code 2 means recoverable errors were reported; inspect them rather than treating the command as either a clean success or a provisioning crash. Do not dump cloud-init user data or full logs into documentation: these can contain credentials. Also check whether the intended service account and Tailscale exist and whether <code>/var/run/reboot-required</code> is present.</p>
+</div>
+<div class="paragraph">
+<p>The first inspected host had no failed systemd units. Cloud-init reported completed provisioning with recoverable deprecation warnings about the provider-supplied password configuration. This did not establish a failed provisioning run, and no cloud-init cleanup or rerun was performed.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_security_baseline"><a class="anchor" href="#_security_baseline"></a>Security baseline</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status: the owner authorized the backup and subsequently the remaining security changes, which were completed on 2026-10-28. The procedure below covers the service account, SSH authentication, UFW and verification/recovery. Review another installation&#8217;s actual state before applying it. Package updates, a reboot and Tailscale enrollment are separate steps.</p>
+</div>
+<div class="sect2">
+<h3 id="_preconditions_and_backup"><a class="anchor" href="#_preconditions_and_backup"></a>Preconditions and backup</h3>
+<div class="paragraph">
+<p>Keep a verified administrator session open and confirm access to the provider recovery console. Inspect the current SSH snippets and UFW rules before changing them. The commands below assume TCP port 22, inactive UFW with no added user rules, IPv6 enabled in UFW and no existing <code>haven</code> account. If the host differs, adapt and review the plan first. Stop on any failed command; these blocks are a reviewed procedure, not an unattended bootstrap script.</p>
+</div>
+<div class="paragraph">
+<p>On the server, verify <code>sudo -n true</code>, <code>sudo -n ufw show added</code>, <code>sudo -n sshd -t</code> and <code>IPV6=yes</code> in <code>/etc/default/ufw</code>. Choose a new root-only backup directory and refuse existing destinations:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo -n test ! -e /root/haven-before-baseline
+sudo -n test ! -e /etc/ssh/sshd_config.d/00-haven.conf
+sudo -n install -d -m 0700 /root/haven-before-baseline
+sudo -n cp -a /etc/ssh /root/haven-before-baseline/ssh
+sudo -n cp -a /etc/ufw /root/haven-before-baseline/ufw
+sudo -n cp -a /etc/default/ufw /root/haven-before-baseline/ufw-default</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The SSH backup includes private host keys. Leave it on the server under root ownership, outside Git and reports. Include <code>/etc/default/ufw</code> as well as <code>/etc/ufw</code>; the defaults file contains settings such as IPv6 handling. This local recovery copy is not an off-site backup.</p>
+</div>
+<div class="paragraph">
+<p>Before relying on the copy, compare source and destination file bytes, directory entries, symlink targets, file types, owners, groups and permission modes. Check the parent backup directory is <code>root:root</code> with mode <code>0700</code>, and verify the administrator cannot traverse it without sudo. A root-owned completion receipt with mode <code>0600</code> can record the UTC time, source paths and checks after they succeed; it must contain no configuration values or key material. If copying or verification fails, leave the incomplete directory unaccepted and choose a new destination after investigation rather than merging into it.</p>
+</div>
+<div class="paragraph">
+<p>The following verifier compares those properties without printing file contents. Use the chosen backup directory in place of the example path. It reads sources and copies without changing them:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo -n python3 - &lt;&lt;'PY'
+import os
+from pathlib import Path
+import stat
+import subprocess
+
+backup = Path('/root/haven-before-baseline')
+
+def verify(source, destination):
+    original, copied = source.lstat(), destination.lstat()
+    def metadata(info):
+        return (stat.S_IFMT(info.st_mode), stat.S_IMODE(info.st_mode),
+                info.st_uid, info.st_gid)
+    assert metadata(original) == metadata(copied), 'Metadata mismatch'
+    if stat.S_ISLNK(original.st_mode):
+        assert os.readlink(source) == os.readlink(destination), 'Symlink mismatch'
+    elif stat.S_ISDIR(original.st_mode):
+        assert {p.name for p in source.iterdir()} == {
+            p.name for p in destination.iterdir()}, 'Tree mismatch'
+        for child in source.iterdir():
+            verify(child, destination / child.name)
+    elif stat.S_ISREG(original.st_mode):
+        subprocess.run(['cmp', '-s', '--', str(source), str(destination)], check=True)
+    else:
+        raise RuntimeError('Unexpected special file in configuration')
+
+for source, relative in [('/etc/ssh', 'ssh'), ('/etc/ufw', 'ufw'),
+                         ('/etc/default/ufw', 'ufw-default')]:
+    verify(Path(source), backup / relative)
+info = backup.stat()
+assert (info.st_uid, info.st_gid, stat.S_IMODE(info.st_mode)) == (0, 0, 0o700)
+print('Backup comparison passed.')
+PY</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The first executed backup passed these checks using <code>cp -a</code> and an inline Python verifier on the server. It changed no active SSH/UFW settings and did not reload services or reboot. Verification of a new administrator connection is recorded separately in the private runbook. Provider recovery-console access and an actual restore exercise are not established by a local copy.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_guard_the_access_change"><a class="anchor" href="#_guard_the_access_change"></a>Guard the access change</h3>
+<div class="paragraph">
+<p>Keep the original SSH transport open throughout the change, and use independent new connections for verification. An existing session alone does not prove that a new login works. The executed procedure kept a local SSH control connection open without forwarding the agent.</p>
+</div>
+<div class="paragraph">
+<p>Before changing access, place the intended SSH snippet&#8217;s exact bytes, shown under SSH authentication below, in the root-only backup as <code>expected-00-haven.conf</code> with mode <code>0600</code>. Create a root-owned <code>rollback-access.sh</code> with mode <code>0700</code> in that backup directory, containing the following. Adapt the backup path to the installation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">#!/bin/sh
+set -eu
+umask 077
+backup=/root/haven-before-baseline
+/usr/sbin/ufw disable
+if test -e /etc/ssh/sshd_config.d/00-haven.conf; then
+    cmp -s "$backup/expected-00-haven.conf" /etc/ssh/sshd_config.d/00-haven.conf
+    rm -- /etc/ssh/sshd_config.d/00-haven.conf
+fi
+cp -a -- "$backup/ufw/." /etc/ufw/
+cp -a -- "$backup/ufw-default" /etc/default/ufw
+/usr/sbin/sshd -t
+/usr/bin/systemctl reload ssh.service
+/usr/bin/date -u +%FT%TZ &gt; "$backup/ACCESS_ROLLBACK_LAST_SUCCESS.txt"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The content comparison prevents this script from deleting a subsequently modified SSH snippet. It is designed for the inspected initial state: UFW inactive and no pre-existing Haven snippet. It does not overwrite SSH host keys or delete the service account&#8217;s data. Validate the script and arm a root systemd timer before applying access changes:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo -n /bin/sh -n /root/haven-before-baseline/rollback-access.sh
+sudo -n systemd-run --unit=haven-h1.3-rollback --on-active=15m \
+    --timer-property=AccuracySec=1s --property=Type=oneshot \
+    /bin/sh /root/haven-before-baseline/rollback-access.sh
+sudo -n systemctl is-active haven-h1.3-rollback.timer</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The timer runs on the host even if the administrator&#8217;s connection is lost. Verify it is active. If more time is required, restart the timer while access still works. Stop it only after final independent connection checks; otherwise it will intentionally undo the access changes. This transient timer is not a substitute for provider-console access or reboot recovery.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_service_account"><a class="anchor" href="#_service_account"></a>Service account</h3>
+<div class="paragraph">
+<p>After confirming the account does not exist, create a system identity without an interactive shell:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo -n adduser --system --group --home /var/lib/haven \
+    --shell /usr/sbin/nologin haven
+id haven
+sudo -n passwd -S haven
+sudo -n -l -U haven</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Verify a locked password, the <code>nologin</code> shell and no sudo or administrator-group membership. The inspected account&#8217;s home was owned by its own user/group with mode <code>0750</code>. Inspect the actual sudo policy text: <code>sudo -l -U haven</code> returned status 0 even while reporting that the user was not allowed to run sudo. Do not treat that listing&#8217;s exit status as proof of privilege. Also verify an actual attempt such as <code>sudo -n -u haven /usr/bin/sudo -n true</code> is denied, and that the service user cannot read the root-only backup. Grant no container socket access. This account is a service identity, not the production executor isolation required in H2.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ssh_authentication"><a class="anchor" href="#_ssh_authentication"></a>SSH authentication</h3>
+<div class="paragraph">
+<p>Create <code>/etc/ssh/sshd_config.d/00-haven.conf</code>, owned by root with mode 0644, containing:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Ubuntu includes the snippets near the start of <code>sshd_config</code>; OpenSSH uses the first obtained value for most settings. A provider&#8217;s <code>50-cloud-init.conf</code> enabling passwords can therefore take precedence over a later <code>60-cloudimg-settings.conf</code> disabling them. Check the actual order and use <code>sshd -T</code> to inspect effective settings; adding another later file may have no effect. Also inspect applicable <code>Match</code> rules using <code>sshd -T -C</code> with the real connection&#8217;s user, client/server addresses, client hostname and server port. Record that connection context privately.</p>
+</div>
+<div class="paragraph">
+<p>Validate with <code>sudo -n /usr/sbin/sshd -t</code> before reloading. If syntax or effective settings are wrong, remove the newly added snippet and stop. Otherwise reload and verify a fresh key-based connection from the local computer before continuing:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo -n systemctl reload ssh.service</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Keep the SSH port and existing authorized keys unchanged. Do not close the original connection while checking the new one.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_firewall"><a class="anchor" href="#_firewall"></a>Firewall</h3>
+<div class="paragraph">
+<p>Allow SSH before enabling UFW. With the inspected IPv6-enabled configuration, verify that UFW reports both IPv4 and IPv6 rules:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo -n ufw allow 22/tcp
+sudo -n ufw default deny incoming
+sudo -n ufw default allow outgoing
+sudo -n ufw --force enable
+sudo -n ufw status verbose</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Check that a new IPv4 SSH connection succeeds. Test IPv6 separately if the administrator&#8217;s network supports it; otherwise record that limitation. Expose no dashboard or application port in this step. Administration still uses public SSH until private access is configured.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h3>
+<div class="paragraph">
+<p>The completed checks covered the following:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>sshd -t</code> passed. Effective settings were checked with <code>sshd -T -C</code> for both the administrator and root connection contexts. Root/password/keyboard-interactive login were disabled, public-key authentication enabled and port 22 retained.</p>
+</li>
+<li>
+<p>Independent IPv4 administrator connections authenticated by key after each SSH/UFW change. No multiplexed existing connection was counted as a fresh-login test.</p>
+</li>
+<li>
+<p>A root public-key connection and an administrator client requesting only password/keyboard-interactive authentication were rejected. No password was supplied during the negative authentication test; the server advertised public-key authentication only.</p>
+</li>
+<li>
+<p>The service account had a locked password, <code>nologin</code>, its own group, no extra administrator membership and no working sudo escalation. Its access to the root-only backup was denied.</p>
+</li>
+<li>
+<p>UFW was active with default incoming deny, outgoing allow and only TCP 22 permitted for IPv4/IPv6. A temporary unprivileged listener on an unallowed high TCP port answered a local loopback check while the external connection timed out. The listener served a fixed marker, read no files and had a two-minute runtime limit; it was stopped after the test. This establishes the observed external reachability result, not an exhaustive audit of all ports or upstream filtering.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The inspection computer had no IPv6 route, so end-to-end IPv6 SSH was not verified. IPv6 UFW rules were present. These checks do not establish full executor isolation, private administration or reboot recovery.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_recovery"><a class="anchor" href="#_recovery"></a>Recovery</h3>
+<div class="paragraph">
+<p>The prepared systemd rollback service was actually started during the verification:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo -n systemctl start haven-h1.3-rollback.service
+sudo -n systemctl show haven-h1.3-rollback.service -p Result -p ExecMainStatus</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It returned <code>Result=success</code> and <code>ExecMainStatus=0</code>. SSH/UFW file contents, trees, ownership and modes matched the original backup afterwards, UFW was inactive and a new key-based connection succeeded. The locked service account remained in place. The timer was restarted, SSH/UFW hardening reapplied, and the connection, authentication and firewall checks repeated before stopping the timer:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo -n systemctl stop haven-h1.3-rollback.timer</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Confirm the timer and any temporary probe listener are no longer active. Record a root-only completion receipt without credentials. On the inspected installation, both temporary facilities were stopped after the final successful checks; the recovery script and original backup remain available.</p>
+</div>
+<div class="paragraph">
+<p>For emergency manual access recovery from the same initially inactive UFW and absent Haven snippet, use the still-open administrator session or provider console:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo ufw disable
+sudo rm /etc/ssh/sshd_config.d/00-haven.conf
+sudo /usr/sbin/sshd -t
+sudo systemctl reload ssh.service</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Disabling UFW leaves its stored rules on disk. For exact restoration, the tested rollback script also restores <code>/etc/ufw</code> and <code>/etc/default/ufw</code> from the root-only backup. Review concurrent edits before restoring files. Restore any other changed SSH file selectively from the backup. Do not automatically delete the service account&#8217;s home or data during access recovery. Record executed commands, verification results and deviations in the private runbook.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_lost_administrator_key"><a class="anchor" href="#_lost_administrator_key"></a>Lost administrator key</h3>
+<div class="paragraph">
+<p>Disabling password authentication in SSH does not disable the administrator&#8217;s local account password. With access to the OVH account and a known, usable OS password, the provider&#8217;s browser KVM console offers another login route. KVM still requires OS authentication; it does not bypass a lost password. This route has not been exercised on the inspected installation. See <a href="https://support.us.ovhcloud.com/hc/en-us/articles/360010659300-How-to-use-the-KVM-console-to-access-a-VPS">OVH KVM access</a>.</p>
+</div>
+<div class="paragraph">
+<p>If no usable administrator credential remains, OVH documents a separate rescue OS with temporary access credentials. Booting it interrupts the normal VPS. Identify and mount the installed system&#8217;s actual disk, add a newly generated public key to the installed administrator&#8217;s <code>authorized_keys</code>, preserve ownership/permissions, and return to normal boot. Revoke the old key if loss might involve theft. Rescue has its own SSH host key; verify it separately rather than silently replacing the normal host&#8217;s trusted entry. See <a href="https://docs.ovhcloud.com/en/guides/bare-metal-cloud/virtual-private-servers/rescue">OVH VPS rescue</a> and <a href="https://github.com/ovh/docs/blob/develop/pages/bare_metal_cloud/dedicated_servers/replacing-lost-ssh-key/guide.en-ie.md">OVH key replacement</a>. Rescue recovery is documented, not tested here.</p>
+</div>
+<div class="paragraph">
+<p>Keep OVH account recovery material and an encrypted offline backup or an independently stored recovery key outside the VPS and both repositories. The server&#8217;s configuration backup does not contain the administrator computer&#8217;s private key.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_remaining_host_preparation"><a class="anchor" href="#_remaining_host_preparation"></a>Remaining host preparation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Refresh package metadata, review the upgrade simulation and apply compatible package updates under the owner&#8217;s change policy. Handle the required reboot as a separate controlled step and verify reconnection afterwards. These actions were not performed as part of the security baseline above. For this pilot, the owner explicitly deferred OS upgrades to the later Security/Worker use case; the subsequent controlled restart was accepted separately in <a href="h1.3-bootstrap.html" class="xref page">bootstrap verification</a>.</p>
+</div>
+<div class="paragraph">
+<p>Record any changed file and its recovery command privately. Keep the provider recovery console available. Do not change the SSH port, remove existing authorized keys, enable root access or reboot merely as part of testing the first connection.</p>
+</div>
+<div class="paragraph">
+<p><a href="h1.3-private-access.html" class="xref page">Tailscale private administration</a> needs a separate interactive owner login, policy validation and guarded cutover before removing public SSH. Installing Hermes, model credentials and WhatsApp remain later H1 tickets. A full isolated executor belongs to H2.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_evidence_and_remaining_acceptance"><a class="anchor" href="#_evidence_and_remaining_acceptance"></a>Evidence and remaining acceptance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The initial access check and subsequent manual security procedure used public source revision <code>e2f3ce22596ace80b6bdbf92b21fdfcfb5ce13f5</code> as documentation context; no Haven application release was deployed. Independent SSH checks succeeded with a loaded administrator key and strict host-key checking. The private instance still tracked foundation revision <code>531e8c2bc2c211036b37f23340be76470739fc87</code>; no deployed application/configuration pairing is claimed.</p>
+</div>
+<div class="paragraph">
+<p>The manual security baseline, service-account restrictions and tested access rollback are complete. Subsequent private administration and <a href="h1.3-bootstrap.html" class="xref page">bounded host automation and restart</a> complete H1.3 acceptance for the existing pilot; a clean-OS installation remains untested. The owner deferred OS upgrades to the later Security/Worker use case. These manual checks alone do not establish automation; the linked guide records its exact implementation revision and live acceptance.</p>
+</div>
+<div class="paragraph">
+<p>Sources consulted on 2026-10-28: <a href="https://docs.ovhcloud.com/en/guides/bare-metal-cloud/virtual-private-servers/starting-with-a-vps">OVH initial VPS access</a>, <a href="https://ubuntu.com/server/docs/how-to/security/openssh-server/">Ubuntu OpenSSH</a>, <a href="https://ubuntu.com/server/docs/firewalls/">Ubuntu firewall</a>, <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd-run.html">systemd-run</a> and <a href="https://docs.cloud-init.io/en/latest/explanation/return_codes.html">cloud-init return codes</a>. Context7 had exhausted its monthly quota, so official documentation was used instead; the rollback timer/service was exercised on the installed systemd 259.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

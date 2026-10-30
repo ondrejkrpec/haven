@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.6 WhatsApp text and access rules · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.6 WhatsApp text and access rules</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-10-29: this guide retains the earlier optional Baileys preparation, which passed local synthetic acceptance but was never paired or deployed. Agent Platform was subsequently assessed but is unavailable on the owner&#8217;s account. The selected first integration is now <a href="h1.6-telegram.html" class="xref page">owner-only Telegram</a>; WhatsApp and family sharing are deferred. Do not follow the dedicated-number/pairing procedure below unless the owner chooses Baileys again.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_scope_and_policy"><a class="anchor" href="#_scope_and_policy"></a>Scope and policy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Hermes remains at v0.22.5, commit <code>bf0203a794a07aac3ff764972ab9087baa4e4f4e</code>, with the retained attributed recovery patch. The proposed transport is its built-in WhatsApp platform and Baileys <code>7.0.0-rc13</code> bridge. This emulates WhatsApp Web; it is an unofficial integration and may be restricted by WhatsApp. Confirm this choice with the owner before pairing a dedicated account. The official Cloud API is a different integration and is not enabled by this implementation.</p>
+</div>
+<div class="paragraph">
+<p>The service renderer now accepts <code>whatsapp.enabled: true</code> only with a nonempty E.164 sender list. It translates that list into the native adapter&#8217;s <code>allow_from</code>, sets <code>dm_policy: allowlist</code>, disables all groups, ignores unauthorized DMs, and disables automatic speech transcription. The adapter passes the same policy to the Node bridge. Read receipts and owner-message forwarding are disabled. Reply text uses the <code>Nora</code> prefix.</p>
+</div>
+<div class="paragraph">
+<p>The existing zero-tool, zero-fallback model profile, one concurrent session, no hooks/MCP/third-party plugins, no automatic installs and disabled coding dispatcher remain enforced. WhatsApp slash administration has a separate native gate: only <code>/help</code>, <code>/whoami</code>, <code>/new</code>, <code>/stop</code> and <code>/status</code> are permitted. Native gating is inactive for an empty administrator list, so <code>allow_admin_from</code> contains the deliberately nonnumeric sentinel <code>haven-console-only</code>; it cannot match a WhatsApp phone/LID principal. It grants nobody administrative commands.</p>
+</div>
+<div class="paragraph">
+<p>Model-emitted attachment paths use the native strict media policy with recency trust disabled and no extra allowed directories. This blocks arbitrary host-file uploads, even for newly created files. Native cache attachments keep their upstream handling; full media behavior is not accepted by this milestone.</p>
+</div>
+<div class="paragraph">
+<p>Voice quality belongs to H1.7. This milestone accepts ordinary text replies; it does not establish autonomous outbound work, executor isolation or exactly-once external delivery. Never blindly resend after an ambiguous WhatsApp delivery.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prepare_the_optional_runtime"><a class="anchor" href="#_prepare_the_optional_runtime"></a>Prepare the optional runtime</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use the accepted explicit private inventory and pinned controller dependencies from <a href="h1.3-bootstrap.html" class="xref page">host adoption</a>. Run from a committed source revision that passed the public checks:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml \
+  ops/whatsapp-prepare.yml -e haven_whatsapp_prepare_authorized=true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This prepares <code>/var/lib/haven/whatsapp</code> without pairing or enabling messaging. It explicitly installs Node.js <code>26.12.1</code> and npm <code>12.0.2</code> through the unchanged upstream PM lock into its own <code>tools</code> store, copies the bridge from the existing pinned source and verifies each retained file hash. PM checks the recorded artifact digests. Hermes deliberately ignores Node copies on <code>PATH</code>, so a separately unpacked Node is insufficient. <code>npm ci --ignore-scripts</code> uses the unchanged upstream dependency lock. A separate Python environment is built through upstream PM&#8217;s frozen lock with only the <code>sms</code> extra (<code>aiohttp</code>); the original core environment is retained for rollback. Actual Baileys/Express and Python transport imports must pass before a root-owned read-only preparation receipt is written. No OS packages, firewall, SSH, model credentials or service configuration are changed by preparation.</p>
+</div>
+<div class="paragraph">
+<p>The completed runtime is root-owned and readable by group <code>haven</code>; neither startup nor pairing installs packages. A repeat reuses the preparation receipt. Do not remove that receipt from an active deployment or repair a partial build by running arbitrary npm updates. Inspect the failed fixed path, stop any adapter using it, and rebuild the optional runtime from the same pins. Dependency upgrades require their own checked change.</p>
+</div>
+<div class="paragraph">
+<p>Deploy the updated service guard first with the current <strong>disabled</strong> WhatsApp input, using <a href="h1.5-service-recovery.html" class="xref page">the service deployment procedure</a>. This installs <code>scripts.whatsapp_runtime</code> and its public pins under the root-owned Haven tools directory while preserving the H1.5 profile. The application snapshot now also covers those two fixed files; it still excludes account and session state.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_owner_only_pairing"><a class="anchor" href="#_owner_only_pairing"></a>Owner-only pairing</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The owner registers a dedicated number in WhatsApp/WhatsApp Business and opens its linked-device screen. Keep the messaging platform disabled during pairing. From the owner&#8217;s own terminal, outside agent tool output or recorded logs:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">ssh -t haven-example 'sudo -H -u haven env \
+  HERMES_HOME=/var/lib/haven/.hermes \
+  PYTHONPATH=/var/lib/haven/haven-tools \
+  /var/lib/haven/whatsapp/venv/bin/python -m scripts.whatsapp_runtime pair'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Scan the QR from the dedicated account&#8217;s <strong>Settings &#8594; Linked Devices &#8594; Link a Device</strong>. The helper requires a terminal, the fixed service identity/profile, verified dependencies and a disabled platform. It invokes the pinned bridge directly in <code>--pair-only --mode bot</code>; no gateway, HTTP listener or inbound model call starts in this mode. Unlike the upstream general wizard, this flow writes no <code>.env</code> or enable flag and uses the same explicit session directory as the service. Do not paste, screenshot, save or commit the QR.</p>
+</div>
+<div class="paragraph">
+<p>The session directory is <code>/var/lib/haven/.hermes/platforms/whatsapp/session</code>, with directories <code>0700</code> and files <code>0600</code>, owned by <code>haven</code>. Checks inspect metadata without reading credential contents. An existing <code>creds.json</code> is never removed or silently replaced by the helper. A failed or partial pairing needs operator review before another attempt; do not delete a potentially live linked identity blindly. To revoke access, unlink the device on the dedicated account&#8217;s phone, then disable the native platform and review its private state.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_activate_and_accept"><a class="anchor" href="#_activate_and_accept"></a>Activate and accept</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the explicitly named private instance, set <code>whatsapp.enabled: true</code> and place the owner&#8217;s sending account in <code>whatsapp.allowed_senders</code> using E.164 syntax. The sending account differs from the dedicated bot account. Phone numbers stay in private configuration and never enter public examples or test receipts.</p>
+</div>
+<div class="paragraph">
+<p>Render a fresh protected profile and deploy it through the existing snapshot/rescue flow:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">umask 077
+whatsapp_config_dir=$(mktemp -d)
+.venv/bin/python -m scripts.render_model ../haven-private/config/instance.yaml \
+  --service --output "$whatsapp_config_dir/config.yaml"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/service.yml \
+  -e haven_service_authorized=true \
+  -e "haven_model_config=$whatsapp_config_dir/config.yaml"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The unit selects the separate SMS environment only for an enabled WhatsApp profile. Its guarded launcher also selects the prepared PM store without modifying the original core store. Before starting, the guard checks the entire policy, exact bridge and PM lock hashes, PM-selected Node/npm versions and paths, dependency stamp and private paired-session metadata. It strips inherited WhatsApp/gateway/Node policy overrides and sets bot mode without <code>.env</code>. Readiness requires the existing live gateway/heartbeat plus a connected bridge reporting the expected session path. Failure restores the previous application snapshot. The bridge listens only on <code>127.0.0.1:3000</code>; no public or tailnet port is published.</p>
+</div>
+<div class="paragraph">
+<p>Complete the following live checks before calling H1.6 accepted:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The owner sends a bounded text request and receives the intended reply. Check the native tool count and lack of fallback without exporting message contents or account identifiers.</p>
+</li>
+<li>
+<p>A consenting sender outside the allowlist receives no reply and creates no gateway/model turn while the bridge remains connected. The owner can cover both roles: temporarily replace the personal sender with the dedicated bot account&#8217;s own number in a protected test override, send from the now-excluded personal account, then restore the accepted profile and confirm another permitted reply. Restore even if the negative check fails. This needs no third account. Report the live check as unverified if it cannot be performed; synthetic denial is separate evidence.</p>
+</li>
+<li>
+<p>Administrative slash commands are denied to an allowed chat sender, while the permitted chat commands work.</p>
+</li>
+<li>
+<p>Restart the service, confirm the session persists and send another text request. Repeat the preparation/deployment without effective changes.</p>
+</li>
+<li>
+<p>If an owner-authorized host reboot is performed, verify a fresh private connection, automatic coordinator/bridge recovery and another reply without re-pairing. H1.5&#8217;s previous reboot is not evidence for a newly linked account.</p>
+</li>
+<li>
+<p>Verify session permissions, loopback bind and absence of QR/session material in Git. Remove protected rendered configuration after acceptance.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To disable messaging, render/deploy the private input with <code>whatsapp.enabled: false</code>. This returns the unit to the retained core Python environment and stops the managed bridge; it does not revoke the linked device or delete session state. Application rollback similarly leaves sessions and OAuth untouched. Off-site encrypted session backup and restoration belong to H1.9; never activate two copies of the same restored session.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verification_so_far"><a class="anchor" href="#_verification_so_far"></a>Verification so far</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The local pinned upstream selection passed 63 tests with three Windows-only skips, covering allowlist/LID handling, group gating, connection failures, native delivery, bridge ownership/recovery, text batching and slash dispatch. Five additional acceptance tests consume Haven&#8217;s actual renderer through Hermes&#8217;s native loader and adapter. They verify the bridge policy, early DM/group denial, restricted slash commands, empty native gateway toolsets and refusal of arbitrary fresh host-file attachments. No real account or provider is contacted by these tests.</p>
+</div>
+<div class="paragraph">
+<p>Reproduce the extra policy tests from the pinned upstream checkout using <code>scripts/run_tests.sh -j 1 /absolute/path/to/haven/research/h1.6/test_native_policy.py --file-timeout 90</code>, with <code>HERMES_PYTHON</code> pointing to the separately prepared frozen test environment and <code>HERMES_TEST_FILE_RETRIES=0</code>. The runner needs its normal writable per-user scratch directory under <code>/var/tmp</code>; a filesystem sandbox that denies that path stops before collection and is not a test result.</p>
+</div>
+<div class="paragraph">
+<p>The PM-selected Node version imports Baileys and Express after frozen installation through its selected npm, with lifecycle scripts disabled. The actual <code>find_node_executable</code> resolves this prepared binary, so the check covers Hermes discovery as well as a direct Node invocation. Five upstream JavaScript test files pass (allowlist, native payload helpers, reconnection, outbound IDs and owner-message gating). Public behavior tests cover access/capability expansion, launch-environment overrides, PM binding, private session metadata, terminal-only pairing and fixed secret-free failure messages. Live pairing, replies and persistence remain pending.</p>
+</div>
+<div class="paragraph">
+<p>The PM-pinned official Node binary also reports <code>v26.12.1</code> when executed on the existing Ubuntu pilot from a disposable directory; its dynamic libraries resolve without installing OS packages. That diagnostic directory was removed immediately. It does not establish a deployed bridge or linked account.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sources"><a class="anchor" href="#_sources"></a>Sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Context7 returned a monthly quota error. The exact pinned <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/messaging/whatsapp.md">upstream WhatsApp guide</a>, <code>plugins/platforms/whatsapp</code>, <code>gateway/slash_access.py</code> and <code>scripts/whatsapp-bridge</code> were inspected. Node comes from the official <a href="https://nodejs.org/dist/v26.12.1/SHASUMS256.txt">26.12.1 checksums</a>; the <a href="https://nodejs.org/en/blog">release listing</a> was checked on 2026-10-29. This is a new optional application dependency, not an upgrade of the pilot&#8217;s OS packages or Hermes candidate.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

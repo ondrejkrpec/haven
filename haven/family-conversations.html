@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Personal conversations and a shared family space · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Personal conversations and a shared family space</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-10-29: retained future product direction. The owner confirmed that Agent Platform is unavailable on their account and selected <a href="h1.6-telegram.html" class="xref page">Telegram for the first owner-only integration</a>. The second member and family service are deferred. The constraints below apply before any future family activation; they are not implemented by the initial Telegram pilot. <a href="adr/0007-telegram-first.html" class="xref page">ADR 0007</a> records the revised first milestone.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_two_personal_entry_points"><a class="anchor" href="#_two_personal_entry_points"></a>Two personal entry points</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Each member creates a personal agent under their own existing WhatsApp account. Each connection has its own API key, verified creator identity, polling cursor and conversation state. Meta currently lets an agent reply only to its creator; outgoing notifications must therefore use the intended member&#8217;s own connection. Agent Platform provides no native WhatsApp group.</p>
+</div>
+<div class="paragraph">
+<p>The same logical Nora can serve both entry points. Shared identity and operating rules do not imply shared transcripts. Separate Hermes profiles carry separate native state, but profiles alone are not an authorization boundary. Never run two writers against one Hermes home/database or copy one member&#8217;s credential store into another profile.</p>
+</div>
+<div class="paragraph">
+<p>The initial family design does not relay private chat messages between members. A later explicit family-chat mode would need separate acceptance. Both users would still see their individual agent chat in WhatsApp.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_data_ownership"><a class="anchor" href="#_data_ownership"></a>Data ownership</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Data</th>
+<th class="tableblock halign-left valign-top">Who can access it</th>
+<th class="tableblock halign-left valign-top">How it becomes shared</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Personal conversation and personal notes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The authenticated member who owns them</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A separate explicit sharing action; membership alone grants no access.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Family shopping items, tasks and notes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The approved members of that family</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The user explicitly creates the object in the family space.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Account keys, provider authentication, polling state and operational logs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The responsible runtime/operator</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">They are never family content or model-visible shared memory.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Other application data, including personal vaults and calendars</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only separately authorized integrations</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Selecting the family design does not connect them or grant access.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>For example, one member can add milk to a family shopping list and the other can read that list through their own Nora chat. A private work discussion stays in its owner&#8217;s conversation. These are acceptance scenarios for future implementation, not working shopping/calendar integrations.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_enforcement_required_before_activation"><a class="anchor" href="#_enforcement_required_before_activation"></a>Enforcement required before activation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The runtime binds each connection to the creator identity verified through Meta. Display names, user-written names and model output cannot select the caller or grant permissions. Message/run identifiers must include the connection identity so equal external message IDs from different agents cannot collide.</p>
+</div>
+<div class="paragraph">
+<p>A narrow data service must check caller, family membership, object ownership and action on every operation. It returns only authorized records to the model. Sharing is an explicit authenticated user action; the model can propose it but cannot promote a private record to family visibility by itself. Unknown or inconsistent identities fail closed. Updates need atomic conflict handling and replay protection.</p>
+</div>
+<div class="paragraph">
+<p>Access also needs enforcement on file/media/tool paths so a caller cannot bypass the data service to read another member&#8217;s home or cached attachments. Until that is implemented and tested, separate profiles establish routing/state separation only. The text pilot keeps broad tools, coding dispatch, arbitrary attachments and external integrations disabled. New transport keys must have an explicit empty native toolset; an unknown platform must never inherit Hermes&#8217;s default tools.</p>
+</div>
+<div class="paragraph">
+<p>Notifications require an authorized event and an explicit recipient set. Deliver separately through each recipient&#8217;s own agent, with independent status and uncertainty handling. An ambiguous external send is reconciled before retrying; a shared notification is not an exactly-once transaction across two WhatsApp chats.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_agent_platform_availability_gate"><a class="anchor" href="#_agent_platform_availability_gate"></a>Agent Platform availability gate</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Meta&#8217;s developer manual specifies <code>WhatsApp &#8594; Settings &#8594; Agents &#8594; Create an agent</code>. Each intended member must have this feature available on their own account. Meta says availability is limited by account/country. The pilot owner&#8217;s iPhone availability is currently unconfirmed; a missing menu is not a Haven configuration error and cannot be enabled from the VPS. Do not buy a second number or treat a general WhatsApp Business AI menu as proof of Agent Platform eligibility.</p>
+</div>
+<div class="paragraph">
+<p>Once an account is eligible, the owner creates the agent and stores its API key privately through the agreed terminal/credential flow. Do not send keys through chat or Git. Agent chats are not end-to-end encrypted according to Meta. If the feature is unavailable, keep the selected personal/family data model and choose a different available transport with the owner.</p>
+</div>
+<div class="paragraph">
+<p>The pinned catalog contains community <code>whatsapp-agent-platform</code> v0.2.0 at <code>4d8fc1c482ed06a34b6609b1dcdf59e370de7d40</code>, compatible by declaration with Hermes &gt;=0.21.4. Its adapter has a key per connection and separate polling state. This does not make it a complete multi-user family application. The current Haven guard refuses third-party plugins, multiplexing and <code>.env</code>; installing the upstream wizard into production would conflict with that guard. A reviewed contract and credential/deployment path must be added first.</p>
+</div>
+<div class="paragraph">
+<p>The <a href="h1.6-agent-platform-assessment.html" class="xref page">local assessment</a> passed 137 connector tests and three additional scoped two-connection scenarios against the exact Hermes candidate using mocked API responses. It does not establish live account access, gateway-level user routing, two deployed connections or the family authorization boundary.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_acceptance_order"><a class="anchor" href="#_acceptance_order"></a>Acceptance order</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Confirm Agent Platform availability on the first account, then the second.</p>
+</li>
+<li>
+<p>Review the exact plugin against pinned Hermes, using synthetic API responses and disposable profiles. Verify distinct credentials, creator checks, replies, cursors, deduplication and duplicate-poller refusal.</p>
+</li>
+<li>
+<p>Implement the bounded runtime/credential contract and accept one live personal text conversation, including restart recovery.</p>
+</li>
+<li>
+<p>Accept the second independent connection. Verify that each reply and notification reaches only the intended creator and that private state is not returned to the other member.</p>
+</li>
+<li>
+<p>Implement the first narrow shared family objects. Verify cross-member access to shared objects, denial of private/foreign objects, explicit sharing, conflicting updates and replay handling before enabling model-driven use.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Speech remains H1.7 work. Coding executors and wider controller/executor authorization remain H2. Off-site backup/restore remains H1.9. Neither a passing mocked plugin test nor an accepted product design proves live WhatsApp access or privacy enforcement.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sources"><a class="anchor" href="#_sources"></a>Sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The official <a href="https://www.whatsapp.com/developer/WhatsApp-Agent-Platform-Developer-Manual.pdf">Agent Platform manual</a> (version 1, dated 2026-08-25) was downloaded and inspected on 2026-10-29. The <a href="https://faq.whatsapp.com/1050934623978152">WhatsApp availability and privacy help</a> and the <a href="https://github.com/ahtishamdilawar/hermes-whatsapp-agent-platform/blob/4d8fc1c482ed06a34b6609b1dcdf59e370de7d40/README.md">pinned plugin README/source</a> describe creator-only access, separate tokens and platform limits. Hermes&#8217;s <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/profiles.md">pinned profiles guide</a> warns against sharing one home between writers. Context7 remains unavailable because its monthly quota is exhausted.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

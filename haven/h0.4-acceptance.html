@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H0.4 documentation and check acceptance · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H0.4 documentation and check acceptance</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Historical acceptance record from before GitHub publication. Current repository, licensing and CI status is in <a href="h1.1-publication.html" class="xref page">H1.1</a>.</p>
+</div>
+<div class="paragraph">
+<p>Verified locally on 2026-10-25 on Manjaro Linux x86_64. H0.4 is implemented locally: Antora generation, the public check entry point and the GitHub Actions definition. No remote, hosted site, live credentials or deployed Haven service were used.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_tools_and_procedure"><a class="anchor" href="#_tools_and_procedure"></a>Tools and procedure</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Tool</th>
+<th class="tableblock halign-left valign-top">Verified version or pin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Python</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.14.7 and 3.12.14</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Node.js</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">26.7.0 and 24.22.1; the 24.22.1 official Linux archive matched its published SHA-256</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Antora CLI and default generator</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.2.1, exact direct dependencies with npm lock integrity</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ruff / yamllint</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.17.2 / 1.38.0, hash-pinned development lock</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gitleaks / actionlint</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8.30.1 / 1.7.12, Linux x86_64 archives verified against checked-in SHA-256 pins</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GitHub Actions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">checkout 7.0.1, setup-python 7.1.0 and setup-node 7.1.0, each resolved to a full release commit</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Install dependencies and binaries as described in <a href="documentation.html" class="xref page">documentation and checks</a>, then run:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.check</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The complete check command passed with Python 3.14.7 / Node.js 26.7.0 and Python 3.12.14 / Node.js 24.22.1. The same 23 behavior tests passed on both Python versions: 16 configuration tests plus seven documentation/export boundary tests. Ruff, strict yamllint, actionlint, both synthetic configuration inputs, secret scanning, all 16 H0.1 manifest entries and documentation/link checks passed.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_public_build_independence"><a class="anchor" href="#_public_build_independence"></a>Public build independence</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A disposable repository under <code>/tmp</code> received only Git-eligible public sources. It had no private sibling. Already verified tools and installed public npm packages were copied as ignored dependencies; this was a build/check-input test, not a fresh dependency-install or full H0.5 clean-clone acceptance. The complete check command passed using Python 3.12 and Node.js 24.</p>
+</div>
+<div class="paragraph">
+<p>The site contains 11 documentation pages plus the generated root redirect, a local CSS/Handlebars UI and explicitly declared public attachments. Source paths and H0.1 evidence bytes remain unchanged. The exporter creates an unborn temporary source repository and removes it after generation; no fixture commit is needed for Antora. A separate disposable Git index checked all new source files for whitespace errors. Working repository indexes were not modified.</p>
+</div>
+<div class="paragraph">
+<p>The maintained tests reject symlinks to private inputs, links escaping the public root, missing or undeclared targets and include indirection. Synthetic private-sibling and ignored-source markers are absent from exported files. The generated-link checker rejects missing files, missing HTML fragments and paths escaping the site. A separate invocation with an invalid Antora navigation reference exited unsuccessfully, verifying the warning failure threshold.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_secret_scan_and_presentation_checks"><a class="anchor" href="#_secret_scan_and_presentation_checks"></a>Secret scan and presentation checks</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The public candidate-file scan reported no findings. The working repository has no commits, so its history scan was explicitly skipped. A separate disposable repository was given a generated synthetic token, then another commit removed it. Gitleaks rejected both the current-file fixture and the deleted-history fixture with exit status <code>1</code>; the full token did not appear in either output stream. Those fixture commits were outside the working repositories. No broad allowlist, ignored-rule baseline or inline allowance was added.</p>
+</div>
+<div class="paragraph">
+<p>Firefox rendered the generated site with isolated temporary profiles at desktop and narrow window widths; the resulting screenshots were inspected. Navigation, headings and content rendered, with the narrow layout stacking navigation above the article. Browser artifacts stayed under <code>/tmp</code>. External website availability and a full accessibility audit are outside these checks.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_remaining_acceptance"><a class="anchor" href="#_remaining_acceptance"></a>Remaining acceptance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>GitHub Actions was checked locally with actionlint; it has not run on GitHub because no remote has been created or pushed. The workflow fetches full history and invokes the same public check command with read-only repository permissions and no private inputs. Local success is not an actual GitHub run.</p>
+</div>
+<div class="paragraph">
+<p>Hosting and private documentation delivery remain future work. Before publication, the owner must choose Haven&#8217;s license and verify repository names. H0.5 must still repeat the documented setup from a clean checkout and record the handoff to <a href="h1-prerequisites.html" class="xref page">H1</a>.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

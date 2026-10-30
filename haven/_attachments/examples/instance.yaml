@@ -1,0 +1,13 @@
+# Synthetic configuration for validation, not a working service deployment.
+schema_version: 1
+telegram:
+  enabled: false
+instance:
+  name: example
+host:
+  address: vps.example.invalid
+model:
+  provider: openai-codex
+  name: example-model
+  # Optional reference only; validation never reads this variable or a secret file.
+  # credential_ref: env:HAVEN_MODEL_API_KEY

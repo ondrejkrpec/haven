@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1 prerequisites and acceptance · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1 prerequisites and acceptance</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>H1 is in progress: publication is accepted, and <a href="h1.3-first-access.html" class="xref page">administrator key access, the manual security baseline and configuration rollback</a> were verified on Ubuntu 26.04 LTS on 2026-10-28. <a href="h1.3-private-access.html" class="xref page">Tailscale private IPv4/IPv6 SSH, public-SSH cutover and narrow access fallback</a> are verified. <a href="h1.3-bootstrap.html" class="xref page">Bounded Ansible adoption, repeatability, access-file restoration and a controlled restart</a> are also verified for the existing pilot. <a href="h1.4-model-configuration.html" class="xref page">Native configuration, independent subscription login and one Hermes model request</a> are verified. <a href="h1.5-service-recovery.html" class="xref page">The bounded coordinator, native worker user bus, application rollback and restart/reboot recovery</a> are verified. OS updates remain owner-deferred; coding dispatch stays disabled until H2. These are decisions and acceptance checks, not a complete clean-host installation procedure. <a href="research/h0.1/README.html" class="xref page">H0.1 evidence</a> retains its historical local/synthetic scope; WhatsApp remains unverified.</p>
+</div>
+<div class="paragraph">
+<p><a href="h1.6-telegram.html" class="xref page">H1.6 owner-only Telegram text</a> is accepted on the existing pilot: private enrollment, owner replies, denied-sender intake, blocked remote administration and enabled-service restart recovery are verified. The owner deferred WhatsApp, the second member and family sharing after confirming Agent Platform is unavailable on their account. The earlier Baileys/Agent Platform work remains inactive.</p>
+</div>
+<div class="paragraph">
+<p>The owner subsequently selected <a href="h1.6.1-capabilities.html" class="xref page">H1.6.1 deterministic operations</a> instead of ordinary AI chat. This profile is accepted with verified application rollback, idempotent repeat, restart and native execution guards. Four real owner messages produced two expected replies and two refusals without additional model calls or conversation rows; a live status reply after restart confirms transport recovery.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_h0_handoff"><a class="anchor" href="#_h0_handoff"></a>H0 handoff</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="h0.5-acceptance.html" class="xref page">H0.5 acceptance</a> establishes the local foundation from a clean public clone with freshly installed dependencies. Configuration validation, instance creation and public documentation/checks work without the original private repository. The synthetic model and host are not deployment inputs, and the tested fixture commit is not a real Haven release.</p>
+</div>
+<div class="paragraph">
+<p>Before reproducible deployment, establish the intended public-source revision and matching private configuration within the owner&#8217;s commit/remote authorization. Real source commits and separate public/private GitHub remotes now exist. The owner selected MIT; authenticated repository-name checks and publication are recorded in <a href="h1.1-publication.html" class="xref page">H1.1</a>; automatic local push checks replace unavailable GitHub Actions with the owner&#8217;s agreement. These are distinct from the host/account acceptance below.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_owner_choices_before_provisioning"><a class="anchor" href="#_owner_choices_before_provisioning"></a>Owner choices before provisioning</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Select a VPS and region within the agreed infrastructure budget. The first delivered host runs Ubuntu 26.04 LTS rather than the earlier 24.04 proposal. The pinned core/service is verified on this existing pilot; clean-host installation, broader integrations and the actual billing region still require verification.</p>
+</li>
+<li>
+<p>Select an off-site backup destination, retention policy and recovery-key storage. Git does not back up sessions or databases.</p>
+</li>
+<li>
+<p>Create the first Telegram bot through official BotFather and complete private token/owner enrollment. Do not obtain a dedicated WhatsApp number for this pilot. A later WhatsApp migration depends on actual eligibility then.</p>
+</li>
+<li>
+<p>Select actual model identifiers and confirm authentication eligibility. The public model and hostname are placeholders. H1.4 verified the pilot&#8217;s selected model through live discovery and a native request; a subscription alone does not prove other integrations are supported.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_technical_work_and_evidence_required"><a class="anchor" href="#_technical_work_and_evidence_required"></a>Technical work and evidence required</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Area</th>
+<th class="tableblock halign-left valign-top">Acceptance to establish in H1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Host</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Document admin access, updates, firewall and service account; restrict internal services through the selected private access mechanism.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hermes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Install the exact candidate and patch, translate Haven configuration to native inputs, supervise with systemd and survive a restart.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Credentials</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resolve references only for authorized services, reject missing credentials, and protect OAuth/WhatsApp runtime state outside Git.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Messaging and family access</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enroll eligible accounts privately, bind each connection to its verified owner, and test replies/restart recovery and negative cross-user access. Accept shared objects only after ownership/membership checks pass. Measure Czech voice quality and latency separately in H1.7.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recovery</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exercise quota deferral/resumption and distinguish transient quota limits from revoked authentication; deterministic recovery must work without Nora&#8217;s model.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Backup</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restore the necessary configuration and runtime state on a clean target. Prevent a second simultaneously active WhatsApp session.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Documentation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Record the actually verified setup, interactive steps and recovery procedure without credentials, QR codes or session data.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Tailscale private administration and the bounded Ansible host playbooks are implemented and verified for the pilot. SOPS with age and restic remain proposed implementation choices. H0.3 only checks credential-reference syntax; it does not implement encrypted storage or runtime authorization.</p>
+</div>
+<div class="paragraph">
+<p>The production controller/executor adapter belongs to H2. Deployment authorization and automatic rollback for the bounded demonstration target belong to H3. Passing foundation CI does not establish these runtime properties.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

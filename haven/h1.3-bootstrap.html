@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.3: Repeatable host bootstrap and restart · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.3: Repeatable host bootstrap and restart</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status on 2026-10-28: bounded adoption, repeatability, access-file restoration and controlled restart are verified on the existing pilot. This guide covers an <strong>already enrolled and manually secured</strong> Ubuntu 26.04 host. It does not provision a provider account, install a fresh OS or deploy Hermes.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_scope_and_prerequisites"><a class="anchor" href="#_scope_and_prerequisites"></a>Scope and prerequisites</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Complete <a href="h1.3-first-access.html" class="xref page">first key access and the manual baseline</a> and <a href="h1.3-private-access.html" class="xref page">Tailscale enrollment/policy</a> first. The administrator must have working private SSH, sudo and an independently usable provider console. Preserve the established SSH host-key identity. The manual baseline supplies key-only/root-denied SSH, the managed snippet and active IPv6-enabled UFW. The playbook can create the service identity if absent; an unexpected existing identity or unrelated firewall rules require review.</p>
+</div>
+<div class="paragraph">
+<p>The checked-in <code>ops/bootstrap.yml</code> adopts the account, service home, SSH snippet, private UFW rule and service startup into Ansible management. It does not change authorized keys, Tailscale preferences, tags, node-key expiry, host keys or runtime identity. The saved tailnet policy remains a separate authorization boundary because Tailscale&#8217;s Linux rules can run before UFW.</p>
+</div>
+<div class="paragraph">
+<p>No APT update/upgrade, package installation, autoremove or automatic-update service changes occur on the VPS. The owner reserved OS updates for the later Security/Worker use case. Bootstrap never reboots automatically; restart is a separate explicit maintenance invocation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prepare_the_controller_and_private_inventory"><a class="anchor" href="#_prepare_the_controller_and_private_inventory"></a>Prepare the controller and private inventory</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Install the hash-locked development dependencies using <a href="documentation.html" class="xref page">the documented local tool setup</a>. These include <code>ansible-core==2.21.5</code> and <code>ansible-lint==26.10.1</code>; no Ansible package is installed on the VPS. The supported controller Python range for this Ansible release is 3.12–3.14. The inspected VPS has <code>/usr/bin/python3</code> 3.14.4; local verification uses Python 3.14.</p>
+</div>
+<div class="paragraph">
+<p>From the public checkout, copy <code>ops/inventory.example.yml</code> into your separate private instance as <code>ops/inventory.yml</code>. Edit only that private copy. It names a local SSH alias with the actual private address, administrator and established host-key alias. The public example deliberately cannot reach a real installation. Inventory is operational input, not configuration-v1 YAML; do not pass it to the application validator or put Ansible fields into <code>config/instance.yaml</code>.</p>
+</div>
+<div class="paragraph">
+<p>Run all commands from the public checkout, selecting the checked-in SSH configuration explicitly:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/bootstrap.yml --check</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The config enforces batch key authentication, strict host-key checking, no forwarding and no reused SSH transport. Check mode runs read-only preflight checks and predicts account/file/service changes, but skips snapshots, the rollback timer, firewall write commands and final live acceptance. It does not fully predict UFW CLI drift or establish that a changed configuration works. Ansible still creates/removes transient module files while connecting. Avoid <code>--diff</code> and verbose logs when using a private inventory; retain any necessary output outside public sources.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_guarded_application"><a class="anchor" href="#_guarded_application"></a>Guarded application</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/bootstrap.yml
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/bootstrap.yml
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/verify.yml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Preflight requires one explicitly selected host, the pinned controller, Ubuntu 26.04, an actual SSH destination matching the enrolled Tailscale node, <code>tag:haven</code>, the accepted Tailscale preferences and effective key-only SSH for the administrator/root contexts. It rejects unrelated UFW user rules and an outstanding bootstrap rollback timer before any managed changes. It refuses to overwrite an unexpected existing service account.</p>
+</div>
+<div class="paragraph">
+<p>Each live application allocates a new mode-<code>0700</code> directory under <code>/root</code>, copies the current managed SSH snippet, <code>/etc/ufw</code> and UFW defaults with <code>cp -a</code>, checks copied contents with <code>diff</code>, and writes a mode-<code>0700</code>, syntax-checked rollback script. No host private keys or Tailscale identity state are needed in this bounded snapshot; all copies remain on the VPS. A host-side <code>haven-bootstrap-rollback.timer</code> schedules restoration after fifteen minutes.</p>
+</div>
+<div class="paragraph">
+<p>The playbook maintains the locked <code>haven</code> account without supplementary groups, <code>/var/lib/haven</code> mode <code>0750</code>, validated key-only SSH and the private TCP 22 UFW allowance for IPv4/IPv6. It removes the recognized global SSH rule if still present. Unrelated rules are not reset. The inspected Ubuntu uses socket activation: <code>ssh.socket</code>, <code>tailscaled.service</code> and <code>ufw.service</code> are maintained as started/enabled. A disabled <code>ssh.service</code> alone does not mean SSH will be unavailable after boot.</p>
+</div>
+<div class="paragraph">
+<p>After applying changes, Ansible drops its connection and verifies through a new private connection before stopping the fallback timer. A reachable task failure invokes the restoration service and reports failure. If the controller loses reachability, rescue tasks cannot run; the host timer is the fallback. The timer is transient and does <strong>not</strong> survive reboot, so never restart with it armed.</p>
+</div>
+<div class="paragraph">
+<p>Snapshots and guard scheduling are maintenance operations, intentionally excluded from Ansible&#8217;s configuration-change count. Every application creates a new root-only snapshot even when the recap reports <code>changed=0</code>. Desired-state tasks retain their normal change reporting. Compare consecutive recaps and independently check new connections; a zero count alone is insufficient.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_recovery"><a class="anchor" href="#_recovery"></a>Recovery</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use the current operation&#8217;s printed root-only snapshot path. From a surviving administrator connection or the provider console, inspect the script and run:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo /bin/sh /root/haven-bootstrap-EXAMPLE/rollback.sh
+sudo systemctl stop haven-bootstrap-rollback.timer</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The script restores the accepted SSH snippet and UFW files, validates SSH, enables/reloads UFW and reloads SSH. Its scope is the access files managed by this operation; account creation and service enablement are not undone. It does not restore the original password-enabled provider setup. If the saved configuration is itself private-only and Tailscale is unavailable, use the separately tested narrow public-SSH fallback from <a href="h1.3-private-access.html" class="xref page">private-access recovery</a> through the provider console.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_controlled_restart"><a class="anchor" href="#_controlled_restart"></a>Controlled restart</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before reboot, complete the application/verification, confirm the rollback timer is inactive, verify the provider console is usable and retain its independent login. Inspect failed units, package activity, the current boot ID and the pending-reboot indication. No package transaction should be started for this test. Reboot activates the kernel/packages already present, even though this work does not upgrade them.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/reboot.yml \
+  -e haven_reboot_authorized=true -e haven_console_verified=true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>These explicit flags are operator acknowledgments, not a technical authorization boundary; invoke them only within owner-authorized maintenance. The playbook first verifies the private baseline, requests restart, waits for a changed boot ID and usable private SSH, and runs verification again. SSH authentication and host-key checks are unchanged. Inspect failed systemd units and repeat external public-denial/private-access checks after return. If private networking fails to return, use KVM and the narrow access-recovery procedure; no persistent timer opens public SSH during boot.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verified_result_on_the_pilot"><a class="anchor" href="#_verified_result_on_the_pilot"></a>Verified result on the pilot</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The clean, pushed implementation revision <code>a026804ca7055374b5f1983901132483550de2dd</code> was used for live applications. Two consecutive applications each reported <code>ok=21 changed=0 unreachable=0 failed=0</code>. Each created its documented operational snapshot/guard, accepted a fresh private connection and stopped the guard after success.</p>
+</div>
+<div class="paragraph">
+<p>A separate guarded restoration rehearsal added only an SSH comment, validated syntax and started the same rollback service. It returned <code>Result=success</code>, <code>ExecMainStatus=0</code>; the original SSH snippet and UFW/defaults contents matched their snapshot afterwards. Snapshot ownership/modes were checked independently. The rehearsal timer was stopped. Timer expiry during a real connection loss was not simulated.</p>
+</div>
+<div class="paragraph">
+<p>To test the configuration-write path as well, a second harmless comment was added and bootstrap run again. It restored the maintained snippet, passed template validation, reloaded SSH and accepted a fresh connection: <code>ok=22 changed=2 unreachable=0 failed=0</code>. The two changes were the file and its reload handler. The guard was stopped before reboot.</p>
+</div>
+<div class="paragraph">
+<p>The explicitly authorized reboot completed with a changed boot ID and <code>ok=8 changed=1 unreachable=0 failed=0</code>. Socket-activated SSH, Tailscale and UFW returned automatically, with no failed systemd units. Before/after comparisons confirmed identical package names/versions, administrator authorized keys, public SSH host-key identity and Tailscale node identity. No VPS package updates were performed. A conservative initial process-name check had stopped on the standard idle unattended-upgrades shutdown helper; it was distinguished from package maintenance and actual lock availability checked before proceeding. Existing update services were not changed.</p>
+</div>
+<div class="paragraph">
+<p>After reboot, new private IPv4/IPv6 SSH passed, root/password-only attempts were rejected, public IPv4 TCP 22 timed out, and the unallowed temporary listener timed out over both private address families while responding locally. The probe was stopped. A final post-reboot check-mode run reported <code>ok=12 changed=0 unreachable=0 failed=0</code>. Public IPv6 remained untestable from the inspection computer; its actual host rules allow SSH only on <code>tailscale0</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_acceptance_and_remaining_limits"><a class="anchor" href="#_acceptance_and_remaining_limits"></a>Acceptance and remaining limits</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Record the actual source/configuration revisions, commands, consecutive recap results, root-only backup locations, pre/post boot IDs and service/network results privately. Public documentation keeps synthetic addresses and concise verified findings. Live current-host adoption does not establish clean-OS installation acceptance. The application, model credentials, WhatsApp, off-site backups and controller/executor isolation remain later H1/H2 work.</p>
+</div>
+<div class="paragraph">
+<p>The public pipeline includes syntax checks using only the synthetic inventory, production-profile offline Ansible lint and negative host-check tests. It never connects to the private host or reads its inventory. Pattern-based secret scans supplement review; they cannot establish the absence of every private value.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sources"><a class="anchor" href="#_sources"></a>Sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Context7&#8217;s monthly quota was exhausted. Versions were checked against official <a href="https://pypi.org/project/ansible-core/2.21.5/">ansible-core 2.21.5</a> and <a href="https://pypi.org/project/ansible-lint/26.10.1/">ansible-lint 26.10.1</a> release metadata. The <a href="https://docs.ansible.com/projects/ansible-core/devel/reference_appendices/release_and_maintenance.html">official support matrix</a> covers Python compatibility. Module behavior was checked in the installed pinned modules and the official <a href="https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/template_module.html">template</a>, <a href="https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/reboot_module.html">reboot</a> and <a href="https://docs.ansible.com/projects/lint/usage/">lint usage</a> references. Versioned 2.21 documentation URLs were unavailable during inspection; installed source was used for the exact pin.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

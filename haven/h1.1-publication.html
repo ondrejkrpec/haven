@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.1: GitHub publication and first CI · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.1: GitHub publication and first CI</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status on 2026-10-25: public/private repositories are published with MIT and correct visibility. The owner accepted automatic local push checks in place of unavailable GitHub Actions. Public HTTPS cloning without credentials was verified; successful Actions execution is not claimed.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_scope_and_licensing"><a class="anchor" href="#_scope_and_licensing"></a>Scope and licensing</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The public repository contains common source, English documentation, synthetic examples, the private-instance template and retained research evidence. Each installation owns its separate private repository. Local workspaces remain in place; GitHub adds remote history and distribution. Documentation hosting remains H1.8 work.</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/LICENSE.txt" class="xref attachment">MIT</a> covers original Haven material. The copied Hermes patch and research artifacts retain their <a href="_attachments/research/h0.1/UPSTREAM-LICENSE.txt" class="xref attachment">upstream notice</a>, author metadata and provenance. The private template carries <code>TEMPLATE-LICENSE</code> so its notice survives copying. A private instance must stay private and must not supply public build inputs.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_publication_procedure"><a class="anchor" href="#_publication_procedure"></a>Publication procedure</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before the first push, review the exact Git-eligible candidates, inspect ignore boundaries, validate the instance explicitly and run the public foundation checks. Scan the private source separately, without copying it into public test or documentation inputs. Disposable review indexes can check new files without modifying working indexes.</p>
+</div>
+<div class="paragraph">
+<p>Use the authenticated owner&#8217;s account to verify repository names. Create the public project and private instance with their intended visibility, without an extra remote README/license commit. Commit the reviewed local source and configure its matching remote. Record the exact public source revision in the private instance, then commit and push the private instance to its private remote. Preserve local instance edits during template updates.</p>
+</div>
+<div class="paragraph">
+<p>GitHub authentication uses the official CLI browser flow; tokens and one-time codes are not recorded in project files or reports. Commit metadata uses the owner&#8217;s identity and GitHub noreply address. No provider credentials, WhatsApp sessions, runtime databases, package caches or generated sites belong in either source publication.</p>
+</div>
+<div class="paragraph">
+<p>After pushing, verify remote visibility and matching branch revisions, clone the public repository from GitHub without private access and verify retained checksums. Use the configured local push pipeline to check the exact committed HEAD before publication. The private hook also checks its explicit configuration and files/history. Local actionlint success and local pipeline success do not establish GitHub Actions execution.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_local_preparation"><a class="anchor" href="#_local_preparation"></a>Local preparation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The initial publication review covered 71 public files and eight private files, before the MIT license files and these publication updates were added. The private input remained synthetic, passed configuration validation and had no Gitleaks findings. The complete local check command passed, including 23 tests and the retained H0.1 manifest. Those counts describe the initial review, not the final published tree.</p>
+</div>
+<div class="paragraph">
+<p>The npm documentation shortcut was corrected to run <code>python3 -m scripts.build_docs</code>, matching the canonical module invocation. This makes imports work from an activated virtual environment without relying on an inherited Python path. No dependency versions were changed. Extensionless license attachments use <code>.txt</code> download aliases so Antora produces file links rather than local fragments; their canonical source names and bytes are preserved.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_repository_and_ci_acceptance"><a class="anchor" href="#_repository_and_ci_acceptance"></a>Repository and CI acceptance</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Check</th>
+<th class="tableblock halign-left valign-top">Current result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Owner-selected license</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MIT, with independent upstream attribution retained</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Authenticated repository-name check</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Both <code>ondrejkrpec/haven</code> and <code>ondrejkrpec/haven-private</code> were available</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Public remote and exact source revision</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://github.com/ondrejkrpec/haven"><code>ondrejkrpec/haven</code></a>, first publication <code>4d8d861a98ae85154bfbd7760f2288386ae1617d</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Private remote and matching public revision</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Private <code>ondrejkrpec/haven-private</code>; <code>HAVEN_REVISION</code> records the matching public commit</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remote visibility verification</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Authenticated API confirmed PUBLIC for the project and PRIVATE for the instance; both default branches are <code>main</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Public clone from GitHub</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTPS clone with empty HOME, disabled Git user/system configuration and no credential helper passed; all 16 research checksums passed</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GitHub Actions history</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://github.com/ondrejkrpec/haven/actions/runs/40208770232">First run</a> failed before steps; owner chose an independent pipeline</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Replacement pipeline</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Versioned pre-push hooks, clean-HEAD/ref checks, complete public checks, explicit private validation/scans, commit-bound receipts in Git metadata</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The seven push-gating tests cover successful revision-bound receipts, dirty/untracked sources, failed checks, checkout mutation, pushes of another revision, empty/deletion pushes and mismatched private/public revisions. The default source suite now contains 30 tests.</p>
+</div>
+<div class="paragraph">
+<p>H1.1 acceptance uses the owner&#8217;s replacement criterion: correctly visible and reachable remotes, an anonymous public clone and successful local automatic push checks tied to the published revisions. Actions is manual-only and does not block progress. Hosting and deployment remain later tickets. Continue with <a href="h1-prerequisites.html" class="xref page">H1 prerequisites</a>.</p>
+</div>
+<div class="paragraph">
+<p>Primary references consulted on 2026-10-25: <a href="https://cli.github.com/manual/gh_auth_login">GitHub CLI authentication</a>, <a href="https://cli.github.com/manual/gh_repo_create">repository creation</a>, <a href="https://cli.github.com/manual/gh_run_watch">watching an Actions run</a> and <a href="https://choosealicense.com/licenses/mit/">MIT</a>. GitHub CLI 2.103.2 was downloaded from its official release and its archive SHA-256 verified. Context7 was unavailable because its monthly quota was exhausted.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

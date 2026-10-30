@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.3: Private administration with Tailscale · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.3: Private administration with Tailscale</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status on 2026-10-28: private administration is verified. The VPS, computer and phone are enrolled; restricted policy and <code>tag:haven</code> permit key-based OpenSSH over private IPv4/IPv6. Public SSH allowances were removed for both address families, a fresh public IPv4 connection timed out, and private connections passed. The owner confirmed console login and phone connectivity over mobile data. The narrow fallback was exercised before reapplying the final configuration. A subsequent <a href="h1.3-bootstrap.html" class="xref page">controlled restart</a> verified automatic return of private access; public IPv6 could not be tested from the inspection computer.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_intended_result"><a class="anchor" href="#_intended_result"></a>Intended result</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Keep OpenSSH, the <code>ubuntu</code> administrator and existing key authentication. Tailscale provides the private network; Tailscale SSH is a different login mechanism and is not required for this rollout. The phone&#8217;s Tailscale app provides connectivity; an SSH client with a separately managed key would additionally be needed for terminal administration from that phone. Later dashboards can use a browser over the tailnet after their own access rules are added.</p>
+</div>
+<div class="paragraph">
+<p>Use the owner&#8217;s personal account with protected sign-in and independent recovery material. Tailscale&#8217;s current Personal plan is free for non-commercial personal use; verify eligibility and limits when enrolling. Keep login URLs, auth/API keys, node state, account identities and actual tailnet addresses outside public sources. Never give the runtime <code>haven</code> account or coding executors the administrator&#8217;s SSH identity.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_inputs_and_owner_actions"><a class="anchor" href="#_inputs_and_owner_actions"></a>Inputs and owner actions</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Create the personal Tailscale account and finish interactive identity-provider authentication. The operator cannot complete the owner&#8217;s login or MFA on their behalf.</p>
+</li>
+<li>
+<p>Enroll the administration computer and phone into that same tailnet. On iOS, the owner installs the official app and approves its VPN configuration.</p>
+</li>
+<li>
+<p>Verify provider-console login, account recovery and a way to regain administration if the sole computer/key is lost before closing public SSH.</p>
+</li>
+<li>
+<p>Confirm the actual account identity and review the complete tailnet policy. Do not replace an existing network&#8217;s policy without reviewing its other devices and required access.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_staged_installation"><a class="anchor" href="#_staged_installation"></a>Staged installation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The official stable package page has an Ubuntu 26.04 <code>resolute</code> repository. The executed installation used its dedicated signed keyring and source list. Only this repository&#8217;s metadata was refreshed, followed by a simulation and installation of the exact candidate:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo apt-get update \
+  -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/tailscale.list \
+  -o Dir::Etc::sourceparts=- -o APT::Get::List-Cleanup=0
+sudo apt-get -s install --no-install-recommends tailscale
+sudo apt-get install --yes --no-install-recommends --no-upgrade tailscale=1.104.4
+sudo systemctl enable --now tailscaled.service
+tailscale version</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The simulation and actual transaction both reported one new package, zero upgrades and zero removals. General OS upgrades reserved for the later Security/Worker use case were not run. <code>tailscaled</code> was active/enabled, its state directory was root-owned with mode <code>0700</code>, and a new public SSH connection and SSH syntax validation passed after installation. Runtime state was not copied into either repository. Enrollment, network authorization and cutover are separate checks below.</p>
+</div>
+<div class="paragraph">
+<p>On the administration computer, the observed Manjaro package candidate was <code>tailscale 1.102.3-1</code>. The owner completed local installation and browser sign-in in their terminal; CLI version 1.102.3 and backend <code>Running</code> were then verified. The agent did not receive the local sudo password. Use the distribution package manager for another installation; do not refresh Arch/Manjaro repositories for a partial system upgrade merely to install this one package.</p>
+</div>
+<div class="paragraph">
+<p>Use an interactive browser enrollment for the server rather than a reusable token in chat or shell history. Treat the enrollment URL as session material and do not commit it. Record successful enrollment without copying the daemon&#8217;s <code>/var/lib/tailscale</code> state into either repository. On the administration computer, select the documented package source for its actual Linux distribution rather than using the server&#8217;s Ubuntu repository.</p>
+</div>
+<div class="paragraph">
+<p>Assign the VPS a server identity such as <code>tag:haven</code> after the policy permits its owner to apply that tag. Personal computers and phones retain user identities. On the verified 1.104.4 server, use <code>tailscale up</code> with the full existing preference set:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo tailscale up --advertise-tags=tag:haven --ssh=false \
+  --accept-routes=false --accept-dns=false --hostname=haven-vps --timeout=10s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>tailscale set --advertise-tags=&#8230;&#8203;</code> was rejected by this installed version before changing settings; <code>up</code> supports the flag. After the owner saved the policy, private SSH was unavailable until the permitted tag was assigned. The retained public SSH route allowed that transition.</p>
+</div>
+<div class="paragraph">
+<p>Record the actual server node-key expiry. Initial authentication as a tagged server disables expiry by default, but changing tags on an already authenticated user-owned device does not necessarily change its existing expiry. The inspected node retained an expiration date, which was left unchanged and recorded privately. Revocation/re-enrollment after a lost or replaced device still needs an operating procedure.</p>
+</div>
+<div class="paragraph">
+<p>Do not enable an exit node, subnet routing, Funnel or Tailscale SSH as part of this step. The required application path is the owner&#8217;s device to TCP 22 on this server.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_access_policy_and_the_host_firewall"><a class="anchor" href="#_access_policy_and_the_host_firewall"></a>Access policy and the host firewall</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>New tailnets can start with a broad allow-all policy. Review the full policy, remove unneeded broad rules, and grant the owner&#8217;s identity only the intended access. Grants add permissions; a narrow rule does not override a broad rule elsewhere.</p>
+</div>
+<div class="paragraph">
+<p>The following is a synthetic example matching the verified policy structure. Substitute the real owner only in the private instance and validate the complete policy, including positive/negative tests, in the admin console before activation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "tagOwners": {"tag:haven": ["owner@example.com"]},
+  "acls": [],
+  "grants": [
+    {
+      "src": ["owner@example.com"],
+      "dst": ["tag:haven"],
+      "ip": ["tcp:22"]
+    }
+  ],
+  "ssh": [],
+  "tests": [
+    {
+      "src": "owner@example.com",
+      "proto": "tcp",
+      "accept": ["tag:haven:22"],
+      "deny": ["tag:haven:80", "tag:haven:443", "tag:haven:40123"]
+    }
+  ]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The network policy grants reachability, not a Unix login. OpenSSH must still verify the administrator&#8217;s key and reject root/password login. Dashboard ports require separate grants when those services exist; the example does not expose them. The instance copy was saved with policy tests according to the owner; actual private SSH and port-denial checks independently confirmed the selected live paths.</p>
+</div>
+<div class="paragraph">
+<p>Tailscale&#8217;s default Linux netfilter mode manages its own firewall rules, accepts tailnet traffic and can evaluate rules ahead of UFW. Therefore an apparently restrictive UFW interface rule alone is not the tailnet authorization boundary. Inspect the selected iptables/nftables integration on the actual host and enforce allowed users/ports in the tailnet policy. Keep the supported default integration unless a concrete tested requirement calls for another mode.</p>
+</div>
+<div class="paragraph">
+<p>The inspected host&#8217;s IPv4 and IPv6 <code>INPUT</code> chains jump to <code>ts-input</code> before the UFW chains. <code>ts-input</code> accepts <code>tailscale0</code> traffic and the Tailscale UDP transport. This ordering was read directly; tailnet access control was tested with a separate temporary listener rather than inferred from the UFW summary alone.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cutover_and_recovery"><a class="anchor" href="#_cutover_and_recovery"></a>Cutover and recovery</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Keep public SSH working during enrollment and policy validation. Before cutover, create a <strong>new</strong> root-only snapshot of the current hardened configuration and UFW state. The older pre-hardening backup intentionally contains the original password-enabled configuration and is not the right automatic recovery target for this operation.</p>
+</div>
+<div class="paragraph">
+<p>A new verified backup of SSH/UFW, UFW defaults and daemon defaults was created on the inspected VPS. No Tailscale identity/runtime state was copied. Its root-only fallback script adds the public TCP 22 allowance without changing SSH authentication or disabling UFW. The owner confirmed both outstanding console/mobile checks before the timer was armed or public rules removed.</p>
+</div>
+<div class="paragraph">
+<p>Keep an existing SSH transport open, verify the private path in a fresh connection and arm a host-side timed fallback before removing the public TCP 22 rule for both IPv4/IPv6. The fallback should restore the previous public SSH allowance while retaining key-only authentication, root-login denial and the active firewall. It must not invoke the earlier pre-hardening rollback or disable the whole firewall.</p>
+</div>
+<div class="paragraph">
+<p>The executed fallback script used the following structure, saved under a new root-only backup directory with mode <code>0700</code>. The example path is synthetic; use the actual installation&#8217;s backup path:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">#!/bin/sh
+set -eu
+umask 077
+/usr/sbin/ufw allow 22/tcp
+/usr/bin/date -u +%FT%TZ &gt; /root/haven-private-access-backup/PUBLIC_ACCESS_RESTORED.txt</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After checking the script syntax, the guarded cutover used:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo systemd-run --unit=haven-tailscale-cutover-rollback --on-active=15m \
+  --timer-property=AccuracySec=1s --property=Type=oneshot \
+  /bin/sh /root/haven-private-access-backup/restore-public-ssh.sh
+sudo systemctl is-active haven-tailscale-cutover-rollback.timer
+sudo ufw allow in on tailscale0 to any port 22 proto tcp
+sudo ufw --force delete allow 22/tcp
+sudo ufw status verbose</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The explicit UFW allowance is TCP 22 on <code>tailscale0</code> for IPv4/IPv6. Tailscale&#8217;s own early rules and the tailnet policy remain part of the filtering path. Validate actual packet filtering rather than relying solely on the UFW summary. Make the cutover only after the computer and phone are enrolled, policy tests pass and the provider-console recovery route is verified.</p>
+</div>
+<div class="paragraph">
+<p>If private access fails, use the retained public transport, timed fallback or provider console. Recover public reachability before stopping or reconfiguring Tailscale. In the exercised rehearsal, <code>systemctl start haven-tailscale-cutover-rollback.service</code> returned success, a fresh public key-based login worked, and key-only/root-denied SSH plus active UFW were preserved. The timer was restarted and public SSH removed again, followed by repeated private/public checks.</p>
+</div>
+<div class="paragraph">
+<p>After final success, stop <code>haven-tailscale-cutover-rollback.timer</code>, confirm it is inactive, and close the maintenance transport. This was completed on the inspected host; a root-only receipt records the final checks. The recovery script remains available without an armed timer.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_acceptance"><a class="anchor" href="#_acceptance"></a>Acceptance</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>The intended server/computer/phone are enrolled, and the complete policy permits only the selected paths. Device/account names, addresses and versions are recorded privately.</p>
+</li>
+<li>
+<p>A fresh OpenSSH connection from the owner&#8217;s computer succeeds over the private address/name with host-key checking and the existing administrator key. Verify the same host key before recording the new address as trusted.</p>
+</li>
+<li>
+<p>The phone connects from a different network, preferably mobile data. If terminal administration is required, separately verify its SSH client/key; a Tailscale connection alone does not establish an SSH login.</p>
+</li>
+<li>
+<p>A controlled listener confirms an unallowed tailnet port is denied even though the service answers locally. Verify policy denial for an unauthorized source using policy tests and an available independent test identity/device; record any unperformed live scenario.</p>
+</li>
+<li>
+<p>After cutover, a fresh public SSH connection fails and a new private connection succeeds. Check IPv4 and IPv6 where connectivity permits, and document any untested path.</p>
+</li>
+<li>
+<p>The timed public-access fallback is exercised and then cancelled after final checks. Service enablement/reconnection and a separate controlled reboot are verified; see <a href="h1.3-bootstrap.html" class="xref page">bootstrap acceptance</a>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verified_private_administration"><a class="anchor" href="#_verified_private_administration"></a>Verified private administration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Server version 1.104.4 and computer version 1.102.3 are connected; the phone is also reported online. Fresh administrator SSH connections use the established host-key identity and succeed over both private IPv4 and private IPv6. A temporary dual-stack TCP listener under the unprivileged service identity answered on loopback, while computer-to-server connections to that unallowed port timed out over both private address families. It served only a fixed marker and was stopped afterwards.</p>
+</div>
+<div class="paragraph">
+<p>The owner confirmed provider-console login and phone connectivity with Wi-Fi disabled. Fresh private SSH connections passed over both address families after each cutover; root and password-only SSH attempts were rejected. The public IPv4 TCP 22 connection timed out after final closure. UFW and its IPv6 user rules were checked to retain only the <code>tailscale0</code> SSH allowances. The original maintenance transport was closed after stopping the fallback timer, and a further fresh private connection succeeded.</p>
+</div>
+<div class="paragraph">
+<p>An optional local OpenSSH alias can make the new path convenient while preserving the established host-key identity. This example must be adapted to the installation&#8217;s actual private address and previously trusted host name; do not overwrite existing host definitions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">Host haven
+    HostName 100.101.102.103
+    User ubuntu
+    IdentityFile ~/.ssh/haven-admin
+    IdentitiesOnly yes
+    HostKeyAlias vps.example.invalid
+    StrictHostKeyChecking yes
+    UpdateHostKeys no
+    ForwardAgent no</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Back up the existing client configuration, validate it with <code>ssh -G haven</code> and test a fresh connection. The instance&#8217;s alias was verified after cutover; private values remain outside these public examples.</p>
+</div>
+<div class="paragraph">
+<p>These checks accept the private-administration step with recorded limits. A live unauthorized-user scenario has not been run; policy tests cover the declared deny cases. Live public IPv6 was unavailable from the inspection computer, although its host rules were verified and private IPv6 SSH passed. The subsequent <a href="h1.3-bootstrap.html" class="xref page">bootstrap/restart acceptance</a> verifies return after reboot. Future key-expiry handling and the remaining H1 services are separate work.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sources"><a class="anchor" href="#_sources"></a>Sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Official sources checked on 2026-10-28: <a href="https://tailscale.com/docs/how-to/quickstart">quickstart</a>, <a href="https://tailscale.com/pricing">Personal pricing</a>, <a href="https://pkgs.tailscale.com/stable/">stable packages and Ubuntu 26.04</a>, <a href="https://tailscale.com/docs/install/ios">iOS setup</a>, <a href="https://tailscale.com/docs/reference/tailscale-cli/up">CLI enrollment flags</a>, <a href="https://tailscale.com/docs/reference/syntax/grants">grants</a>, <a href="https://tailscale.com/docs/reference/examples/acls">initial allow-all policy</a>, <a href="https://tailscale.com/docs/reference/netfilter-modes">Linux netfilter integration</a>, <a href="https://tailscale.com/docs/features/tags">tags/key expiry</a> and <a href="https://tailscale.com/docs/how-to/secure-ubuntu-server-with-ufw">UFW cutover</a>. Context7 returned a monthly quota error; official documentation and installed package-manager metadata were used instead.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

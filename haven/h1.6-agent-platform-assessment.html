@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.6 Agent Platform compatibility assessment · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.6 Agent Platform compatibility assessment</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Assessment date: 2026-10-29. This is a local review of a candidate community connector for the <a href="family-conversations.html" class="xref page">selected personal/family design</a>. No plugin was installed into the pilot, no real API key was used and no live WhatsApp/model request was made.</p>
+</div>
+<div class="paragraph">
+<p>Later owner decision on the same date: Agent Platform is unavailable on their account. This assessment is retained as historical evidence; the current first integration is <a href="h1.6-telegram.html" class="xref page">owner-only Telegram</a>. No WhatsApp release date is assumed.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_exact_inputs"><a class="anchor" href="#_exact_inputs"></a>Exact inputs</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Hermes v0.22.5, commit <code>bf0203a794a07aac3ff764972ab9087baa4e4f4e</code>, with the attributed upstream recovery patch recorded in <a href="research/h0.1/README.html" class="xref page">H0.1</a>.</p>
+</li>
+<li>
+<p>Community <code>whatsapp-agent-platform</code> v0.2.0, commit <code>4d8fc1c482ed06a34b6609b1dcdf59e370de7d40</code>, from <a href="https://github.com/ahtishamdilawar/hermes-whatsapp-agent-platform">the connector repository</a>. It is not a Meta or NousResearch implementation. The MIT package declares no extra runtime dependencies; it uses core <code>httpx</code>.</p>
+</li>
+<li>
+<p>The existing disposable Hermes dev/test environment built through the pinned PM lock, separate from service credentials and production state.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The review covered the plugin manifest, registration, adapter, client, persisted polling state and test fixtures. The adapter resolves a scoped API key, verifies the creator through the API and keeps key-specific cursor/deduplication state below the Hermes home. It has duplicate-key poller guards. These mechanisms do not implement family membership or data authorization.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_reproduction_and_result"><a class="anchor" href="#_reproduction_and_result"></a>Reproduction and result</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use fresh disposable checkouts at the exact revisions above and the PM-built test environment described in H0.1. Apply only the retained recovery patch. Do not install or enable the plugin, run its wizard or supply credentials. From the Hermes checkout, set <code>HERMES_PYTHON</code> to that disposable environment&#8217;s <code>bin/python</code> and <code>HAVEN_AGENT_PLUGIN</code> to the exact connector checkout, then run:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 2 \
+  "$HAVEN_AGENT_PLUGIN/tests/test_adapter.py" \
+  "$HAVEN_AGENT_PLUGIN/tests/test_client.py" \
+  "$HAVEN_AGENT_PLUGIN/tests/test_delivery_and_state.py" \
+  "$HAVEN_AGENT_PLUGIN/tests/test_state_and_formatting.py" \
+  "$HAVEN_AGENT_PLUGIN/tests/test_plugin_load.py" \
+  "$HAVEN_AGENT_PLUGIN/tests/test_hermes_compat.py" \
+  --file-timeout 90</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Result: 6 files, 137 passed, 0 failed, no retries. The upstream canonical per-file runner was used. Connector fixtures supplied disposable homes, synthetic keys/identities and mocked HTTP responses. The passing files cover adapter behavior, client requests, delivery/state, formatting, plugin loading and compatibility with the pinned Hermes APIs.</p>
+</div>
+<div class="paragraph">
+<p>This is a compatibility result. The run did not exercise two live accounts, independently secured runtimes, family objects, cross-user privacy or real API behavior. The test suite&#8217;s optional extra-sender cases cannot override Meta&#8217;s creator-only delivery rules.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_two_connection_probe"><a class="anchor" href="#_two_connection_probe"></a>Two-connection probe</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Haven&#8217;s retained <code>research/h1.6/test_agent_connections.py</code> adds three behavioral scenarios using the real connector adapter/client and Hermes context-local home/secret scopes. HTTP alone is replaced with the connector&#8217;s mock transport; no model runs.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Both connections accept the same external message ID independently, retain different creators/cursors, and send through the correct bearer key and recipient even when the caller has the other profile&#8217;s scope. Restarting the first connection preserves its cursor/deduplication while the second keeps working.</p>
+</li>
+<li>
+<p>An API-rejected foreign sender is dropped on each connection before the conversation handoff, including when that sender owns the other connection.</p>
+</li>
+<li>
+<p>A second poller using the same key is refused even with a different home; after the first disconnects, that key can reconnect.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Result: 3 passed, 0 failed, no retries. Clone the connector at the exact revision into the ignored Haven path <code>build/whatsapp-agent-plugin</code>; verify both checkout revisions before running. Set <code>HAVEN_ROOT</code> to the public Haven checkout, then use the same Hermes runner/environment:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 2 \
+  "$HAVEN_ROOT/research/h1.6/test_agent_connections.py" --file-timeout 90</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This probe establishes scoped adapter behavior in one test process. It does not test gateway-level conversation routing, isolation from arbitrary files/tools, family storage or operating-system access control. Outbound text also needs Haven-side recipient authorization before calling the chosen adapter; the connector delegates arbitrary text-recipient rejection to Meta. Correct transport credentials alone do not authorize a user to access another member&#8217;s adapter or data.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_work_remaining_before_activation"><a class="anchor" href="#_work_remaining_before_activation"></a>Work remaining before activation</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Confirm that both accounts have <code>Settings &#8594; Agents</code>; a missing menu cannot be enabled by Haven. The pilot owner&#8217;s iPhone eligibility is unconfirmed.</p>
+</li>
+<li>
+<p>Add a reviewed plugin pin, private credential flow and bounded runtime contract. Current Haven guards reject third-party plugins and multiplexing. Keep an explicit empty <code>whatsapp_agent_platform</code> toolset and disable connector media for the text pilot.</p>
+</li>
+<li>
+<p>Accept one live creator-bound connection, restart recovery and uncertain-send handling before adding the second.</p>
+</li>
+<li>
+<p>Verify independent credentials, private state and recipient routing for both connections. Never share a writable Hermes home.</p>
+</li>
+<li>
+<p>Implement and negatively test the separate family data authorization layer before enabling shared objects.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Follow <a href="family-conversations.html" class="xref page">the design and acceptance order</a>. The existing H1.5 pilot remains the accepted running service.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sources"><a class="anchor" href="#_sources"></a>Sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The official <a href="https://www.whatsapp.com/developer/WhatsApp-Agent-Platform-Developer-Manual.pdf">Meta developer manual</a> gives the Settings/Agents creation path and API contract. Meta&#8217;s <a href="https://faq.whatsapp.com/1050934623978152">agent FAQ</a> documents creator-only chats, limited rollout and the absence of end-to-end encryption. The exact <a href="https://github.com/ahtishamdilawar/hermes-whatsapp-agent-platform/tree/4d8fc1c482ed06a34b6609b1dcdf59e370de7d40">connector source</a> and pinned Hermes source were inspected directly. Context7 was unavailable because its monthly quota was exhausted.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

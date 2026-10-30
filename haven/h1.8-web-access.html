@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.8: Read-only dashboard and separate documentation sites · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.8: Read-only dashboard and separate documentation sites</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status on 2026-10-30: implementation and live acceptance in progress. The owner selected a read-only dashboard; administrative controls are deferred. This guide separates public publication, private build inputs and tailnet access. <a href="adr/0009-read-only-web-access.html" class="xref page">ADR 0009</a> records the boundaries.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_three_independent_surfaces"><a class="anchor" href="#_three_independent_surfaces"></a>Three independent surfaces</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Surface</th>
+<th class="tableblock halign-left valign-top">Inputs</th>
+<th class="tableblock halign-left valign-top">Access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Public documentation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only the existing bounded public Antora exporter</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Prebuilt GitHub Pages branch, subject to live account acceptance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Private documentation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Explicit tracked Markdown runbooks/instructions in one named private instance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tailscale Serve HTTPS, TCP 8443, owner-only grant</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operational dashboard</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fixed systemd properties, session usage aggregates and default-board status counts</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tailscale Serve HTTPS, TCP 443, owner-only grant</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>No native Hermes dashboard backend is started. Its embedded chat, terminal, configuration and task administration would exceed the accepted deterministic profile. The snapshot exporter imports no Hermes code, resolves no credentials, starts no model/dispatcher and exposes no conversation text or task bodies. Future controls need a separate authorization design and acceptance; they are backlog work.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_publish_public_documentation_without_github_actions"><a class="anchor" href="#_publish_public_documentation_without_github_actions"></a>Publish public documentation without GitHub Actions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Install the <a href="documentation.html" class="xref page">documented tools</a> and configure the versioned hooks. <code>scripts.publish_docs</code> requires a clean <code>main</code> matching a fresh remote <code>main</code> read, runs the complete public checks, then checks that identity again. It copies only freshly generated regular files from <code>build/site</code> into a disposable artifact repository. Hidden files and symlinks are refused; <code>.nojekyll</code> and <code>publication.json</code> are generated explicitly. The metadata records the checked source revision and each generated file&#8217;s SHA-256.</p>
+</div>
+<div class="paragraph">
+<p>Publication updates only <code>gh-pages</code>, preserving its artifact history and protecting the previous remote tip with an explicit lease. It never commits or pushes the source primary branch. A changed source/remote or concurrent artifact publisher aborts the operation. There is a final remote read immediately before push, not an atomic cross-ref transaction with a concurrent GitHub merge; a later source merge needs its own successful publication. The artifact branch is persistent hosting state, not an unfinished topic branch.</p>
+</div>
+<div class="paragraph">
+<p>Configure GitHub Pages once with source branch <code>gh-pages</code>, path <code>/</code>, build type <code>legacy</code>, and HTTPS. Do not select a custom Actions workflow. GitHub documents direct prebuilt deployment with <code>.nojekyll</code> when Actions is unavailable; only a successful HTTPS request with matching metadata establishes that it works on the actual account.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">git config --local core.hooksPath .githooks
+git config --local haven.publishDocs true
+.venv/bin/python -m scripts.publish_docs</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>post-merge</code> hook automatically publishes when this configured development clone fast-forwards a merged change into <code>main</code>. It reruns the checks for the actual merge revision. Publication failures remain visible and can be retried with the last command after fixing the cause. Other clones and GitHub web-only merges need their own configured runner/synchronization; no unattended cloud runner is claimed. Disabling publication is <code>git config --local haven.publishDocs false</code>; the current hosted version remains available.</p>
+</div>
+<div class="paragraph">
+<p>The expected project URL is <code><a href="https://ondrejkrpec.github.io/haven/" class="bare">https://ondrejkrpec.github.io/haven/</a></code>; links are relative, so a project subpath works. A missing or rejected Pages deployment must remain an explicit acceptance blocker and trigger a hosting decision, rather than being counted as Actions-independent success.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_build_private_runbooks_separately"><a class="anchor" href="#_build_private_runbooks_separately"></a>Build private runbooks separately</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Add <code>docs/site.json</code> to the private repository with an explicit <code>documents</code> array. Each entry must be tracked Markdown below <code>runbooks/</code> or <code>instructions/</code>; no recursive discovery of instance configuration, secrets or runtime state occurs. A minimal synthetic example is:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{"documents": ["runbooks/README.md"]}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The private template includes this initial manifest. Build only with an explicitly named instance:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.build_private_docs /absolute/path/to/private-instance</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Output is confined to that instance&#8217;s ignored <code>build/site</code>, with a private directory mode. Never choose a public output directory or transfer these artifacts to Pages. Markdown-it 15.0.3 is pinned in the npm lock. Raw HTML and image embedding are disabled. Selected document links become local HTML links; known public-guide links use the public documentation site; other source-file references remain text rather than exposing attachments. No repository configuration, credentials or source tree is downloadable through this build.</p>
+</div>
+<div class="paragraph">
+<p>The manifest records public/instance revisions, dirty-source status and output hashes. A preview may use uncommitted private documents, but deployment refuses it. Commit reviewed private inputs, rebuild, and run the integrity verifier before live transfer. Generated-link checks run independently of the public build. The public build never calls this private builder.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_install_the_bounded_internal_artifacts"><a class="anchor" href="#_install_the_bounded_internal_artifacts"></a>Install the bounded internal artifacts</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use the existing pinned Ansible environment and explicit private inventory. <code>ops/web.yml</code> first runs the <a href="h1.3-bootstrap.html" class="xref page">host verification</a>, then requires <code>haven_web_authorized=true</code> and the absolute private artifact path. It checks clean private provenance, the current public revision and every generated file hash before transfer. It installs immutable private releases by content hash and switches <code>current</code> only after copying the complete release. Older releases remain available for rollback.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">ANSIBLE_CONFIG=ops/ansible.cfg ANSIBLE_HOME=build/ansible \
+  .venv/bin/ansible-playbook -i /absolute/path/to/private-instance/ops/inventory.yml \
+  ops/web.yml -e haven_web_authorized=true \
+  -e haven_private_site=/absolute/path/to/private-instance/build/site</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An independent systemd oneshot runs the fixed snapshot exporter as <code>haven</code>, with no network access, no capabilities, protected system directories and a single writable dashboard output directory. Credential directories, <code>.env</code> and native configuration are inaccessible to that process. The timer refreshes once a minute. SQLite uses read-only/query-only access; missing databases are not created and errors appear as unavailable data. The exporter selects no conversation content, titles, message rows or task bodies.</p>
+</div>
+<div class="paragraph">
+<p>The page refreshes every minute and displays its UTC snapshot timestamp. Treat a snapshot older than two minutes as stale; it is not an external outage monitor. Model counters are retained-session aggregates, and recorded costs are neither subscription quota nor a provider invoice. Unknown costs are not displayed as zero. An absent default board is reported as unavailable, not as an empty healthy queue. Other boards and task controls remain future work.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_enable_owner_only_https_through_tailscale"><a class="anchor" href="#_enable_owner_only_https_through_tailscale"></a>Enable owner-only HTTPS through Tailscale</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The pilot&#8217;s installed Serve CLI is 1.104.4. Preserve all current settings and inspect <code>sudo tailscale serve status --json</code> before changing anything. This rollout expects no pre-existing Serve routes. Do not use <code>serve reset</code> on a host with unrelated routes.</p>
+</div>
+<div class="paragraph">
+<p>In the Tailscale admin console, enable HTTPS certificates and add an owner-only grant to <code>tag:haven</code> for TCP 443 and 8443 while preserving SSH. Update policy tests to accept the two new ports and retain denials for unused ports and an unauthorized identity. A new narrow grant does not cancel an existing broad allow rule; inspect the complete policy. Certificate Transparency publicly records the node&#8217;s certificate DNS name, not private content. No Funnel capability is required.</p>
+</div>
+<div class="paragraph">
+<p>After reviewing and authorizing the installed artifact and policy, configure only these two private listeners:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo tailscale serve --bg --https=443 /var/lib/haven/web/dashboard
+sudo tailscale serve --bg --https=8443 /var/lib/haven/web/private-docs/current
+sudo tailscale serve status --json</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Both sites use root paths on separate HTTPS ports. The tailnet DNS name is instance-specific and stays in private runbooks. Tailscale Serve owns the TLS listener and persists background configuration across daemon restarts. It serves only the chosen generated directories. Do not expose an entire home, repository or parent directory. Verify whether the installed version honors the release symlink on each request when testing rollback.</p>
+</div>
+<div class="paragraph">
+<p>No public firewall rule, public HTTP listener, OS update, service-account change or Nora restart is part of this operation. Tailscale&#8217;s policy, together with authenticated tailnet devices, controls access; UFW alone is not that boundary. Funnel must remain absent from the resulting Serve configuration.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_acceptance_and_recovery"><a class="anchor" href="#_acceptance_and_recovery"></a>Acceptance and recovery</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Public HTTPS must return a real guide and <code>publication.json</code> for the checked source revision. Verify representative file hashes and repeat after a source update through the configured automatic hook. A pushed artifact alone is insufficient.</p>
+</li>
+<li>
+<p>On an authorized device, both private HTTPS roots, one runbook and <code>snapshot.json</code> must respond. Confirm public root/source paths do not disclose private documents. Check that directory/file traversal cannot reach credentials or the neighboring private release.</p>
+</li>
+<li>
+<p>Test public/no-tailnet reachability and unauthorized tailnet identity where available; distinguish actual network results from admin-console policy tests. Record unperformed scenarios explicitly.</p>
+</li>
+<li>
+<p>Restart the snapshot oneshot and verify a new timestamp without a model-call/token increase or a Nora PID change. Repeat deployment, verify the timer, root-owned executable/units and absence of a native dashboard process.</p>
+</li>
+<li>
+<p>Exercise rollback by switching the private <code>current</code> symlink to the previous verified release and confirm HTTPS content, then restore the accepted release. Never roll back databases, OAuth or Telegram credentials.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To withdraw H1.8 access, disable only these listeners and the refresh timer:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo tailscale serve --https=443 off
+sudo tailscale serve --https=8443 off
+sudo systemctl disable --now haven-dashboard-snapshot.timer</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Preserve SSH and unrelated routes. Revert only the H1.8 policy grant if access is being revoked. The deployed snapshot and private releases are data, not a backup; <a href="h1-prerequisites.html" class="xref page">off-site backup and full recovery</a> remain H1.9.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_evidence_and_sources"><a class="anchor" href="#_evidence_and_sources"></a>Evidence and sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Context7 returned a monthly quota error. Official <a href="https://github.blog/changelog/2024-07-08-pages-legacy-worker-sunset/">GitHub prebuilt Pages deployment</a>, <a href="https://docs.github.com/en/rest/pages/pages">Pages API</a>, <a href="https://tailscale.com/docs/reference/tailscale-cli/serve">Serve CLI</a> and <a href="https://markdown-it.github.io/markdown-it/">Markdown-it documentation</a> were checked on 2026-10-30. The installed Tailscale help and pinned Hermes dashboard parser were inspected directly. Live acceptance results follow separately; planned commands are not deployment evidence.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

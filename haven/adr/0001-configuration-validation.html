@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ADR 0001: Validate Haven inputs before runtime translation · Haven</title>
+  <link rel="stylesheet" href="../../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="../index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="../index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="../local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="../configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="../h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="../h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="../h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="../documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="../architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="../family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="../h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="../research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="../h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="../h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="../h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="../h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>ADR 0001: Validate Haven inputs before runtime translation</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Date: 2026-10-25. Status: implemented locally in H0.3; live deployment remains H1.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_context"><a class="anchor" href="#_context"></a>Context</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Public defaults and each user&#8217;s private configuration must be independently maintainable. The H0.2 YAML draft had no contract. First deployment needs a small set of instance, host, model and WhatsApp inputs; account setup and executor permissions are still unverified.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_decision"><a class="anchor" href="#_decision"></a>Decision</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use a versioned JSON Schema draft 2020-12 contract for YAML documents and a small Python validator using pinned PyYAML and jsonschema. Every input layer declares its version and is checked before merging; the complete result is checked afterwards. Maps merge recursively, lists replace completely, and nulls do not delete values.</p>
+</div>
+<div class="paragraph">
+<p>Keep credential references as strings and resolve nothing during validation. Reject ambiguous YAML indirection and duplicate keys. Print schema field diagnostics without user values or source excerpts. Expose one validation script, without introducing the proposed general-purpose <code>havenctl</code> CLI.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_consequences"><a class="anchor" href="#_consequences"></a>Consequences</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The example and private template can be checked without accounts or credentials. List replacement prevents an override from silently retaining earlier allowed senders. Custom formats need Haven&#8217;s validator; a generic JSON Schema editor alone does not establish time-zone, host or credential-reference validity.</p>
+</div>
+<div class="paragraph">
+<p>Validation does not prove provider support, authorization, host reachability or deployment readiness. H1 must add native Hermes translation and authorized credential loading. Future incompatible input changes need an explicit new schema version. See <a href="../configuration.html" class="xref page">configuration v1</a> for the maintained contract and commands.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

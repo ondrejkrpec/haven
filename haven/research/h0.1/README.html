@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haven H0.1 evidence · Haven</title>
+  <link rel="stylesheet" href="../../../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="../../index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="../../index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="../../local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="../../configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="../../documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="../../architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="../../family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="../../h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="../../adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="../../adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="../../adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="../../adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="../../adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="../../adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="../../adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="../../adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="../../adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="../../h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="../../h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="../../h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="../../h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Haven H0.1 evidence</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Research performed on 2026-10-25. This directory contains feasibility probes and upstream test results, transferred to Haven during H0.2. It is not an installed Haven instance. Historical logs have local usernames and hostnames replaced; <code>provenance.json</code> records original file hashes and transformations. Test counts and failures are retained. The original local archive remains unchanged.</p>
+</div>
+<div class="paragraph">
+<p>The portable isolation probe now derives the Codex home path and uses a synthetic vault note instead of the author&#8217;s vault path. Its new execution evidence is separate from the original H0.1 results. Read <a href="../../local-development.html" class="xref page">local development</a> for the foundation workflow.</p>
+</div>
+<div class="paragraph">
+<p>H0.2 reran the portable filesystem probe successfully; <code>evidence/h0.2-portable-isolation.json</code> records that result. The unchanged dispatcher probe and the upstream suite retain their H0.1 results. <code>.gitattributes</code> preserves patch bytes and exempts historical log and patch whitespace from formatting checks.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_candidate_and_findings"><a class="anchor" href="#_candidate_and_findings"></a>Candidate and findings</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The baseline is <a href="https://github.com/NousResearch/hermes-agent/releases/tag/v0.22.5">Hermes v0.22.5</a>, commit <code>bf0203a794a07aac3ff764972ab9087baa4e4f4e</code>. The unmodified release fails the required quota-to-review recovery scenario. A candidate using upstream <a href="https://github.com/NousResearch/hermes-agent/pull/117820">PR #117820</a>, commit <code>36fbe1ebb69340a6de881e7c93aecd5c684a373b</code>, passes that scenario locally. The PR was open and unmerged at inspection. This is an explicitly patched candidate, not a claim that the released version contains the fix.</p>
+</div>
+<div class="paragraph">
+<p>The patch skips an obsolete failure stamp after a newer run has progressed. It retains current authentication guards, quota cooldowns and duplicate-work guards. Its original MIT attribution is in the patch and <code>UPSTREAM-LICENSE</code>. <code>pins.json</code> records hashes. An upstream release containing an equivalent fix can replace the patch only after rerunning the acceptance scenario.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Evidence</th>
+<th class="tableblock halign-left valign-top">Result and scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>evidence/upstream-tests.log</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unmodified v0.22.5: 235 passed, 1 skipped across 8 selected files. Includes DB, review, quota hold, Codex adapter with doubles, Docker/Podman command construction, STT language resolution.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>evidence/recovery-tests.log</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unmodified v0.22.5: 13 passed, 1 failed. Actual processes and a local fake model. Dispatcher restart scenarios pass; quota → review gets stuck at <code>blocker_auth</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>evidence/patched-recovery-tests.log</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Patched candidate: 110 passed, 1 skipped. Includes the same failing scenario and upstream patch regressions. Strict acceptance enabled; known gaps are not excused as expected failures.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>evidence/auth-whatsapp-tests.log</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Initial incomplete test environment: 42 passed, 2 failed, 3 skipped. Both failures were connection tests without the optional <code>aiohttp</code> dependency. Retained for transparency.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>evidence/auth-whatsapp-complete-tests.log</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rebuilt through PM with declared extra <code>sms</code> providing <code>aiohttp</code>: 44 passed, 3 skipped. Synthetic authentication and WhatsApp adapter/allowlist tests, no live connection.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>evidence/isolation.json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rootless Podman: only a synthetic workspace is writable; synthetic Nora credentials, host config, the audited host vault path, host sockets and a sentinel environment secret are unavailable; no network route. BusyBox only.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>evidence/dispatch-isolation.json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Real <code>dispatch_once(spawn_fn=&#8230;&#8203;)</code> launches synthetic container executors. Parent retains the DB; executors cannot see it. Durable review survives reconnect; idempotent intake and completion pass without Nora or any LLM. One default profile; no role authorization claim.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Counts overlap between runs and must not be summed as unique tests. Platform skips are retained in logs. These tests ran on Manjaro Linux, PM Python 3.14.9 and rootless Podman 6.1.0, not Ubuntu. Codex CLI 0.164.0 is locally present; real authenticated Codex inference was not exercised.</p>
+</div>
+<div class="paragraph">
+<p>The stricter filesystem probe initially allowed a write to <code>/tmp</code>: Podman mounts writable temporary filesystems by default even with <code>--read-only</code>. The final isolation probe explicitly sets <code>--read-only-tmpfs=false</code> and verifies rejection of that write. The dispatch seam probe retains Podman&#8217;s normal temporary filesystems; neither probe exposes host credentials. See the <a href="https://docs.podman.io/en/v6.1.0/markdown/podman-run.1.html#read-only-tmpfs">Podman 6.1 manual</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_technical_path_for_h1h2"><a class="anchor" href="#_technical_path_for_h1h2"></a>Technical path for H1–H2</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use Hermes' durable board for task/run/event state and review handoffs. Keep a trusted controller responsible for claims and narrow result transitions. Run the entire lower-trust executor process tree with only its own workspace and required credentials. Do not mount Nora&#8217;s home, WhatsApp session, personal vault or the board into that executor. The local seam probe demonstrates feasibility with synthetic commands.</p>
+</div>
+<div class="paragraph">
+<p><code>dispatch_once(spawn_fn=&#8230;&#8203;)</code> is an internal, version-bound Python interface, not a supported stable plugin hook. Haven needs a small adapter around that seam, validated against the pinned source on upgrades. The probe does not implement admission authentication, crash-safe receipt handling, role-specific authorization or a production service. The built-in worker path is not automatically confined by selecting a container terminal backend.</p>
+</div>
+<div class="paragraph">
+<p>For H1, restrict Nora&#8217;s tools and postpone coding executors until H2. A Codex app-server worker is the preferred integration candidate for subscription-backed coding. Its login is separate from Hermes' native <code>openai-codex</code> provider. App-server lacks the Hermes <code>delegate_task</code>, <code>memory</code>, <code>session_search</code> and <code>todo</code> tools; use durable Kanban handoffs where supported rather than assuming feature parity. Do not copy the workstation&#8217;s existing credentials or plugin configuration into an executor.</p>
+</div>
+<div class="paragraph">
+<p>Keep task recovery independent of model reasoning. A deterministic, supervised control process can tick dispatch while Nora&#8217;s model is unavailable. If using a systemd timer around CLI dispatch, disable gateway-embedded dispatch and verify worker scope/lifetime behavior on Ubuntu; do not run competing dispatch owners. Hermes documents the need for a user bus/linger for restart-safe worker scopes. This production setup is still H1–H2 work.</p>
+</div>
+<div class="paragraph">
+<p>Hermes provides DB persistence, claim ownership, reclaim, quota requeues and cooldowns. Cron has a provider-window hold when a structured retry hint is available. An exhausted quota is distinct from revoked credentials or an unsupported model; terminal provider failures must remain parked for operator action. The tested fake provider returns HTTP 429; it does not prove the exact live Codex quota payload or account eligibility.</p>
+</div>
+<div class="paragraph">
+<p>Task idempotency does not guarantee exactly-once external effects. Haven must bind results to the current run, retain checkpoints/artifacts and use operation keys for each deploy or outbound action. After a crash between an effect and its receipt, reconcile the actual target state before retrying. An ambiguous non-idempotent effect must wait for resolution. The shared board is coordination data, not an authorization boundary or a deployment approval authority.</p>
+</div>
+<div class="paragraph">
+<p>For WhatsApp, the Baileys bridge remains the first candidate: dedicated number, explicit sender allowlist, groups disabled until configured. It uses the unofficial Web protocol; account restrictions and protocol breakage remain possible. Cloud API is a separate alternative requiring Meta business setup and public HTTPS ingress. Neither path was paired. Local STT can avoid an extra API subscription, but Czech audio quality, model size, RAM and CPU latency require an H1 measurement. A Codex subscription alone does not establish STT service access.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_reproduction"><a class="anchor" href="#_reproduction"></a>Reproduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use a disposable checkout at the exact commit in <code>pins.json</code>. Commands below describe this audit, not a VPS installation. Do not point <code>HERMES_HOME</code> or <code>HERMES_RUNTIME_DIR</code> at an existing instance.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Run this in the Haven checkout before changing directories.
+export HAVEN_ROOT="$PWD"
+export HAVEN_RESEARCH="$HAVEN_ROOT/research/h0.1"
+git clone --depth 1 --branch v0.22.5 https://github.com/NousResearch/hermes-agent.git /tmp/haven-h0.1-hermes-v0.22.5
+cd /tmp/haven-h0.1-hermes-v0.22.5
+test "$(git rev-parse HEAD)" = bf0203a794a07aac3ff764972ab9087baa4e4f4e
+export HERMES_HOME=/tmp/haven-h0.1-state
+export HERMES_RUNTIME_DIR=/tmp/haven-h0.1-runtime
+python3 -m pm.build_env --source . --out /tmp/haven-h0.1-testenv --group dev --group test</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>All listed checkout, environment and container-store paths must be fresh and disposable. Change the example paths consistently if they already exist. The output destination must be fresh. PM selects the pinned Python and dependency lock. The test runner below strips credentials; all provider responses are synthetic.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">HERMES_PYTHON=/tmp/haven-h0.1-testenv/bin/python HERMES_E2E_STRICT_ACCEPTANCE=1 HERMES_TEST_FILE_RETRIES=0 \
+  scripts/run_tests.sh -j 2 tests/e2e/core/kanban/test_kanban_rate_limit_review.py</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That command fails on the unmodified release. Inspect the retained failure, then apply the exact patch:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">git apply --check "$HAVEN_RESEARCH/patches/upstream-117820.patch"
+git apply "$HAVEN_RESEARCH/patches/upstream-117820.patch"
+HERMES_PYTHON=/tmp/haven-h0.1-testenv/bin/python HERMES_E2E_STRICT_ACCEPTANCE=1 HERMES_TEST_FILE_RETRIES=0 \
+  scripts/run_tests.sh -j 2 tests/e2e/core/kanban/test_kanban_rate_limit_review.py \
+  tests/hermes_cli/test_kanban_db.py tests/hermes_cli/test_kanban_review_lifecycle.py \
+  tests/hermes_cli/test_kanban_review_lifecycle_complete.py</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For the WhatsApp connection tests, build a separate fresh environment with <code>--group dev --group test --extra sms</code>; the extra is how this release declares <code>aiohttp</code>. Merely installing the default test groups does not supply it. Exact test file selections are listed at the beginning of each retained log.</p>
+</div>
+<div class="paragraph">
+<p>The two container probes use fixed dedicated Podman store paths under <code>/tmp/haven-h0.1-podman-*</code>; inspect those paths before use and do not run concurrent copies. Populate it with the digest from <code>pins.json</code>, then run each probe. They refuse a rootful runtime and use <code>--pull=never</code> while executing:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mkdir -m 700 /tmp/haven-h0.1-podman-runtime
+XDG_RUNTIME_DIR=/tmp/haven-h0.1-podman-runtime podman \
+  --root /tmp/haven-h0.1-podman-storage --runroot /tmp/haven-h0.1-podman-run \
+  --storage-driver vfs --cgroup-manager cgroupfs pull \
+  docker.io/library/busybox@sha256:66a6306db78bf2dbf3487f293aa8d6990d8e506fdffab9cc43fe422becf886e4
+python3 "$HAVEN_RESEARCH/probes/isolation.py"
+env -i PATH=/usr/bin:/bin LANG=C.UTF-8 /tmp/haven-h0.1-testenv/bin/python \
+  "$HAVEN_RESEARCH/probes/dispatch_isolation.py" /tmp/haven-h0.1-hermes-v0.22.5</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_primary_sources_inspected"><a class="anchor" href="#_primary_sources_inspected"></a>Primary sources inspected</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/NousResearch/hermes-agent/releases/tag/v0.22.5">Release</a>, <a href="https://github.com/NousResearch/hermes-agent/issues/119070">tracked defect #119070</a>, <a href="https://github.com/NousResearch/hermes-agent/pull/117820">candidate patch #117820</a>.</p>
+</li>
+<li>
+<p>Pinned <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/features/kanban.md">Kanban reference</a>, <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/hermes_cli/kanban_db_dispatch.py">dispatcher</a>, <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/cron/quota_hold.py">quota hold</a>.</p>
+</li>
+<li>
+<p>Pinned <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/SECURITY.md">security boundaries</a>, <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/tools/environments/docker.py">container backend</a>, <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/pm/lock.json">runtime pins</a>.</p>
+</li>
+<li>
+<p>Pinned <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/features/codex-app-server-runtime.md">Codex app-server integration</a>, <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/messaging/whatsapp.md">WhatsApp</a>, <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/messaging/whatsapp-cloud.md">Cloud API</a>, <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/tools/transcription_tools.py">STT language resolver</a>.</p>
+</li>
+<li>
+<p>OpenAI <a href="https://learn.chatgpt.com/docs/auth">authentication</a>, <a href="https://learn.chatgpt.com/docs/app-server#auth-endpoints">app-server authentication and quota RPCs</a>, <a href="https://learn.chatgpt.com/docs/sandboxing#configure-defaults">sandbox defaults</a>. Personal/open-source app-server use is documented; account eligibility and live inference remain untested. Commercial/hosted use needs separate assessment.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Context7 returned a monthly quota error. Official documentation and exact-version upstream source were used instead. Live website documentation was not treated as proof of behavior in the tagged release.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

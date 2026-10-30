@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.6: private Telegram text · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.6: private Telegram text</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-10-29: accepted on the existing Ubuntu pilot. Private bot enrollment, owner text replies, denied-sender intake, remote-command restriction and enabled-transport restart recovery are verified. The owner selected Telegram for themselves only after confirming WhatsApp Agent Platform is unavailable on their account. Voice, the second member and family data remain outside this text milestone.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bounded_pilot"><a class="anchor" href="#_bounded_pilot"></a>Bounded pilot</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Hermes stays at v0.22.5, base <code>bf0203a794a07aac3ff764972ab9087baa4e4f4e</code>, with the existing attributed recovery patch. The native Telegram extra pins <code>python-telegram-bot[webhooks]==22.8</code>; the pilot uses only long polling. There is no public webhook, new firewall rule, third-party plugin or second gateway.</p>
+</div>
+<div class="paragraph">
+<p>The optional Haven input is <code>telegram.enabled</code> and a quoted numeric <code>telegram.owner_id</code>. Disabled is the default; enabled requires exactly one owner. A username/display name is not an identity. The native profile has matching sender/private-chat allowlists, a nonmatching group sender sentinel, no guests/bots/group observation and no remote administrative principal. The permitted chat commands remain help/whoami/new/stop/status. Native Telegram intake rejects strangers and groups before event construction; the command gate and model tool restrictions remain separate.</p>
+</div>
+<div class="paragraph">
+<p>CLI/local/API/cron/Telegram/WhatsApp model toolsets are empty. Coding dispatch, fallback, MCP/hooks, community plugins and lazy installs stay disabled. Automatic speech transcription is off; full attachment behavior and Czech voice quality are not accepted here. Strict outgoing media paths do not trust fresh arbitrary host files. Cold boot does not deliberately discard pending Telegram updates; this is not an exactly-once message-delivery guarantee.</p>
+</div>
+<div class="paragraph">
+<p>The service explicitly disables first-contact profile building and predeclares the busy/tool-progress hints as seen. Those native hints otherwise write <code>onboarding.seen</code> into the guarded YAML after a message. They offer settings/tools outside this pilot, so they are suppressed rather than allowing arbitrary runtime configuration edits. The first-contact regression test exercises the actual pinned handler and confirms that the rendered profile remains unchanged.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prepare_without_activating"><a class="anchor" href="#_prepare_without_activating"></a>Prepare without activating</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use the checked public commit, pinned Ansible dependencies and explicit private inventory from <a href="h1.3-bootstrap.html" class="xref page">H1.3</a>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml \
+  ops/telegram-prepare.yml -e haven_telegram_prepare_authorized=true</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This checks the exact source and dependency hashes, builds <code>/var/lib/haven/telegram/venv</code> through upstream PM with only <code>--extra telegram</code>, verifies the real 22.8 import and protects prepared code as root-owned/read-only. Installation HOME/profile/cache are separate from production credentials. It neither changes the core environment nor enables messaging. The receipt permits repeat preparation with the same pins.</p>
+</div>
+<div class="paragraph">
+<p>Render/deploy the updated service with both transports disabled using <a href="h1.5-service-recovery.html" class="xref page">the application procedure</a> before owner enrollment. The guard/helper/pin files belong to the bounded application snapshot; credentials, conversations and databases do not. The selected interpreter changes to the prepared Telegram environment only when Telegram is enabled. A missing model login still does not stop deterministic scheduling; an enabled messaging transport requires its own protected credential file.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_owner_enrollment"><a class="anchor" href="#_owner_enrollment"></a>Owner enrollment</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Create a bot through official <a href="https://t.me/BotFather">BotFather</a> using <code>/newbot</code>. Keep the token private; do not put it in YAML, command arguments, chat or Git.</p>
+</li>
+<li>
+<p>In the owner&#8217;s own terminal, run the installed helper over interactive SSH. It requires the disabled Telegram profile and refuses an existing token:</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">ssh -t haven-example 'sudo -u haven /usr/bin/env \
+  HERMES_HOME=/var/lib/haven/.hermes PYTHONPATH=/var/lib/haven/haven-tools \
+  /var/lib/haven/telegram/venv/bin/python -m scripts.telegram_runtime enroll'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The helper prompts for the token without echo, verifies the bot and refuses an existing webhook. It prints a random one-time challenge in that local terminal. Send that exact text to the displayed bot from your own Telegram account. Only a matching challenge in a human sender&#8217;s private chat can select the numeric owner. The helper saves the token in <code>/var/lib/haven/.hermes/credentials/telegram-bot-token</code> with directory <code>0700</code> and file <code>0600</code>, then prints only the verified owner ID and bot username. It neither calls the model nor sends chat messages. Keep other pollers stopped throughout enrollment.</p>
+</div>
+<div class="paragraph">
+<p>Enter that ID in the private instance, render a fresh <code>--service</code> profile and deploy explicitly:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schema_version: 1
+telegram:
+  enabled: true
+  owner_id: "123456789" # synthetic; use the locally verified owner ID
+whatsapp:
+  enabled: false</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Do not reuse the synthetic ID. Startup validates policy, dependency hashes and credential metadata, then reads the token into a sanitized child environment. Native YAML and application rollback never contain it. Health requires the running gateway, fresh heartbeat and a connected Telegram adapter from the same process.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_live_acceptance"><a class="anchor" href="#_live_acceptance"></a>Live acceptance</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Send a unique harmless text from the owner&#8217;s private chat and verify one Nora answer without tools/fallback.</p>
+</li>
+<li>
+<p>Verify a denied principal cannot reach conversation/model handling. A separate account is optional: temporarily configure a different valid numeric owner ID, send from the now-denied actual owner, check connection plus aggregate session/model counters, and restore the accepted profile in cleanup even on failure.</p>
+</li>
+<li>
+<p>Verify admin commands cannot change models/configuration or run tools. Do not confuse a hidden command menu with authorization.</p>
+</li>
+<li>
+<p>Restart the managed service, verify it reconnects without token entry and send another unique text. Inspect replay/duplicate handling without assuming exactly-once external sends.</p>
+</li>
+<li>
+<p>Repeat deployment unchanged and retain a working application rollback. Never copy/delete the token or OAuth as a rollback step.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Do not run a second unmanaged gateway or <code>getUpdates</code> poller beside the service. After uncertain delivery, reconcile before resending. Revoke/rotate compromised bot tokens through BotFather with a deliberate disabled-profile replacement; enrollment refuses silent overwrite.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_local_evidence_and_reproduction"><a class="anchor" href="#_local_evidence_and_reproduction"></a>Local evidence and reproduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The foundation suite covers schema rejection, bounded runtime policy, token permissions/symlink rejection, supervised token injection, private-challenge enrollment and fixed diagnostics. Full public checks also run production Ansible lint/syntax, secret scans and the documentation build/links.</p>
+</div>
+<div class="paragraph">
+<p>A separate fresh test environment was built through the exact upstream PM lock with <code>--group dev --group test --extra telegram</code>. The previous H1.5 environment lacked PTB; the first research run failed two cases for that missing dependency. The original complete run passed 81 tests. Adding the first-contact regression brings the selection to 82 passing tests across nine files, with no retries; five are retained Haven scenarios and the rest are upstream tests. No live account, model or production profile was used in these test runs.</p>
+</div>
+<div class="paragraph">
+<p>From the pinned patched Hermes checkout, set <code>HERMES_PYTHON</code> to that disposable interpreter and <code>HAVEN_ROOT</code> to the public Haven checkout:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 2 \
+  "$HAVEN_ROOT/research/h1.6/test_native_telegram_policy.py" \
+  tests/gateway/test_telegram_auth_check.py \
+  tests/gateway/test_telegram_group_gating.py \
+  tests/gateway/test_telegram_callback_auth_fail_closed.py \
+  tests/gateway/test_telegram_connect.py \
+  tests/gateway/test_telegram_conflict.py \
+  tests/gateway/test_telegram_error_redaction.py \
+  tests/gateway/test_telegram_polling_progress.py \
+  tests/gateway/test_telegram_pending_update_probe.py --file-timeout 90</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_future_whatsapp_migration"><a class="anchor" href="#_future_whatsapp_migration"></a>Future WhatsApp migration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The owner wants to reconsider WhatsApp next year; no availability date or automatic migration is scheduled. Keep the same coordinator/model/instructions and canonical domain data. Review the then-supported adapter and permissions, map the authenticated owner explicitly, enroll credentials separately and accept the new channel before disabling the old intake. Telegram/WhatsApp histories have different native session identities and are not silently merged. Decide history retention and reconcile queued/outbound work at cutover. The second member and <a href="family-conversations.html" class="xref page">family authorization</a> need their own acceptance.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_existing_pilot_preparation"><a class="anchor" href="#_existing_pilot_preparation"></a>Existing pilot preparation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The application was prepared from public implementation revision <code>0d8c0551a0ef9fde26098ba0f5fdfd35aab668e6</code>. Frozen dependency preparation passed; repeating it made no changes. The service guard/helper/unit were deployed with both messaging transports disabled, and the repeat made no effective changes. The actual PTB import and source-pin helper check passed. Noninteractive enrollment was refused before token entry or API use.</p>
+</div>
+<div class="paragraph">
+<p>A separate application rollback check appended a harmless comment to the deployed Telegram helper, then restored all nine fixed files with their hashes, modes and owners. Service health passed afterwards. OAuth inode/size/mtime were unchanged across preparation/deployment and rollback. The baseline core interpreter remains selected until Telegram activation; the prepared optional environment is retained read-only. No OS update, firewall change, bot enrollment, live Telegram message or model request was performed by these preparation checks.</p>
+</div>
+<div class="paragraph">
+<p>These initial results establish the application preparation path. The subsequent live acceptance below uses the enrolled account.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_live_pilot_result"><a class="anchor" href="#_live_pilot_result"></a>Live pilot result</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The first enabled deployment connected and delivered a no-tools reply, but native first-contact onboarding wrote <code>onboarding.seen.profile_build_offered</code> into YAML. The strict guard rejected that unexpected field and automatic application rollback restored healthy disabled service. The first-contact regression reproduced the write; the explicit onboarding settings described above fixed it without relaxing policy comparison. The corrected application deployed from <code>191849494b5417129306b95703b2277470b4ac7e</code>.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Check</th>
+<th class="tableblock halign-left valign-top">Verified outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enrollment and connection</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Owner-terminal challenge completed, protected token accepted, no webhook; the native adapter connects in the supervised process.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Personal text</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The owner confirmed an actual answer on the phone; persisted final-response obligations record successful delivery and model tool counts remain zero.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Denied sender</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Temporarily allowed only the owned bot&#8217;s ID, excluding the real human owner. The owner sent a synthetic marker. The native auth log records its rejection; user/model/message counters did not increase and the marker never entered the conversation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Safe test cleanup</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A root-only application snapshot and a four-minute automatic restore were armed before the temporary denial. The restore returned the accepted profile; snapshot hashes were verified and the temporary timer/code directory removed.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restart</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A controlled restart of the enabled service reconnects without token entry. The owner confirmed the subsequent synthetic reply.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remote administration</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The owner confirmed <code>/model</code> is rejected. Native configuration remained unchanged; the no-tools/no-fallback profile remains enforced.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Active deployment repeat</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The same enabled profile passed <code>ok=19 changed=0 failed=0</code>; the service stayed healthy under the same process without a restart.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Read-only acceptance audits selected only Telegram rows and returned aggregate counts or synthetic-marker matches, never transcripts or credentials. Local checks cover 75 project tests and 82 pinned native Telegram tests; live outcomes are separate evidence. This accepts one owner&#8217;s text pilot, not exactly-once external delivery, speech or a multi-user family authorization service.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sources"><a class="anchor" href="#_sources"></a>Sources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The exact pinned <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/plugins/platforms/telegram/adapter.py">native adapter</a>, gateway authorization/slash code and lock were inspected. Telegram documents <a href="https://core.telegram.org/bots/tutorial">BotFather enrollment</a> and <a href="https://core.telegram.org/bots/api#getupdates">getUpdates</a>; <a href="https://docs.python-telegram-bot.org/en/v22.8/telegram.ext.applicationbuilder.html">PTB 22.8</a> documents the client builder. Context7 was unavailable because its monthly quota was exhausted.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haven documentation · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Haven documentation</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Haven is a personal agent system built around Hermes, with Telegram as its first phone interface and WhatsApp as a future option. Text comes first; inbound Czech voice is later H1 work. The first deployment uses one Ubuntu VPS and bounded automation. Nora is the coordinator&#8217;s working name.</p>
+</div>
+<div class="paragraph">
+<p>The local foundation is accepted through a fresh checkout: public sources, a private-instance template, configuration v1 validation and a documentation/check workflow. The existing Ubuntu pilot also has accepted private administration, independent model authentication, a supervised coordinator and owner-only Telegram text. Czech voice and off-site restore remain later H1 work; WhatsApp is deferred.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_start_here"><a class="anchor" href="#_start_here"></a>Start here</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="local-development.html" class="xref page">Local development</a>: prepare the public checkout and a separate private instance.</p>
+</li>
+<li>
+<p><a href="configuration.html" class="xref page">Configuration v1</a>: supported inputs, defaults, overrides and credential references.</p>
+</li>
+<li>
+<p><a href="documentation.html" class="xref page">Documentation and checks</a>: build this site and run the public checks.</p>
+</li>
+<li>
+<p><a href="architecture.html" class="xref page">Architecture</a>: controller/executor boundaries, recovery and milestone scope.</p>
+</li>
+<li>
+<p><a href="h1-prerequisites.html" class="xref page">H1 prerequisites</a>: what must be selected and verified before live operation.</p>
+</li>
+<li>
+<p><a href="h1.3-first-access.html" class="xref page">VPS access and security</a>: administrator keys, service account, firewall and verified configuration rollback.</p>
+</li>
+<li>
+<p><a href="h1.3-private-access.html" class="xref page">Tailscale private administration</a>: verified enrollment, policy, private-only SSH and guarded access recovery.</p>
+</li>
+<li>
+<p><a href="h1.3-bootstrap.html" class="xref page">Repeatable bootstrap and restart</a>: verified adoption of the secured pilot, restoration and post-boot access.</p>
+</li>
+<li>
+<p><a href="h1.5-service-recovery.html" class="xref page">Supervised service and recovery</a>: bounded native gateway, application rollback, restart-safe cron workers and recovery evidence.</p>
+</li>
+<li>
+<p><a href="h1.6-telegram.html" class="xref page">Telegram private text</a>: accepted owner enrollment, live replies, sender/command rejection and restart recovery.</p>
+</li>
+<li>
+<p><a href="family-conversations.html" class="xref page">Personal conversations and family sharing</a>: deferred family design and access constraints.</p>
+</li>
+<li>
+<p><a href="h1.6-agent-platform-assessment.html" class="xref page">Agent Platform assessment</a>: exact community connector revision and local mocked compatibility results.</p>
+</li>
+<li>
+<p><a href="h1.6-whatsapp.html" class="xref page">Earlier WhatsApp bridge preparation</a>: retained optional Baileys procedure; inactive and not the selected path.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_evidence_and_limits"><a class="anchor" href="#_evidence_and_limits"></a>Evidence and limits</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="research/h0.1/README.html" class="xref page">H0.1</a> established a technical path using synthetic providers and rootless-container probes. <a href="h0.2-acceptance.html" class="xref page">H0.2</a> verified the local repository/template workflow. H0.3 implements input validation; <a href="h0.4-acceptance.html" class="xref page">H0.4</a> records documentation and check acceptance. <a href="h0.5-acceptance.html" class="xref page">H0.5</a> verified the complete setup from a clean checkout and records the H1 handoff.</p>
+</div>
+<div class="paragraph">
+<p>This site contains only public material. Personal configuration and instructions belong in each user&#8217;s separate private repository. Runtime sessions, credentials, databases and backups stay outside the public sources and build inputs.</p>
+</div>
+<div class="paragraph">
+<p>The owner selected MIT and both repositories are published with their intended visibility; <a href="h1.1-publication.html" class="xref page">automatic local push checks</a> replace unavailable GitHub Actions with the owner&#8217;s agreement. Original Haven material uses <a href="_attachments/LICENSE.txt" class="xref attachment">MIT</a>. The retained Hermes patch and license keep their independent upstream attribution.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

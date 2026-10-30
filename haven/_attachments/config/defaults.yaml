@@ -1,0 +1,10 @@
+schema_version: 1
+instance:
+  timezone: Etc/UTC
+host:
+  service_user: haven
+telegram:
+  enabled: false
+whatsapp:
+  enabled: false
+  allowed_senders: []
