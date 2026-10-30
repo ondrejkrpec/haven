@@ -1,0 +1,19 @@
+= ADR 0010: Scaleway storage and hosted Healthchecks.io
+
+Date: 2026-10-30. Status: provider choice accepted by the owner; provisioning and production acceptance pending.
+
+== Context
+
+H1.9 needs an encrypted recovery copy outside the VPS and alerts that survive loss of that host. The owner requested a comparison of other storage and monitoring providers before choosing, and chose a personal password manager for the independent repository password.
+
+== Decision
+
+Use Scaleway Object Storage for the pilot's restic repository and hosted Healthchecks.io for backup and service heartbeats. Prepare Paris Standard Multi-AZ in a dedicated backup Project, a private versioned bucket and restricted application credentials. Keep maintenance/recovery credentials and the repository password recovery copy outside the VPS. These layout/access details are implementation targets requiring backend tests, not evidence of provisioned resources.
+
+Use independent systemd timers; do not depend on the coordinator's disabled model/cron workers. The proposed first alert destination is the owner's verified account email, pending confirmation. Complete enrollment and actual account billing with the owner; do not request secrets in chat.
+
+== Consequences
+
+The provider-selection step is closed. The link:../h1.9-provider-options.adoc[comparison] remains historical research rather than an open choice. Versioned objects add storage cost, and encryption alone does not protect against repository deletion. Verify the storage policy, old-version recovery and maintenance separation before production activation. Object Lock is not enabled by this decision.
+
+The link:../h1.9-scaleway-healthchecks.adoc[setup plan] records the owner handoff and live acceptance boundaries. Neither this decision nor the synthetic local restic test establishes a functioning off-site backup, delivered alert or complete host recovery.

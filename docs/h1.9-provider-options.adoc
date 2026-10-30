@@ -1,6 +1,6 @@
 = H1.9: Storage and monitoring options
 
-Checked against official sources on 2026-10-30. The owner requested alternatives before selecting a provider. This is a comparison, not an order or an account-specific quote. Prices below describe storage only, before taxes unless stated; USD and EUR are deliberately not converted. Volume means the entire retained repository, not the size of one daily backup. Confirm billable rounding, minimum invoice/payment rules and actual account terms before ordering.
+Checked against official sources on 2026-10-30. After this comparison, the owner selected link:h1.9-scaleway-healthchecks.adoc[Scaleway Object Storage + hosted Healthchecks.io]; provisioning and live acceptance remain pending. This comparison is not an order or an account-specific quote. Prices below describe storage only, before taxes unless stated; USD and EUR are deliberately not converted. Volume means the entire retained repository, not the size of one daily backup. Confirm billable rounding, minimum invoice/payment rules and actual account terms before ordering.
 
 == Backup storage
 

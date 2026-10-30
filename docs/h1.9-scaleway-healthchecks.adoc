@@ -1,0 +1,65 @@
+= H1.9: Scaleway and Healthchecks.io setup
+
+Status, 2026-10-30: the owner selected Scaleway Object Storage and hosted Healthchecks.io after the link:h1.9-provider-options.adoc[provider comparison]. Account enrollment, credentials, notification destination and live acceptance remain pending. This is a provisioning and verification plan, not an installed backup service. See link:adr/0010-offsite-backup-providers.adoc[ADR 0010] and the link:h1.9-backup-recovery.adoc[backup implementation plan].
+
+== Owner enrollment
+
+. Sign in to https://console.scaleway.com/[Scaleway] or create the account, complete its required verification/payment setup, and enable MFA. Confirm the actual account price and billing details before creating billable resources. Keep recovery codes outside the VPS.
+. Sign in to https://healthchecks.io/[hosted Healthchecks.io], verify the notification email and enable account two-factor authentication. The proposed first channel is the account email; the owner still needs to confirm this choice. The monitor must remain accessible when Haven is unavailable.
+. In the owner's password manager, reserve an entry for the restic repository password and a recovery record for the account/project, region, bucket, repository prefix and source revisions. Generate a unique repository password locally when enrollment starts; retain it before initializing the repository. Do not reuse a Scaleway password or API secret as the restic password.
+
+Account registration, billing acceptance, MFA and notification verification require the owner's interaction. Do not send passwords, API secrets, recovery codes or heartbeat URLs through chat. Merely report which enrollment steps are complete. No third-party account or resource was created by this preparation.
+
+== Proposed storage layout
+
+[cols="1,3",options="header"]
+|===
+|Setting |Initial implementation target, subject to live verification
+|Project |A dedicated backup Project, containing no unrelated resources. Project-scoped IAM is not itself a bucket-level boundary.
+|Region / class |Paris (`fr-par`), Standard Multi-AZ. Keep data online for recovery; do not add Glacier transitions to an active restic repository.
+|Bucket / prefix |One private bucket with a unique non-personal name; one `haven` repository prefix. A public example name is not the real bucket name. Disable website/public access and do not grant a wildcard principal access.
+|Versions |Enable bucket versioning before the first repository write. Keep non-current versions during initial acceptance; no automatic version expiration or retention/prune until its recovery behavior is tested. Previous versions add billable storage.
+|Repository |Pinned restic 0.19.1, repository format 2, native S3 backend. Use the endpoint displayed for the actual Paris bucket and a repository-location file. No credentials in a repository URL.
+|Object Lock |Do not apply blanket default retention in this preparation. Object Lock has lasting bucket consequences and default retention affects new lock/index objects too. Decide its use only after a disposable backend test proves normal locking, backup, maintenance and recovery behavior.
+|===
+
+The https://www.scaleway.com/en/docs/object-storage/how-to/create-a-bucket/[bucket guide] describes visibility and versioning at creation. Restic encryption is independent of optional provider-side encryption; introducing a separately managed KMS key would add another recovery dependency and is not part of this initial plan.
+
+== Access contract to implement and test
+
+Create a dedicated IAM application for the VPS, not an owner API key. Combine Project-scoped IAM with a bucket policy naming the exact application. Review the https://www.scaleway.com/en/docs/iam/policies-permissions/permission-sets/[current permission sets] and https://www.scaleway.com/en/docs/object-storage/reference-content/s3-iam-permissions-equivalence/[S3 operation mapping] when constructing the policy. An IAM delete permission can cover more than lock deletion, so the bucket policy must supply the narrower resource/action restriction. The following is the required behavior, not an already tested policy:
+
+[cols="1,3",options="header"]
+|===
+|Principal |Required boundary
+|VPS backup application |List the repository, read/write its objects, perform needed multipart operations, and remove restic objects under `haven/locks/`. Deny deleting snapshot/data/key/index objects during normal backup, deleting particular object versions, changing policies/versioning/lifecycle/retention, or accessing another bucket/prefix. Do not grant IAM or account administration.
+|Maintenance / recovery operator |Separate credentials outside the VPS. Review and run retention/prune and any recovery of object versions from the trusted administrative workstation. Keep a way for the account owner to repair policy mistakes. These credentials must not be supplied to routine timers.
+|Unauthenticated caller |No bucket listing or object reads.
+|===
+
+Scaleway https://www.scaleway.com/en/docs/object-storage/api-cli/bucket-policy/[bucket policies] use an allowlist; do not assume AWS-style explicit Deny statements provide enforcement. Preserve the intended owner/recovery access when replacing the one bucket policy. Project-wide IAM may allow access to another bucket without an appropriate policy, so a real negative-access test is mandatory. Never broaden to full access just to make a test pass.
+
+Versioning plus restricted credentials is a proposed recovery layer, not proof of immutable or append-only backups. An overwrite may hide an older object; repository deletion may require recovery of many related versions to a consistent point. Test that process in a separate disposable repository. Permanent version deletion and disabling the protection must be unavailable with the VPS key. Separately controlled version cleanup must leave a documented recovery window and account for storage growth. See the provider's https://www.scaleway.com/en/docs/object-storage/how-to/use-bucket-versioning/[versioning] and https://www.scaleway.com/en/docs/object-storage/how-to/use-object-lock/[Object Lock] behavior.
+
+== Two external checks
+
+Use a separate Healthchecks project and individual UUID ping URLs, rather than an account management key or a shared project ping key on the VPS. Keep each URL in a protected credential file. Neither descriptions nor ping bodies should contain paths, conversations, command output or credentials.
+
+[cols="1,1,1,3",options="header"]
+|===
+|Check |Proposed schedule |Grace |When to send success
+|`haven-backup` |Simple, 24 hours |1 hour |After a complete exit-zero backup, confirmation of its exact snapshot and the required integrity checks. A proposed daily UTC timer and these settings permit a late alert after about 25 hours without success; they do not establish the 24-hour recovery objective.
+|`haven-service` |Simple, 5 minutes |5 minutes |After the independent probe confirms the coordinator is running, its existing operational snapshot is fresh, and the last accepted backup is no older than 24 hours. This does not prove end-to-end Telegram reply delivery.
+|===
+
+For backup, `/start` begins the execution window, normal success ends it and `/fail` reports a failed/incomplete run. A crash or failed network request must still lead to a missed-heartbeat alert. Configure timer/runtime limits to finish or fail within the backup grace window; persistent catch-up runs must not race another run. The short-period service probe is independent of both Nora and the backup process, with bounded HTTPS requests and no failure output attached. Missing initial backup must fail freshness once monitoring is armed, not silently pass.
+
+The proposed settings follow Healthchecks' https://healthchecks.io/docs/configuring_checks/[schedule semantics] and https://healthchecks.io/docs/signaling_failures/[failure signaling]. Leave checks paused until their runner and notification integration are ready. Merely creating checks or sending a manual success ping is not acceptance. Test the https://healthchecks.io/docs/configuring_notifications/[chosen notification integration], then a deliberately missed heartbeat and its recovery without stopping the production coordinator. Do not send that external notification without the owner's selected destination and authorized live test.
+
+== Private handoff and next deployable increment
+
+Enrollment will place separate storage credentials, the restic password and per-check URLs in root-controlled files on the VPS, outside checkouts and routine logs; exact paths and transfer commands belong to the reviewed runner/deployment change. Use a hidden terminal prompt or protected-file transfer, not shell arguments/history. The owner's password manager holds the independent recovery copies. Do not create a plaintext credentials template inside a repository, even if ignored. No enrollment command or production runner is supplied by this documentation-only change.
+
+After accounts are ready, record only non-secret resource identifiers privately. Before initializing the production repository, test the actual policy with synthetic data: read/write/list, normal lock cleanup and multipart failure cleanup; rejected snapshot/data/version deletion; rejected policy/versioning changes and access outside the repository; exact restore and protected-version recovery with the separate operator. Clean up only disposable test resources and retain the evidence. Backend compatibility and policy failure remain blockers for production activation.
+
+In parallel, finish the instance path manifest and coordinated consistency procedure, then implement and test the bounded runner and systemd units. Deploy only after local checks and secret enrollment. Finally run a real encrypted backup, an external alarm and isolated recovery onto a separate target, with Telegram polling/model/scheduler disabled. H1.9 remains open until those live tests and the owner recovery runbook pass.

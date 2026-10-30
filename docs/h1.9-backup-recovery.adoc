@@ -1,6 +1,6 @@
 = H1.9: Backup and recovery preparation
 
-Status, 2026-10-30: preparation implemented; production off-site backup and monitoring are not enabled. This increment supplies a bounded metadata inventory, a pinned synthetic restic experiment and the implementation/acceptance plan below. Provider selection, real credentials, an external notification channel and clean-host recovery remain open. No installation, service restart or production secret copy is part of this increment.
+Status, 2026-10-30: preparation implemented; production off-site backup and monitoring are not enabled. This increment supplies a bounded metadata inventory, a pinned synthetic restic experiment and the implementation/acceptance plan below. The owner selected link:h1.9-scaleway-healthchecks.adoc[Scaleway + Healthchecks.io]; account enrollment, real credentials, an external notification destination and clean-host recovery remain open. No installation, service restart or production secret copy is part of this increment.
 
 == Preparation tools
 
@@ -40,9 +40,9 @@ SQLite Online Backup establishes consistency for one database. It does not produ
 
 Use a private staging directory (`0700`, files `0600`), an explicit path manifest and path/link checks. Bound source size, free staging space, concurrency and runtime. Clean staging on success, exception, cancellation and subsequent recovery. Do not put real plaintext staging in a controller checkout. The backup process is trusted and isolated from Nora's model and future H2 workers; its permissions do not grant workers access to credentials.
 
-== Storage and monitoring candidates
+== Selected storage and monitoring
 
-link:h1.9-provider-options.adoc[Provider options] compares current official prices, locations and monitoring limits. No candidate is selected automatically. Before provisioning confirm the owner's account price/tax, restricted credentials, recovery-key storage and notification destination.
+The owner selected Scaleway Object Storage and hosted Healthchecks.io after reviewing link:h1.9-provider-options.adoc[provider options]. The link:h1.9-scaleway-healthchecks.adoc[setup plan] specifies enrollment, proposed storage/access boundaries and two external checks. Before provisioning confirm the owner's account price/tax, restricted credentials and notification destination. The independent repository password belongs in the owner's password manager.
 
 Restic encrypts content, but encryption does not prevent repository deletion by an attacker with storage credentials. Verify protection for old recovery points using provider versioning/immutability, separately controlled snapshots or an actually tested append-only path. Keep destructive retention/maintenance authorization separate where the selected backend permits it. Do not claim that an untested bucket policy is append-only: lock removal and normal backend operations must still work.
 
@@ -53,7 +53,7 @@ Use independent systemd services/timers, with no Hermes model/cron dependency. A
 == Remaining implementation and live acceptance
 
 . Finish the explicit path manifest, extension/identity review and cross-file consistency strategy from the private metadata inventory.
-. Confirm storage/monitor choices. The owner enrolls accounts/MFA, notification address and password-manager recovery material through private procedures; no credentials are supplied in chat.
+. Enroll the selected Scaleway/Healthchecks accounts, MFA, notification destination and password-manager recovery material through private procedures; no credentials are supplied in chat.
 . Implement the bounded production runner and systemd units, with a verified tool pin, least-privilege storage access, fixed diagnostics, staging cleanup and a lock. Validate against synthetic fixtures before deployment.
 . Exercise allowed read/write/lock operations and rejected access to another bucket/prefix; test old-backup protection and the actual maintenance path. Test success, partial backup, wrong/missing key, unavailable storage and stale/missing external heartbeats.
 . Restore an exact snapshot onto a disposable isolated host with outbound messaging/model/scheduler disabled. Verify database integrity, receipts, modes/owners and required services. Reconcile or re-enroll credentials as necessary. Never start a second Telegram `getUpdates` poller beside production; deferred WhatsApp sessions must also remain inactive.
