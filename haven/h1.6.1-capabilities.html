@@ -58,6 +58,10 @@
     
   </li>
   <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
     <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
     
   </li>
@@ -175,7 +179,10 @@
 <h2 id="_supported_behavior"><a class="anchor" href="#_supported_behavior"></a>Supported behavior</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><code>system.status</code> (also <code>stav systému</code>) checks the current gateway PID, fresh heartbeat and connected Telegram writer. <code>system.capabilities</code> (also <code>co umíš</code>) lists enabled operations. Matching accepts case/spacing differences and a final question mark; it never asks a model to classify intent. Other requests receive a fixed refusal. <code>wishlist.check_deals</code> is explicitly disabled and has no implementation.</p>
+<p><code>system.status</code> (also <code>stav systému</code>) checks the current gateway PID, fresh heartbeat and connected Telegram writer. <code>system.capabilities</code> (also <code>co umíš</code>) lists enabled operations. Matching accepts case/spacing differences and final question marks, periods or exclamation marks; it never asks a model to classify intent. Other requests receive a fixed refusal. <code>wishlist.check_deals</code> is explicitly disabled and has no implementation.</p>
+</div>
+<div class="paragraph">
+<p>The text usability update adds explicit natural Czech questions, including <code>Jaký je stav systému?</code>, <code>Jaký je aktuální stav systému?</code>, <code>Jak se má systém?</code>, <code>Jak je na tom systém?</code>, <code>Co všechno umíš?</code> and <code>Jaké máš funkce?</code>, with unaccented equivalents. Capability replies show Czech examples. The whole normalized message must match an alias; a quoted question, negation or appended instruction is not a match. This source update does not establish live deployment or enable transcription; <a href="h1.7-czech-voice.html" class="xref page">H1.7 voice</a> is deferred by the owner.</p>
 </div>
 <div class="paragraph">
 <p>Both enabled operations have a zero model-call, token and monetary budget and a limit of 60 accepted requests per owner/operation/hour. The registry is deployment input, not chat-editable configuration. Enabling a future integration requires implementing its handler and authorization and accepting its effects separately. The current validator rejects nonzero model budgets and unknown handlers.</p>

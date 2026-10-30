@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.7: Deferred Czech voice · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.7: Deferred Czech voice</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-10-30: deferred by the owner because voice is not a current priority. Provider selection and voice implementation are stopped. The independent natural Czech text questions are implemented in the explicit capability registry. Live voice intake remains disabled; no provider was selected and no Czech quality or latency measurements were made. H1.9 off-site backup and recovery is the next planned operational milestone. The notes below retain the initial findings for a future return to H1.7.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_intended_behavior"><a class="anchor" href="#_intended_behavior"></a>Intended behavior</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The first voice increment should reach the same owner-only, read-only operations as text. <code>Jaký je stav systému?</code> maps to <code>system.status</code>; <code>Co všechno umíš?</code> maps to <code>system.capabilities</code>. Text matching uses complete explicit aliases, accepts normal sentence punctuation and does not call a model to classify intent. Additional requests remain unsupported. Voice replies are outside H1.7.</p>
+</div>
+<div class="paragraph">
+<p>The existing <a href="h1.6.1-capabilities.html" class="xref page">native guard</a> continues to block ordinary model/tool/cron execution. Adding speech recognition requires its own bounded path and tests; enabling a generic AI fallback is not part of this milestone.</p>
+</div>
+<div class="paragraph">
+<p>Source inspection of the pinned Hermes base <code>bf0203a794a07aac3ff764972ab9087baa4e4f4e</code> found that the current <code>post_gateway_admission</code> hook supplies text and identity, without media paths. It consumes the message before normal turn-context transcription. The built-in enrichment also wraps recognized text in quotes and can attempt a local fallback after provider failure. Merely setting <code>stt.enabled: true</code> would not connect voice to the current capability dispatcher. The selected integration must explicitly bridge admitted audio to plain recognized text and enforce the chosen provider/failure policy.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_telegram_is_not_the_transcription_provider"><a class="anchor" href="#_why_telegram_is_not_the_transcription_provider"></a>Why Telegram is not the transcription provider</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Telegram&#8217;s <a href="https://core.telegram.org/bots/api#voice">Bot API Voice object</a> supplies a file identifier and audio metadata, not a transcript. Telegram provides <a href="https://core.telegram.org/api/transcribe">voice transcription</a> to its user clients, but <a href="https://core.telegram.org/method/messages.transcribeAudio">messages.transcribeAudio</a> is explicitly restricted to users. The existing bot token cannot invoke it. A client-visible transcript does not establish that the bot receives text. H1.7 does not introduce an authenticated personal Telegram user session.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_provider_candidates"><a class="anchor" href="#_provider_candidates"></a>Provider candidates</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These are candidates checked against primary documentation on 2026-10-30, not installed dependencies or verified Czech benchmarks. Context7 was unavailable because its monthly quota was exhausted.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Candidate</th>
+<th class="tableblock halign-left valign-top">Benefit</th>
+<th class="tableblock halign-left valign-top">What remains to verify</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Local multilingual Whisper through <a href="https://github.com/SYSTRAN/faster-whisper">faster-whisper</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CPU/int8 operation; audio need not leave the host for recognition; no per-minute API fee.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pin the release, model and dependencies; measure Czech accuracy, cold/warm latency and CPU/RAM with a small model. Published eight-thread benchmarks do not establish performance on the two-vCPU pilot.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Local multilingual Whisper through <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Native CPU implementation with quantization and a possible future Apple Silicon path.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pin the build/model; verify audio decoding, Czech quality, resource limits and integration. It is an alternative to compare, not a second required production backend.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cloud <a href="https://developers.openai.com/api/docs/models/gpt-transcribe">gpt-transcribe</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recorded-file transcription without hosting inference on the VPS. The <a href="https://developers.openai.com/api/docs/pricing">current listed price</a> is USD 0.0045/minute, or USD 0.45 per 100 minutes before taxes and other charges.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Explicit cloud choice, separate API credentials/billing, Czech samples, upload formats, timeout and spending limits. This does not use Nora&#8217;s existing subscription OAuth credentials.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>OpenAI&#8217;s <a href="https://developers.openai.com/api/docs/guides/speech-to-text">current guide</a> recommends <code>gpt-transcribe</code> and marks older <code>whisper-1</code>/<code>gpt-4o-*-transcribe</code> API models for shutdown on 2027-02-26. That API deprecation is distinct from running an open-source Whisper model locally. No fallback provider is selected automatically.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_next_implementation_and_acceptance"><a class="anchor" href="#_next_implementation_and_acceptance"></a>Next implementation and acceptance</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Choose a local experiment or an explicit cloud provider. Agree on Czech sample expectations and acceptable response latency before live acceptance.</p>
+</li>
+<li>
+<p>Inspect the pinned Hermes intake/transcription path, including whether recognition precedes the deterministic post-admission hook. Verify owner/private-chat admission before any download or transcription, not only before the final handler.</p>
+</li>
+<li>
+<p>Bound audio type, declared and decoded duration, actual download size, concurrency and processing time. Remove temporary audio on success and error; keep transcripts out of ordinary logs and capability audit.</p>
+</li>
+<li>
+<p>Send recognized text through the existing authorization and explicit-operation dispatcher. A partial match, uncertain result, unavailable recognizer or unsupported audio must produce a clear fixed response without conversational fallback.</p>
+</li>
+<li>
+<p>Measure representative Czech recordings, silence/noise, unsupported requests, invalid audio, length/size limits and recognizer failure. Verify unauthorized senders, duplicate delivery, restart and continued text operation. Account for recognition usage separately from the zero-budget capability handlers.</p>
+</li>
+<li>
+<p>After checked deployment, verify a real owner voice message, repeat deployment, restart and rollback. Record exact revisions, measured quality/latency and remaining limitations, then update the private owner guide.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>H1.7 is accepted only after these live outcomes are recorded. Local text tests or provider documentation alone do not accept Czech voice.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>
