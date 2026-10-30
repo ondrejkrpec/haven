@@ -30,6 +30,7 @@ The https://www.scaleway.com/en/docs/object-storage/how-to/create-a-bucket/[buck
 Create a dedicated IAM application for the VPS, not an owner API key. Combine Project-scoped IAM with a bucket policy naming the exact application. Review the https://www.scaleway.com/en/docs/iam/policies-permissions/permission-sets/[current permission sets] and https://www.scaleway.com/en/docs/object-storage/reference-content/s3-iam-permissions-equivalence/[S3 operation mapping] when constructing the policy. An IAM delete permission can cover more than lock deletion, so the bucket policy must supply the narrower resource/action restriction. The following is the required behavior, not an already tested policy:
 
 [cols="1,3",options="header"]
+|===
 |Principal |Required boundary
 |VPS backup application |List the repository, read/write its objects, perform needed multipart operations, and remove restic objects under `haven/locks/`. Deny deleting snapshot/data/key/index objects during normal backup, deleting particular object versions, changing policies/versioning/lifecycle/retention, or accessing another bucket/prefix. Do not grant IAM or account administration.
 |Maintenance / recovery operator |Separate credentials outside the VPS. Review and run retention/prune and any recovery of object versions from the trusted administrative workstation. Keep a way for the account owner to repair policy mistakes. These credentials must not be supplied to routine timers.
@@ -45,6 +46,7 @@ Versioning plus restricted credentials is a proposed recovery layer, not proof o
 Use a separate Healthchecks project and individual UUID ping URLs, rather than an account management key or a shared project ping key on the VPS. Keep each URL in a protected credential file. Neither descriptions nor ping bodies should contain paths, conversations, command output or credentials.
 
 [cols="1,1,1,3",options="header"]
+|===
 |Check |Proposed schedule |Grace |When to send success
 |`haven-backup` |Simple, 24 hours |1 hour |After a complete exit-zero backup, confirmation of its exact snapshot and the required integrity checks. A proposed daily UTC timer and these settings permit a late alert after about 25 hours without success; they do not establish the 24-hour recovery objective.
 |`haven-service` |Simple, 5 minutes |5 minutes |After the independent probe confirms the coordinator is running, its existing operational snapshot is fresh, and the last accepted backup is no older than 24 hours. This does not prove end-to-end Telegram reply delivery.
