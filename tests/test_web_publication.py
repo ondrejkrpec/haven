@@ -51,7 +51,10 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(git(self.remote, "show", first + ":index.html"), (self.site / "index.html").read_text())
         metadata = json.loads(git(self.remote, "show", first + ":publication.json"))
         self.assertEqual(metadata["source_revision"], git(self.root, "rev-parse", "HEAD"))
-        self.assertEqual(set(metadata["files_sha256"]), {"index.html"})
+        self.assertEqual({item["path"] for item in metadata["files"]}, {"index.html"})
+        receipt = json.loads((self.root / ".git/haven-docs/last-success.json").read_text())
+        self.assertEqual(receipt["artifact_revision"], first)
+        self.assertEqual(receipt["source_revision"], metadata["source_revision"])
         self.assertEqual(set(git(self.remote, "ls-tree", "--name-only", first).splitlines()),
                          {".nojekyll", "index.html", "publication.json"})
         second = self.checked_publish()

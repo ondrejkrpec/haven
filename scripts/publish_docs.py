@@ -48,9 +48,12 @@ def copy_site(site, destination, revision):
         hashes[relative.as_posix()] = hashlib.sha256(target.read_bytes()).hexdigest()
     (destination / ".nojekyll").touch()
     (destination / "publication.json").write_text(json.dumps({
+        "schema_version": 1,
         "source_revision": revision,
         "checked_at_utc": datetime.now(timezone.utc).isoformat(),
-        "files_sha256": hashes,
+        # Keep paths and digest fields separate: an "access" filename adjacent
+        # to a hex value resembles an API credential to generic secret rules.
+        "files": [{"path": path, "sha256": digest} for path, digest in hashes.items()],
     }, indent=2) + "\n", encoding="utf-8")
 
 
@@ -72,6 +75,11 @@ def publish(root=ROOT):
             # Retain artifact history without checking out old, untrusted files.
             git(artifact, "update-ref", PAGES_REF, previous)
         copy_site(root / "build/site", artifact, revision)
+        # Scan the exact generated candidate, including its new manifest, before
+        # it can enter the artifact branch or any future history scan.
+        subprocess.run([str(ROOT / "build/tools/gitleaks"), "dir", str(artifact),
+                        "--config", str(ROOT / ".gitleaks.toml"), "--redact",
+                        "--no-banner", "--ignore-gitleaks-allow"], cwd=ROOT, check=True)
         git(artifact, "add", "--all")
         git(artifact, "-c", "user.name=" + git(root, "var", "GIT_AUTHOR_IDENT").split(" <")[0],
             "-c", "user.email=" + git(root, "config", "user.email"),
@@ -81,6 +89,10 @@ def publish(root=ROOT):
         git(artifact, "push", "--porcelain", "--force-with-lease=" + PAGES_REF + ":" + previous,
             "origin", "HEAD:" + PAGES_REF)
         published = git(artifact, "rev-parse", "HEAD")
+    receipt = Path(git(root, "rev-parse", "--absolute-git-dir")) / "haven-docs/last-success.json"
+    receipt.parent.mkdir(parents=True, exist_ok=True)
+    receipt.write_text(json.dumps({"source_revision": revision, "artifact_revision": published,
+                                   "result": "passed"}, indent=2) + "\n", encoding="utf-8")
     print(f"Public documentation artifact {published} published from {revision}.")
     return published
 

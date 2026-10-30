@@ -36,6 +36,8 @@ The command fails at the first unsuccessful check. It runs:
 
 This does not validate your private instance, access any credentials, run Hermes or test upstream integrations. Explicit private validation remains a separate operation in link:configuration.adoc[the configuration guide]. Pattern scanning cannot establish the absence of all sensitive data; review the exact publication candidates before publishing.
 
+H1.8 retains four narrowly reviewed historical false-positive fingerprints in `.gitleaksignore`: each is an independently verified file digest in the first prebuilt Pages manifest. All other findings, including new values in `publication.json`, remain blocking. No whole artifact branch/commit or file path is excluded; see link:h1.8-web-access.adoc[publication acceptance].
+
 == Build and view documentation
 
 [source,sh]
