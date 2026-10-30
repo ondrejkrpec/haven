@@ -31,8 +31,10 @@ const pages = documents.map(doc => {
       const target = path.posix.normalize(path.posix.join(path.posix.dirname(doc.path), decodeURIComponent(raw)));
       if (!raw) continue;
       if (available.has(target)) {
-        const relative = path.posix.relative(path.posix.dirname(doc.path), target).replace(/\.md$/, '.html');
-        child.attrSet('href', relative + (fragment ? `#${fragment}` : ''));
+        // The selected homepage is also rendered at /; absolute site paths
+        // keep its document links valid in both locations.
+        const address = '/' + encodeURI(target.replace(/\.md$/, '.html'));
+        child.attrSet('href', address + (fragment ? `#${fragment}` : ''));
       } else if (target.startsWith('../haven/docs/') && publicPages.includes(target.slice(14))) {
         child.attrSet('href', 'https://ondrejkrpec.github.io/haven/haven/' + target.slice(14).replace(/\.adoc$/, '.html') + (fragment ? `#${fragment}` : ''));
       } else {

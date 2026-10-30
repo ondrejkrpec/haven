@@ -48,6 +48,33 @@ class PrivateDocumentationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "symlinks"):
             build(self.root)
 
+    def test_grouped_navigation_and_real_homepage_keep_links_working(self):
+        (self.root / "runbooks/second.md").write_text('# Druhá stránka\n')
+        (self.root / "runbooks/test.md").write_text('# Domů\n\n[Druhá](second.md)\n')
+        selection = {"documents": ["runbooks/test.md", "runbooks/second.md"],
+                     "home": "runbooks/test.md", "navigation": [
+                         {"title": "Přehled", "document": "runbooks/test.md"},
+                         {"title": "Infrastruktura <unsafe>", "children": [
+                             {"title": "Druhá", "document": "runbooks/second.md"}]}]}
+        (self.root / "docs/site.json").write_text(json.dumps(selection))
+        git(self.root, "add", ".")
+        output = build(self.root)
+        page = (output / "index.html").read_text()
+        self.assertIn('<h1 id="domů">Domů</h1>', page)
+        self.assertIn('href="/runbooks/second.html"', page)
+        self.assertIn("Infrastruktura &lt;unsafe&gt;", page)
+        self.assertNotIn('<details open>', page)
+        self.assertIn('<details open>', (output / "runbooks/second.html").read_text())
+        self.assertIn('aria-current="page"', page)
+
+    def test_navigation_cannot_admit_unselected_sources_or_hide_selected_pages(self):
+        for item in [{"title": "Secret", "document": "config/instance.yaml"},
+                     {"title": "Hidden", "children": []}]:
+            selection = {"documents": ["runbooks/test.md"], "navigation": [item]}
+            (self.root / "docs/site.json").write_text(json.dumps(selection))
+            with self.subTest(item=item), self.assertRaises(ValueError):
+                build(self.root)
+
     def test_deployment_verifier_rejects_dirty_or_changed_artifacts(self):
         output = build(self.root)
         metadata = json.loads((output / "publication.json").read_text())

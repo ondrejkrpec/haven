@@ -16,6 +16,63 @@ from scripts.pre_push import git
 from scripts.public_files import ROOT
 
 
+def navigation(selection):
+    """Validate display metadata without admitting additional source files."""
+    documents = selection.get("documents")
+    if (not isinstance(documents, list) or not documents
+            or any(not isinstance(name, str) for name in documents)
+            or len(set(documents)) != len(documents)
+            or set(selection) - {"documents", "home", "navigation"}):
+        raise ValueError("Private documentation needs unique documents and supported metadata")
+    home = selection.get("home")
+    if home is not None and home not in documents:
+        raise ValueError("Private home must be a selected document")
+    items = selection.get("navigation")
+    if items is None:
+        return [{"title": Path(name).stem, "document": name} for name in documents]
+    seen = []
+
+    def validate(nodes, depth=0):
+        if not isinstance(nodes, list) or not nodes or depth > 4:
+            raise ValueError("Private navigation must be a bounded nonempty tree")
+        for node in nodes:
+            if (not isinstance(node, dict) or set(node) - {"title", "document", "children"}
+                    or not isinstance(node.get("title"), str) or not node["title"].strip()
+                    or not ({"document", "children"} & set(node))):
+                raise ValueError("Invalid private navigation item")
+            if "document" in node:
+                if node["document"] not in documents:
+                    raise ValueError("Navigation may reference only selected documents")
+                seen.append(node["document"])
+            if "children" in node:
+                validate(node["children"], depth + 1)
+
+    validate(items)
+    if sorted(seen) != sorted(documents):
+        raise ValueError("Navigation must expose each selected document exactly once")
+    return items
+
+
+def render_navigation(items, active=None):
+    def contains(node):
+        return node.get("document") == active or any(contains(child) for child in node.get("children", []))
+
+    rows = []
+    for item in items:
+        label = html.escape(item["title"])
+        if "document" in item:
+            address = quote(str(Path(item["document"]).with_suffix(".html")))
+            current = ' aria-current="page"' if item["document"] == active else ""
+            label = f'<a href="/{address}"{current}>{label}</a>'
+        children = render_navigation(item["children"], active) if "children" in item else ""
+        if "children" in item and "document" not in item:
+            opened = ' open' if contains(item) else ''
+            rows.append('<li><details' + opened + '><summary>' + label + '</summary>' + children + '</details></li>')
+            continue
+        rows.append('<li>' + label + children + '</li>')
+    return '<ul>' + ''.join(rows) + '</ul>'
+
+
 def build(instance, root=ROOT):
     instance = instance.absolute()
     if instance.is_relative_to(root) or instance.is_symlink() or instance.resolve() != instance:
@@ -25,8 +82,7 @@ def build(instance, root=ROOT):
     if any(part.is_symlink() for part in [manifest, *manifest.parents] if part != instance.parent) or "docs/site.json" not in tracked:
         raise ValueError("A tracked private docs/site.json allowlist is required")
     selection = json.loads(manifest.read_text(encoding="utf-8"))
-    if set(selection) != {"documents"} or not isinstance(selection["documents"], list) or not selection["documents"]:
-        raise ValueError("Private documentation manifest needs a nonempty documents list")
+    items = navigation(selection)
     documents = []
     for name in selection["documents"]:
         relative = Path(name)
@@ -50,21 +106,23 @@ def build(instance, root=ROOT):
     os.chmod(output.parent, 0o700)
     with tempfile.TemporaryDirectory(prefix="private-docs-", dir=output.parent) as directory:
         staging = Path(directory)
-        navigation = '<nav aria-label="Runbooks"><ul>' + ''.join(
-            f'<li><a href="/{quote(page["path"])}">{html.escape(Path(page["path"]).stem)}</a></li>' for page in pages) + '</ul></nav>'
-        def page(content):
+        def page(content, active=None):
+            menu = '<nav aria-label="Průvodce">' + render_navigation(items, active) + '</nav>'
             return ('<!doctype html><html lang="cs"><meta charset="utf-8">'
                     '<meta name="viewport" content="width=device-width, initial-scale=1">'
                     '<meta name="referrer" content="no-referrer">'
-                    '<title>Haven · Soukromé návody</title><link rel="stylesheet" href="/site.css">'
+                    '<title>Haven · Průvodce</title><link rel="stylesheet" href="/site.css">'
                     '<body><a class="skip" href="#main">Přejít na obsah</a>'
-                    '<header><a href="/">Haven</a><span>Soukromé provozní návody</span></header>'
-                    '<div class="layout">' + navigation + '<main id="main">' + content + '</main></div></body></html>')
+                    '<header><a href="/">Haven</a><span>Průvodce mojí instancí</span></header>'
+                    '<div class="layout">' + menu + '<main id="main"><article>' + content + '</article></main></div></body></html>')
         for item in pages:
             target = staging / item["path"]
             target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-            target.write_text(page(item["html"]), encoding="utf-8")
-        (staging / "index.html").write_text(page('<h1>Soukromé návody Haven</h1><p>Vyberte návod v navigaci. Obsah pochází pouze z výslovného seznamu dokumentů.</p>'), encoding="utf-8")
+            target.write_text(page(item["html"], str(Path(item["path"]).with_suffix(".md"))), encoding="utf-8")
+        home = selection.get("home")
+        homepage = next((item["html"] for item in pages if home and item["path"] == str(Path(home).with_suffix(".html"))),
+                        '<h1>Soukromé návody Haven</h1><p>Vyberte návod v navigaci.</p>')
+        (staging / "index.html").write_text(page(homepage, home), encoding="utf-8")
         shutil.copyfile(root / "docs/ui/css/site.css", staging / "site.css")
         hashes = {p.relative_to(staging).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in sorted(staging.rglob("*")) if p.is_file()}
