@@ -1,0 +1,66 @@
+= H1.9: Backup and recovery preparation
+
+Status, 2026-10-30: preparation implemented; production off-site backup and monitoring are not enabled. This increment supplies a bounded metadata inventory, a pinned synthetic restic experiment and the implementation/acceptance plan below. Provider selection, real credentials, an external notification channel and clean-host recovery remain open. No installation, service restart or production secret copy is part of this increment.
+
+== Preparation tools
+
+`scripts/backup_inventory.py --home /absolute/instance/home` enumerates file metadata without opening regular-file contents. Directory traversal uses no-follow directory descriptors, including when a directory is replaced during the scan. Reports contain category totals and metadata for six fixed known paths; arbitrary filenames and symlink targets are not emitted. The scan is bounded by entry/depth limits. A partial/error result is not a complete inventory. Metadata can change during enumeration; this is not an atomic backup or proof of recovery completeness.
+
+The categories are review hints, not a backup allowlist. In particular, `extensions_review`, `identity_review` and `local_snapshots_review` require operator review. Custom skills must not be discarded as rebuildable dependencies. A socket is not persistent application data. Missing/linked credential parents and unknown items must be reconciled before defining the actual production manifest. Real inventory reports belong only in the private instance.
+
+The optional experiment uses https://github.com/restic/restic/releases/tag/v0.19.1[restic 0.19.1], an explicitly selected Linux/amd64 binary pinned by archive and executable SHA-256 in `research/h1.9/pins.json`. It is not added to mandatory public check dependencies and is not installed on the VPS. From the public checkout:
+
+[source,sh]
+----
+# Explicit public binary download, then the synthetic experiment:
+.venv/bin/python research/h1.9/probe.py --download
+# Repeat offline with the already verified binary:
+.venv/bin/python research/h1.9/probe.py
+----
+
+The experiment creates a fresh local repository and random synthetic password in a private temporary directory. Subprocesses receive a fresh environment, no inherited cloud credentials, no-cache operation and closed stdin. The repository has no remote backend. No production path is accepted as input. Temporary data is removed after the experiment; the generated result remains in ignored `build/h1.9/probe-result.json`.
+
+It exercises committed SQLite WAL data through the https://www.sqlite.org/backup.html[Online Backup API], encrypted backup, exact snapshot restore with file hashes/modes, full data check, wrong-password and missing-repository refusal, retention/prune and a separate corrupted-repository copy. Restore is repeated after the source files are removed. A raw synthetic credential marker is checked absent from the repository. This bounded check is not an independent cryptographic audit.
+
+The staging path is relative to the experiment working directory, so the archive does not include unrelated ancestor directory ownership. Initial harness attempts exposed unmapped `/tmp` ownership in a user namespace and read-only repository pack modes; the final harness uses relative staging and changes permissions only on its deliberately corrupted disposable copy. These were harness failures, not successful acceptance runs.
+
+== Proposed production scope
+
+[cols="1,3",options="header"]
+|===
+|Data |Preparation decision
+|Configuration and provenance |Record exact public/private revisions, native source pins, required instance configuration and a restore manifest. Keep private material outside public artifacts.
+|Credentials |Only explicitly required account/runtime files, inside encrypted off-site backup; repository password and storage recovery access additionally outside both VPS and repository. Never place values in Git, arguments or logs.
+|Databases |Current state and capability audit; board databases when present. Include committed WAL state through supported backup/export. Never initialize an absent board while collecting a backup.
+|Other durable state |Review memory, sessions, pending delivery/receipt state and custom extensions against the pinned runtime. Restore admission/delivery state before reconnecting the one active gateway.
+|Rebuildable and transient material |Reconstruct pinned environments; exclude live sockets, PIDs, locks, heartbeat files and reviewed caches. Classify local snapshots and host/profile identity explicitly.
+|===
+
+SQLite Online Backup establishes consistency for one database. It does not produce a single consistent cut across multiple databases, JSON files and credentials. The production runner must first define coordinated quiescence or a bounded service pause/resume procedure with failure recovery. The synthetic experiment does not establish that production procedure.
+
+Use a private staging directory (`0700`, files `0600`), an explicit path manifest and path/link checks. Bound source size, free staging space, concurrency and runtime. Clean staging on success, exception, cancellation and subsequent recovery. Do not put real plaintext staging in a controller checkout. The backup process is trusted and isolated from Nora's model and future H2 workers; its permissions do not grant workers access to credentials.
+
+== Storage and monitoring candidates
+
+link:h1.9-provider-options.adoc[Provider options] compares current official prices, locations and monitoring limits. No candidate is selected automatically. Before provisioning confirm the owner's account price/tax, restricted credentials, recovery-key storage and notification destination.
+
+Restic encrypts content, but encryption does not prevent repository deletion by an attacker with storage credentials. Verify protection for old recovery points using provider versioning/immutability, separately controlled snapshots or an actually tested append-only path. Keep destructive retention/maintenance authorization separate where the selected backend permits it. Do not claim that an untested bucket policy is append-only: lock removal and normal backend operations must still work.
+
+Proposed schedule: daily backup, seven daily/four weekly/three monthly recovery points, periodic integrity/data checks and an isolated restore sample. Recovery objectives are no more than 24 hours of lost data and recovery within four hours; they are targets to measure, not verified guarantees. Retention counts describe retained snapshots, not a fixed storage-volume limit.
+
+Use independent systemd services/timers, with no Hermes model/cron dependency. A backup success heartbeat is sent only after exit zero, the exact snapshot is confirmed and required checks pass. https://restic.readthedocs.io/en/stable/040_backup.html#exit-status-codes[Restic exit 3] is an incomplete snapshot and must fail acceptance. A separate short-period heartbeat should check the service plus backup freshness. Missing heartbeats must alert from outside the VPS. Do not send conversation text, credentials or raw command logs to the monitor.
+
+== Remaining implementation and live acceptance
+
+. Finish the explicit path manifest, extension/identity review and cross-file consistency strategy from the private metadata inventory.
+. Confirm storage/monitor choices. The owner enrolls accounts/MFA, notification address and password-manager recovery material through private procedures; no credentials are supplied in chat.
+. Implement the bounded production runner and systemd units, with a verified tool pin, least-privilege storage access, fixed diagnostics, staging cleanup and a lock. Validate against synthetic fixtures before deployment.
+. Exercise allowed read/write/lock operations and rejected access to another bucket/prefix; test old-backup protection and the actual maintenance path. Test success, partial backup, wrong/missing key, unavailable storage and stale/missing external heartbeats.
+. Restore an exact snapshot onto a disposable isolated host with outbound messaging/model/scheduler disabled. Verify database integrity, receipts, modes/owners and required services. Reconcile or re-enroll credentials as necessary. Never start a second Telegram `getUpdates` poller beside production; deferred WhatsApp sessions must also remain inactive.
+. Measure recovery time, missing manual steps and data loss window. Confirm a real external alert and an owner-readable recovery runbook. Only then accept H1.9 and proceed to H1.10.
+
+== Local evidence
+
+The public behavior suite covers inventory privacy, symlinked roots/parents, directory replacement during enumeration, bounds and access errors. The optional restic experiment records its tool version and exact source hashes. Local result receipts must distinguish these synthetic outcomes from real S3 access, alert delivery and clean-host application recovery; none of those live scenarios is established by this preparation.
+
+Context7 was unavailable due to its monthly quota. The pinned binary's own help and official SQLite/restic/provider documentation were used instead.

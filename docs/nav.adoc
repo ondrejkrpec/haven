@@ -11,6 +11,8 @@
 ** xref:h1.6.1-capabilities.adoc[Deterministic capability guardrails]
 ** xref:h1.7-czech-voice.adoc[Czech voice (deferred)]
 ** xref:h1.8-web-access.adoc[Read-only dashboard and documentation hosting]
+** xref:h1.9-backup-recovery.adoc[Backup and recovery preparation]
+** xref:h1.9-provider-options.adoc[Backup storage and monitoring options]
 ** xref:h1.6-whatsapp.adoc[WhatsApp text and access rules]
 ** xref:h1.6-agent-platform-assessment.adoc[Agent Platform compatibility assessment]
 ** xref:documentation.adoc[Documentation and checks]

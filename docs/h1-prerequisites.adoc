@@ -31,7 +31,7 @@ Before reproducible deployment, establish the intended public-source revision an
 |Credentials |Resolve references only for authorized services, reject missing credentials, and protect OAuth/WhatsApp runtime state outside Git.
 |Messaging and family access |Enroll eligible accounts privately, bind each connection to its verified owner, and test replies/restart recovery and negative cross-user access. Accept shared objects only after ownership/membership checks pass. Measure Czech voice quality and latency separately in H1.7.
 |Recovery |Exercise quota deferral/resumption and distinguish transient quota limits from revoked authentication; deterministic recovery must work without Nora's model.
-|Backup |Restore the necessary configuration and runtime state on a clean target. Prevent a second simultaneously active WhatsApp session.
+|Backup |link:h1.9-backup-recovery.adoc[H1.9 preparation] covers metadata inventory and a synthetic restic experiment. Restore the necessary configuration/runtime state on a clean target; prevent a second Telegram poller or deferred WhatsApp session. Real off-site storage, external alerts and clean-host recovery remain unaccepted.
 |Documentation |Record the actually verified setup, interactive steps and recovery procedure without credentials, QR codes or session data.
 |===
 
