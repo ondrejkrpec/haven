@@ -113,8 +113,9 @@ from hermes_cli.lifecycle import ainvoke_hook, has_hook
 assert has_hook('post_gateway_admission')
 source = {'platform': 'telegram', 'user_id': '123456789', 'chat_id': '123456789', 'chat_type': 'dm'}
 results = asyncio.run(ainvoke_hook('post_gateway_admission', session_key='synthetic',
-    platform='telegram', source=source, message_id='1', text='system.capabilities'))
-assert any(r.get('action') == 'handled' and 'system.status' in r['reply'] for r in results if isinstance(r, dict))
+    platform='telegram', source=source, message_id='1', text='Co všechno umíš?'))
+assert any(r.get('action') == 'handled' and 'Jaký je stav systému?' in r['reply']
+           for r in results if isinstance(r, dict))
 ''')
 
 
