@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.9: Storage and monitoring options · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery preparation</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.9: Storage and monitoring options</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Checked against official sources on 2026-10-30. The owner requested alternatives before selecting a provider. This is a comparison, not an order or an account-specific quote. Prices below describe storage only, before taxes unless stated; USD and EUR are deliberately not converted. Volume means the entire retained repository, not the size of one daily backup. Confirm billable rounding, minimum invoice/payment rules and actual account terms before ordering.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_backup_storage"><a class="anchor" href="#_backup_storage"></a>Backup storage</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 28.5714%;">
+<col style="width: 28.5714%;">
+<col style="width: 28.5715%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Candidate</th>
+<th class="tableblock halign-left valign-top">Listed pricing / example</th>
+<th class="tableblock halign-left valign-top">Location and access</th>
+<th class="tableblock halign-left valign-top">Fit and open checks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://www.scaleway.com/en/pricing/storage/">Scaleway Standard Multi-AZ</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">EUR 0.01606/GB-month; 20 GB approximately EUR 0.3212 before tax, EUR 0.3887 with illustrative 21% VAT. Requests/ingress included; 75 GB monthly egress allowance, then listed EUR 0.01/GB. Do not budget on a temporary trial.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">EU provider, Paris candidate; S3 backend.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keeps the earlier EU-provider direction. Verify IAM/bucket-policy interaction, protected recovery points and account billing.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://developers.cloudflare.com/r2/pricing/">Cloudflare R2 Standard</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10 GB-month storage, 1M Class A and 10M Class B operations/month included; then USD 0.015/GB-month and request charges. 20 GB storage line item approximately USD 0.15. Internet egress is free under the published conditions.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">US provider; explicit <a href="https://developers.cloudflare.com/r2/reference/data-location/">EU jurisdiction</a> is available, with its jurisdiction-specific S3 endpoint. A location hint alone is not the same guarantee.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Potentially no storage charge for a small retained repository within free limits. Verify jurisdiction, token scope, compatibility and object-retention behavior; no actual R2 account/API test has run.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://www.backblaze.com/cloud-storage/pricing">Backblaze B2 pay-as-you-go</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">USD 6.95/TB per 30 days; conservative 20 GB calculation USD 0.139 before any allowance/tax. Standard API calls are free under the current offering; direct egress allowance is 3x average stored data, then USD 0.01/GB.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">US provider with <a href="https://www.backblaze.com/docs/cloud-storage-data-regions">EU Central in Amsterdam</a>. Region is chosen when creating the account and cannot subsequently be changed on that account. S3 or B2 access.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low unit price and a backup-oriented service. Confirm current account allowances/billing and restricted application-key/retention semantics. No free-storage allowance is assumed in this conservative estimate.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://www.hetzner.com/storage/storage-box/">Hetzner Storage Box BX11</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Official page&#8217;s hidden pricing label lists EUR 3.20/month excluding VAT; minimum capacity 1 TB. At 20 GB the whole plan is still required. Confirm the localized order price.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">EU provider, Germany/Finland; SFTP backend, subaccounts and provider snapshots.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">More capacity and a separate snapshot control plane, at a higher fixed floor for a tiny pilot. <a href="https://docs.hetzner.com/storage/storage-box/general/">Storage Box</a> is not an S3 bucket; data resides on one host with RAID. Verify subaccount restrictions and independently controlled snapshots.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Backblaze&#8217;s <a href="https://www.backblaze.com/blog/backblaze-pricing-and-product-updates/">2026-03-17 update</a> establishes the May 1 pricing/API change; older help pages about per-call charges should not override it. The primary pricing page&#8217;s free-storage wording was not established by the retrieved live page, so the table does not subtract it.</p>
+</div>
+<div class="paragraph">
+<p>For a small Haven-only repository, compare Scaleway when an EU-operated service matters most, R2 EU when staying within a free allowance matters most, and B2 EU for its storage pricing. Storage Box becomes more interesting when the owner also wants substantially more backup capacity. These are tradeoffs; credentials, deletion protection and an actual restore still require acceptance on whichever provider is selected.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_independent_monitoring"><a class="anchor" href="#_independent_monitoring"></a>Independent monitoring</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Candidate</th>
+<th class="tableblock halign-left valign-top">Verified public offer</th>
+<th class="tableblock halign-left valign-top">Fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://healthchecks.io/pricing/">Healthchecks.io Hobbyist</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">USD 0/month, 20 jobs, 100 log entries per job.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Focused <a href="https://healthchecks.io/faq/">dead-man heartbeat monitoring</a>; <a href="https://healthchecks.io/docs/signaling_failures/">explicit failure signals</a> are supported. Two checks can cover backup completion and a combined service/backup-freshness heartbeat. Keep ping URLs private and send no raw logs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://betterstack.com/uptime">Better Stack Uptime</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10 monitors, 10 heartbeats and one status page with three-minute checks advertised free.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">An alternative if one console should also cover other public services. Heartbeats still work without exposing Haven&#8217;s private dashboard. Account-specific notification/integration limits remain to verify.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>A monitor installed only on the Haven VPS cannot report that host&#8217;s complete disappearance without an external receiver. This pilot does not add another self-hosted server just to run monitoring. Before accepting either hosted candidate, choose the owner&#8217;s notification destination, confirm a real alert and exercise a deliberately missed heartbeat without disabling production access.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

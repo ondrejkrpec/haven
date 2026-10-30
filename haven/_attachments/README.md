@@ -10,6 +10,8 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 [H1.8 web access](docs/h1.8-web-access.adoc) adds a verified read-only operational snapshot, separate private runbooks and the [public documentation site](https://ondrejkrpec.github.io/haven/). The guide records hosting, access and recovery evidence and remaining acceptance limits. Administrative dashboard controls remain deferred.
 
+[H1.9 preparation](docs/h1.9-backup-recovery.adoc) adds a metadata-only inventory and an opt-in synthetic encrypted backup/restore experiment. [Storage and monitoring options](docs/h1.9-provider-options.adoc) remain unselected; production off-site backup and external alerts are not enabled.
+
 ## Start locally
 
 Prerequisites: a POSIX shell, Git 2.28 or newer, and `sha256sum`. Configuration validation needs Python 3.12+; the complete public checks also need Node.js/npm and Linux check tools. Podman is used only by optional H0.1 probes. Use an existing checkout, or clone the public repository:

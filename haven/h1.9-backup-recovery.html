@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.9: Backup and recovery preparation · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery preparation</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.9: Backup and recovery preparation</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-10-30: preparation implemented; production off-site backup and monitoring are not enabled. This increment supplies a bounded metadata inventory, a pinned synthetic restic experiment and the implementation/acceptance plan below. Provider selection, real credentials, an external notification channel and clean-host recovery remain open. No installation, service restart or production secret copy is part of this increment.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_preparation_tools"><a class="anchor" href="#_preparation_tools"></a>Preparation tools</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>scripts/backup_inventory.py --home /absolute/instance/home</code> enumerates file metadata without opening regular-file contents. Directory traversal uses no-follow directory descriptors, including when a directory is replaced during the scan. Reports contain category totals and metadata for six fixed known paths; arbitrary filenames and symlink targets are not emitted. The scan is bounded by entry/depth limits. A partial/error result is not a complete inventory. Metadata can change during enumeration; this is not an atomic backup or proof of recovery completeness.</p>
+</div>
+<div class="paragraph">
+<p>The categories are review hints, not a backup allowlist. In particular, <code>extensions_review</code>, <code>identity_review</code> and <code>local_snapshots_review</code> require operator review. Custom skills must not be discarded as rebuildable dependencies. A socket is not persistent application data. Missing/linked credential parents and unknown items must be reconciled before defining the actual production manifest. Real inventory reports belong only in the private instance.</p>
+</div>
+<div class="paragraph">
+<p>The optional experiment uses <a href="https://github.com/restic/restic/releases/tag/v0.19.1">restic 0.19.1</a>, an explicitly selected Linux/amd64 binary pinned by archive and executable SHA-256 in <code>research/h1.9/pins.json</code>. It is not added to mandatory public check dependencies and is not installed on the VPS. From the public checkout:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># Explicit public binary download, then the synthetic experiment:
+.venv/bin/python research/h1.9/probe.py --download
+# Repeat offline with the already verified binary:
+.venv/bin/python research/h1.9/probe.py</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The experiment creates a fresh local repository and random synthetic password in a private temporary directory. Subprocesses receive a fresh environment, no inherited cloud credentials, no-cache operation and closed stdin. The repository has no remote backend. No production path is accepted as input. Temporary data is removed after the experiment; the generated result remains in ignored <code>build/h1.9/probe-result.json</code>.</p>
+</div>
+<div class="paragraph">
+<p>It exercises committed SQLite WAL data through the <a href="https://www.sqlite.org/backup.html">Online Backup API</a>, encrypted backup, exact snapshot restore with file hashes/modes, full data check, wrong-password and missing-repository refusal, retention/prune and a separate corrupted-repository copy. Restore is repeated after the source files are removed. A raw synthetic credential marker is checked absent from the repository. This bounded check is not an independent cryptographic audit.</p>
+</div>
+<div class="paragraph">
+<p>The staging path is relative to the experiment working directory, so the archive does not include unrelated ancestor directory ownership. Initial harness attempts exposed unmapped <code>/tmp</code> ownership in a user namespace and read-only repository pack modes; the final harness uses relative staging and changes permissions only on its deliberately corrupted disposable copy. These were harness failures, not successful acceptance runs.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_proposed_production_scope"><a class="anchor" href="#_proposed_production_scope"></a>Proposed production scope</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Data</th>
+<th class="tableblock halign-left valign-top">Preparation decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration and provenance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Record exact public/private revisions, native source pins, required instance configuration and a restore manifest. Keep private material outside public artifacts.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Credentials</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only explicitly required account/runtime files, inside encrypted off-site backup; repository password and storage recovery access additionally outside both VPS and repository. Never place values in Git, arguments or logs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Databases</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current state and capability audit; board databases when present. Include committed WAL state through supported backup/export. Never initialize an absent board while collecting a backup.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Other durable state</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Review memory, sessions, pending delivery/receipt state and custom extensions against the pinned runtime. Restore admission/delivery state before reconnecting the one active gateway.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rebuildable and transient material</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reconstruct pinned environments; exclude live sockets, PIDs, locks, heartbeat files and reviewed caches. Classify local snapshots and host/profile identity explicitly.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>SQLite Online Backup establishes consistency for one database. It does not produce a single consistent cut across multiple databases, JSON files and credentials. The production runner must first define coordinated quiescence or a bounded service pause/resume procedure with failure recovery. The synthetic experiment does not establish that production procedure.</p>
+</div>
+<div class="paragraph">
+<p>Use a private staging directory (<code>0700</code>, files <code>0600</code>), an explicit path manifest and path/link checks. Bound source size, free staging space, concurrency and runtime. Clean staging on success, exception, cancellation and subsequent recovery. Do not put real plaintext staging in a controller checkout. The backup process is trusted and isolated from Nora&#8217;s model and future H2 workers; its permissions do not grant workers access to credentials.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_storage_and_monitoring_candidates"><a class="anchor" href="#_storage_and_monitoring_candidates"></a>Storage and monitoring candidates</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="h1.9-provider-options.html" class="xref page">Provider options</a> compares current official prices, locations and monitoring limits. No candidate is selected automatically. Before provisioning confirm the owner&#8217;s account price/tax, restricted credentials, recovery-key storage and notification destination.</p>
+</div>
+<div class="paragraph">
+<p>Restic encrypts content, but encryption does not prevent repository deletion by an attacker with storage credentials. Verify protection for old recovery points using provider versioning/immutability, separately controlled snapshots or an actually tested append-only path. Keep destructive retention/maintenance authorization separate where the selected backend permits it. Do not claim that an untested bucket policy is append-only: lock removal and normal backend operations must still work.</p>
+</div>
+<div class="paragraph">
+<p>Proposed schedule: daily backup, seven daily/four weekly/three monthly recovery points, periodic integrity/data checks and an isolated restore sample. Recovery objectives are no more than 24 hours of lost data and recovery within four hours; they are targets to measure, not verified guarantees. Retention counts describe retained snapshots, not a fixed storage-volume limit.</p>
+</div>
+<div class="paragraph">
+<p>Use independent systemd services/timers, with no Hermes model/cron dependency. A backup success heartbeat is sent only after exit zero, the exact snapshot is confirmed and required checks pass. <a href="https://restic.readthedocs.io/en/stable/040_backup.html#exit-status-codes">Restic exit 3</a> is an incomplete snapshot and must fail acceptance. A separate short-period heartbeat should check the service plus backup freshness. Missing heartbeats must alert from outside the VPS. Do not send conversation text, credentials or raw command logs to the monitor.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_remaining_implementation_and_live_acceptance"><a class="anchor" href="#_remaining_implementation_and_live_acceptance"></a>Remaining implementation and live acceptance</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Finish the explicit path manifest, extension/identity review and cross-file consistency strategy from the private metadata inventory.</p>
+</li>
+<li>
+<p>Confirm storage/monitor choices. The owner enrolls accounts/MFA, notification address and password-manager recovery material through private procedures; no credentials are supplied in chat.</p>
+</li>
+<li>
+<p>Implement the bounded production runner and systemd units, with a verified tool pin, least-privilege storage access, fixed diagnostics, staging cleanup and a lock. Validate against synthetic fixtures before deployment.</p>
+</li>
+<li>
+<p>Exercise allowed read/write/lock operations and rejected access to another bucket/prefix; test old-backup protection and the actual maintenance path. Test success, partial backup, wrong/missing key, unavailable storage and stale/missing external heartbeats.</p>
+</li>
+<li>
+<p>Restore an exact snapshot onto a disposable isolated host with outbound messaging/model/scheduler disabled. Verify database integrity, receipts, modes/owners and required services. Reconcile or re-enroll credentials as necessary. Never start a second Telegram <code>getUpdates</code> poller beside production; deferred WhatsApp sessions must also remain inactive.</p>
+</li>
+<li>
+<p>Measure recovery time, missing manual steps and data loss window. Confirm a real external alert and an owner-readable recovery runbook. Only then accept H1.9 and proceed to H1.10.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_local_evidence"><a class="anchor" href="#_local_evidence"></a>Local evidence</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The public behavior suite covers inventory privacy, symlinked roots/parents, directory replacement during enumeration, bounds and access errors. The optional restic experiment records its tool version and exact source hashes. Local result receipts must distinguish these synthetic outcomes from real S3 access, alert delivery and clean-host application recovery; none of those live scenarios is established by this preparation.</p>
+</div>
+<div class="paragraph">
+<p>The complete public checks passed with 108 behavior tests. On 2026-10-30 at 18:23 UTC, <code>.venv/bin/python research/h1.9/probe.py</code> passed from clean implementation revision <code>39591da52d10286ac6e8b23a9c76e829dcc08f31</code>, with Python 3.14.7, SQLite 3.53.4 and restic 0.19.1. <code>research/h1.9/acceptance.json</code> records the exact source hashes and all bounded outcomes, including the untested remote/alert flags. The experiment used only disposable local fixtures and did not initialize or contact a remote repository.</p>
+</div>
+<div class="paragraph">
+<p>Context7 was unavailable due to its monthly quota. The pinned binary&#8217;s own help and official SQLite/restic/provider documentation were used instead.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>
