@@ -1,0 +1,34 @@
+{
+  "policy_version": "haven-h1.6.1-v1",
+  "retention_days": 30,
+  "max_audit_rows": 50000,
+  "capabilities": {
+    "system.status": {
+      "enabled": true,
+      "handler": "status",
+      "aliases": ["system.status", "stav systému", "stav systemu"],
+      "max_llm_calls": 0,
+      "max_tokens": 0,
+      "max_cost_microusd": 0,
+      "max_requests_per_hour": 60
+    },
+    "system.capabilities": {
+      "enabled": true,
+      "handler": "capabilities",
+      "aliases": ["system.capabilities", "co umíš", "co umis"],
+      "max_llm_calls": 0,
+      "max_tokens": 0,
+      "max_cost_microusd": 0,
+      "max_requests_per_hour": 60
+    },
+    "wishlist.check_deals": {
+      "enabled": false,
+      "handler": "unavailable",
+      "aliases": ["wishlist.check_deals"],
+      "max_llm_calls": 0,
+      "max_tokens": 0,
+      "max_cost_microusd": 0,
+      "max_requests_per_hour": 0
+    }
+  }
+}

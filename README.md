@@ -6,6 +6,8 @@ Haven is a personal agent system built around Hermes. Telegram is the first phon
 
 H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegram.adoc), with live owner/denied-sender checks, blocked remote administration and verified reconnect after restart. It uses a numeric owner allowlist, protected token and outbound long polling. Agent Platform is unavailable on the pilot owner's account, so WhatsApp and [family sharing](docs/family-conversations.adoc) are deferred; the earlier Baileys and Agent Platform assessments stay inactive.
 
+[H1.6.1 guardrails](docs/h1.6.1-capabilities.adoc) add an explicitly selected deterministic profile: status/capability replies, bounded private audit and an independent native model/tool/cron guard. Local verification and live acceptance are recorded separately in that guide.
+
 ## Start locally
 
 Prerequisites: a POSIX shell, Git 2.28 or newer, and `sha256sum`. Configuration validation needs Python 3.12+; the complete public checks also need Node.js/npm and Linux check tools. Podman is used only by optional H0.1 probes. Use an existing checkout, or clone the public repository:

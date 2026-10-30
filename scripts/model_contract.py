@@ -67,7 +67,7 @@ def check_native(config):
     return model["default"]
 
 
-def service_config(config):
+def service_config(config, *, capabilities=False):
     """Supervised coordinator; one optional private transport, no coding executors."""
     base = deepcopy(config)
     base["whatsapp"]["enabled"] = False
@@ -134,6 +134,12 @@ def service_config(config):
             "allow_admin_from": ["haven-console-only"],
             "user_allowed_commands": ["new", "stop", "status"],
         }}}
+    if capabilities:
+        if not telegram.get("enabled"):
+            raise ModelConfigError("Capability mode requires the owner-only Telegram transport")
+        native["plugins"] = {"enabled": ["haven-capabilities"], "entries": {
+            "haven-capabilities": {"settings": {"owner_id": telegram["owner_id"]}},
+        }}
     return native
 
 
@@ -151,7 +157,8 @@ def check_service(config):
                                                 "allowed_senders": ["+" + s for s in senders]},
                                    "telegram": {"enabled": telegram.get("enabled", False),
                                                 "owner_id": owners[0] if len(owners) == 1 else None},
-                                   "instance": {"timezone": config["timezone"]}})
+                                   "instance": {"timezone": config["timezone"]}},
+                                  capabilities=capability_mode(config))
         # Compare the whole bounded profile, permitting only upstream's version marker.
         actual = {key: value for key, value in config.items() if key != "_config_version"}
         if actual != expected:
@@ -159,3 +166,7 @@ def check_service(config):
     except (KeyError, TypeError, AttributeError):
         raise ModelConfigError("Native service policy is incomplete") from None
     return model
+
+
+def capability_mode(config):
+    return config.get("plugins", {}).get("enabled") == ["haven-capabilities"]

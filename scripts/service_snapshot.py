@@ -12,13 +12,26 @@ import subprocess
 import tempfile
 
 
-FILES = (
+LEGACY_FILES = (
     "/etc/systemd/system/haven.service",
     "/var/lib/haven/.hermes/config.yaml",
     *(f"/var/lib/haven/haven-tools/scripts/{name}.py"
       for name in ("model_contract", "model_probe", "service_runtime", "whatsapp_runtime", "telegram_runtime")),
     "/var/lib/haven/haven-tools/config/whatsapp-runtime.json",
     "/var/lib/haven/haven-tools/config/telegram-runtime.json",
+)
+FILES = LEGACY_FILES + (
+    *(f"/var/lib/haven/haven-tools/scripts/{name}.py"
+      for name in ("capability_runtime", "capability_gateway", "capability_policy", "prepare_capabilities")),
+    *(f"/var/lib/haven/haven-tools/config/{name}"
+      for name in ("capabilities.json", "capability-runtime.json", "deterministic-policy.patch")),
+    *(f"/var/lib/haven/haven-tools/plugins/haven-capabilities/{name}"
+      for name in ("plugin.yaml", "__init__.py")),
+    *(f"/var/lib/haven/.hermes/plugins/haven-capabilities/{name}"
+      for name in ("plugin.yaml", "__init__.py")),
+    *(f"/var/lib/haven/releases/hermes-bf0203a-785f2646/{name}"
+      for name in ("agent/agent_init.py", "agent/auxiliary_client.py", "model_tools.py",
+                   "tools/registry.py", "cron/scheduler.py", "agent/deterministic_policy.py")),
 )
 
 
@@ -57,7 +70,7 @@ def snapshot():
 
 def read_manifest(root):
     manifest = json.loads((root / "manifest.json").read_text())
-    if tuple(row["path"] for row in manifest["files"]) != FILES:
+    if tuple(row["path"] for row in manifest["files"]) not in (FILES, LEGACY_FILES):
         raise ValueError("Snapshot scope differs")
     # Verify every receipt before changing any live file.
     for index, row in enumerate(manifest["files"]):
@@ -86,6 +99,9 @@ def restore(root):
             os.chown(path, row["uid"], row["gid"])
         else:
             path.unlink(missing_ok=True)
+    plugin = Path("/var/lib/haven/.hermes/plugins/haven-capabilities")
+    if plugin.is_dir() and not plugin.is_symlink() and not any(plugin.iterdir()):
+        plugin.rmdir()
     subprocess.run(["systemctl", "daemon-reload"], check=True, capture_output=True)
     systemctl("reset-failed")
     subprocess.run(["loginctl", "enable-linger" if manifest.get("linger") else "disable-linger", "haven"],

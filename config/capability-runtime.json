@@ -1,0 +1,19 @@
+{
+  "hermes_commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+  "patch_sha256": "d9f0abb4f0de86e3a94927919670613ed38295c94a121dd7021f9ecf3916eb69",
+  "source_sha256": {
+    "agent/agent_init.py": "a96bcbde936113098abfc6fe2068f866f142c5b59c34042fa1917fed6a2c7dd3",
+    "agent/auxiliary_client.py": "0d69fed4db1897ac1f3b5b023f876c95859b900618b1b4341c68e8a0db414872",
+    "model_tools.py": "b05414d7b3e508eed160e08d5338b3f2cd512c44e69039b3a376987a377516c8",
+    "tools/registry.py": "8afa625e0f9fcf3bda7c85c0b8d1cce5ca064c8d4a5fdc37bcbef7326143d659",
+    "cron/scheduler.py": "cf4306131ba167d91267e4318192e6c4617665d7c37049d2ac82c301e5035b71",
+    "agent/deterministic_policy.py": "703f84b479c624b811e76b26e305f7cc50011f3c2357e294cc05e3c8b275a939"
+  },
+  "base_sha256": {
+    "agent/agent_init.py": "1e29225039534583ef0f3e7ae0d7a02b091e03792f8170c880ba83fff9c977cd",
+    "agent/auxiliary_client.py": "053078416f2b2d94256584a5c1ed6176bfbd3f3de88a8ca858e8257274a04bb5",
+    "model_tools.py": "da5b7db1b05de615658e56c4172426ed82099a093c5b586e48e65ef930b778c8",
+    "tools/registry.py": "48c3875138ac9e1875349ed2900d6940f51dfff050d655d6fb17a1dafe30f5e7",
+    "cron/scheduler.py": "ec5823fffdeb18f4417eb97cbd37a03739c2fc20bb4e44c333d2dd5e07d86dd4"
+  }
+}

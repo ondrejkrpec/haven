@@ -1,0 +1,7 @@
+---
+name: haven-capabilities
+version: 1.0.0
+description: Explicit deterministic Haven operations and private admission audit
+provides_hooks:
+  - post_gateway_admission
+  - pre_tool_call

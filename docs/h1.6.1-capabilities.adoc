@@ -1,0 +1,70 @@
+= H1.6.1: Explicit deterministic operations
+
+Status, 2026-10-30: implementation and local acceptance; live acceptance is recorded separately below. The owner selected a deterministic capability profile in place of ordinary AI conversation. H1.6's owner allowlist, protected Telegram token and native long polling remain the transport boundary. Voice and coding dispatch remain disabled.
+
+== Supported behavior
+
+`system.status` (also `stav systému`) checks the current gateway PID, fresh heartbeat and connected Telegram writer. `system.capabilities` (also `co umíš`) lists enabled operations. Matching accepts case/spacing differences and a final question mark; it never asks a model to classify intent. Other requests receive a fixed refusal. `wishlist.check_deals` is explicitly disabled and has no implementation.
+
+Both enabled operations have a zero model-call, token and monetary budget and a limit of 60 accepted requests per owner/operation/hour. The registry is deployment input, not chat-editable configuration. Enabling a future integration requires implementing its handler and authorization and accepting its effects separately. The current validator rejects nonzero model budgets and unknown handlers.
+
+The ordinary `--service` renderer retains the accepted H1.6 AI chat. The explicit `--service --capabilities` combination selects this narrower profile. The two are intentional operator choices; never infer the active mode from a branch name.
+
+== Independent host enforcement
+
+The trusted same-PID launcher validates the bounded native profile, exact patched Hermes source hashes and the two declared plugin files before arming an irreversible process policy. It then loads Hermes. The native patch gates agent construction, synchronous/asynchronous auxiliary LLM calls, both tool-dispatch boundaries and cron execution before scripts or external workers can start.
+
+The `post_gateway_admission` plugin implements deterministic replies and audit. Hermes deliberately treats a missing, throwing or malformed consumer hook as fail-open. The independent native gates still refuse model/tool execution in that case. An audit failure also produces a fixed unavailable reply, never an AI fallback. A missing or altered deployed plugin/source fails startup with exit 78.
+
+This is a bounded application policy, not an isolation boundary against arbitrary Python code or the service administrator. Other independently started interpreters do not inherit the latch. No lower-trust executor is enabled; H2 still owns that isolation. Native informational slash commands retain H1.6's existing access policy and are outside this capability audit.
+
+== Private audit and replay
+
+`state/capability-audit.sqlite3` lives in the private Hermes home, with directory `0700` and database `0600`. It contains hashed actor/request identity, request hash/byte length, operation, decision/reason, fixed reply/result, policy version/hash and zero usage/cost counters. Raw request text, Telegram IDs and credentials are not stored there. Unsalted hashes are pseudonymous metadata, not anonymization.
+
+An immediate SQLite transaction serializes rate checks, execution and the receipt. A repeated transport message ID with matching text returns its stored reply, including after restart; conflicting reuse is refused. Handler authorization is repeated independently, before replay and at the handler boundary. Receipts expire after 30 days on a subsequent audited operation; the 50,000-row ceiling refuses further work until maintenance/retention frees space. SQLite secure deletion is enabled for removed rows; no claim is made about storage snapshots or backups.
+
+The two handlers are read-only. Receipt replay does not guarantee exactly-once Telegram delivery and does not authorize future non-idempotent operations. Invalid intake rejected by native authorization is outside this post-admission database; an unavailable audit cannot record its own failure reliably.
+
+== Deploy and restore
+
+Use checked, committed public sources and an explicit private inventory as in link:h1.5-service-recovery.adoc[service deployment]. No OS package, access, account or firewall change is needed.
+
+[source,sh]
+----
+export ANSIBLE_CONFIG="$PWD/ops/ansible.cfg"
+export ANSIBLE_HOME="$PWD/build/ansible"
+umask 077
+capability_dir=$(mktemp -d)
+.venv/bin/python -m scripts.render_model ../haven-private/config/instance.yaml \
+  --service --capabilities --output "$capability_dir/config.yaml"
+.venv/bin/ansible-playbook -i ../haven-private/ops/inventory.yml ops/service.yml \
+  -e haven_service_authorized=true -e "haven_model_config=$capability_dir/config.yaml"
+----
+
+The application snapshot now also includes the fixed capability modules/configuration/plugin files and six native patch targets. It never copies the audit database, conversations, OAuth or Telegram credentials. The exact base hashes and patch checksum must match before the coordinator is stopped and the patch applied. Repeating a matching deployment does not reapply the patch or restart the service. Unknown source drift fails closed.
+
+For rollback use the *new snapshot taken before this operation* with the matching `scripts/service_snapshot.py`. Restore returns code/configuration and active/enabled state, and removes an empty newly introduced instance plugin directory. Older nine-file snapshots remain readable for their historical scope; they do not cover H1.6.1's additional files. Do not use them to undo this upgrade. The audit database remains private and is not discarded by application rollback.
+
+== Local acceptance
+
+Public behavior tests exercise exact-operation matching, zero budgets, owner/transport checks, replay/conflict handling after recreation, rate/capacity limits, audit permissions/corruption, source/plugin drift and guarded launcher selection. The public check pipeline never contacts the VPS, Telegram or a model.
+
+The research test `research/h1.6.1/test_native_capabilities.py` runs fresh subprocesses through the real pinned Hermes APIs. It verifies agent/auxiliary/tool/cron refusal, an irreplaceable host latch, fail-open hook failure with the model still blocked, and actual plugin discovery plus a deterministic reply. Run from the pinned patched checkout with the PM-prepared test interpreter:
+
+[source,bash]
+----
+HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 2 \
+  "$HAVEN_ROOT/research/h1.6.1/test_native_capabilities.py" \
+  tests/gateway/test_post_gateway_admission.py tests/cron/test_restart_safe_worker.py
+----
+
+Use the existing PM environment with `--group dev --group test --extra sms` for these native core tests (`aiohttp` is required by the upstream webhook case). The separate `--extra telegram` environment covers the retained H1.6 Telegram tests. An initial run used the Telegram-only environment and failed the webhook case for missing `aiohttp`; it was rerun with the declared SMS extra. A sandbox-only runner attempt failed before collecting tests due to its read-only filesystem; neither failure is counted as a pass. No dependency was installed into production for these tests.
+
+== Live acceptance
+
+Pending until deployment, deterministic owner requests, refusal, zero model/tool usage, restart recovery, idempotent deployment and application rollback have been checked on the pilot. Do not infer production acceptance from local tests.
+
+== Sources and scope
+
+Context7 returned a monthly quota error. The implementation uses the exact v0.22.5 source at `bf0203a794a07aac3ff764972ab9087baa4e4f4e`: `gateway/run_inbound_consumer.py`, `hermes_cli/plugins.py`, `agent/agent_init.py`, `agent/auxiliary_client.py`, `model_tools.py`, `tools/registry.py` and `cron/scheduler.py`. The retained H0.1 upstream patch/author metadata and MIT notice are unchanged. The H1.6.1 policy patch is Haven-owned and separately pinned in `config/capability-runtime.json`.

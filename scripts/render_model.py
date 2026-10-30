@@ -11,8 +11,11 @@ from scripts.model_contract import ModelConfigError, native_config, service_conf
 from scripts.validate_config import ConfigError, load_config
 
 
-def render(config, output, overrides=(), *, service=False):
-    native = (service_config if service else native_config)(load_config(Path(config), overrides))
+def render(config, output, overrides=(), *, service=False, capabilities=False):
+    if capabilities and not service:
+        raise ModelConfigError("Capability mode requires --service")
+    config = load_config(Path(config), overrides)
+    native = service_config(config, capabilities=capabilities) if service else native_config(config)
     # O_EXCL refuses an existing file or symlink; do not clobber runtime state.
     descriptor = os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
@@ -26,9 +29,10 @@ def main(argv=None):
     parser.add_argument("--override", type=Path, action="append", default=[])
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--service", action="store_true", help="Render the bounded supervised service profile")
+    parser.add_argument("--capabilities", action="store_true", help="Disable AI chat; permit only deterministic operations")
     args = parser.parse_args(argv)
     try:
-        render(args.config, args.output, args.override, service=args.service)
+        render(args.config, args.output, args.override, service=args.service, capabilities=args.capabilities)
     except (ConfigError, ModelConfigError) as error:
         print(f"Cannot render runtime: {error}", file=sys.stderr)
         return 1
