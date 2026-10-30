@@ -13,6 +13,8 @@ nav ul { list-style: none; padding-left: 1rem; }
 nav > ul { padding-left: 0; }
 nav li { margin: .5rem 0; }
 nav span { font-weight: 650; }
+nav summary { cursor: pointer; font-weight: 650; }
+nav a[aria-current="page"] { font-weight: 750; text-decoration-thickness: .15em; }
 main { min-width: 0; padding: 1.5rem clamp(1rem, 4vw, 4rem); }
 article { max-width: 62rem; }
 h1, h2, h3 { line-height: 1.25; margin-top: 1.5em; }

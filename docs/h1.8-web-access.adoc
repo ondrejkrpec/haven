@@ -46,6 +46,8 @@ Add `docs/site.json` to the private repository with an explicit `documents` arra
 
 The private template includes this initial manifest. Build only with an explicitly named instance:
 
+An owner guide can additionally select `home` (one of the declared documents) and a `navigation` tree. Items have a `title` and a selected `document`, `children`, or both. The tree must expose each selected document exactly once; it does not admit additional inputs. Categories are expandable without JavaScript and the active category opens automatically. The selected home is rendered at `/` with working site-relative links. Existing manifests containing only `documents` retain flat navigation and the default landing page.
+
 [source,sh]
 ----
 .venv/bin/python -m scripts.build_private_docs /absolute/path/to/private-instance
