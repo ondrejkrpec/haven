@@ -26,6 +26,7 @@ Public defaults are applied first. Additional YAML files can be named with repea
 | `config/instance.yaml` | Your instance's configuration; intended for this private Git repository |
 | [Instructions](instructions/README.md) | Instance-specific personal and role instructions |
 | [Runbooks](runbooks/README.md) | Private operational notes when verified |
+| `docs/site.json` | Explicit tracked runbooks/instructions selected for the separate private H1.8 site |
 | [Secrets](secrets/README.md) | Future encrypted-file boundary; no keys or plaintext secrets |
 
 Store hostnames and allowlists in the supported YAML fields; personal instructions belong here too. WhatsApp is disabled by default and can be enabled only with a non-empty effective allowlist. Optional model credentials use an `env:VARIABLE_NAME` or `file:/absolute/path` reference, never a value. References are not resolved during validation. Sessions, runtime databases and backups belong outside Git. Ignore rules reduce accidental additions; they do not scan secrets or protect already tracked files.

@@ -51,7 +51,7 @@ Canonical guides remain in `docs/`, with navigation in `docs/nav.adoc`. The expo
 
 The exporter never discovers sibling repositories. It copies only selected public inputs and the Git-eligible local UI, initializes a temporary Git repository without commits, runs Antora with warning-level failure, then removes the temporary sources. Generated output replaces ignored `build/site`. Existing source paths, research evidence and working Git indexes are preserved. Once dependencies are installed, generation needs no network, external UI or private source. Antora 3.2 supports repositories without commits; no first-commit workaround is needed.
 
-The repository-owned UI uses HTML/CSS and system fonts, with navigation, responsive layout, dark mode and a keyboard skip link. It requires no browser JavaScript. This is a documentation build, not a hosted service. No Pages workflow or private documentation build is added yet.
+The repository-owned UI uses HTML/CSS and system fonts, with navigation, responsive layout, dark mode and a keyboard skip link. It requires no browser JavaScript. link:h1.8-web-access.adoc[H1.8] adds a checked prebuilt Pages publisher and a separate, explicitly selected private Markdown build. No GitHub Actions publication workflow or private input is added to the public build.
 
 == Automatic local push pipeline
 

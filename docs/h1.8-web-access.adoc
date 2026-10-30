@@ -1,0 +1,112 @@
+= H1.8: Read-only dashboard and separate documentation sites
+
+Status on 2026-10-30: implementation and live acceptance in progress. The owner selected a read-only dashboard; administrative controls are deferred. This guide separates public publication, private build inputs and tailnet access. link:adr/0009-read-only-web-access.adoc[ADR 0009] records the boundaries.
+
+== Three independent surfaces
+
+[cols="1,2,2",options="header"]
+|===
+|Surface |Inputs |Access
+|Public documentation |Only the existing bounded public Antora exporter |Prebuilt GitHub Pages branch, subject to live account acceptance
+|Private documentation |Explicit tracked Markdown runbooks/instructions in one named private instance |Tailscale Serve HTTPS, TCP 8443, owner-only grant
+|Operational dashboard |Fixed systemd properties, session usage aggregates and default-board status counts |Tailscale Serve HTTPS, TCP 443, owner-only grant
+|===
+
+No native Hermes dashboard backend is started. Its embedded chat, terminal, configuration and task administration would exceed the accepted deterministic profile. The snapshot exporter imports no Hermes code, resolves no credentials, starts no model/dispatcher and exposes no conversation text or task bodies. Future controls need a separate authorization design and acceptance; they are backlog work.
+
+== Publish public documentation without GitHub Actions
+
+Install the link:documentation.adoc[documented tools] and configure the versioned hooks. `scripts.publish_docs` requires a clean `main` matching a fresh remote `main` read, runs the complete public checks, then checks that identity again. It copies only freshly generated regular files from `build/site` into a disposable artifact repository. Hidden files and symlinks are refused; `.nojekyll` and `publication.json` are generated explicitly. The metadata records the checked source revision and each generated file's SHA-256.
+
+Publication updates only `gh-pages`, preserving its artifact history and protecting the previous remote tip with an explicit lease. It never commits or pushes the source primary branch. A changed source/remote or concurrent artifact publisher aborts the operation. There is a final remote read immediately before push, not an atomic cross-ref transaction with a concurrent GitHub merge; a later source merge needs its own successful publication. The artifact branch is persistent hosting state, not an unfinished topic branch.
+
+Configure GitHub Pages once with source branch `gh-pages`, path `/`, build type `legacy`, and HTTPS. Do not select a custom Actions workflow. GitHub documents direct prebuilt deployment with `.nojekyll` when Actions is unavailable; only a successful HTTPS request with matching metadata establishes that it works on the actual account.
+
+[source,sh]
+----
+git config --local core.hooksPath .githooks
+git config --local haven.publishDocs true
+.venv/bin/python -m scripts.publish_docs
+----
+
+The `post-merge` hook automatically publishes when this configured development clone fast-forwards a merged change into `main`. It reruns the checks for the actual merge revision. Publication failures remain visible and can be retried with the last command after fixing the cause. Other clones and GitHub web-only merges need their own configured runner/synchronization; no unattended cloud runner is claimed. Disabling publication is `git config --local haven.publishDocs false`; the current hosted version remains available.
+
+The expected project URL is `https://ondrejkrpec.github.io/haven/`; links are relative, so a project subpath works. A missing or rejected Pages deployment must remain an explicit acceptance blocker and trigger a hosting decision, rather than being counted as Actions-independent success.
+
+== Build private runbooks separately
+
+Add `docs/site.json` to the private repository with an explicit `documents` array. Each entry must be tracked Markdown below `runbooks/` or `instructions/`; no recursive discovery of instance configuration, secrets or runtime state occurs. A minimal synthetic example is:
+
+[source,json]
+----
+{"documents": ["runbooks/README.md"]}
+----
+
+The private template includes this initial manifest. Build only with an explicitly named instance:
+
+[source,sh]
+----
+.venv/bin/python -m scripts.build_private_docs /absolute/path/to/private-instance
+----
+
+Output is confined to that instance's ignored `build/site`, with a private directory mode. Never choose a public output directory or transfer these artifacts to Pages. Markdown-it 15.0.3 is pinned in the npm lock. Raw HTML and image embedding are disabled. Selected document links become local HTML links; known public-guide links use the public documentation site; other source-file references remain text rather than exposing attachments. No repository configuration, credentials or source tree is downloadable through this build.
+
+The manifest records public/instance revisions, dirty-source status and output hashes. A preview may use uncommitted private documents, but deployment refuses it. Commit reviewed private inputs, rebuild, and run the integrity verifier before live transfer. Generated-link checks run independently of the public build. The public build never calls this private builder.
+
+== Install the bounded internal artifacts
+
+Use the existing pinned Ansible environment and explicit private inventory. `ops/web.yml` first runs the link:h1.3-bootstrap.adoc[host verification], then requires `haven_web_authorized=true` and the absolute private artifact path. It checks clean private provenance, the current public revision and every generated file hash before transfer. It installs immutable private releases by content hash and switches `current` only after copying the complete release. Older releases remain available for rollback.
+
+[source,sh]
+----
+ANSIBLE_CONFIG=ops/ansible.cfg ANSIBLE_HOME=build/ansible \
+  .venv/bin/ansible-playbook -i /absolute/path/to/private-instance/ops/inventory.yml \
+  ops/web.yml -e haven_web_authorized=true \
+  -e haven_private_site=/absolute/path/to/private-instance/build/site
+----
+
+An independent systemd oneshot runs the fixed snapshot exporter as `haven`, with no network access, no capabilities, protected system directories and a single writable dashboard output directory. Credential directories, `.env` and native configuration are inaccessible to that process. The timer refreshes once a minute. SQLite uses read-only/query-only access; missing databases are not created and errors appear as unavailable data. The exporter selects no conversation content, titles, message rows or task bodies.
+
+The page refreshes every minute and displays its UTC snapshot timestamp. Treat a snapshot older than two minutes as stale; it is not an external outage monitor. Model counters are retained-session aggregates, and recorded costs are neither subscription quota nor a provider invoice. Unknown costs are not displayed as zero. An absent default board is reported as unavailable, not as an empty healthy queue. Other boards and task controls remain future work.
+
+== Enable owner-only HTTPS through Tailscale
+
+The pilot's installed Serve CLI is 1.104.4. Preserve all current settings and inspect `sudo tailscale serve status --json` before changing anything. This rollout expects no pre-existing Serve routes. Do not use `serve reset` on a host with unrelated routes.
+
+In the Tailscale admin console, enable HTTPS certificates and add an owner-only grant to `tag:haven` for TCP 443 and 8443 while preserving SSH. Update policy tests to accept the two new ports and retain denials for unused ports and an unauthorized identity. A new narrow grant does not cancel an existing broad allow rule; inspect the complete policy. Certificate Transparency publicly records the node's certificate DNS name, not private content. No Funnel capability is required.
+
+After reviewing and authorizing the installed artifact and policy, configure only these two private listeners:
+
+[source,sh]
+----
+sudo tailscale serve --bg --https=443 /var/lib/haven/web/dashboard
+sudo tailscale serve --bg --https=8443 /var/lib/haven/web/private-docs/current
+sudo tailscale serve status --json
+----
+
+Both sites use root paths on separate HTTPS ports. The tailnet DNS name is instance-specific and stays in private runbooks. Tailscale Serve owns the TLS listener and persists background configuration across daemon restarts. It serves only the chosen generated directories. Do not expose an entire home, repository or parent directory. Verify whether the installed version honors the release symlink on each request when testing rollback.
+
+No public firewall rule, public HTTP listener, OS update, service-account change or Nora restart is part of this operation. Tailscale's policy, together with authenticated tailnet devices, controls access; UFW alone is not that boundary. Funnel must remain absent from the resulting Serve configuration.
+
+== Acceptance and recovery
+
+* Public HTTPS must return a real guide and `publication.json` for the checked source revision. Verify representative file hashes and repeat after a source update through the configured automatic hook. A pushed artifact alone is insufficient.
+* On an authorized device, both private HTTPS roots, one runbook and `snapshot.json` must respond. Confirm public root/source paths do not disclose private documents. Check that directory/file traversal cannot reach credentials or the neighboring private release.
+* Test public/no-tailnet reachability and unauthorized tailnet identity where available; distinguish actual network results from admin-console policy tests. Record unperformed scenarios explicitly.
+* Restart the snapshot oneshot and verify a new timestamp without a model-call/token increase or a Nora PID change. Repeat deployment, verify the timer, root-owned executable/units and absence of a native dashboard process.
+* Exercise rollback by switching the private `current` symlink to the previous verified release and confirm HTTPS content, then restore the accepted release. Never roll back databases, OAuth or Telegram credentials.
+
+To withdraw H1.8 access, disable only these listeners and the refresh timer:
+
+[source,sh]
+----
+sudo tailscale serve --https=443 off
+sudo tailscale serve --https=8443 off
+sudo systemctl disable --now haven-dashboard-snapshot.timer
+----
+
+Preserve SSH and unrelated routes. Revert only the H1.8 policy grant if access is being revoked. The deployed snapshot and private releases are data, not a backup; link:h1-prerequisites.adoc[off-site backup and full recovery] remain H1.9.
+
+== Evidence and sources
+
+Context7 returned a monthly quota error. Official https://github.blog/changelog/2024-07-08-pages-legacy-worker-sunset/[GitHub prebuilt Pages deployment], https://docs.github.com/en/rest/pages/pages[Pages API], https://tailscale.com/docs/reference/tailscale-cli/serve[Serve CLI] and https://markdown-it.github.io/markdown-it/[Markdown-it documentation] were checked on 2026-10-30. The installed Tailscale help and pinned Hermes dashboard parser were inspected directly. Live acceptance results follow separately; planned commands are not deployment evidence.

@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+if [ "$(git config --local --get haven.publishDocs || true)" = true ]; then
+  exec .venv/bin/python -m scripts.publish_docs --if-configured
+fi

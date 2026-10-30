@@ -1,0 +1,25 @@
+[Unit]
+Description=Haven read-only dashboard snapshot
+After=haven.service
+
+[Service]
+Type=oneshot
+User=haven
+Group=haven
+ExecStart=/usr/bin/python3 /var/lib/haven/web-tools/dashboard_snapshot.py
+UMask=0027
+TimeoutStartSec=20
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX
+IPAddressDeny=any
+ReadWritePaths=/var/lib/haven/web/dashboard
+InaccessiblePaths=-/var/lib/haven/.hermes/credentials -/var/lib/haven/.hermes/.env -/var/lib/haven/.hermes/config.yaml
+CapabilityBoundingSet=

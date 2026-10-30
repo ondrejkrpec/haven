@@ -8,6 +8,8 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 [H1.6.1 guardrails](docs/h1.6.1-capabilities.adoc) add an explicitly selected deterministic profile: status/capability replies, bounded private audit and an independent native model/tool/cron guard. Local verification and live acceptance are recorded separately in that guide.
 
+[H1.8 web access](docs/h1.8-web-access.adoc) adds a read-only operational snapshot, a separately built private runbook site and prebuilt public documentation publication. Live hosting and access acceptance are tracked in that guide. Administrative dashboard controls remain deferred.
+
 ## Start locally
 
 Prerequisites: a POSIX shell, Git 2.28 or newer, and `sha256sum`. Configuration validation needs Python 3.12+; the complete public checks also need Node.js/npm and Linux check tools. Podman is used only by optional H0.1 probes. Use an existing checkout, or clone the public repository:

@@ -1,0 +1,21 @@
+= ADR 0009: Separate public publication and read-only private web access
+
+Date: 2026-10-30. Status: owner selected the read-only scope; implementation and live acceptance in progress.
+
+== Context
+
+H1.8 needs a public documentation site, private runbooks and an internal dashboard while GitHub Actions is unavailable. The accepted H1.6.1 service permits two deterministic operations and independently blocks models/tools/cron workers. The pinned native Hermes dashboard exposes embedded chat, a terminal and administration; starting it would broaden that profile.
+
+== Decision
+
+Publish the existing bounded Antora output as prebuilt GitHub Pages content with `.nojekyll`, after complete local checks of the exact current public `main`. Keep artifact history on `gh-pages`, record source/file hashes and protect concurrent publication with a remote-ref lease. Activate the local post-merge publisher explicitly per development clone. Accept hosting only after actual account/HTTPS verification; choose a fallback with the owner if this path is rejected.
+
+Build private documentation only from an explicitly named private repository and its tracked Markdown allowlist, into a separate private output. Render escaped Markdown with a pinned renderer, disable embedded images/HTML and omit undeclared attachments. Deploy content-addressed private releases and keep an independently switchable current release.
+
+For the initial dashboard, export fixed systemd status, model-usage aggregates and default-board counts to static files. Do not start a native dashboard/backend, import the model runtime, expose conversations or allow task/configuration changes. Refresh through an independent restricted systemd timer. Serve the dashboard and private docs on separate owner-authorized tailnet HTTPS ports with Funnel disabled.
+
+== Consequences
+
+The deterministic coordinator's execution boundary is preserved. A static snapshot can become stale; display its timestamp and retain independent monitoring as H1.9 work. Private output never enters the public exporter or hosting branch. Certificates disclose the node's DNS name through Certificate Transparency, which must be explained before enabling HTTPS.
+
+The configured local clone publishes after synchronization; a GitHub-only merge does not itself run local code. Live denial tests, file/revision checks, repeatability and release rollback are required. Administrative dashboard controls, further boards and authenticated mutation APIs remain separate backlog work. See link:../h1.8-web-access.adoc[the implementation and acceptance guide].
