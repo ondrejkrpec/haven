@@ -1,0 +1,45 @@
+= H1.9: Storage and monitoring options
+
+Checked against official sources on 2026-10-30. The owner requested alternatives before selecting a provider. This is a comparison, not an order or an account-specific quote. Prices below describe storage only, before taxes unless stated; USD and EUR are deliberately not converted. Volume means the entire retained repository, not the size of one daily backup. Confirm billable rounding, minimum invoice/payment rules and actual account terms before ordering.
+
+== Backup storage
+
+[cols="1,2,2,2",options="header"]
+|===
+|Candidate |Listed pricing / example |Location and access |Fit and open checks
+|https://www.scaleway.com/en/pricing/storage/[Scaleway Standard Multi-AZ]
+|EUR 0.01606/GB-month; 20 GB approximately EUR 0.3212 before tax, EUR 0.3887 with illustrative 21% VAT. Requests/ingress included; 75 GB monthly egress allowance, then listed EUR 0.01/GB. Do not budget on a temporary trial.
+|EU provider, Paris candidate; S3 backend.
+|Keeps the earlier EU-provider direction. Verify IAM/bucket-policy interaction, protected recovery points and account billing.
+|https://developers.cloudflare.com/r2/pricing/[Cloudflare R2 Standard]
+|10 GB-month storage, 1M Class A and 10M Class B operations/month included; then USD 0.015/GB-month and request charges. 20 GB storage line item approximately USD 0.15. Internet egress is free under the published conditions.
+|US provider; explicit https://developers.cloudflare.com/r2/reference/data-location/[EU jurisdiction] is available, with its jurisdiction-specific S3 endpoint. A location hint alone is not the same guarantee.
+|Potentially no storage charge for a small retained repository within free limits. Verify jurisdiction, token scope, compatibility and object-retention behavior; no actual R2 account/API test has run.
+|https://www.backblaze.com/cloud-storage/pricing[Backblaze B2 pay-as-you-go]
+|USD 6.95/TB per 30 days; conservative 20 GB calculation USD 0.139 before any allowance/tax. Standard API calls are free under the current offering; direct egress allowance is 3x average stored data, then USD 0.01/GB.
+|US provider with https://www.backblaze.com/docs/cloud-storage-data-regions[EU Central in Amsterdam]. Region is chosen when creating the account and cannot subsequently be changed on that account. S3 or B2 access.
+|Low unit price and a backup-oriented service. Confirm current account allowances/billing and restricted application-key/retention semantics. No free-storage allowance is assumed in this conservative estimate.
+|https://www.hetzner.com/storage/storage-box/[Hetzner Storage Box BX11]
+|Official page's hidden pricing label lists EUR 3.20/month excluding VAT; minimum capacity 1 TB. At 20 GB the whole plan is still required. Confirm the localized order price.
+|EU provider, Germany/Finland; SFTP backend, subaccounts and provider snapshots.
+|More capacity and a separate snapshot control plane, at a higher fixed floor for a tiny pilot. https://docs.hetzner.com/storage/storage-box/general/[Storage Box] is not an S3 bucket; data resides on one host with RAID. Verify subaccount restrictions and independently controlled snapshots.
+|===
+
+Backblaze's https://www.backblaze.com/blog/backblaze-pricing-and-product-updates/[2026-03-17 update] establishes the May 1 pricing/API change; older help pages about per-call charges should not override it. The primary pricing page's free-storage wording was not established by the retrieved live page, so the table does not subtract it.
+
+For a small Haven-only repository, compare Scaleway when an EU-operated service matters most, R2 EU when staying within a free allowance matters most, and B2 EU for its storage pricing. Storage Box becomes more interesting when the owner also wants substantially more backup capacity. These are tradeoffs; credentials, deletion protection and an actual restore still require acceptance on whichever provider is selected.
+
+== Independent monitoring
+
+[cols="1,2,2",options="header"]
+|===
+|Candidate |Verified public offer |Fit
+|https://healthchecks.io/pricing/[Healthchecks.io Hobbyist]
+|USD 0/month, 20 jobs, 100 log entries per job.
+|Focused https://healthchecks.io/faq/[dead-man heartbeat monitoring]; https://healthchecks.io/docs/signaling_failures/[explicit failure signals] are supported. Two checks can cover backup completion and a combined service/backup-freshness heartbeat. Keep ping URLs private and send no raw logs.
+|https://betterstack.com/uptime[Better Stack Uptime]
+|10 monitors, 10 heartbeats and one status page with three-minute checks advertised free.
+|An alternative if one console should also cover other public services. Heartbeats still work without exposing Haven's private dashboard. Account-specific notification/integration limits remain to verify.
+|===
+
+A monitor installed only on the Haven VPS cannot report that host's complete disappearance without an external receiver. This pilot does not add another self-hosted server just to run monitoring. Before accepting either hosted candidate, choose the owner's notification destination, confirm a real alert and exercise a deliberately missed heartbeat without disabling production access.
