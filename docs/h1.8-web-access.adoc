@@ -1,13 +1,13 @@
 = H1.8: Read-only dashboard and separate documentation sites
 
-Status on 2026-10-30: implementation and live acceptance in progress. The owner selected a read-only dashboard; administrative controls are deferred. This guide separates public publication, private build inputs and tailnet access. link:adr/0009-read-only-web-access.adoc[ADR 0009] records the boundaries.
+Status on 2026-10-30: H1.8 is accepted for this owner-only pilot. Public Pages hosting, private HTTPS, read-only snapshots, repeat deployment and private-release rollback are verified. The owner confirmed ordinary browser access with the corporate VPN both enabled and disabled. The final source merge exercises the configured automatic publisher; verify its live `publication.json` before handoff. Administrative controls are deferred. link:adr/0009-read-only-web-access.adoc[ADR 0009] records the boundaries.
 
 == Three independent surfaces
 
 [cols="1,2,2",options="header"]
 |===
 |Surface |Inputs |Access
-|Public documentation |Only the existing bounded public Antora exporter |Prebuilt GitHub Pages branch, subject to live account acceptance
+|Public documentation |Only the existing bounded public Antora exporter |Verified prebuilt GitHub Pages branch
 |Private documentation |Explicit tracked Markdown runbooks/instructions in one named private instance |Tailscale Serve HTTPS, TCP 8443, owner-only grant
 |Operational dashboard |Fixed systemd properties, session usage aggregates and default-board status counts |Tailscale Serve HTTPS, TCP 443, owner-only grant
 |===
@@ -88,6 +88,12 @@ Both sites use root paths on separate HTTPS ports. The tailnet DNS name is insta
 
 No public firewall rule, public HTTP listener, OS update, service-account change or Nora restart is part of this operation. Tailscale's policy, together with authenticated tailnet devices, controls access; UFW alone is not that boundary. Funnel must remain absent from the resulting Serve configuration.
 
+=== Workstation with corporate DNS
+
+Check the client separately: tailnet-wide MagicDNS does not mean a workstation accepts Tailscale DNS. Do not change an existing corporate VPN, its resolvers, routes, NSS order or Tailscale DNS preference to make this site work. An owner-approved exact `/etc/hosts` mapping for the one node's current tailnet IP is a narrow alternative. Keep a byte-for-byte copy of the original file and check for an existing mapping before adding one. Ensure a newline separates the new record from the previous last line; some existing files have no trailing newline.
+
+After the owner installs the single mapping, verify `getent hosts` and ordinary HTTPS with certificate verification enabled. Compare corporate DNS/NSS files before and after. This mapping bypasses DNS only for that exact hostname and must be updated if the node's tailnet IP changes. Keep Tailscale connected. Testing both corporate-VPN states requires the owner to switch their VPN; the deployment agent must not toggle it. An explicit `curl --resolve` is useful for diagnosis but does not establish ordinary browser acceptance.
+
 == Acceptance and recovery
 
 * Public HTTPS must return a real guide and `publication.json` for the checked source revision. Verify representative file hashes and repeat after a source update through the configured automatic hook. A pushed artifact alone is insufficient.
@@ -110,3 +116,22 @@ Preserve SSH and unrelated routes. Revert only the H1.8 policy grant if access i
 == Evidence and sources
 
 Context7 returned a monthly quota error. Official https://github.blog/changelog/2024-07-08-pages-legacy-worker-sunset/[GitHub prebuilt Pages deployment], https://docs.github.com/en/rest/pages/pages[Pages API], https://tailscale.com/docs/reference/tailscale-cli/serve[Serve CLI] and https://markdown-it.github.io/markdown-it/[Markdown-it documentation] were checked on 2026-10-30. The installed Tailscale help and pinned Hermes dashboard parser were inspected directly. Live acceptance results follow separately; planned commands are not deployment evidence.
+
+
+== Verified public hosting on the pilot account
+
+https://github.com/ondrejkrpec/haven/pull/17[PR 17] merged as `2a286745d3baa3b51d6751e96124a0db1eeeb74e`. The full local pipeline passed 98 behavior tests, Ansible syntax/offline production lint, configuration checks, source/history secret scans, retained checksums and the 31-page Antora build. Public source and generated links passed. These are local checks, not GitHub Actions results.
+
+The first artifact `df081128cfcd02661362b0d2a6e0d72343c6a6e9` published from that exact remote `main`. Pushing the prebuilt `gh-pages` branch enabled Pages automatically on this account; a subsequent create request returned HTTP 409 because it already existed. Read-back confirmed `build_type: legacy`, branch `gh-pages`, path `/` and enforced HTTPS. The Pages build API reached `built` without a custom Actions workflow.
+
+Actual HTTPS requests to https://ondrejkrpec.github.io/haven/[the public site], `publication.json`, the H1.8/configuration guides and the CSS returned the expected source revision and four exact file hashes. An initial request during deployment returned 404; it was accepted only after the build completed and the files matched. The configured local clone now enables `haven.publishDocs=true`; automatic publication after the next accepted source merge remains to be verified.
+
+== Verified private runtime and recovery
+
+Two separately built 13-runbook releases were deployed through the explicit private inventory. Both private HTTPS roots, a real rendered runbook and the snapshot/publication JSON returned HTTP 200 with valid TLS. Six attempts to fetch configuration, credentials or paths outside the static roots returned 404. The effective installed packet filter contains only individual device prefixes and TCP 22, 443 and 8443; no broad source range was present. Serve configuration contains exactly the two intended HTTPS paths and no Funnel. From the inspection computer, public TCP 443/8443 and the unused native dashboard port were inaccessible.
+
+The real snapshot reads the existing aggregate counters; the uninitialized default board is correctly unavailable. Restarting only the snapshot oneshot produced a later timestamp with an active timer. The coordinator's PID/start timestamp and all aggregate model-call/token/cost totals exactly matched the baseline taken before H1.8 deployment. Effective systemd properties confirmed the `haven` identity, empty capability set, AF_UNIX-only sockets, network denial, strict filesystem protection, the single writable snapshot path and inaccessible credentials/configuration.
+
+The private release was switched back to the first verified version, its HTTPS metadata was checked, then the second accepted version was restored and checked again. The installed Serve version follows the `current` symlink on each request. No Nora restart, database initialization, credential copy or model call was needed. Live access from a separate unauthorized tailnet identity and a public IPv6 path were not available for this acceptance; effective-filter inspection and tested public/source-path denials do not replace those scenarios. Full off-site recovery and external stale-snapshot monitoring remain H1.9.
+
+An identical final deployment left every installed file, directory, unit and timer unchanged; the only reported change was the explicitly requested fresh oneshot snapshot (`ok=13`, `changed=1`, `failed=0`). Ordinary workstation lookup and both TLS sites passed after the owner installed the single hosts mapping. All original hosts bytes were retained, and corporate DNS/NSS checksums were unchanged. An initially missing final newline joined the appended mapping to the last existing record; a guarded correction separated it before browser acceptance. The owner subsequently confirmed both sites work with the corporate VPN on and off. The agent never changed or toggled that VPN, its DNS, routing or Tailscale DNS preferences.
