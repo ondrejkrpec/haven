@@ -1,0 +1,7 @@
+# Four verified SHA-256 file digests in the first prebuilt Pages manifest.
+# Each equals the corresponding HTML blob in this immutable artifact commit.
+# Exact commit/file/rule/line fingerprints only; no path, rule or token pattern exclusion.
+df081128cfcd02661362b0d2a6e0d72343c6a6e9:publication.json:generic-api-key:29
+df081128cfcd02661362b0d2a6e0d72343c6a6e9:publication.json:generic-api-key:40
+df081128cfcd02661362b0d2a6e0d72343c6a6e9:publication.json:generic-api-key:41
+df081128cfcd02661362b0d2a6e0d72343c6a6e9:publication.json:generic-api-key:48
