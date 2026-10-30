@@ -63,4 +63,6 @@ Use independent systemd services/timers, with no Hermes model/cron dependency. A
 
 The public behavior suite covers inventory privacy, symlinked roots/parents, directory replacement during enumeration, bounds and access errors. The optional restic experiment records its tool version and exact source hashes. Local result receipts must distinguish these synthetic outcomes from real S3 access, alert delivery and clean-host application recovery; none of those live scenarios is established by this preparation.
 
+The complete public checks passed with 108 behavior tests. On 2026-10-30 at 18:23 UTC, `.venv/bin/python research/h1.9/probe.py` passed from clean implementation revision `39591da52d10286ac6e8b23a9c76e829dcc08f31`, with Python 3.14.7, SQLite 3.53.4 and restic 0.19.1. `research/h1.9/acceptance.json` records the exact source hashes and all bounded outcomes, including the untested remote/alert flags. The experiment used only disposable local fixtures and did not initialize or contact a remote repository.
+
 Context7 was unavailable due to its monthly quota. The pinned binary's own help and official SQLite/restic/provider documentation were used instead.

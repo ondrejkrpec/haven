@@ -1,0 +1,25 @@
+{
+  "result": "passed",
+  "scope": "synthetic local repository only",
+  "restic_version": "0.19.1",
+  "sqlite_committed_wal_restored": true,
+  "exact_files_and_modes_restored": true,
+  "restored_after_sources_removed": true,
+  "plaintext_marker_absent_from_repository": true,
+  "wrong_password_refused": true,
+  "missing_repository_refused": true,
+  "retention_prune_and_remaining_restore": true,
+  "corruption_detected": true,
+  "production_credentials_used": false,
+  "remote_repository_tested": false,
+  "external_alert_delivery_tested": false,
+  "captured_at_utc": "2026-10-30T18:23:02.884046+00:00",
+  "source_sha256": {
+    "research/h1.9/probe.py": "6243ad3a7926b570a0e08dfe587072d083bfcab87026607d96117602af41208d",
+    "research/h1.9/pins.json": "3c03e0d2e8a27006ab4119c050db1583e578dd4f58d7e6b9b928e5e883e6e73f"
+  },
+  "python_version": "3.14.7",
+  "sqlite_version": "3.53.4",
+  "source_revision": "39591da52d10286ac6e8b23a9c76e829dcc08f31",
+  "source_dirty": false
+}
