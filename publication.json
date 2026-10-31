@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "5ddc8114e4555ebca11fc1749d74ec597a0d300d",
-  "checked_at_utc": "2026-10-30T18:51:03.535825+00:00",
+  "source_revision": "bf1d243acd0b306457b18c0a096bd634f3350a0d",
+  "checked_at_utc": "2026-10-31T11:13:41.723006+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -105,7 +105,7 @@
     },
     {
       "path": "haven/adr/0010-offsite-backup-providers.html",
-      "sha256": "2951b69eec6fa4d49e8a90fc5fac3a8b124770aa3c7aec1ef8dbb6e58e9cb13f"
+      "sha256": "92ace463b0fc3fdb9c0a636cf9e2aa96ea2e59c19d491e6fac6a2bdfb3f6e474"
     },
     {
       "path": "haven/architecture.html",
@@ -197,7 +197,7 @@
     },
     {
       "path": "haven/h1.9-scaleway-healthchecks.html",
-      "sha256": "bbea7f46c3835625189916e671988ffd0b4e63ebfdecce5720b732d342f33152"
+      "sha256": "3a974e1398fec477693d4b1f47765321ee46d87e4c027103d1d124c95d8dfc17"
     },
     {
       "path": "haven/index.html",

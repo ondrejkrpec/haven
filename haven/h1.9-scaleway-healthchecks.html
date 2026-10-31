@@ -200,7 +200,7 @@
 <p>Sign in to <a href="https://console.scaleway.com/">Scaleway</a> or create the account, complete its required verification/payment setup, and enable MFA. Confirm the actual account price and billing details before creating billable resources. Keep recovery codes outside the VPS.</p>
 </li>
 <li>
-<p>Sign in to <a href="https://healthchecks.io/">hosted Healthchecks.io</a>, verify the notification email and enable account two-factor authentication. The proposed first channel is the account email; the owner still needs to confirm this choice. The monitor must remain accessible when Haven is unavailable.</p>
+<p>Sign in to <a href="https://healthchecks.io/">hosted Healthchecks.io</a>, verify the notification email and enable account two-factor authentication. The owner selected the account email as the initial notification channel. The monitor must remain accessible when Haven is unavailable.</p>
 </li>
 <li>
 <p>In the owner&#8217;s password manager, reserve an entry for the restic repository password and a recovery record for the account/project, region, bucket, repository prefix and source revisions. Generate a unique repository password locally when enrollment starts; retain it before initializing the repository. Do not reuse a Scaleway password or API secret as the restic password.</p>
@@ -346,7 +346,23 @@
 <h2 id="_private_handoff_and_next_deployable_increment"><a class="anchor" href="#_private_handoff_and_next_deployable_increment"></a>Private handoff and next deployable increment</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Enrollment will place separate storage credentials, the restic password and per-check URLs in root-controlled files on the VPS, outside checkouts and routine logs; exact paths and transfer commands belong to the reviewed runner/deployment change. Use a hidden terminal prompt or protected-file transfer, not shell arguments/history. The owner&#8217;s password manager holds the independent recovery copies. Do not create a plaintext credentials template inside a repository, even if ignored. No enrollment command or production runner is supplied by this documentation-only change.</p>
+<p>The local helper <code>scripts/enroll_healthchecks.py</code> collects the two UUID URLs using hidden terminal prompts. On the administrative workstation, choose a new absolute directory beneath an existing directory you own, outside Git. For example, when <code>$HOME/.config</code> already exists and is not a symlink or inside a Git checkout:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># From the public checkout, in your own interactive terminal:
+.venv/bin/python -m scripts.enroll_healthchecks \
+  --directory "$HOME/.config/haven-healthchecks"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The helper accepts only distinct bare HTTPS UUID URLs on <code>hc-ping.com</code>. It refuses redirected input, echo fallback, existing destinations, symlinked paths and Git worktree/bare-repository ancestors, including ignored subdirectories. It creates a <code>0700</code> directory and two <code>0600</code> files, <code>backup.url</code> and <code>service.url</code>, without printing their values. Directory traversal and writes use no-follow descriptors, and the parent is rechecked after input. Argument errors and caught failures expose only fixed diagnostics. No network request, credential validation against an account, VPS transfer, systemd installation or monitor activation takes place. Keep the checks paused; this only prepares local secret files.</p>
+</div>
+<div class="paragraph">
+<p>Handled interruption/write failures clean up files created by that attempt. A killed process or host crash can leave a protected partial directory; the helper deliberately refuses to overwrite it. Review it privately before retrying. Never paste its file contents into a diagnostic report. A successful run establishes local storage only, not ownership or reachability of the checks. Its tests use synthetic URLs and cover permissions, invalid inputs, no overwrite, Git/symlink boundaries, cancellation, failed writes and suppressed private diagnostics.</p>
+</div>
+<div class="paragraph">
+<p>Deployment will place storage credentials, the restic password and per-check URLs in root-controlled files on the VPS, outside checkouts and routine logs; exact paths and transfer commands belong to the reviewed runner/deployment change. Use a hidden terminal prompt or protected-file transfer, not shell arguments/history. The owner&#8217;s password manager holds the independent recovery copies. Do not create a plaintext credentials template inside a repository, even if ignored. The production runner and deployment are still pending.</p>
 </div>
 <div class="paragraph">
 <p>After accounts are ready, record only non-secret resource identifiers privately. Before initializing the production repository, test the actual policy with synthetic data: read/write/list, normal lock cleanup and multipart failure cleanup; rejected snapshot/data/version deletion; rejected policy/versioning changes and access outside the repository; exact restore and protected-version recovery with the separate operator. Clean up only disposable test resources and retain the evidence. Backend compatibility and policy failure remain blockers for production activation.</p>
