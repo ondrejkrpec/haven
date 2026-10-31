@@ -38,6 +38,20 @@ The staging path is relative to the experiment working directory, so the archive
 
 SQLite Online Backup establishes consistency for one database. It does not produce a single consistent cut across multiple databases, JSON files and credentials. The production runner must first define coordinated quiescence or a bounded service pause/resume procedure with failure recovery. The synthetic experiment does not establish that production procedure.
 
+=== Prepared consistent capture primitive
+
+`scripts/backup_capture.py` supplies a tested Python component, with no CLI, live systemd adapter, durable journal implementation, upload or deployed timer. Its link:../examples/backup-capture.json[explicit candidate capture policy] covers native configuration/credentials, identity, databases, sessions/delivery receipts, memories, schedules, skills/custom extensions and reviewed local snapshots/logs. It excludes named caches, transient gateway state and the exact pinned Python/uv installations while preserving their `tools/facts.json` provenance. A new runtime directory or unknown top-level path requires review instead of silent omission. This is one pilot-profile candidate, not a universal Hermes backup manifest.
+
+The caller must stop every writer and hold a trusted maintenance lock. `capture_with_pause` requires a healthy starting service, arms its journal before stopping, checks the stopped state, captures the data and attempts to start/health-check the service in `finally`. A failed resume keeps the recovery intent and discards the capture. `recover_pause` supplies the corresponding recovery operation for a future `ExecStopPost`/next-run adapter. Tests use controller/journal doubles: they do not establish real systemd stop semantics, fsync durability, power-loss recovery, mutual exclusion with administrator maintenance or production downtime. Implement those adapters and test actual process termination before deployment.
+
+Source traversal and file reads use no-follow descriptors; destination I/O is anchored to a newly created private directory descriptor through Linux `/proc/self/fd`. Included symlinks, hardlinks, mount boundaries, special files, unrepresented extended attributes/ACLs, missing required files and unreviewed SQLite databases/sidecars fail capture. Known lock/cache/transient patterns are excluded explicitly in code/policy. Full source metadata is compared across copy passes; this detects observed changes but is not an alternative to stopping all writers.
+
+SQLite normalization operates only on the private copy, including copied WAL/rollback state, then checks integrity and removes the copied sidecars. A missing optional board database stays absent. Staged directories/files are `0700`/`0600`; the returned private manifest records hashes plus original UID, GID, mode and mtime for an eventual reviewed restore. The caller must include this manifest in the encrypted payload and map owner identities on a new host before reapplying metadata. A bare restic restore of staging is not a completed application restore.
+
+Default cooperative limits are 256 MiB, 20,000 entries, depth 32 and 60 seconds including database normalization. A separate process/unit timeout is still required for blocked system calls. Handled staging failures remove the owned partial tree without following replaced destination parents; a killed process still requires protected staging cleanup by the eventual recovery adapter. Callers must suppress raw OS/SQLite exception text and never publish returned filenames or metadata outside the private instance.
+
+The pilot candidate passed a metadata-only preflight on 2026-10-31: 372 regular files, 134 directories and approximately 4.7 MB selected. It did not copy real contents or pause the service. Own skills are approximately 2.8 MB and included; approximately 296 MB of installed Python/uv tools are excluded by exact reviewed directory names, with package/artifact provenance retained privately. A clean-host rebuild of those dependencies remains an acceptance requirement.
+
 Use a private staging directory (`0700`, files `0600`), an explicit path manifest and path/link checks. Bound source size, free staging space, concurrency and runtime. Clean staging on success, exception, cancellation and subsequent recovery. Do not put real plaintext staging in a controller checkout. The backup process is trusted and isolated from Nora's model and future H2 workers; its permissions do not grant workers access to credentials.
 
 == Selected storage and monitoring
@@ -52,7 +66,7 @@ Use independent systemd services/timers, with no Hermes model/cron dependency. A
 
 == Remaining implementation and live acceptance
 
-. Finish the explicit path manifest, extension/identity review and cross-file consistency strategy from the private metadata inventory.
+. Accept the candidate path policy against an actual paused capture; implement the systemd/lock/durable-journal/recovery adapters for the prepared capture primitive. The metadata preflight and synthetic service doubles do not establish live cross-file consistency.
 . Enroll the selected Scaleway/Healthchecks accounts, MFA, notification destination and password-manager recovery material through private procedures; no credentials are supplied in chat.
 . Implement the bounded production runner and systemd units, with a verified tool pin, least-privilege storage access, fixed diagnostics, staging cleanup and a lock. Validate against synthetic fixtures before deployment.
 . Exercise allowed read/write/lock operations and rejected access to another bucket/prefix; test old-backup protection and the actual maintenance path. Test success, partial backup, wrong/missing key, unavailable storage and stale/missing external heartbeats.
