@@ -10,7 +10,7 @@ H1.9 needs an encrypted recovery copy outside the VPS and alerts that survive lo
 
 Use Scaleway Object Storage for the pilot's restic repository and hosted Healthchecks.io for backup and service heartbeats. Prepare Paris Standard Multi-AZ in a dedicated backup Project, a private versioned bucket and restricted application credentials. Keep maintenance/recovery credentials and the repository password recovery copy outside the VPS. These layout/access details are implementation targets requiring backend tests, not evidence of provisioned resources.
 
-Use independent systemd timers; do not depend on the coordinator's disabled model/cron workers. The proposed first alert destination is the owner's verified account email, pending confirmation. Complete enrollment and actual account billing with the owner; do not request secrets in chat.
+Use independent systemd timers; do not depend on the coordinator's disabled model/cron workers. On 2026-10-31 the owner confirmed the account email for initial alerts. Complete enrollment and actual account billing with the owner; do not request secrets in chat.
 
 == Consequences
 
