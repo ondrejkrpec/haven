@@ -13,7 +13,7 @@ from scripts.public_files import ROOT, public_files
 # Deliberately bounded downloads, not a copy of the public or private repository.
 ATTACHMENTS = (
     "README.md", "CONTRIBUTING.md", "AGENTS.md", "LICENSE", "config/defaults.yaml",
-    "examples/instance.yaml", "schemas/instance-v1.schema.json",
+    "examples/instance.yaml", "examples/scaleway-backup.json", "schemas/instance-v1.schema.json",
     "research/h0.1/provenance.json", "research/h0.1/UPSTREAM-LICENSE",
     "research/h0.1/pins.json", "research/h0.1/patches/upstream-117820.patch",
     "research/h0.1/evidence/h0.2-portable-isolation.json",
