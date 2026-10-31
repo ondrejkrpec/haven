@@ -10,7 +10,7 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 [H1.8 web access](docs/h1.8-web-access.adoc) adds a verified read-only operational snapshot, separate private runbooks and the [public documentation site](https://ondrejkrpec.github.io/haven/). The guide records hosting, access and recovery evidence and remaining acceptance limits. Administrative dashboard controls remain deferred.
 
-[H1.9 preparation](docs/h1.9-backup-recovery.adoc) adds a metadata-only inventory and an opt-in synthetic encrypted backup/restore experiment. The owner selected [Scaleway + Healthchecks.io](docs/h1.9-scaleway-healthchecks.adoc); account enrollment, production off-site backup and external alerts remain pending.
+[H1.9 preparation](docs/h1.9-backup-recovery.adoc) adds a metadata-only inventory and opt-in synthetic encrypted backup/restore experiments. The owner selected [Scaleway + Healthchecks.io](docs/h1.9-scaleway-healthchecks.adoc); live S3 access checks and a remote synthetic restic backup/restore passed. Production data backups and external alerts remain pending.
 
 ## Start locally
 
