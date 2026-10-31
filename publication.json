@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "bf1d243acd0b306457b18c0a096bd634f3350a0d",
-  "checked_at_utc": "2026-10-31T11:13:41.723006+00:00",
+  "source_revision": "e09b19378f44092fa7ffa52e8e66bfbf1e030c96",
+  "checked_at_utc": "2026-10-31T13:55:18.971914+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -30,6 +30,10 @@
     {
       "path": "haven/_attachments/examples/instance.yaml",
       "sha256": "5d82135656488eb84bf559b5f5f4dc49f42fce410727a40ce138b14eb054e384"
+    },
+    {
+      "path": "haven/_attachments/examples/scaleway-backup.json",
+      "sha256": "e1410b4212e5ae9e523cea3f165a71dd8eb20b8dc81e6dce7ed9e34700bcd040"
     },
     {
       "path": "haven/_attachments/github/workflows/checks.yml",
@@ -197,7 +201,7 @@
     },
     {
       "path": "haven/h1.9-scaleway-healthchecks.html",
-      "sha256": "3a974e1398fec477693d4b1f47765321ee46d87e4c027103d1d124c95d8dfc17"
+      "sha256": "0b9f741fd36a39dc64b54fb10bbec28d3dffb46bdbcbc638c9870b3474c52fc1"
     },
     {
       "path": "haven/index.html",

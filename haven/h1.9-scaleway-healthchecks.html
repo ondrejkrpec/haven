@@ -299,6 +299,48 @@
 </div>
 </div>
 <div class="sect1">
+<h2 id="_candidate_policy_renderer"><a class="anchor" href="#_candidate_policy_renderer"></a>Candidate policy renderer</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>scripts.scaleway_backup_policy</code> renders offline from explicit installation metadata. The <a href="_attachments/examples/scaleway-backup.json" class="xref attachment">synthetic example</a> is separate from configuration v1; real IDs belong only in the private instance. The metadata requires a Paris region, a single safe repository prefix and distinct application/owner principal IDs. Unknown fields, wildcard resources and a missing owner block bucket-policy rendering. Output must be a new file outside the public checkout:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.scaleway_backup_policy iam \
+  --settings /absolute/private/ops/backup/scaleway.json \
+  --output /absolute/private/ops/backup/scaleway-iam-plan.json
+.venv/bin/python -m scripts.scaleway_backup_policy bucket \
+  --settings /absolute/private/ops/backup/scaleway.json \
+  --output /absolute/private/ops/backup/scaleway-bucket-policy.json</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The IAM output is a UI checklist, not an API request: <code>ObjectStorageBucketsRead</code>, <code>ObjectStorageObjectsRead</code>, <code>ObjectStorageObjectsWrite</code>, <code>ObjectStorageObjectsDelete</code>, scoped to the one Project and application. No bucket-write, bucket-policy, IAM administration or organization-wide grant is added. Object-delete permission is needed for locks and incomplete multipart cleanup; the bucket policy narrows it further. Check that no group/other policy broadens the application&#8217;s scope.</p>
+</div>
+<div class="paragraph">
+<p>The bucket JSON uses provider version <code>2023-04-17</code>, TLS-only Allow statements and the supplied owner principal for full bucket administration/recovery. The application can read location/versioning metadata, list under the repository prefix, read/write repository objects, manage relevant multipart operations, and delete only lock objects. It receives no object-version access/deletion, lifecycle/versioning/policy changes or routine snapshot/data deletion. This is a candidate to apply through the owner&#8217;s console, not a claim that it was installed.</p>
+</div>
+<div class="paragraph">
+<p>IAM remains Project-scoped. Keep the Project dedicated to this bucket: another bucket added without an appropriate bucket policy may inherit the application&#8217;s broad Project IAM permissions. Do not treat this document&#8217;s bucket-level matcher tests as evidence of a provider-wide deny. A known existing forbidden resource in another Project, and any separately secured same-Project resource used for acceptance, need real negative-access tests. Do not rely on unverified IAM resource-level conditions.</p>
+</div>
+<div class="paragraph">
+<p>Unfiltered listing/<code>HeadBucket</code> is intentionally not allowed to the application by the prefix-conditioned bucket listing statement. The pinned <a href="https://github.com/restic/restic/blob/v0.19.1/internal/backend/s3/s3.go">restic S3 implementation</a> lists type directories with a trailing slash and tolerates an <code>AccessDenied</code> bucket-existence response during creation. This source review suggests compatibility, but does not replace a real backend test. Check multipart cleanup, lock removal and the no-data-deletion contract before production. Synthetic tests exercise only the generated statement subset, not Scaleway&#8217;s IAM/ACL/policy engine.</p>
+</div>
+<div class="paragraph">
+<p>Create the application&#8217;s API key only with its identity and preferred Object Storage Project checked. Save the secret shown once in the owner&#8217;s password manager. The local <code>scripts.enroll_scaleway</code> helper uses the same tested private-file primitive as Healthchecks:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.enroll_scaleway \
+  --directory "$HOME/.config/haven-scaleway"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Enter the access key and secret key at the hidden prompts. The helper creates <code>access-key</code> and <code>secret-key</code> files (<code>0600</code>) in a new <code>0700</code> directory outside Git, refuses overwrite/links/echo fallback, and sends no network request. Input checking is deliberately limited to distinct bounded single-line credential strings: it cannot prove the key belongs to the intended application, has the intended Project or is valid. Live identity/scope and negative-access checks are still required. Do not supply an owner&#8217;s administrative key to this collector or a routine VPS service.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_two_external_checks"><a class="anchor" href="#_two_external_checks"></a>Two external checks</h2>
 <div class="sectionbody">
 <div class="paragraph">
