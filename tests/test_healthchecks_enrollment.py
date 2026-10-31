@@ -122,7 +122,7 @@ class HealthchecksEnrollmentTests(unittest.TestCase):
                     raise OSError("SYNTHETIC_PRIVATE_ERROR")
                 return original_open(path, flags, *args, **kwargs)
 
-            with patch.object(enrollment.os, "open", side_effect=fail_second_file):
+            with patch("scripts.private_enrollment.os.open", side_effect=fail_second_file):
                 with self.assertRaises(OSError):
                     enrollment.collect(target, prompt=lambda prompt: URLS["service" in prompt])
             self.assertFalse(target.exists())

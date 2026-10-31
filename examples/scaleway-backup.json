@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "project_id": "00000000-0000-4000-8000-000000000001",
+  "application_id": "00000000-0000-4000-8000-000000000002",
+  "owner_user_id": "00000000-0000-4000-8000-000000000003",
+  "bucket": "example-haven-backup",
+  "region": "fr-par",
+  "prefix": "haven"
+}

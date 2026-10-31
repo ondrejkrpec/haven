@@ -41,6 +41,38 @@ Scaleway https://www.scaleway.com/en/docs/object-storage/api-cli/bucket-policy/[
 
 Versioning plus restricted credentials is a proposed recovery layer, not proof of immutable or append-only backups. An overwrite may hide an older object; repository deletion may require recovery of many related versions to a consistent point. Test that process in a separate disposable repository. Permanent version deletion and disabling the protection must be unavailable with the VPS key. Separately controlled version cleanup must leave a documented recovery window and account for storage growth. See the provider's https://www.scaleway.com/en/docs/object-storage/how-to/use-bucket-versioning/[versioning] and https://www.scaleway.com/en/docs/object-storage/how-to/use-object-lock/[Object Lock] behavior.
 
+== Candidate policy renderer
+
+`scripts.scaleway_backup_policy` renders offline from explicit installation metadata. The link:../examples/scaleway-backup.json[synthetic example] is separate from configuration v1; real IDs belong only in the private instance. The metadata requires a Paris region, a single safe repository prefix and distinct application/owner principal IDs. Unknown fields, wildcard resources and a missing owner block bucket-policy rendering. Output must be a new file outside the public checkout:
+
+[source,sh]
+----
+.venv/bin/python -m scripts.scaleway_backup_policy iam \
+  --settings /absolute/private/ops/backup/scaleway.json \
+  --output /absolute/private/ops/backup/scaleway-iam-plan.json
+.venv/bin/python -m scripts.scaleway_backup_policy bucket \
+  --settings /absolute/private/ops/backup/scaleway.json \
+  --output /absolute/private/ops/backup/scaleway-bucket-policy.json
+----
+
+The IAM output is a UI checklist, not an API request: `ObjectStorageBucketsRead`, `ObjectStorageObjectsRead`, `ObjectStorageObjectsWrite`, `ObjectStorageObjectsDelete`, scoped to the one Project and application. No bucket-write, bucket-policy, IAM administration or organization-wide grant is added. Object-delete permission is needed for locks and incomplete multipart cleanup; the bucket policy narrows it further. Check that no group/other policy broadens the application's scope.
+
+The bucket JSON uses provider version `2023-04-17`, TLS-only Allow statements and the supplied owner principal for full bucket administration/recovery. The application can read location/versioning metadata, list under the repository prefix, read/write repository objects, manage relevant multipart operations, and delete only lock objects. It receives no object-version access/deletion, lifecycle/versioning/policy changes or routine snapshot/data deletion. This is a candidate to apply through the owner's console, not a claim that it was installed.
+
+IAM remains Project-scoped. Keep the Project dedicated to this bucket: another bucket added without an appropriate bucket policy may inherit the application's broad Project IAM permissions. Do not treat this document's bucket-level matcher tests as evidence of a provider-wide deny. A known existing forbidden resource in another Project, and any separately secured same-Project resource used for acceptance, need real negative-access tests. Do not rely on unverified IAM resource-level conditions.
+
+Unfiltered listing/`HeadBucket` is intentionally not allowed to the application by the prefix-conditioned bucket listing statement. The pinned https://github.com/restic/restic/blob/v0.19.1/internal/backend/s3/s3.go[restic S3 implementation] lists type directories with a trailing slash and tolerates an `AccessDenied` bucket-existence response during creation. This source review suggests compatibility, but does not replace a real backend test. Check multipart cleanup, lock removal and the no-data-deletion contract before production. Synthetic tests exercise only the generated statement subset, not Scaleway's IAM/ACL/policy engine.
+
+Create the application's API key only with its identity and preferred Object Storage Project checked. Save the secret shown once in the owner's password manager. The local `scripts.enroll_scaleway` helper uses the same tested private-file primitive as Healthchecks:
+
+[source,sh]
+----
+.venv/bin/python -m scripts.enroll_scaleway \
+  --directory "$HOME/.config/haven-scaleway"
+----
+
+Enter the access key and secret key at the hidden prompts. The helper creates `access-key` and `secret-key` files (`0600`) in a new `0700` directory outside Git, refuses overwrite/links/echo fallback, and sends no network request. Input checking is deliberately limited to distinct bounded single-line credential strings: it cannot prove the key belongs to the intended application, has the intended Project or is valid. Live identity/scope and negative-access checks are still required. Do not supply an owner's administrative key to this collector or a routine VPS service.
+
 == Two external checks
 
 Use a separate Healthchecks project and individual UUID ping URLs, rather than an account management key or a shared project ping key on the VPS. Keep each URL in a protected credential file. Neither descriptions nor ping bodies should contain paths, conversations, command output or credentials.
