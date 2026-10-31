@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "d69578850bc9e728d19342ddabd9f16b682f6b4d",
-  "checked_at_utc": "2026-10-31T15:41:12.969752+00:00",
+  "source_revision": "a5908ec587a61956126f40f0190178548ab960b2",
+  "checked_at_utc": "2026-10-31T16:10:02.801029+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -26,6 +26,10 @@
     {
       "path": "haven/_attachments/config/defaults.yaml",
       "sha256": "086dc39a08b1347cb8c842ad06c6f8b4edaeae6b96ec5a88b239acee1a50f63f"
+    },
+    {
+      "path": "haven/_attachments/examples/backup-capture.json",
+      "sha256": "1967e9c462ad9a357fed2a90677c618f2e01cd9240cccc9f7a4dff3374006052"
     },
     {
       "path": "haven/_attachments/examples/instance.yaml",
@@ -193,7 +197,7 @@
     },
     {
       "path": "haven/h1.9-backup-recovery.html",
-      "sha256": "ce34915edee8559fd6810159f0ccc270c44727d6a6df6611f3612be3ebc522f0"
+      "sha256": "670d530ce2b4f29e9e425473899c0128c4886d3b2fe87a2bac93dfe186e3876f"
     },
     {
       "path": "haven/h1.9-provider-options.html",

@@ -262,8 +262,29 @@
 <div class="paragraph">
 <p>SQLite Online Backup establishes consistency for one database. It does not produce a single consistent cut across multiple databases, JSON files and credentials. The production runner must first define coordinated quiescence or a bounded service pause/resume procedure with failure recovery. The synthetic experiment does not establish that production procedure.</p>
 </div>
+<div class="sect2">
+<h3 id="_prepared_consistent_capture_primitive"><a class="anchor" href="#_prepared_consistent_capture_primitive"></a>Prepared consistent capture primitive</h3>
+<div class="paragraph">
+<p><code>scripts/backup_capture.py</code> supplies a tested Python component, with no CLI, live systemd adapter, durable journal implementation, upload or deployed timer. Its <a href="_attachments/examples/backup-capture.json" class="xref attachment">explicit candidate capture policy</a> covers native configuration/credentials, identity, databases, sessions/delivery receipts, memories, schedules, skills/custom extensions and reviewed local snapshots/logs. It excludes named caches, transient gateway state and the exact pinned Python/uv installations while preserving their <code>tools/facts.json</code> provenance. A new runtime directory or unknown top-level path requires review instead of silent omission. This is one pilot-profile candidate, not a universal Hermes backup manifest.</p>
+</div>
+<div class="paragraph">
+<p>The caller must stop every writer and hold a trusted maintenance lock. <code>capture_with_pause</code> requires a healthy starting service, arms its journal before stopping, checks the stopped state, captures the data and attempts to start/health-check the service in <code>finally</code>. A failed resume keeps the recovery intent and discards the capture. <code>recover_pause</code> supplies the corresponding recovery operation for a future <code>ExecStopPost</code>/next-run adapter. Tests use controller/journal doubles: they do not establish real systemd stop semantics, fsync durability, power-loss recovery, mutual exclusion with administrator maintenance or production downtime. Implement those adapters and test actual process termination before deployment.</p>
+</div>
+<div class="paragraph">
+<p>Source traversal and file reads use no-follow descriptors; destination I/O is anchored to a newly created private directory descriptor through Linux <code>/proc/self/fd</code>. Included symlinks, hardlinks, mount boundaries, special files, unrepresented extended attributes/ACLs, missing required files and unreviewed SQLite databases/sidecars fail capture. Known lock/cache/transient patterns are excluded explicitly in code/policy. Full source metadata is compared across copy passes; this detects observed changes but is not an alternative to stopping all writers.</p>
+</div>
+<div class="paragraph">
+<p>SQLite normalization operates only on the private copy, including copied WAL/rollback state, then checks integrity and removes the copied sidecars. A missing optional board database stays absent. Staged directories/files are <code>0700</code>/<code>0600</code>; the returned private manifest records hashes plus original UID, GID, mode and mtime for an eventual reviewed restore. The caller must include this manifest in the encrypted payload and map owner identities on a new host before reapplying metadata. A bare restic restore of staging is not a completed application restore.</p>
+</div>
+<div class="paragraph">
+<p>Default cooperative limits are 256 MiB, 20,000 entries, depth 32 and 60 seconds including database normalization. A separate process/unit timeout is still required for blocked system calls. Handled staging failures remove the owned partial tree without following replaced destination parents; a killed process still requires protected staging cleanup by the eventual recovery adapter. Callers must suppress raw OS/SQLite exception text and never publish returned filenames or metadata outside the private instance.</p>
+</div>
+<div class="paragraph">
+<p>The pilot candidate passed a metadata-only preflight on 2026-10-31: 372 regular files, 134 directories and approximately 4.7 MB selected. It did not copy real contents or pause the service. Own skills are approximately 2.8 MB and included; approximately 296 MB of installed Python/uv tools are excluded by exact reviewed directory names, with package/artifact provenance retained privately. A clean-host rebuild of those dependencies remains an acceptance requirement.</p>
+</div>
 <div class="paragraph">
 <p>Use a private staging directory (<code>0700</code>, files <code>0600</code>), an explicit path manifest and path/link checks. Bound source size, free staging space, concurrency and runtime. Clean staging on success, exception, cancellation and subsequent recovery. Do not put real plaintext staging in a controller checkout. The backup process is trusted and isolated from Nora&#8217;s model and future H2 workers; its permissions do not grant workers access to credentials.</p>
+</div>
 </div>
 </div>
 </div>
@@ -290,7 +311,7 @@
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Finish the explicit path manifest, extension/identity review and cross-file consistency strategy from the private metadata inventory.</p>
+<p>Accept the candidate path policy against an actual paused capture; implement the systemd/lock/durable-journal/recovery adapters for the prepared capture primitive. The metadata preflight and synthetic service doubles do not establish live cross-file consistency.</p>
 </li>
 <li>
 <p>Enroll the selected Scaleway/Healthchecks accounts, MFA, notification destination and password-manager recovery material through private procedures; no credentials are supplied in chat.</p>
@@ -315,7 +336,7 @@
 <h2 id="_local_evidence"><a class="anchor" href="#_local_evidence"></a>Local evidence</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The public behavior suite covers inventory privacy, symlinked roots/parents, directory replacement during enumeration, bounds and access errors. The optional restic experiment records its tool version and exact source hashes. Local result receipts must distinguish these synthetic outcomes from real S3 access, alert delivery and clean-host application recovery; none of those live scenarios is established by this preparation.</p>
+<p>The public behavior suite covers inventory privacy, symlinked roots/parents, directory replacement during enumeration, bounds and access errors, plus the capture/pause contracts described above. The optional local restic experiment records its tool version and exact source hashes. These synthetic checks and the metadata-only preflight do not establish production consistency, alert delivery or clean-host application recovery. Separate live S3 and remote synthetic restic results are recorded in the <a href="h1.9-scaleway-healthchecks.html" class="xref page">provider setup guide</a>.</p>
 </div>
 <div class="paragraph">
 <p>The complete public checks passed with 108 behavior tests. On 2026-10-30 at 18:23 UTC, <code>.venv/bin/python research/h1.9/probe.py</code> passed from clean implementation revision <code>39591da52d10286ac6e8b23a9c76e829dcc08f31</code>, with Python 3.14.7, SQLite 3.53.4 and restic 0.19.1. <code>research/h1.9/acceptance.json</code> records the exact source hashes and all bounded outcomes, including the untested remote/alert flags. The experiment used only disposable local fixtures and did not initialize or contact a remote repository.</p>

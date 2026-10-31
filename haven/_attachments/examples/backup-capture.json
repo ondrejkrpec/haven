@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "include": [
+    "config.yaml", "auth.json", "credentials", "SOUL.md", "AGENTS.md", "USER.md", ".env",
+    "state.db", "state", "kanban.db", "kanban", "sessions", "memories", "memory", "profiles",
+    "cron", "pending_messages", "spawn-ledger.json", "channel_directory.json", "install_id",
+    "pairing", "platforms", "skills", "plugins", "scripts", "hooks", "tools/facts.json",
+    "backups", "logs", "gateway-starts.log"
+  ],
+  "exclude": [
+    "cache", ".cache", "installs", "runtime", "pm-runtime", "audio_cache", "image_cache",
+    "context_length_cache.yaml", "plugin-update-checks", "gateway_state.json", "gateway.lock",
+    "gateway.pid", "gateway.sock", "gateway_runtime.json", "gateway_heartbeat.json", "gateway_voice_mode.json",
+    "state/gateway.heartbeat", "state/gateway.lifecycle.json", "cron/ticker_heartbeat", "cron/ticker_last_success",
+    "tools/python-3.14.9+20261021-linux-x64", "tools/uv-0.13.5-linux-x64"
+  ],
+  "required": [
+    "config.yaml", "auth.json", "credentials/telegram-bot-token", "SOUL.md", "install_id",
+    "state.db", "state/capability-audit.sqlite3", "cron/jobs.json", "tools/facts.json"
+  ],
+  "sqlite": ["state.db", "state/capability-audit.sqlite3", "cron/executions.db", "kanban.db"]
+}
