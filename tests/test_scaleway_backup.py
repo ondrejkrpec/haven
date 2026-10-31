@@ -24,9 +24,11 @@ def candidate_allows(policy, principal, action, resource, prefix=None, tls=True)
     No ambient IAM, ACL, missing-resource or service-side behavior is simulated.
     """
     for row in policy["Statement"]:
-        if (row["Principal"]["SCW"] != principal or not tls
+        if (row["Effect"] != "Allow" or row["Principal"]["SCW"] != principal
                 or not any(fnmatchcase(action, item) for item in row["Action"])
                 or not any(fnmatchcase(resource, item) for item in row["Resource"])):
+            continue
+        if row["Condition"].get("Bool", {}).get("aws:SecureTransport") == "true" and not tls:
             continue
         pattern = row["Condition"].get("StringLike", {}).get("s3:prefix")
         if pattern is None or (prefix is not None and fnmatchcase(prefix, pattern)):
@@ -67,6 +69,8 @@ class ScalewayBackupTests(unittest.TestCase):
             self.assertFalse(candidate_allows(policy, app, "s3:ListBucket", SETTINGS["bucket"], prefix))
         plan = iam_plan(SETTINGS)
         self.assertEqual(plan["project_id"], SETTINGS["project_id"])
+        self.assertEqual(set(plan["permission_sets"]), {"ObjectStorageBucketsRead", "ObjectStorageObjectsRead",
+                                                       "ObjectStorageObjectsWrite", "ObjectStorageObjectsDelete"})
         self.assertNotIn("ObjectStorageFullAccess", plan["permission_sets"])
         self.assertFalse(any("BucketsWrite" in item or "Policy" in item for item in plan["permission_sets"]))
 
