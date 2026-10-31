@@ -1,6 +1,6 @@
 = H1.9: Scaleway and Healthchecks.io setup
 
-Status, 2026-10-30: the owner selected Scaleway Object Storage and hosted Healthchecks.io after the link:h1.9-provider-options.adoc[provider comparison]. Account enrollment, credentials, notification destination and live acceptance remain pending. This is a provisioning and verification plan, not an installed backup service. See link:adr/0010-offsite-backup-providers.adoc[ADR 0010] and the link:h1.9-backup-recovery.adoc[backup implementation plan].
+Status, 2026-10-31: the owner selected Scaleway Object Storage and hosted Healthchecks.io after the link:h1.9-provider-options.adoc[provider comparison]. The pilot passed bounded live S3 read/write/denial tests below. Production restic initialization, backup/restore and external alert delivery remain pending. See link:adr/0010-offsite-backup-providers.adoc[ADR 0010] and the link:h1.9-backup-recovery.adoc[backup implementation plan].
 
 == Owner enrollment
 
@@ -89,6 +89,49 @@ For backup, `/start` begins the execution window, normal success ends it and `/f
 The proposed settings follow Healthchecks' https://healthchecks.io/docs/configuring_checks/[schedule semantics] and https://healthchecks.io/docs/signaling_failures/[failure signaling]. Leave checks paused until their runner and notification integration are ready. Merely creating checks or sending a manual success ping is not acceptance. Test the https://healthchecks.io/docs/configuring_notifications/[chosen notification integration], then a deliberately missed heartbeat and its recovery without stopping the production coordinator. Do not send that external notification without the owner's selected destination and authorized live test.
 
 == Private handoff and next deployable increment
+
+=== Bounded S3 preflight
+
+The optional SDK environment is separate from the mandatory check dependencies. `research/h1.9/scaleway-requirements.txt` pins botocore 1.43.123 and its dependencies with hashes. For the inspected Python 3.14 administrative controller, install it explicitly using the approved package index:
+
+[source,sh]
+----
+uv --no-config venv --python python3 build/h1.9/s3-venv
+uv --no-config pip sync --python build/h1.9/s3-venv/bin/python \
+  --require-hashes --default-index https://pypi.org/simple research/h1.9/scaleway-requirements.txt
+----
+
+Run `scripts.scaleway_preflight` only with explicit private settings, key directory and a new private receipt. `--live` is required for every cloud operation; omit `--synthetic-writes` for read-only checks. Use a fresh environment so unrelated profiles, SDK configuration, proxies and credential providers are not inherited. The client supplies its credentials/Paris endpoint explicitly, verifies TLS, rejects other hosts and bucket-configuration writes, disables request retries and bounds operations/timeouts.
+
+[source,sh]
+----
+env -i PATH=/usr/bin:/bin LANG=C.UTF-8 HOME=/nonexistent \
+  AWS_CONFIG_FILE=/nonexistent AWS_SHARED_CREDENTIALS_FILE=/nonexistent AWS_EC2_METADATA_DISABLED=true \
+  build/h1.9/s3-venv/bin/python -m scripts.scaleway_preflight --live --synthetic-writes \
+  --settings /absolute/private/ops/backup/scaleway.json \
+  --credentials /absolute/local/private/scaleway \
+  --receipt /absolute/private/build/NEW-scaleway-preflight.json
+----
+
+The write phase refuses a nonempty repository prefix. It creates only two small versions of its uniquely named synthetic payload, its own temporary lock and an empty multipart upload. Intent and generated keys are journaled privately before requests. It checks latest bytes, anonymous/version-read refusal, data/version-delete refusal, multipart listing/abort and lock cleanup. Unexpected delete permission can affect only that run's synthetic object/version and fails acceptance immediately. It never changes bucket policy, versioning, lifecycle or real recovery points.
+
+Protected payload versions and the lock's non-current versions/delete marker remain for separately authorized owner cleanup. They contain no production data. A partial/uncertain write is not retried automatically; inspect its journal and reconcile that run's exact objects/uploads before repeating. Do not delete the journal or choose a new receipt merely to bypass failure. Existing repositories cannot use the synthetic write mode. Errors expose fixed diagnostics rather than SDK URLs, headers or bodies.
+
+On 2026-10-31 at 15:11 UTC, clean implementation `79424b8bd90beb51bd8fc0b0b985d4c6e8097b05` passed 19 bounded S3 operations on the pilot: Paris/versioning, permitted prefix listing, forbidden outside/unfiltered listing, two distinct versions and latest-byte match, anonymous/version-read denial, data/version-delete denial, multipart operations and verified lock cleanup. Private journals retain exact resource/run/version identifiers and source hash. No actual Hermes content, restic repository or Healthchecks ping was involved. IAM key ownership, cross-bucket isolation, configuration-change denial, owner version recovery and full remote restic recovery remain untested; these results do not accept H1.9 as a whole.
+
+=== Repository recovery password
+
+Before initializing restic, the owner retains a new independently generated password in their password manager. A local copy can be enrolled through the shared protected-file primitive:
+
+[source,sh]
+----
+.venv/bin/python -m scripts.enroll_restic \
+  --directory "$HOME/.config/haven-restic"
+----
+
+Paste the same 32–256 character printable ASCII password at both hidden prompts; prefer a password manager's random generator. This length/input check cannot establish randomness or prove an independent copy exists. The new directory is `0700`, its `password` file `0600`; no repository, account request or VPS transfer is performed. Keep this secret distinct from the cloud account/API credentials and never place it in arguments or chat. The local copy does not replace independent recovery storage.
+
+=== Healthchecks handoff
 
 The local helper `scripts/enroll_healthchecks.py` collects the two UUID URLs using hidden terminal prompts. On the administrative workstation, choose a new absolute directory beneath an existing directory you own, outside Git. For example, when `$HOME/.config` already exists and is not a symlink or inside a Git checkout:
 
