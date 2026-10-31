@@ -187,7 +187,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-10-31: the owner selected Scaleway Object Storage and hosted Healthchecks.io after the <a href="h1.9-provider-options.html" class="xref page">provider comparison</a>. The pilot passed bounded live S3 read/write/denial tests below. Production restic initialization, backup/restore and external alert delivery remain pending. See <a href="adr/0010-offsite-backup-providers.html" class="xref page">ADR 0010</a> and the <a href="h1.9-backup-recovery.html" class="xref page">backup implementation plan</a>.</p>
+<p>Status, 2026-10-31: the owner selected Scaleway Object Storage and hosted Healthchecks.io after the <a href="h1.9-provider-options.html" class="xref page">provider comparison</a>. The pilot passed bounded live S3 access tests and initialization/backup/restore of a synthetic restic snapshot below. Production data backups and external alert delivery remain pending. See <a href="adr/0010-offsite-backup-providers.html" class="xref page">ADR 0010</a> and the <a href="h1.9-backup-recovery.html" class="xref page">backup implementation plan</a>.</p>
 </div>
 </div>
 </div>
@@ -435,6 +435,33 @@ uv --no-config pip sync --python build/h1.9/s3-venv/bin/python \
 </div>
 <div class="paragraph">
 <p>Paste the same 32–256 character printable ASCII password at both hidden prompts; prefer a password manager&#8217;s random generator. This length/input check cannot establish randomness or prove an independent copy exists. The new directory is <code>0700</code>, its <code>password</code> file <code>0600</code>; no repository, account request or VPS transfer is performed. Keep this secret distinct from the cloud account/API credentials and never place it in arguments or chat. The local copy does not replace independent recovery storage.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_first_remote_restic_backup_and_restore"><a class="anchor" href="#_first_remote_restic_backup_and_restore"></a>First remote restic backup and restore</h3>
+<div class="paragraph">
+<p><code>scripts.restic_remote_probe</code> is an opt-in administrative test using the pinned restic binary, the optional SDK environment above and explicit private inputs. The recovery password must already be retained independently. It validates private file permissions/ownership without revealing values. Before initialization it requires a passed S3 receipt, enabled versioning, no unfinished multipart uploads and a prefix containing only that receipt&#8217;s synthetic payload, if present. An existing repository or unknown object blocks initialization. Do not rerun this first-initialization tool against the now established pilot repository.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">env -i PATH=/usr/bin:/bin LANG=C.UTF-8 HOME=/nonexistent \
+  AWS_CONFIG_FILE=/nonexistent AWS_SHARED_CREDENTIALS_FILE=/nonexistent AWS_EC2_METADATA_DISABLED=true \
+  build/h1.9/s3-venv/bin/python -m scripts.restic_remote_probe --live \
+  --settings /absolute/private/ops/backup/scaleway.json \
+  --credentials /absolute/local/private/scaleway \
+  --password-directory /absolute/local/private/restic \
+  --preflight /absolute/private/ops/backup/scaleway-preflight.json \
+  --receipt /absolute/private/build/NEW-restic-remote.json</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The tool requires the missing-repository exit code before one initialization attempt, records repository/snapshot IDs privately, backs up only its own small synthetic SQLite/configuration payload and checks all remote repository data. After removing both synthetic source directories, it restores the exact recorded snapshot, compares every file&#8217;s hash/mode, checks the committed WAL row and rejects a wrong password. It verifies no current locks remain. Restic runs with TLS, explicit Paris/path addressing, Standard storage, two connections, <code>s3.retries=1</code>, no cache, no inherited profiles/proxies/debug settings and a 180-second timeout per command. The underlying restic backend can retry operations; this is not the SDK preflight&#8217;s fixed request-count bound.</p>
+</div>
+<div class="paragraph">
+<p>The receipt is a new private file, with durable intent before each command and only selected diagnostics/exit codes. Raw restic output and credentials are not logged. Temporary password copies and synthetic source/restore files are private and removed on normal completion or handled failure. A killed controller can leave protected temporary material requiring private reconciliation. An uncertain initialization/backup is never repeated, unlocked or erased automatically; inspect its receipt and actual remote state before proceeding. No <code>forget</code>, <code>prune</code>, bucket-setting change or real-instance path is accepted.</p>
+</div>
+<div class="paragraph">
+<p>On 2026-10-31 at 15:37 UTC, clean implementation <code>cf822d8f5115ca700e0f6dae2d301485d8ec61d1</code> passed all eight restic commands using restic 0.19.1 and botocore 1.43.123. Full data integrity, exact snapshot/files/modes, committed WAL content, restore after source removal, wrong-password exit 12 and absence of current locks passed. The initialized repository and its synthetic test snapshot remain for subsequent production work. This establishes backend compatibility and recovery using the enrolled password, not the existence of its password-manager copy, owner recovery of previous object versions, production consistency, a clean-host restore or external alerts. No VPS service or Healthchecks check changed.</p>
 </div>
 </div>
 <div class="sect2">

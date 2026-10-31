@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "ac430156bd32abe2d9d6bae6234cc87f3c0912a5",
-  "checked_at_utc": "2026-10-31T15:22:01.624225+00:00",
+  "source_revision": "d69578850bc9e728d19342ddabd9f16b682f6b4d",
+  "checked_at_utc": "2026-10-31T15:41:12.969752+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -21,7 +21,7 @@
     },
     {
       "path": "haven/_attachments/README.md",
-      "sha256": "8eff072fa6462c69a34b96c503abc560dc47d130056eab4bbe68f1961640cc15"
+      "sha256": "a623bdcc0f60f978544298cea6910a86e02cabc33b95dc180206aedd82eefd20"
     },
     {
       "path": "haven/_attachments/config/defaults.yaml",
@@ -193,7 +193,7 @@
     },
     {
       "path": "haven/h1.9-backup-recovery.html",
-      "sha256": "fcdbc06fc11aa4842fc9b19056d2a029eab139c5c0ef4015377a2a3a1631cc21"
+      "sha256": "ce34915edee8559fd6810159f0ccc270c44727d6a6df6611f3612be3ebc522f0"
     },
     {
       "path": "haven/h1.9-provider-options.html",
@@ -201,7 +201,7 @@
     },
     {
       "path": "haven/h1.9-scaleway-healthchecks.html",
-      "sha256": "a5c18043eab44d842946f91b4ca519529128f5e494fe9fe5b1b869c8f6dcdbd9"
+      "sha256": "36e3874df394f81f463b25b617648c51e467cb6db2f951671b7f248917385453"
     },
     {
       "path": "haven/index.html",
