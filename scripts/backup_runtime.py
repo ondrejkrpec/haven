@@ -352,7 +352,13 @@ def backup(settings, state, config, policy):
     payload.mkdir(mode=0o700)
     journal["stage"] = "capturing"
     save(state / "run.json", journal)
-    receipt = capture_with_pause(SystemController(settings), PauseJournal(state), Path(settings["source_home"]), payload / "home", policy)
+    try:
+        receipt = capture_with_pause(SystemController(settings), PauseJournal(state), Path(settings["source_home"]), payload / "home", policy)
+    except CaptureError as error:
+        if str(error) == "unreviewed_source_path" and hasattr(error, "relative_path"):
+            journal["unreviewed_source_path"] = error.relative_path
+            save(state / "run.json", journal)
+        raise
     manifest = {"schema_version": 1, "run_id": journal["run_id"], "capture": receipt, "policy": policy,
                 "provenance": {key: settings[key] for key in ("public_revision", "private_revision", "runtime_source", "runtime_python")}}
     save(payload / "restore-manifest.json", manifest)
