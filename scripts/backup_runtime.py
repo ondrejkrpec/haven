@@ -164,7 +164,8 @@ class SystemController:
                      "HOME=/var/lib/haven", "PATH=/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE=1",
                      "HERMES_HOME=" + self.settings["source_home"], "PYTHONPATH=/var/lib/haven/haven-tools",
                      self.settings["runtime_python"], "-m", "scripts.service_runtime", "health",
-                     "--source", self.settings["runtime_source"], "--home", self.settings["source_home"]], timeout=20)
+                     "--source", self.settings["runtime_source"], "--home", self.settings["source_home"]],
+                    timeout=20, cwd=self.settings["runtime_source"])
             return True
         except (CaptureError, subprocess.TimeoutExpired):
             return False

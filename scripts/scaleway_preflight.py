@@ -233,11 +233,12 @@ class Probe:
         return self.journal.data["result"] == "passed"
 
 
-def clients(settings, keys, writes):
+def clients(settings, keys, writes, *, request_limit=40):
     import botocore
     import botocore.session
     from botocore.config import Config
     require(botocore.__version__ == SDK_VERSION)
+    require(type(request_limit) is int and 1 <= request_limit <= 128)
     session = botocore.session.get_session()
     session.set_config_variable("config_file", "/nonexistent/haven-config")
     session.set_config_variable("credentials_file", "/nonexistent/haven-credentials")
@@ -248,7 +249,7 @@ def clients(settings, keys, writes):
         attempts += 1
         url = urlsplit(request.url)
         base = "/" + settings["bucket"]
-        require(attempts <= 40 and url.scheme == "https" and url.hostname == "s3.fr-par.scw.cloud"
+        require(attempts <= request_limit and url.scheme == "https" and url.hostname == "s3.fr-par.scw.cloud"
                 and (url.path == base or url.path.startswith(base + "/")))
         if request.method not in ("GET", "HEAD"):
             require(writes and url.path.startswith(base + "/" + settings["prefix"] + "/")
