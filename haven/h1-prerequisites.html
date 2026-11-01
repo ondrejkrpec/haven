@@ -147,6 +147,10 @@
     <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
     
   </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -196,7 +200,7 @@
 <p>The owner subsequently selected <a href="h1.6.1-capabilities.html" class="xref page">H1.6.1 deterministic operations</a> instead of ordinary AI chat. This profile is accepted with verified application rollback, idempotent repeat, restart and native execution guards. Four real owner messages produced two expected replies and two refusals without additional model calls or conversation rows; a live status reply after restart confirms transport recovery.</p>
 </div>
 <div class="paragraph">
-<p><a href="h1.8-web-access.html" class="xref page">H1.8</a> adds verified prebuilt public Pages hosting, separately generated owner-only private runbooks and a static read-only operational snapshot. Private HTTPS, negative source-path checks, effective network filtering and release rollback are verified. The coordinator remains unchanged with no additional model calls. The guide records client/update acceptance and unperformed identity/IPv6 scenarios. The owner deferred <a href="h1.7-czech-voice.html" class="xref page">H1.7 Czech voice</a> on 2026-10-30; H1.9 off-site backup and recovery is the next planned operational milestone.</p>
+<p><a href="h1.8-web-access.html" class="xref page">H1.8</a> adds verified prebuilt public Pages hosting, separately generated owner-only private runbooks and a static read-only operational snapshot. Private HTTPS, negative source-path checks, effective network filtering and release rollback are verified. The coordinator remains unchanged with no additional model calls. The guide records client/update acceptance and unperformed identity/IPv6 scenarios. The owner deferred <a href="h1.7-czech-voice.html" class="xref page">H1.7 Czech voice</a> on 2026-10-30; H1.9 off-site backup, isolated application recovery and external email delivery are accepted; H1.10 is next.</p>
 </div>
 </div>
 </div>
@@ -269,7 +273,7 @@
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Backup</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="h1.9-backup-recovery.html" class="xref page">H1.9 preparation</a> covers metadata inventory and a synthetic restic experiment; the owner selected <a href="h1.9-scaleway-healthchecks.html" class="xref page">Scaleway + Healthchecks.io</a>. Restore the necessary configuration/runtime state on a clean target; prevent a second Telegram poller or deferred WhatsApp session. Account enrollment, real off-site storage, external alerts and clean-host recovery remain unaccepted.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="h1.9-backup-recovery.html" class="xref page">H1.9</a> accepts encrypted production snapshots, exact restore, clean isolated application reconstruction and real external alerts with <a href="h1.9-scaleway-healthchecks.html" class="xref page">Scaleway + Healthchecks.io</a>. No second Telegram poller is started. New VPS/OS provisioning is outside the measured application recovery.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Documentation</p></td>

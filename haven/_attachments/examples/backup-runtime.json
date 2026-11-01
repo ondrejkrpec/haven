@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "repository": "s3:https://s3.fr-par.scw.cloud/haven-example-backups/haven",
+  "repository_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "restic_sha256": "20d4142678d0d95ec11a4759def1b73fd9190abc9ca19e4b62d067c0b387e639",
+  "source_home": "/var/lib/haven/.hermes",
+  "runtime_source": "/var/lib/haven/releases/hermes-bf0203a-785f2646",
+  "runtime_python": "/var/lib/haven/telegram/venv/bin/python",
+  "hostname": "haven-example"
+}

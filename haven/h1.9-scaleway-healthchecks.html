@@ -147,6 +147,10 @@
     <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
     
   </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -187,7 +191,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-10-31: the owner selected Scaleway Object Storage and hosted Healthchecks.io after the <a href="h1.9-provider-options.html" class="xref page">provider comparison</a>. The pilot passed bounded live S3 access tests and initialization/backup/restore of a synthetic restic snapshot below. Production data backups and external alert delivery remain pending. See <a href="adr/0010-offsite-backup-providers.html" class="xref page">ADR 0010</a> and the <a href="h1.9-backup-recovery.html" class="xref page">backup implementation plan</a>.</p>
+<p>Status, 2026-11-01: Scaleway production backup and exact restore, separate-operator version recovery/retention, isolated application reconstruction and actual Healthchecks email delivery are accepted. The <a href="h1.9-backup-recovery.html" class="xref page">current operations guide</a> records the deployed controller and recovery scope. The dated preparation/probe records below retain their original scope; they are not instructions to reinitialize the existing repository.</p>
 </div>
 </div>
 </div>

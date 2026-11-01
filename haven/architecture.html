@@ -147,6 +147,10 @@
     <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
     
   </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -201,7 +205,7 @@
 <p><a href="h1.4-model-configuration.html" class="xref page">H1.4</a> verifies the pinned core runtime, native subscription-provider configuration, independent service-owned OAuth and one request with no tools or fallback on the existing pilot. <a href="h1.5-service-recovery.html" class="xref page">H1.5</a> adds native systemd supervision, a guarded no-tools profile and a required user bus for restart-safe cron workers. Coding dispatch remains disabled; the controller/executor adapter belongs to H2.</p>
 </div>
 <div class="paragraph">
-<p>Keep common source, general instructions and public examples here. Each instance owns its configuration and personal instructions in a separate private repository. Runtime state, account sessions and databases require a future backup workflow outside Git.</p>
+<p>Keep common source, general instructions and public examples here. Each instance owns its configuration and personal instructions in a separate private repository. Runtime state, account sessions and databases use the trusted <a href="h1.9-backup-recovery.html" class="xref page">H1.9 encrypted backup and recovery workflow</a> outside Git.</p>
 </div>
 <div class="paragraph">
 <p>The retained <a href="family-conversations.html" class="xref page">family design</a> has separate personal conversations and explicitly shared family objects. It is deferred beyond the <a href="h1.6-telegram.html" class="xref page">initial owner-only Telegram pilot</a>. Future members need separate authenticated identities and private state; a narrow service must enforce ownership and family membership before returning data to the model. This access layer is not implemented by selecting Hermes profiles.</p>
@@ -263,7 +267,7 @@
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">H1</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Host/private administration, model access, bounded service/recovery and owner-only Telegram text verified; Czech voice quality/latency, off-site backups and restore remain. WhatsApp and family sharing are deferred.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Host/private administration, model access, bounded service/recovery and owner-only Telegram text verified; Encrypted off-site backup, isolated application restore and external alerts are accepted; overall H1.10 acceptance remains. Czech voice is deferred. WhatsApp and family sharing are deferred.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">H2</p></td>
