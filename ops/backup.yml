@@ -1,0 +1,179 @@
+---
+- name: Verify private access before backup deployment
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Install the explicitly selected backup and independent monitoring
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - name: Require explicit deployment inputs and authorization
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_backup_authorized | default(false) | bool
+          - haven_backup_settings is defined
+          - haven_backup_capture is defined
+          - haven_backup_credentials is defined
+          - haven_backup_restic is defined
+          - haven_backup_password is defined
+          - haven_backup_healthchecks is defined
+        fail_msg: Backup requires explicit private settings and protected credential paths.
+
+    - name: Require that no backup or maintenance is in progress
+      ansible.builtin.command:
+        argv: [systemctl, show, haven-backup.service, haven-maintenance.service, '-p', ActiveState]
+      register: haven_backup_existing
+      failed_when: "'ActiveState=active' in haven_backup_existing.stdout or 'ActiveState=activating' in haven_backup_existing.stdout"
+      changed_when: false
+      check_mode: false
+
+  tasks:
+    - name: Inspect an existing backup controller before upgrading it
+      ansible.builtin.stat:
+        path: /usr/local/lib/haven-backup/scripts/backup_runtime.py
+      register: haven_previous_backup
+
+    - name: Select an exclusive backup deployment lease
+      ansible.builtin.set_fact:
+        haven_backup_lease: "haven-maintenance-{{ lookup('ansible.builtin.password', '/dev/null', length=24, chars=['ascii_lowercase', 'digits']) }}"
+      when: haven_previous_backup.stat.exists
+
+    - name: Hold maintenance exclusion while updating an installed controller
+      ansible.builtin.command:
+        argv:
+          - systemd-run
+          - "--unit={{ haven_backup_lease }}"
+          - --collect
+          - --property=Type=notify
+          - --property=TimeoutStartSec=10
+          - --property=UMask=0077
+          - --setenv=PYTHONPATH=/usr/local/lib/haven-backup
+          - --setenv=PYTHONDONTWRITEBYTECODE=1
+          - /usr/bin/python3
+          - -m
+          - scripts.backup_runtime
+          - maintenance
+      changed_when: true
+      when: haven_previous_backup.stat.exists
+
+    - name: Install the reviewed backup under maintenance exclusion
+      block:
+        - name: Create root-only backup code state and credential directories
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: directory
+            owner: root
+            group: root
+            mode: '0700'
+          loop:
+            - /usr/local/lib/haven-backup
+            - /usr/local/lib/haven-backup/scripts
+            - /etc/haven-backup
+            - /var/lib/haven-backup
+
+        - name: Install trusted backup components outside the coordinator home
+          ansible.builtin.copy:
+            src: "../scripts/{{ item }}"
+            dest: "/usr/local/lib/haven-backup/scripts/{{ item }}"
+            owner: root
+            group: root
+            mode: '0600'
+          loop: [backup_runtime.py, backup_capture.py, backup_restore.py, private_enrollment.py]
+
+        - name: Install the hash-pinned backup executable
+          ansible.builtin.copy:
+            src: "{{ haven_backup_restic }}"
+            dest: /usr/local/lib/haven-backup/restic
+            owner: root
+            group: root
+            mode: '0700'
+
+        - name: Install explicit backup settings and capture policy
+          ansible.builtin.copy:
+            src: "{{ item.source }}"
+            dest: "/etc/haven-backup/{{ item.name }}"
+            owner: root
+            group: root
+            mode: '0600'
+          loop:
+            - {source: "{{ haven_backup_settings }}", name: settings.json}
+            - {source: "{{ haven_backup_capture }}", name: capture.json}
+
+        - name: Transfer only the enrolled runtime secrets without logging contents
+          ansible.builtin.copy:
+            src: "{{ item.source }}"
+            dest: "/etc/haven-backup/{{ item.name }}"
+            owner: root
+            group: root
+            mode: '0600'
+          loop:
+            - {source: "{{ haven_backup_credentials }}/access-key", name: access-key}
+            - {source: "{{ haven_backup_credentials }}/secret-key", name: secret-key}
+            - {source: "{{ haven_backup_password }}/password", name: password}
+            - {source: "{{ haven_backup_healthchecks }}/backup.url", name: backup.url}
+            - {source: "{{ haven_backup_healthchecks }}/service.url", name: service.url}
+          no_log: true
+          diff: false
+
+        - name: Install independent backup recovery exclusion and monitor units
+          ansible.builtin.template:
+            src: "templates/{{ item }}.j2"
+            dest: "/etc/systemd/system/{{ item }}"
+            owner: root
+            group: root
+            mode: '0644'
+          loop:
+            - haven-backup.service
+            - haven-backup-health.service
+            - haven-backup.timer
+            - haven-backup-recovery.service
+            - haven-monitor.service
+            - haven-monitor.timer
+            - haven-maintenance.service
+          register: haven_backup_units
+          notify: Reload backup units
+
+        - name: Verify installed unit syntax
+          ansible.builtin.command:
+            argv:
+              - systemd-analyze
+              - verify
+              - /etc/systemd/system/haven-backup.service
+              - /etc/systemd/system/haven-backup-health.service
+              - /etc/systemd/system/haven-backup.timer
+              - /etc/systemd/system/haven-backup-recovery.service
+              - /etc/systemd/system/haven-monitor.service
+              - /etc/systemd/system/haven-monitor.timer
+              - /etc/systemd/system/haven-maintenance.service
+          changed_when: false
+          when: not ansible_check_mode
+
+        - name: Load installed units before enabling recovery
+          ansible.builtin.meta: flush_handlers
+
+        - name: Enable boot recovery independently of backup timer activation
+          ansible.builtin.systemd_service:
+            name: haven-backup-recovery.service
+            enabled: true
+
+
+      always:
+        - name: Release the backup deployment exclusion
+          ansible.builtin.systemd_service:
+            name: "{{ haven_backup_lease }}.service"
+            state: stopped
+          when: haven_previous_backup.stat.exists
+
+    - name: Activate timers only after explicit live acceptance
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop: [haven-backup.timer, haven-monitor.timer]
+      when: haven_backup_activate | default(false) | bool
+
+  handlers:
+    - name: Reload backup units
+      ansible.builtin.systemd_service:
+        daemon_reload: true

@@ -1,0 +1,24 @@
+[Unit]
+Description=Independent Haven service and backup freshness heartbeat
+After=network-online.target haven.service haven-backup-recovery.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/usr/local/lib/haven-backup
+Environment=PYTHONPATH=/usr/local/lib/haven-backup
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -m scripts.backup_runtime monitor
+TimeoutStartSec=60
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/run/lock/haven-maintenance.lock
+MemoryMax=128M
+TasksMax=32
+StandardOutput=journal
+StandardError=null

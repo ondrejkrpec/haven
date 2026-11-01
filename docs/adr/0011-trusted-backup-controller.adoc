@@ -1,0 +1,21 @@
+= ADR 0011: Trusted backup and recovery
+
+Date: 2026-11-01. Status: accepted for the deterministic Ubuntu pilot.
+
+== Context
+
+Haven needs a consistent recovery point across SQLite, JSON, credentials and custom extensions. A model must not control recovery or receive storage administration credentials. A single live Telegram poller and independent external alerts must survive controller failures.
+
+== Decision
+
+Use a root-only bounded backup controller outside Nora's home. Fsync the fixed-service resume intent before stopping writers, hold the shared maintenance lock, verify a stopped empty cgroup and restore the healthy service before network work. ExecStopPost and boot recovery handle interruption without depending on model or backup credentials/settings.
+
+Run native health checks as the existing unprivileged service identity in a network-denied unit with no capabilities. Keep the backup's exact snapshot identity and sealed restore manifest bound to its run. Accept only exit-zero upload, full data verification and exact restore; reconcile uncertain effects instead of blindly retrying.
+
+Keep destructive retention and object-version recovery on the owner's workstation with a separate temporary operator key. Restore credentials and delivery receipts before enabling the one production transport. Verify application reconstruction in a new network-isolated target with unchanged configuration, armed deterministic guard and an adapter factory disabled before construction.
+
+== Consequences
+
+Nora has a bounded brief capture pause; network work does not extend that pause. Unknown state or unsupported metadata blocks capture. Administrative changes and retention must obtain their own exclusion lease. Persistent journals/staging contain private metadata and remain root-only.
+
+Provider versioning supports recovery but is not immutability. Snapshot retention does not automatically clean non-current provider versions. A clean application test does not replace new-host provisioning or the broader H1.10 acceptance.

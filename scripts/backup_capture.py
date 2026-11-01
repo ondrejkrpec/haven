@@ -1,4 +1,4 @@
-"""Consistent private staging primitive; no CLI, upload or live service adapter yet."""
+"""Consistent private staging primitive used by the trusted backup controller."""
 
 from contextlib import closing
 from datetime import datetime, timezone
@@ -68,7 +68,10 @@ def selection(name, policy):
         return "include"
     if any(base.startswith(name + "/") for base in policy["include"]):
         return "parent"
-    raise CaptureError("unreviewed_source_path")
+    error = CaptureError("unreviewed_source_path")
+    # The controller may retain this only in its protected journal, never stdout.
+    error.relative_path = name
+    raise error
 
 
 def fingerprint(info):

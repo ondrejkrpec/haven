@@ -8,7 +8,7 @@ H0.1 established a candidate based on Hermes v0.22.5 plus an exact upstream patc
 
 link:h1.4-model-configuration.adoc[H1.4] verifies the pinned core runtime, native subscription-provider configuration, independent service-owned OAuth and one request with no tools or fallback on the existing pilot. link:h1.5-service-recovery.adoc[H1.5] adds native systemd supervision, a guarded no-tools profile and a required user bus for restart-safe cron workers. Coding dispatch remains disabled; the controller/executor adapter belongs to H2.
 
-Keep common source, general instructions and public examples here. Each instance owns its configuration and personal instructions in a separate private repository. Runtime state, account sessions and databases require a future backup workflow outside Git.
+Keep common source, general instructions and public examples here. Each instance owns its configuration and personal instructions in a separate private repository. Runtime state, account sessions and databases use the trusted link:h1.9-backup-recovery.adoc[H1.9 encrypted backup and recovery workflow] outside Git.
 
 The retained link:family-conversations.adoc[family design] has separate personal conversations and explicitly shared family objects. It is deferred beyond the link:h1.6-telegram.adoc[initial owner-only Telegram pilot]. Future members need separate authenticated identities and private state; a narrow service must enforce ownership and family membership before returning data to the model. This access layer is not implemented by selecting Hermes profiles.
 
@@ -33,7 +33,7 @@ Automatic deployment will initially be limited to the proposed `haven-health` de
 |H0.4 |Implemented locally: Antora documentation build, public check workflow, secret scan and link checks. Automatic local push checks replace unavailable GitHub Actions.
 |H0.5 |Accepted locally: fresh public clone, newly installed dependencies, independent private instance and public build checks. See link:h0.5-acceptance.adoc[acceptance and H1 handoff].
 |H1.1 |MIT selected; public/private GitHub remotes and source history exist. link:h1.1-publication.adoc[Local push checks] replace unavailable Actions with the owner's agreement.
-|H1 |Host/private administration, model access, bounded service/recovery and owner-only Telegram text verified; Czech voice quality/latency, off-site backups and restore remain. WhatsApp and family sharing are deferred.
+|H1 |Host/private administration, model access, bounded service/recovery and owner-only Telegram text verified; Encrypted off-site backup, isolated application restore and external alerts are accepted; overall H1.10 acceptance remains. Czech voice is deferred. WhatsApp and family sharing are deferred.
 |H2 |Controller adapter, separate roles, full executor isolation, negative access tests and review lifecycle.
 |H3 |Bounded automated repair and deployment with rollback.
 |===

@@ -1,0 +1,17 @@
+[Unit]
+Description=Hold Haven maintenance exclusion against backup capture
+
+[Service]
+Type=notify
+User=root
+WorkingDirectory=/usr/local/lib/haven-backup
+Environment=PYTHONPATH=/usr/local/lib/haven-backup
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -m scripts.backup_runtime maintenance
+TimeoutStartSec=10
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/run/lock
+StandardError=null

@@ -1,0 +1,23 @@
+[Unit]
+Description=Recover an interrupted Haven backup independently of the coordinator
+After=haven.service
+Wants=haven.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/usr/local/lib/haven-backup
+Environment=PYTHONPATH=/usr/local/lib/haven-backup
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -m scripts.backup_runtime recover
+TimeoutStartSec=5min
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/haven-backup /run/lock
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target

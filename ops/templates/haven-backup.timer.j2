@@ -1,0 +1,11 @@
+[Unit]
+Description=Encrypted Haven backup twice daily
+
+[Timer]
+OnCalendar=*-*-* 02,14:00:00 UTC
+RandomizedDelaySec=5min
+Persistent=true
+Unit=haven-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,23 @@
+FROM docker.io/library/python@sha256:82bc3c539b8813ada9d68c63b40158fa002f7f33de9bf3312a3dfdc0620dff56
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates util-linux dbus \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 2345 haven \
+    && useradd --uid 2345 --gid 2345 --create-home --home-dir /var/lib/haven haven
+COPY upstream-117820.patch deterministic-policy.patch /opt/recovery-patches/
+COPY public-tools /var/lib/haven/haven-tools
+RUN install -d -o haven -g haven -m 0700 /var/lib/haven/releases /var/lib/haven/telegram \
+    && chmod -R a+rX /var/lib/haven/haven-tools
+USER haven
+ENV HOME=/var/lib/haven HERMES_HOME=/var/lib/haven/.hermes HERMES_RUNTIME_DIR=/var/lib/haven/.hermes/tools
+RUN git clone --depth=1 --branch v0.22.5 https://github.com/NousResearch/hermes-agent /var/lib/haven/releases/hermes-bf0203a-785f2646 \
+    && test "$(git -C /var/lib/haven/releases/hermes-bf0203a-785f2646 rev-parse HEAD)" = bf0203a794a07aac3ff764972ab9087baa4e4f4e \
+    && git -C /var/lib/haven/releases/hermes-bf0203a-785f2646 apply /opt/recovery-patches/upstream-117820.patch \
+    && git -C /var/lib/haven/releases/hermes-bf0203a-785f2646 apply /opt/recovery-patches/deterministic-policy.patch
+WORKDIR /var/lib/haven/releases/hermes-bf0203a-785f2646
+RUN python -c "import hashlib; from pathlib import Path; assert hashlib.sha256(Path('pm/lock.json').read_bytes()).hexdigest() == '0ede00c6ee83d3cf7a93fe1b569b31c705cd274d83050547511b2d8c2f244e04'" \
+    && python -m pm.build_env --source /var/lib/haven/releases/hermes-bf0203a-785f2646 --out /var/lib/haven/telegram/venv --extra telegram \
+    && mv /var/lib/haven/.hermes /var/lib/haven/rebuilt-tools-home
+USER root
+WORKDIR /opt/recovery
+ENV PYTHONPATH=/var/lib/haven/haven-tools PYTHONDONTWRITEBYTECODE=1
+ENTRYPOINT ["/var/lib/haven/rebuilt-tools-home/tools/python-3.14.9+20261021-linux-x64/bin/python3"]
