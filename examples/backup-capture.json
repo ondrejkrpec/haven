@@ -11,7 +11,7 @@
     "cache", ".cache", "installs", "runtime", "pm-runtime", "audio_cache", "image_cache",
     "context_length_cache.yaml", "plugin-update-checks", "gateway_state.json", "gateway.lock",
     "gateway.pid", "gateway.sock", "gateway_runtime.json", "gateway_heartbeat.json", "gateway_voice_mode.json",
-    "state/gateway.heartbeat", "state/gateway.lifecycle.json", "cron/ticker_heartbeat", "cron/ticker_last_success",
+    ".clean_shutdown", "state/gateway.heartbeat", "state/gateway.lifecycle.json", "cron/ticker_heartbeat", "cron/ticker_last_success",
     "tools/python-3.14.9+20261021-linux-x64", "tools/uv-0.13.5-linux-x64"
   ],
   "required": [
