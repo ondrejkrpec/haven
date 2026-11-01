@@ -193,7 +193,10 @@ class SystemController:
 
 
 def settings_from(config):
-    settings = load(config / "settings.json")
+    return validate_settings(load(config / "settings.json"))
+
+
+def validate_settings(settings):
     require(set(settings) == {"schema_version", "repository", "repository_id", "restic_sha256", "source_home",
                               "runtime_source", "runtime_python", "public_revision", "private_revision", "hostname"}
             and settings["schema_version"] == 1, "invalid_backup_settings")
@@ -432,9 +435,14 @@ def main(argv=None):
             maintenance_daemon()
         else:
             protected_directory(STATE)
-            protected_directory(CONFIG)
-            settings = settings_from(CONFIG)
-            if args.mode == "monitor":
+            if args.mode == "recover":
+                # A pending fixed-service resume must survive damaged/missing
+                # backup settings or credentials. Native admission still applies.
+                with maintenance_lock():
+                    recover({}, STATE)
+            elif args.mode == "monitor":
+                protected_directory(CONFIG)
+                settings = settings_from(CONFIG)
                 try:
                     with maintenance_lock():
                         monitor(settings, STATE, CONFIG)
@@ -446,13 +454,13 @@ def main(argv=None):
                     print('{"result":"deferred","code":"maintenance_busy"}')
                     return 0
             else:
+                protected_directory(CONFIG)
+                settings = settings_from(CONFIG)
                 with maintenance_lock():
                     if args.mode == "backup":
                         backup(settings, STATE, CONFIG, load(CONFIG / "capture.json"))
                     elif args.mode == "reconcile":
                         reconcile(settings, STATE, CONFIG)
-                    else:
-                        recover(settings, STATE)
         print(json.dumps({"result": "passed", "operation": args.mode}))
         return 0
     except Exception as error:

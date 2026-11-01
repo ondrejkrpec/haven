@@ -20,4 +20,4 @@ RUN python -c "import hashlib; from pathlib import Path; assert hashlib.sha256(P
 USER root
 WORKDIR /opt/recovery
 ENV PYTHONPATH=/var/lib/haven/haven-tools PYTHONDONTWRITEBYTECODE=1
-ENTRYPOINT ["python"]
+ENTRYPOINT ["/var/lib/haven/rebuilt-tools-home/tools/python-3.14.9+20261021-linux-x64/bin/python3"]

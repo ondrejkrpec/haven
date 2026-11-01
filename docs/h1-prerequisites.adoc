@@ -6,7 +6,7 @@ link:h1.6-telegram.adoc[H1.6 owner-only Telegram text] is accepted on the existi
 
 The owner subsequently selected link:h1.6.1-capabilities.adoc[H1.6.1 deterministic operations] instead of ordinary AI chat. This profile is accepted with verified application rollback, idempotent repeat, restart and native execution guards. Four real owner messages produced two expected replies and two refusals without additional model calls or conversation rows; a live status reply after restart confirms transport recovery.
 
-link:h1.8-web-access.adoc[H1.8] adds verified prebuilt public Pages hosting, separately generated owner-only private runbooks and a static read-only operational snapshot. Private HTTPS, negative source-path checks, effective network filtering and release rollback are verified. The coordinator remains unchanged with no additional model calls. The guide records client/update acceptance and unperformed identity/IPv6 scenarios. The owner deferred link:h1.7-czech-voice.adoc[H1.7 Czech voice] on 2026-10-30; H1.9 off-site backup and recovery is the next planned operational milestone.
+link:h1.8-web-access.adoc[H1.8] adds verified prebuilt public Pages hosting, separately generated owner-only private runbooks and a static read-only operational snapshot. Private HTTPS, negative source-path checks, effective network filtering and release rollback are verified. The coordinator remains unchanged with no additional model calls. The guide records client/update acceptance and unperformed identity/IPv6 scenarios. The owner deferred link:h1.7-czech-voice.adoc[H1.7 Czech voice] on 2026-10-30; H1.9 off-site backup, isolated application recovery and external email delivery are accepted; H1.10 is next.
 
 == H0 handoff
 
@@ -31,7 +31,7 @@ Before reproducible deployment, establish the intended public-source revision an
 |Credentials |Resolve references only for authorized services, reject missing credentials, and protect OAuth/WhatsApp runtime state outside Git.
 |Messaging and family access |Enroll eligible accounts privately, bind each connection to its verified owner, and test replies/restart recovery and negative cross-user access. Accept shared objects only after ownership/membership checks pass. Measure Czech voice quality and latency separately in H1.7.
 |Recovery |Exercise quota deferral/resumption and distinguish transient quota limits from revoked authentication; deterministic recovery must work without Nora's model.
-|Backup |link:h1.9-backup-recovery.adoc[H1.9 preparation] covers metadata inventory and a synthetic restic experiment; the owner selected link:h1.9-scaleway-healthchecks.adoc[Scaleway + Healthchecks.io]. Restore the necessary configuration/runtime state on a clean target; prevent a second Telegram poller or deferred WhatsApp session. Account enrollment, real off-site storage, external alerts and clean-host recovery remain unaccepted.
+|Backup |link:h1.9-backup-recovery.adoc[H1.9] accepts encrypted production snapshots, exact restore, clean isolated application reconstruction and real external alerts with link:h1.9-scaleway-healthchecks.adoc[Scaleway + Healthchecks.io]. No second Telegram poller is started. New VPS/OS provisioning is outside the measured application recovery.
 |Documentation |Record the actually verified setup, interactive steps and recovery procedure without credentials, QR codes or session data.
 |===
 

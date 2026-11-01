@@ -1,6 +1,6 @@
 = H1.9: Scaleway and Healthchecks.io setup
 
-Status, 2026-10-31: the owner selected Scaleway Object Storage and hosted Healthchecks.io after the link:h1.9-provider-options.adoc[provider comparison]. The pilot passed bounded live S3 access tests and initialization/backup/restore of a synthetic restic snapshot below. Production data backups and external alert delivery remain pending. See link:adr/0010-offsite-backup-providers.adoc[ADR 0010] and the link:h1.9-backup-recovery.adoc[backup implementation plan].
+Status, 2026-11-01: Scaleway production backup and exact restore, separate-operator version recovery/retention, isolated application reconstruction and actual Healthchecks email delivery are accepted. The link:h1.9-backup-recovery.adoc[current operations guide] records the deployed controller and recovery scope. The dated preparation/probe records below retain their original scope; they are not instructions to reinitialize the existing repository.
 
 == Owner enrollment
 

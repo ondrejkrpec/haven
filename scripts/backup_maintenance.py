@@ -26,7 +26,8 @@ def retention(repository, accepted, *, apply=False, journal=None, receipt=None):
 
     def ids(groups, field):
         require(isinstance(groups, list), "invalid_retention_plan")
-        result = {row["id"] for group in groups for row in group.get(field, [])}
+        require(all(group.get(field) is None or isinstance(group.get(field), list) for group in groups), "invalid_retention_plan")
+        result = {row["id"] for group in groups for row in (group.get(field) or [])}
         require(all(IDENTIFIER.fullmatch(value) for value in result), "invalid_retention_plan")
         return result
 

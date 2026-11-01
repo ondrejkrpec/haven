@@ -1,131 +1,122 @@
-= H1.9: Backup and recovery preparation
+= H1.9: Off-site backup and recovery
 
-Status, 2026-11-01: production off-site backup and monitoring are not enabled. Preparation supplies a bounded metadata inventory and pinned synthetic restic experiments; the link:h1.9-scaleway-healthchecks.adoc[Scaleway + Healthchecks.io guide] records live S3 access checks and successful remote repository initialization, synthetic backup, integrity check and exact restore. A production controller candidate is implemented below; live deployment, external alert delivery and clean-host recovery remain open. No VPS installation, service restart or production data backup was performed for these checks.
+Status, 2026-11-01: production encrypted backup, exact restore verification and independent monitoring are accepted on the Ubuntu pilot. A production snapshot passed full integrity and file/database restore checks. Its application profile was rebuilt in a fresh isolated Linux container with the pinned runtime, a different service UID/GID, unchanged production configuration, zero added model calls and no transport adapters. The owner confirmed the external missed-heartbeat email at 14:13:35 UTC. H1.10 remains the next overall operational milestone; a new VPS/OS provisioning cycle was not part of this recovery test.
 
-== Preparation tools
+The owner selected link:h1.9-scaleway-healthchecks.adoc[Scaleway Object Storage + Healthchecks.io]. link:adr/0011-trusted-backup-controller.adoc[ADR 0011] records the trusted controller and recovery boundary. Account secrets, exact snapshot/repository identities and operational receipts remain in the private instance.
 
-`scripts/backup_inventory.py --home /absolute/instance/home` enumerates file metadata without opening regular-file contents. Directory traversal uses no-follow directory descriptors, including when a directory is replaced during the scan. Reports contain category totals and metadata for six fixed known paths; arbitrary filenames and symlink targets are not emitted. The scan is bounded by entry/depth limits. A partial/error result is not a complete inventory. Metadata can change during enumeration; this is not an atomic backup or proof of recovery completeness.
-
-The categories are review hints, not a backup allowlist. In particular, `extensions_review`, `identity_review` and `local_snapshots_review` require operator review. Custom skills must not be discarded as rebuildable dependencies. A socket is not persistent application data. Missing/linked credential parents and unknown items must be reconciled before defining the actual production manifest. Real inventory reports belong only in the private instance.
-
-The optional experiment uses https://github.com/restic/restic/releases/tag/v0.19.1[restic 0.19.1], an explicitly selected Linux/amd64 binary pinned by archive and executable SHA-256 in `research/h1.9/pins.json`. It is not added to mandatory public check dependencies and is not installed on the VPS. From the public checkout:
-
-[source,sh]
-----
-# Explicit public binary download, then the synthetic experiment:
-.venv/bin/python research/h1.9/probe.py --download
-# Repeat offline with the already verified binary:
-.venv/bin/python research/h1.9/probe.py
-----
-
-The experiment creates a fresh local repository and random synthetic password in a private temporary directory. Subprocesses receive a fresh environment, no inherited cloud credentials, no-cache operation and closed stdin. The repository has no remote backend. No production path is accepted as input. Temporary data is removed after the experiment; the generated result remains in ignored `build/h1.9/probe-result.json`.
-
-It exercises committed SQLite WAL data through the https://www.sqlite.org/backup.html[Online Backup API], encrypted backup, exact snapshot restore with file hashes/modes, full data check, wrong-password and missing-repository refusal, retention/prune and a separate corrupted-repository copy. Restore is repeated after the source files are removed. A raw synthetic credential marker is checked absent from the repository. This bounded check is not an independent cryptographic audit.
-
-The staging path is relative to the experiment working directory, so the archive does not include unrelated ancestor directory ownership. Initial harness attempts exposed unmapped `/tmp` ownership in a user namespace and read-only repository pack modes; the final harness uses relative staging and changes permissions only on its deliberately corrupted disposable copy. These were harness failures, not successful acceptance runs.
-
-== Proposed production scope
+== Services and authority
 
 [cols="1,3",options="header"]
 |===
-|Data |Preparation decision
-|Configuration and provenance |Record exact public/private revisions, native source pins, required instance configuration and a restore manifest. Keep private material outside public artifacts.
-|Credentials |Only explicitly required account/runtime files, inside encrypted off-site backup; repository password and storage recovery access additionally outside both VPS and repository. Never place values in Git, arguments or logs.
-|Databases |Current state and capability audit; board databases when present. Include committed WAL state through supported backup/export. Never initialize an absent board while collecting a backup.
-|Other durable state |Review memory, sessions, pending delivery/receipt state and custom extensions against the pinned runtime. Restore admission/delivery state before reconnecting the one active gateway.
-|Rebuildable and transient material |Reconstruct pinned environments; exclude live sockets, PIDs, locks, heartbeat files and reviewed caches. Classify local snapshots and host/profile identity explicitly.
+|Component |Purpose
+|`haven-backup.service` / `.timer` |Root-only consistent capture, encrypted upload, full repository check and exact snapshot restore. Runs at 02:00 and 14:00 UTC, with up to five minutes of jitter and persistent catch-up.
+|`haven-backup-recovery.service` |Boot recovery of a pending pause and protected staging cleanup. `ExecStopPost` also recovers an interrupted backup. Recovery does not require backup settings or storage credentials.
+|`haven-backup-health.service` |Fixed native read-only check as `haven`, with an empty capability set, strict filesystem protection and network denial. PID 1 starts it; the backup process needs no setuid helper or extra capabilities.
+|`haven-monitor.service` / `.timer` |Five-minute independent check of native service health, dashboard freshness and the age of the last accepted backup. Its only writable filesystem path is the existing maintenance lock file.
+|`haven-maintenance.service` |An explicit administrative exclusion lease. Application/backup deployment and operator retention use distinct transient leases holding the same lock.
 |===
 
-SQLite Online Backup establishes consistency for one database. It does not produce a single consistent cut across multiple databases, JSON files and credentials. The production runner must first define coordinated quiescence or a bounded service pause/resume procedure with failure recovery. The synthetic experiment does not establish that production procedure.
+Trusted code and the hash-pinned restic 0.19.1 executable live in root-only `/usr/local/lib/haven-backup`. Secrets and rendered settings are under `/etc/haven-backup`; journals and private staging are under `/var/lib/haven-backup`. These paths are outside Nora's home and inaccessible to the service identity and future lower-trust workers. No operator/IAM administration key is deployed to the VPS.
 
-=== Prepared consistent capture primitive
+The services do not depend on a model or Hermes cron. Healthchecks receives empty POST bodies over verified HTTPS, without redirects, proxy inheritance, source paths, command logs or conversation data. The link:https://healthchecks.io/docs/http_api/[ping API] confirms completion/start/failure; receipt of HTTP 200 alone is not proof that an email integration works.
 
-`scripts/backup_capture.py` supplies the tested staging component. The initial 31 October acceptance used controller/journal doubles; the production adapter is described below. Its link:../examples/backup-capture.json[explicit candidate capture policy] covers native configuration/credentials, identity, databases, sessions/delivery receipts, memories, schedules, skills/custom extensions and reviewed local snapshots/logs. It excludes named caches, transient gateway state and the exact pinned Python/uv installations while preserving their `tools/facts.json` provenance. A new runtime directory or unknown top-level path requires review instead of silent omission. This is one pilot-profile candidate, not a universal Hermes backup manifest.
+== Captured state and consistency
 
-The caller must stop every writer and hold a trusted maintenance lock. `capture_with_pause` requires a healthy starting service, arms its journal before stopping, checks the stopped state, captures the data and attempts to start/health-check the service in `finally`. A failed resume keeps the recovery intent and discards the capture. `recover_pause` supplies the corresponding recovery operation for a future `ExecStopPost`/next-run adapter. The original primitive tests use controller/journal doubles and do not establish real systemd behavior. The production adapter adds durable journaling and maintenance exclusion; actual process termination and live pause acceptance must still be recorded.
+The link:../examples/backup-capture.json[explicit capture policy] includes native configuration and required credentials, SQLite state/audit databases, sessions, Telegram receipts, memories, identity, schedules, skills and reviewed custom extensions. Missing optional board state stays absent. Source owners, groups, modes, mtimes and hashes are retained in an encrypted restore manifest alongside source revisions and the policy.
 
-Source traversal and file reads use no-follow descriptors; destination I/O is anchored to a newly created private directory descriptor through Linux `/proc/self/fd`. Included symlinks, hardlinks, mount boundaries, special files, unrepresented extended attributes/ACLs, missing required files and unreviewed SQLite databases/sidecars fail capture. Known lock/cache/transient patterns are excluded explicitly in code/policy. Full source metadata is compared across copy passes; this detects observed changes but is not an alternative to stopping all writers.
+Named caches, installed Python/uv directories and transient sockets/PIDs/locks/heartbeats are excluded; pinned tool provenance remains. The reviewed `.clean_shutdown` marker exists only between stop and startup and is excluded explicitly. Restore treats interrupted activity conservatively instead of importing a live-process marker. New unknown paths, links, mount boundaries, unsupported metadata, unreviewed SQLite stores or missing required inputs stop capture. An unknown path is retained only in the protected journal, never stdout.
 
-SQLite normalization operates only on the private copy, including copied WAL/rollback state, then checks integrity and removes the copied sidecars. A missing optional board database stays absent. Staged directories/files are `0700`/`0600`; the returned private manifest records hashes plus original UID, GID, mode and mtime for an eventual reviewed restore. The caller must include this manifest in the encrypted payload and map owner identities on a new host before reapplying metadata. A bare restic restore of staging is not a completed application restore.
+The controller verifies the existing repository identity before pausing. It holds `/run/lock/haven-maintenance.lock`, fsyncs the resume intent, stops the coordinator and requires no main process and an empty service cgroup. The pinned gateway can report exit 1 during stop; a failed unit state alone is not evidence of a remaining writer. A live/deactivating/nonempty cgroup is refused.
 
-Default cooperative limits are 256 MiB, 20,000 entries, depth 32 and 60 seconds including database normalization. A separate process/unit timeout is still required for blocked system calls. Handled staging failures remove the owned partial tree without following replaced destination parents; a killed process still requires protected staging cleanup by the eventual recovery adapter. Callers must suppress raw OS/SQLite exception text and never publish returned filenames or metadata outside the private instance.
+No-follow file descriptors anchor traversal and staging writes. The copy is checked against a second metadata pass. SQLite normalization operates only on the private copy, includes committed WAL state and verifies integrity. Cooperative capture limits are 256 MiB, 20,000 entries, depth 32 and 60 seconds; systemd separately bounds the whole job. The healthy coordinator resumes before network/archive work. A failed resume retains its durable intent and discards the copy.
 
-The pilot candidate passed a metadata-only preflight on 2026-10-31: 372 regular files, 134 directories and approximately 4.7 MB selected. It did not copy real contents or pause the service. Own skills are approximately 2.8 MB and included; approximately 296 MB of installed Python/uv tools are excluded by exact reviewed directory names, with package/artifact provenance retained privately. A clean-host rebuild of those dependencies remains an acceptance requirement.
+== Snapshot acceptance and interrupted runs
 
-Use a private staging directory (`0700`, files `0600`), an explicit path manifest and path/link checks. Bound source size, free staging space, concurrency and runtime. Clean staging on success, exception, cancellation and subsequent recovery. Do not put real plaintext staging in a controller checkout. The backup process is trusted and isolated from Nora's model and future H2 workers; its permissions do not grant workers access to credentials.
+A backup is accepted only after all of these succeed:
 
-== Selected storage and monitoring
+. Restic exits zero; exit 3 is an explicitly rejected incomplete snapshot.
+. The full snapshot ID, repository identity, host and unique run tag match this run.
+. `check --read-data` verifies repository data.
+. The exact snapshot is restored with `--verify`; the complete file set, hashes, staging modes and SQLite integrity match its sealed manifest.
 
-The owner selected Scaleway Object Storage and hosted Healthchecks.io after reviewing link:h1.9-provider-options.adoc[provider options]. The link:h1.9-scaleway-healthchecks.adoc[setup plan] specifies enrollment, proposed storage/access boundaries and two external checks. Before provisioning confirm the owner's account price/tax, restricted credentials and notification destination. The independent repository password belongs in the owner's password manager.
+`accepted.json` records capture time rather than upload completion time. A success heartbeat follows acceptance. Credentials or storage failures before capture do not stop Nora. Handled failure and `ExecStopPost` clean private staging; boot recovery retries a pending resume. Synthetic stop/SIGKILL/real-systemd recovery and cleanup passed. Physical power loss was not simulated.
 
-Restic encrypts content, but encryption does not prevent repository deletion by an attacker with storage credentials. Verify protection for old recovery points using provider versioning/immutability, separately controlled snapshots or an actually tested append-only path. Keep destructive retention/maintenance authorization separate where the selected backend permits it. Do not claim that an untested bucket policy is append-only: lock removal and normal backend operations must still work.
+An uncertain upload is never repeated automatically and remote locks are not erased. Inspect its protected `run.json`, then use the explicit root operation:
 
-Proposed schedule: daily backup, seven daily/four weekly/three monthly recovery points, periodic integrity/data checks and an isolated restore sample. Recovery objectives are no more than 24 hours of lost data and recovery within four hours; they are targets to measure, not verified guarantees. Retention counts describe retained snapshots, not a fixed storage-volume limit.
+[source,sh]
+----
+sudo env PYTHONPATH=/usr/local/lib/haven-backup \
+  python3 -m scripts.backup_runtime reconcile
+----
 
-Use independent systemd services/timers, with no Hermes model/cron dependency. A backup success heartbeat is sent only after exit zero, the exact snapshot is confirmed and required checks pass. https://restic.readthedocs.io/en/stable/040_backup.html#exit-status-codes[Restic exit 3] is an incomplete snapshot and must fail acceptance. A separate short-period heartbeat should check the service plus backup freshness. Missing heartbeats must alert from outside the VPS. Do not send conversation text, credentials or raw command logs to the monitor.
+Reconciliation searches only that run's exact tag/host, verifies any completed snapshot and restores it before acceptance. No matching snapshot closes the interrupted run without creating a new backup. A failed integrity/restore check preserves the uncertainty for operator review.
 
-== Remaining implementation and live acceptance
+== Install or update
 
-=== Production controller candidate
+Backup settings are separate operational inputs, not configuration v1. Start from link:../examples/backup-runtime.json[synthetic runtime metadata] in the private `ops/backup/runtime.json`; replace repository identity with the previously verified private receipt. Keep credentials in their enrolled directories outside Git.
 
-The explicit `ops/backup.yml` installs `scripts.backup_runtime` and the pinned
-restic executable in root-only `/usr/local/lib/haven-backup`, with separate
-`/etc/haven-backup` credentials and `/var/lib/haven-backup` journals/staging.
-Deployment requires explicit private settings, capture policy, enrollment paths
-and `haven_backup_authorized=true`. It installs no account administration key.
-It enables boot recovery; timers remain inactive until a separate explicit
-`haven_backup_activate=true` invocation after live acceptance.
+`render_backup` requires clean public/private checkouts and a matching `HAVEN_REVISION`. It adds both exact source revisions at deployment time, avoiding a self-referential revision committed into its own inputs. From the public checkout:
 
-The controller verifies the existing repository identity before stopping Nora,
-fsyncs its resume intent, holds `/run/lock/haven-maintenance.lock` and resumes the
-healthy coordinator before archive/network work. `ExecStopPost` and independent
-boot recovery restore a pending pause and remove protected staging. A failed
-resume retains its intent. Application deployment obtains a distinct systemd
-maintenance lease using the same lock; simultaneous leases fail instead of
-sharing ownership. Manual changes must hold `haven-maintenance.service`; release
-it explicitly after maintenance, including a failed administrative session.
+[source,sh]
+----
+umask 077
+haven_backup_render=$(mktemp -d)
+.venv/bin/python -m scripts.render_backup /absolute/private-instance \
+  --output "$haven_backup_render/settings.json"
+ANSIBLE_CONFIG=ops/ansible.cfg ANSIBLE_HOME=build/ansible \
+  .venv/bin/ansible-playbook -i /absolute/private-instance/ops/inventory.yml \
+  ops/backup.yml -e haven_backup_authorized=true \
+  -e "haven_backup_settings=$haven_backup_render/settings.json" \
+  -e haven_backup_capture=/absolute/private-instance/ops/backup/capture-manifest.json \
+  -e haven_backup_credentials=/absolute/private/scaleway-runtime \
+  -e haven_backup_password=/absolute/private/restic-password \
+  -e haven_backup_healthchecks=/absolute/private/healthchecks \
+  -e haven_backup_restic=/absolute/public-checkout/build/h1.9/restic
+----
 
-The timer candidate runs at 02:00 and 14:00 UTC with up to five minutes of jitter.
-This gives the 24-hour freshness threshold room for a failed run. Every accepted
-backup has exit zero, a full run-bound snapshot ID, matching repository/host/tags,
-full `check --read-data`, an exact verified restore, file-set/hash/mode comparison
-and SQLite integrity checks. The accepted timestamp is the capture time. Exit 3
-is explicitly rejected. Interrupted uploads require the separate `reconcile`
-operation, which searches only that run's snapshot; it never repeats an uncertain
-backup or removes remote locks. The five-minute monitor checks native service
-health, dashboard freshness and accepted backup age before a success ping.
+Installation enables boot recovery and validates units without sending pings or enabling new timers. After live acceptance, the same playbook with `-e haven_backup_activate=true` enables backup and monitoring. It uses `no_log`/no diff for secret transfer. Repeating a deployment holds the maintenance exclusion while updating code and settings. OS updates, firewall, Tailscale and model permissions are outside this playbook.
 
-Healthchecks requests use empty POST bodies, verified HTTPS, no proxies or
-redirects and fixed diagnostics. Busy maintenance defers monitoring without a
-forged success; prolonged silence still expires outside the VPS. Ping URLs and
-storage secrets are root-only and never enter arguments or journal output.
+Manual administrative commands must hold the common lock. For example:
 
-`scripts.backup_restore` validates the exact archived manifest and builds a new
-profile in an exclusively created directory. UID and GID maps are independent;
-original modes/mtimes and root-owned plugin group access are restored. It never
-starts a gateway, a scheduler or a model. Rebuild the pinned runtime separately
-before admission; a restored directory alone is not clean-host acceptance.
+[source,sh]
+----
+sudo flock -n /run/lock/haven-maintenance.lock systemctl restart haven.service
+----
 
-The optional offline controller test is
-`.venv/bin/python research/h1.9/runtime_probe.py`. It exercises the full controller,
-real local restic, WAL capture and metadata reconstruction using synthetic data,
-without production credentials or external requests. Live deployment, process
-termination recovery, provider version recovery and email delivery remain to be
-recorded separately. No production completion is inferred from this candidate.
+Never share another invocation's lease. A lost administrative session may leave a transient lease holding the lock; reconcile that exact lease before releasing it. Busy maintenance defers monitoring without forging success; prolonged silence still expires externally.
 
-=== Acceptance checklist
+== Monitoring and retention
 
-. Accept the candidate path policy against an actual paused capture; implement the systemd/lock/durable-journal/recovery adapters for the prepared capture primitive. The metadata preflight and synthetic service doubles do not establish live cross-file consistency.
-. Enroll the selected Scaleway/Healthchecks accounts, MFA, notification destination and password-manager recovery material through private procedures; no credentials are supplied in chat.
-. Implement the bounded production runner and systemd units, with a verified tool pin, least-privilege storage access, fixed diagnostics, staging cleanup and a lock. Validate against synthetic fixtures before deployment.
-. Exercise allowed read/write/lock operations and rejected access to another bucket/prefix; test old-backup protection and the actual maintenance path. Test success, partial backup, wrong/missing key, unavailable storage and stale/missing external heartbeats.
-. Restore an exact snapshot onto a disposable isolated host with outbound messaging/model/scheduler disabled. Verify database integrity, receipts, modes/owners and required services. Reconcile or re-enroll credentials as necessary. Never start a second Telegram `getUpdates` poller beside production; deferred WhatsApp sessions must also remain inactive.
-. Measure recovery time, missing manual steps and data loss window. Confirm a real external alert and an owner-readable recovery runbook. Only then accept H1.9 and proceed to H1.10.
+`haven-backup` has a 24-hour period/one-hour grace. `haven-service` has a five-minute period/five-minute grace and requires a fresh native heartbeat/dashboard plus a verified backup no older than 24 hours. The twice-daily schedule leaves room to recover from a failed backup. The owner confirmed the actual missed-service-heartbeat email; reporting was then restored. Telegram reply delivery is not measured by this monitor.
 
-== Local evidence
+The VPS application key cannot delete data/snapshots or access previous object versions. A separate temporary operator key on the workstation handles recovery and retention. Versioning is a recovery layer, not immutable storage. A disposable encrypted repository was overwritten, its latest state failed integrity, older object versions restored the exact snapshot, and restoring the previous pack as the latest version repaired it. Runtime access to that separate prefix was denied; only recorded synthetic versions were cleaned up. IAM read-back also confirmed the runtime application's identity and preferred Project.
 
-The public behavior suite covers inventory privacy, symlinked roots/parents, directory replacement during enumeration, bounds and access errors, plus the capture/pause contracts described above. The optional local restic experiment records its tool version and exact source hashes. These synthetic checks and the metadata-only preflight do not establish production consistency, alert delivery or clean-host application recovery. Separate live S3 and remote synthetic restic results are recorded in the link:h1.9-scaleway-healthchecks.adoc[provider setup guide].
+`scripts.backup_maintenance` obtains an exclusive VPS lease before a retention dry-run. It filters the production host/tag, groups by host, preserves the accepted snapshot and verifies the exact removal plan before `forget`/`prune`. Retention keeps seven daily/four weekly/three monthly recovery points. The real operator path passed without removing the accepted snapshot. Run it explicitly from the workstation with a newly enrolled operator key; no destructive retention timer or operator credential belongs on the VPS. Non-current provider versions require separately reviewed cleanup and can continue consuming storage.
 
-The complete public checks passed with 108 behavior tests. On 2026-10-30 at 18:23 UTC, `.venv/bin/python research/h1.9/probe.py` passed from clean implementation revision `39591da52d10286ac6e8b23a9c76e829dcc08f31`, with Python 3.14.7, SQLite 3.53.4 and restic 0.19.1. `research/h1.9/acceptance.json` records the exact source hashes and all bounded outcomes, including the untested remote/alert flags. The experiment used only disposable local fixtures and did not initialize or contact a remote repository.
+== Restore to a new target
 
-Context7 was unavailable due to its monthly quota. The pinned binary's own help and official SQLite/restic/provider documentation were used instead.
+Obtain the independent repository password and private repository settings. The protected accepted receipt is useful when available; recovery must also work when the VPS and that receipt are lost. `scripts.backup_fetch --live` takes explicit settings, receipt, runtime credential/password directories and a new destination outside Git. It verifies repository/run/snapshot identity and restores exact bytes without starting software. With `--discover`, it reads the authenticated encrypted snapshot catalogue, pins a full ID, reads that snapshot’s authenticated manifest and verifies the complete restored file set. It does not contact the VPS or infer that a discovered candidate was previously accepted by the missing server. `--snapshot` can select a reviewed full ID if the newest candidate is incomplete. Temporary input-key copies are removed. Do not select mutable `latest` or overwrite an existing profile.
+
+Rebuild dependencies from pinned public sources using upstream PM and its frozen lock. Use the pinned Python's SQLite: the base container's older SQLite rejected the production schema; the rebuilt Python 3.14.9/SQLite 3.53.1 passed. `scripts.backup_restore` verifies the sealed manifest, independently maps numeric UIDs/GIDs, restores executable/group modes and creates a new profile under a trusted owned parent. Place it at the final path only after admission checks. Restore Telegram delivery receipts before allowing the one production poller to connect.
+
+The repeatable clean application recovery test uses an explicit public-only context:
+
+[source,sh]
+----
+.venv/bin/python research/h1.9/container_context.py build/NEW-recovery-context
+podman build --no-cache -t haven-recovery build/NEW-recovery-context
+podman run --rm --network=none --security-opt=no-new-privileges --cap-drop=NET_RAW \
+  -v /absolute/private-recovery-input:/recovery-input:ro \
+  -v "$PWD/research/h1.9/container_restore.py:/opt/recovery/restore.py:ro" \
+  haven-recovery /opt/recovery/restore.py
+----
+
+The input contains `accepted.json` and `restored/payload` from the fetch tool. The test verifies the exact production profile before boot, preserves that configuration and arms the independent deterministic guard. Only the disposable process's adapter factory is disabled before adapter construction; no Telegram poller or provider login is created. The core gateway/event-loop heartbeat becomes healthy, model-call totals stay unchanged and the read-only input is revalidated afterwards. This establishes clean application reconstruction, not a second production instance or a new Ubuntu host bootstrap.
+
+== Evidence and recovery objectives
+
+The first accepted production payload selected approximately 4.9 MB and passed encrypted off-site backup, full data check and exact file/database restore. The private receipts retain full snapshot/run IDs and code/image hashes. Fresh runtime dependency installation was measured separately, followed by isolated reconstruction and native startup; the observed application recovery is in minutes against a four-hour target. New VPS provisioning, owner enrollment and a physical host-loss exercise remain part of broader operational acceptance.
+
+The 24-hour data-loss objective is enforced operationally by the 12-hour schedule and stale-backup alerts, not a guarantee during an unresolved provider outage. Keep the owner password manager, account recovery and private Git access independent of the VPS.
+
+The original metadata inventory, local restic/WAL/retention/corruption experiment and remote synthetic probe remain under `research/h1.9` and the provider guide. The public suite uses synthetic fixtures; real data and provider/notification evidence are private. Context7 supplied restic/systemd/Healthchecks documentation; local restic help, exact native sources and the installed systemd verifier established the actual version-specific behavior.

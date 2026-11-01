@@ -11,7 +11,7 @@ FILES = {
     "research/h1.6.1/deterministic-policy.patch": "deterministic-policy.patch",
 }
 SCRIPTS = ("backup_runtime", "backup_capture", "backup_restore", "private_enrollment", "model_contract", "model_probe",
-           "service_runtime", "capability_runtime", "capability_policy", "telegram_runtime", "whatsapp_runtime")
+           "service_runtime", "capability_runtime", "capability_policy", "capability_gateway", "telegram_runtime", "whatsapp_runtime")
 CONFIGS = ("capability-runtime.json", "capabilities.json", "telegram-runtime.json", "whatsapp-runtime.json")
 
 

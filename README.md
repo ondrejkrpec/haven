@@ -2,7 +2,7 @@
 
 Haven is a personal agent system built around Hermes. Telegram is the first phone interface; WhatsApp is a future transport option. The first deployment uses one Ubuntu VPS and bounded automation, with separate worker and reviewer roles.
 
-**Status: H1.6.1 deterministic Telegram operations verified on the Ubuntu pilot.** Owner status/capability replies, refusal, zero model usage, native execution guards, rollback, restart and idempotent deployment are accepted. Private administration and supervised recovery work. Coding dispatch stays disabled until H2; Czech voice work is deferred by the owner, and H1.9 off-site backup/recovery is the next planned operational milestone. Automatic local pre-push checks replace unavailable GitHub Actions.
+**Status: H1.6.1 deterministic Telegram operations verified on the Ubuntu pilot.** Owner status/capability replies, refusal, zero model usage, native execution guards, rollback, restart and idempotent deployment are accepted. Private administration and supervised recovery work. Coding dispatch stays disabled until H2; Czech voice work is deferred by the owner, and H1.9 encrypted off-site backup, isolated recovery and external alert delivery are accepted. H1.10 is the next overall operational milestone. Automatic local pre-push checks replace unavailable GitHub Actions.
 
 H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegram.adoc), with live owner/denied-sender checks, blocked remote administration and verified reconnect after restart. It uses a numeric owner allowlist, protected token and outbound long polling. Agent Platform is unavailable on the pilot owner's account, so WhatsApp and [family sharing](docs/family-conversations.adoc) are deferred; the earlier Baileys and Agent Platform assessments stay inactive.
 
@@ -10,7 +10,7 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 [H1.8 web access](docs/h1.8-web-access.adoc) adds a verified read-only operational snapshot, separate private runbooks and the [public documentation site](https://ondrejkrpec.github.io/haven/). The guide records hosting, access and recovery evidence and remaining acceptance limits. Administrative dashboard controls remain deferred.
 
-[H1.9 preparation](docs/h1.9-backup-recovery.adoc) adds a metadata-only inventory and opt-in synthetic encrypted backup/restore experiments. The owner selected [Scaleway + Healthchecks.io](docs/h1.9-scaleway-healthchecks.adoc); live S3 access checks and a remote synthetic restic backup/restore passed. Production data backups and external alerts remain pending.
+[H1.9 backup and recovery](docs/h1.9-backup-recovery.adoc) provides twice-daily encrypted Scaleway backups, exact snapshot restore verification, independent Healthchecks monitoring and separate operator retention. Production recovery was verified in a clean isolated runtime with no transport adapters or added model calls; the owner confirmed the missed-heartbeat email.
 
 ## Start locally
 

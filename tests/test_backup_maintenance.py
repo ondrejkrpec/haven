@@ -16,7 +16,7 @@ class BackupMaintenanceTests(unittest.TestCase):
                 repository = Mock(settings={"hostname": "synthetic"})
                 repository.snapshots.return_value = [{"id": accepted["snapshot_id"]}]
                 plan = [{"keep": [{"id": "b" * 64}] if preserved else [],
-                         "remove": [] if preserved else [{"id": "b" * 64}]}]
+                         "remove": None if preserved else [{"id": "b" * 64}]}]
                 repository.run.side_effect = [b"", json.dumps(plan).encode()]
                 receipt = Path(temporary) / "receipt.json"
                 if preserved:

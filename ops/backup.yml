@@ -157,13 +157,6 @@
             name: haven-backup-recovery.service
             enabled: true
 
-        - name: Activate timers only after explicit live acceptance
-          ansible.builtin.systemd_service:
-            name: "{{ item }}"
-            enabled: true
-            state: started
-          loop: [haven-backup.timer, haven-monitor.timer]
-          when: haven_backup_activate | default(false) | bool
 
       always:
         - name: Release the backup deployment exclusion
@@ -171,6 +164,14 @@
             name: "{{ haven_backup_lease }}.service"
             state: stopped
           when: haven_previous_backup.stat.exists
+
+    - name: Activate timers only after explicit live acceptance
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop: [haven-backup.timer, haven-monitor.timer]
+      when: haven_backup_activate | default(false) | bool
 
   handlers:
     - name: Reload backup units
