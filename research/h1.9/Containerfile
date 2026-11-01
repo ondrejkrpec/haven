@@ -1,5 +1,5 @@
 FROM docker.io/library/python@sha256:82bc3c539b8813ada9d68c63b40158fa002f7f33de9bf3312a3dfdc0620dff56
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates util-linux \
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates util-linux dbus \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 2345 haven \
     && useradd --uid 2345 --gid 2345 --create-home --home-dir /var/lib/haven haven

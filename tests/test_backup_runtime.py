@@ -19,6 +19,17 @@ POLICY = {"schema_version": 1, "include": ["config.yaml", "state.db", "skills"],
 
 
 class BackupRuntimeTests(unittest.TestCase):
+    def test_stopped_requires_no_main_process_and_an_empty_service_cgroup(self):
+        controller = runtime.SystemController({})
+        cases = [({"ActiveState": "inactive", "MainPID": "0", "ControlGroup": ""}, True),
+                 ({"ActiveState": "failed", "MainPID": "0", "ControlGroup": ""}, True),
+                 ({"ActiveState": "failed", "MainPID": "0", "ControlGroup": "/fixture", "TasksCurrent": "2"}, False),
+                 ({"ActiveState": "active", "MainPID": "42", "ControlGroup": "/fixture"}, False),
+                 ({"ActiveState": "deactivating", "MainPID": "0", "ControlGroup": ""}, False)]
+        for state, expected in cases:
+            with self.subTest(state=state), patch.object(controller, "state", return_value=state):
+                self.assertEqual(controller.stopped(), expected)
+
     @contextmanager
     def fixture(self):
         with tempfile.TemporaryDirectory() as temporary:

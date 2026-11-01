@@ -153,7 +153,8 @@ class SystemController:
         self.unit = unit
 
     def state(self):
-        output = command(["/usr/bin/systemctl", "show", self.unit, "-p", "ActiveState", "-p", "SubState", "-p", "MainPID"])
+        output = command(["/usr/bin/systemctl", "show", self.unit, "-p", "ActiveState", "-p", "SubState", "-p", "MainPID",
+                          "-p", "ControlGroup", "-p", "TasksCurrent"])
         return dict(line.split("=", 1) for line in output.decode().splitlines() if "=" in line)
 
     def healthy(self):
@@ -172,7 +173,15 @@ class SystemController:
 
     def stopped(self):
         state = self.state()
-        return state.get("ActiveState") == "inactive" and state.get("MainPID") == "0"
+        stopped = (state.get("ActiveState") in {"inactive", "failed"} and state.get("MainPID") == "0"
+                   and (state.get("ControlGroup") == "" or state.get("TasksCurrent") == "0"))
+        if not stopped:
+            # Only fixed systemd states cross diagnostics, never source values.
+            allowed = {"active", "inactive", "failed", "activating", "deactivating", "reloading", "running", "dead", "stop", "stop-sigterm"}
+            print(json.dumps({"check": "stopped", "active_state": state.get("ActiveState") if state.get("ActiveState") in allowed else "unknown",
+                              "sub_state": state.get("SubState") if state.get("SubState") in allowed else "unknown",
+                              "has_main_process": state.get("MainPID") != "0"}), flush=True)
+        return stopped
 
     def start(self):
         command(["/usr/bin/systemctl", "start", self.unit], timeout=195)
