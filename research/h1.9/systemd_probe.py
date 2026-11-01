@@ -35,6 +35,12 @@ def main(mode):
     controller, journal = Controller(), runtime.PauseJournal(ROOT)
     with runtime.maintenance_lock(Path("/run/lock/haven-h19-fixture.lock")):
         if mode == "setup":
+            # A stopped transient unit is unloaded and cannot be restarted.
+            # Use a disposable runtime unit file, matching production semantics.
+            unit_file = Path("/run/systemd/system") / UNIT
+            with unit_file.open("x") as stream:
+                stream.write("[Unit]\nDescription=Haven synthetic recovery fixture\n[Service]\nExecStart=/usr/bin/sleep infinity\n")
+            runtime.command(["systemctl", "daemon-reload"])
             (ROOT / "source").mkdir(mode=0o700)
             (ROOT / "source/config.yaml").write_text("synthetic: true\n")
             with closing(sqlite3.connect(ROOT / "source/state.db")) as db:
