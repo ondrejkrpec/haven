@@ -125,6 +125,7 @@
             mode: '0644'
           loop:
             - haven-backup.service
+            - haven-backup-health.service
             - haven-backup.timer
             - haven-backup-recovery.service
             - haven-monitor.service
@@ -139,6 +140,7 @@
               - systemd-analyze
               - verify
               - /etc/systemd/system/haven-backup.service
+              - /etc/systemd/system/haven-backup-health.service
               - /etc/systemd/system/haven-backup.timer
               - /etc/systemd/system/haven-backup-recovery.service
               - /etc/systemd/system/haven-monitor.service
