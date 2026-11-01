@@ -148,11 +148,12 @@ def command(argv, *, timeout=30, cwd=None, env=None):
 
 
 class SystemController:
-    def __init__(self, settings):
+    def __init__(self, settings, *, unit="haven.service"):
         self.settings = settings
+        self.unit = unit
 
     def state(self):
-        output = command(["/usr/bin/systemctl", "show", "haven.service", "-p", "ActiveState", "-p", "SubState", "-p", "MainPID"])
+        output = command(["/usr/bin/systemctl", "show", self.unit, "-p", "ActiveState", "-p", "SubState", "-p", "MainPID"])
         return dict(line.split("=", 1) for line in output.decode().splitlines() if "=" in line)
 
     def healthy(self):
@@ -169,14 +170,14 @@ class SystemController:
             return False
 
     def stop(self):
-        command(["/usr/bin/systemctl", "stop", "haven.service"], timeout=195)
+        command(["/usr/bin/systemctl", "stop", self.unit], timeout=195)
 
     def stopped(self):
         state = self.state()
         return state.get("ActiveState") == "inactive" and state.get("MainPID") == "0"
 
     def start(self):
-        command(["/usr/bin/systemctl", "start", "haven.service"], timeout=195)
+        command(["/usr/bin/systemctl", "start", self.unit], timeout=195)
         for _ in range(12):
             if self.healthy():
                 return
