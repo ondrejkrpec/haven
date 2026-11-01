@@ -1,4 +1,4 @@
-"""Consistent private staging primitive; no CLI, upload or live service adapter yet."""
+"""Consistent private staging primitive used by the trusted backup controller."""
 
 from contextlib import closing
 from datetime import datetime, timezone

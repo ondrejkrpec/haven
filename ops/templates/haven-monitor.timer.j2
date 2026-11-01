@@ -1,0 +1,10 @@
+[Unit]
+Description=Independent Haven heartbeat every five minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+Unit=haven-monitor.service
+
+[Install]
+WantedBy=timers.target

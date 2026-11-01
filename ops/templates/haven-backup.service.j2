@@ -1,0 +1,28 @@
+[Unit]
+Description=Haven encrypted off-site backup and exact restore verification
+After=network-online.target haven.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/usr/local/lib/haven-backup
+Environment=PYTHONPATH=/usr/local/lib/haven-backup
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -m scripts.backup_runtime backup
+ExecStopPost=/usr/bin/python3 -m scripts.backup_runtime recover
+TimeoutStartSec=30min
+TimeoutStopSec=5min
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/var/lib/haven-backup /run/lock
+MemoryMax=512M
+TasksMax=64
+StandardOutput=journal
+StandardError=null
