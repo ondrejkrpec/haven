@@ -195,7 +195,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-02: the owner accepted the scope below. Step 1 defines the acceptance baseline; steps 2–8 remain pending. H1 is not yet accepted as a whole. Each step must finish its checks, source PR workflow, affected documentation publication and cleanup before the owner authorizes the next step.</p>
+<p>Status, 2026-11-02: scope and the read-only revision audit have supported results. Steps 3–8 remain pending and H1 is not yet accepted as a whole. Each step must finish its checks, source PR workflow, affected documentation publication and cleanup before the owner authorizes the next step.</p>
 </div>
 </div>
 </div>
@@ -282,12 +282,12 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">1. Scope</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">One acceptance baseline, aligned public/private owner documentation and explicit deferred items.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Scope agreed; verify documentation delivery at this step&#8217;s handoff.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Complete; public/private manifests and changed page hashes verified.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">2. Revisions</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Bind deployed components/configuration to exact checked public/private revisions.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pending owner authorization.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Read-only audit passed; verify documentation delivery at this step&#8217;s handoff.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">3. Telegram and policy</p></td>
@@ -329,6 +329,51 @@
 </div>
 <div class="paragraph">
 <p>H1.10 is complete only when the required in-scope scenarios have supported results, failures are resolved or explicitly accepted, the runbooks match the installation and the final record states the remaining limits. Stopping after an individual step does not accept H1 as a whole.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="revision-mapping"><a class="anchor" href="#revision-mapping"></a>Step 2: Verified revision mapping</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>On 2026-11-02, the read-only audit used checked public baseline <code>ea19c90ba8a11ef76b801382fb2eda0fc3bf0cdc</code> and its matching clean private instance. Exact private revisions, configuration digests, ownership/mode receipts and the bounded reproduction probe remain in private acceptance evidence.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Layer</th>
+<th class="tableblock halign-left valign-top">Verified mapping</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hermes source</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All 20,799 tracked files match commit <code>bf0203a794a07aac3ff764972ab9087baa4e4f4e</code>, with the two pinned patch sets. Seven tracked changes and the one added native guard match their declared digests. The 38 PowerShell files use only the CRLF checkout transformation declared by that commit&#8217;s Git attributes.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Application and native configuration</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All 38 explicitly selected application, plugin, backup, web and unit files match expected bytes, owners and modes. The native configuration exactly matches a fresh <code>--service --capabilities</code> render from the private inputs, without credential resolution. Trusted code/plugin directories contain only their declared entries, apart from excluded Python caches.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Loaded service definitions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All ten units use the expected fragments without drop-ins or a pending daemon reload. The running coordinator uses the selected interpreter; checked Python/application-code modification times precede its start. The native policy check passes.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Runtime dependencies</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Python 3.14.9, Telegram 22.8 and all 70 installed distribution versions match the frozen source lock and the protected Telegram preparation receipt. This verifies versions and pins, not every installed wheel payload byte.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Backup provenance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The installed controller retains its H1.9 public/private source pair. Its code, binary, capture policy and reproduced settings match the checked baseline; later source changes updated documentation without changing those deployment inputs. A newer documentation checkout does not by itself require an application or backup redeployment.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The audit reads only declared source/configuration inputs and package metadata. It does not read credential values, invoke a provider, restart services or start a backup/Telegram poller. OS package auditing, Telegram delivery, host restart and disaster-recovery behavior remain separate scenarios. Web publication has its own exact source manifests and delivery receipts; it is not evidence that every component was deployed from the newest documentation commit.</p>
 </div>
 </div>
 </div>

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "ea19c90ba8a11ef76b801382fb2eda0fc3bf0cdc",
-  "checked_at_utc": "2026-11-02T18:54:52.615894+00:00",
+  "source_revision": "f157ac058fecc250bdda8c35b2cdb3f1b9f79e38",
+  "checked_at_utc": "2026-11-02T19:43:53.275135+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -21,7 +21,7 @@
     },
     {
       "path": "haven/_attachments/README.md",
-      "sha256": "88f47f7c011f66c9a22ebb361bfa9f7980918a3b4886e74567e592ecfc6aa595"
+      "sha256": "0ce2e16b8dc162c1aa00992ed4740612c909df225dc6e23a1d04d65240a4dd0e"
     },
     {
       "path": "haven/_attachments/config/defaults.yaml",
@@ -161,7 +161,7 @@
     },
     {
       "path": "haven/h1.10-acceptance.html",
-      "sha256": "729856c090969219a6e7955c01af8677033131c5d4acc39d371fd75d961c1a1d"
+      "sha256": "43df91f9e4a8dfe9a4bb7c5f7cfc7ddf5c11229c50d936a7ac87398704f6b753"
     },
     {
       "path": "haven/h1.3-bootstrap.html",
