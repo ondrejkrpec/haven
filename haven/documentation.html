@@ -66,7 +66,7 @@
     
   </li>
   <li>
-    <a href="h1.9-backup-recovery.html">Backup and recovery preparation</a>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
     
   </li>
   <li>
@@ -175,6 +175,10 @@
   </li>
   <li>
     <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
     
   </li>
 </ul>
@@ -323,7 +327,7 @@ git -C ../haven-private config --local haven.publicRoot "$PWD"</code></pre>
 <p><a href="_attachments/github/workflows/checks.yml" class="xref attachment">GitHub Actions</a> retains a manual <code>workflow_dispatch</code> definition for possible future use, without push/PR triggers. The owner selected the local pipeline after GitHub rejected the first job at account level before runner allocation. A successful Actions run is no longer required for H1.1 acceptance. No claim is made that GitHub-hosted checks passed.</p>
 </div>
 <div class="paragraph">
-<p>The manual workflow selects Ubuntu 24.04, Python 3.12 and Node.js 24, with Actions pinned to full commits, read-only repository permissions and no instance secrets. Both source remotes are configured and MIT is selected. <a href="h1.1-publication.html" class="xref page">H1.1</a> records publication and local-pipeline acceptance. Hosting and private Tailscale documentation remain later work. <a href="h0.5-acceptance.html" class="xref page">H0.5</a> records the clean-checkout dependency installation.</p>
+<p>The manual workflow selects Ubuntu 24.04, Python 3.12 and Node.js 24, with Actions pinned to full commits, read-only repository permissions and no instance secrets. Both source remotes are configured and MIT is selected. <a href="h1.1-publication.html" class="xref page">H1.1</a> records publication and local-pipeline acceptance; <a href="h1.8-web-access.html" class="xref page">H1.8</a> records public hosting and private Tailscale documentation. <a href="h0.5-acceptance.html" class="xref page">H0.5</a> records the clean-checkout dependency installation.</p>
 </div>
 </div>
 </div>

@@ -66,7 +66,7 @@
     
   </li>
   <li>
-    <a href="h1.9-backup-recovery.html">Backup and recovery preparation</a>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
     
   </li>
   <li>
@@ -177,6 +177,10 @@
     <a href="h1.1-publication.html">H1.1 GitHub publication</a>
     
   </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -203,6 +207,9 @@
 </div>
 <div class="paragraph">
 <p><a href="h1.4-model-configuration.html" class="xref page">H1.4</a> verifies the pinned core runtime, native subscription-provider configuration, independent service-owned OAuth and one request with no tools or fallback on the existing pilot. <a href="h1.5-service-recovery.html" class="xref page">H1.5</a> adds native systemd supervision, a guarded no-tools profile and a required user bus for restart-safe cron workers. Coding dispatch remains disabled; the controller/executor adapter belongs to H2.</p>
+</div>
+<div class="paragraph">
+<p>The active <a href="h1.6.1-capabilities.html" class="xref page">H1.6.1 profile</a> serves only deterministic owner operations and independently blocks model, tool and cron-worker execution. The <a href="h1.10-acceptance.html" class="xref page">H1.10 acceptance baseline</a> covers this existing pilot and its private web, backup and monitoring services. It keeps later autonomy and clean-host installation separate.</p>
 </div>
 <div class="paragraph">
 <p>Keep common source, general instructions and public examples here. Each instance owns its configuration and personal instructions in a separate private repository. Runtime state, account sessions and databases use the trusted <a href="h1.9-backup-recovery.html" class="xref page">H1.9 encrypted backup and recovery workflow</a> outside Git.</p>

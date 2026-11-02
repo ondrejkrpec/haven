@@ -66,7 +66,7 @@
     
   </li>
   <li>
-    <a href="h1.9-backup-recovery.html">Backup and recovery preparation</a>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
     
   </li>
   <li>
@@ -177,6 +177,10 @@
     <a href="h1.1-publication.html">H1.1 GitHub publication</a>
     
   </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -200,7 +204,7 @@
 <p>The owner subsequently selected <a href="h1.6.1-capabilities.html" class="xref page">H1.6.1 deterministic operations</a> instead of ordinary AI chat. This profile is accepted with verified application rollback, idempotent repeat, restart and native execution guards. Four real owner messages produced two expected replies and two refusals without additional model calls or conversation rows; a live status reply after restart confirms transport recovery.</p>
 </div>
 <div class="paragraph">
-<p><a href="h1.8-web-access.html" class="xref page">H1.8</a> adds verified prebuilt public Pages hosting, separately generated owner-only private runbooks and a static read-only operational snapshot. Private HTTPS, negative source-path checks, effective network filtering and release rollback are verified. The coordinator remains unchanged with no additional model calls. The guide records client/update acceptance and unperformed identity/IPv6 scenarios. The owner deferred <a href="h1.7-czech-voice.html" class="xref page">H1.7 Czech voice</a> on 2026-10-30; H1.9 off-site backup, isolated application recovery and external email delivery are accepted; H1.10 is next.</p>
+<p><a href="h1.8-web-access.html" class="xref page">H1.8</a> adds verified prebuilt public Pages hosting, separately generated owner-only private runbooks and a static read-only operational snapshot. Private HTTPS, negative source-path checks, effective network filtering and release rollback are verified. The coordinator remains unchanged with no additional model calls. The guide records client/update acceptance and unperformed identity/IPv6 scenarios. The owner deferred <a href="h1.7-czech-voice.html" class="xref page">H1.7 Czech voice</a> on 2026-10-30; H1.9 off-site backup, isolated application recovery and external email delivery are accepted. On 2026-11-02 the owner accepted the <a href="h1.10-acceptance.html" class="xref page">H1.10 scope</a> and a step-by-step process with an explicit stop after each completed step. Combined operational acceptance remains pending.</p>
 </div>
 </div>
 </div>
@@ -216,21 +220,21 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_owner_choices_before_provisioning"><a class="anchor" href="#_owner_choices_before_provisioning"></a>Owner choices before provisioning</h2>
+<h2 id="_accepted_pilot_inputs_and_remaining_records"><a class="anchor" href="#_accepted_pilot_inputs_and_remaining_records"></a>Accepted pilot inputs and remaining records</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p>Select a VPS and region within the agreed infrastructure budget. The first delivered host runs Ubuntu 26.04 LTS rather than the earlier 24.04 proposal. The pinned core/service is verified on this existing pilot; clean-host installation, broader integrations and the actual billing region still require verification.</p>
+<p>The existing host runs Ubuntu 26.04 LTS rather than the earlier 24.04 proposal. Its service/security baseline is verified; exact billing region and cost still need an instance record. A complete clean-host installation remains unverified.</p>
 </li>
 <li>
-<p>Select an off-site backup destination, retention policy and recovery-key storage. Git does not back up sessions or databases.</p>
+<p>Scaleway Object Storage and Healthchecks.io are selected and accepted in <a href="h1.9-backup-recovery.html" class="xref page">H1.9</a>. Recovery access and the repository password must remain available independently of the VPS. Their independent storage is an owner record, not something inferred from a successful backup.</p>
 </li>
 <li>
-<p>Create the first Telegram bot through official BotFather and complete private token/owner enrollment. Do not obtain a dedicated WhatsApp number for this pilot. A later WhatsApp migration depends on actual eligibility then.</p>
+<p>The Telegram bot and numeric owner are enrolled and accepted. Do not obtain a dedicated WhatsApp number for this pilot; family sharing and a later WhatsApp migration require separate implementation and acceptance.</p>
 </li>
 <li>
-<p>Select actual model identifiers and confirm authentication eligibility. The public model and hostname are placeholders. H1.4 verified the pilot&#8217;s selected model through live discovery and a native request; a subscription alone does not prove other integrations are supported.</p>
+<p>H1.4/H1.5 verified the configured subscription model and independent service login. Current deterministic operations must not add model calls. Actual provider quota/revocation/refresh behavior remains outside the synthetic recovery evidence.</p>
 </li>
 </ul>
 </div>
@@ -261,15 +265,15 @@
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Credentials</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Resolve references only for authorized services, reject missing credentials, and protect OAuth/WhatsApp runtime state outside Git.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Protect service OAuth and Telegram credentials outside Git. Review failure handling without exposing or deliberately revoking a live account grant.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Messaging and family access</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Enroll eligible accounts privately, bind each connection to its verified owner, and test replies/restart recovery and negative cross-user access. Accept shared objects only after ownership/membership checks pass. Measure Czech voice quality and latency separately in H1.7.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Messaging</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Verify the one owner&#8217;s deterministic operations, sender rejection, blocked administration and restart recovery. Voice, WhatsApp and family access are deferred.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Recovery</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Exercise quota deferral/resumption and distinguish transient quota limits from revoked authentication; deterministic recovery must work without Nora&#8217;s model.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Verify model-independent live recovery and review the pinned synthetic quota deferral/resumption and terminal-authentication evidence separately. Full executor recovery belongs to H2.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Backup</p></td>
@@ -282,7 +286,7 @@
 </tbody>
 </table>
 <div class="paragraph">
-<p>Tailscale private administration and the bounded Ansible host playbooks are implemented and verified for the pilot. SOPS with age and restic remain proposed implementation choices. H0.3 only checks credential-reference syntax; it does not implement encrypted storage or runtime authorization.</p>
+<p>Tailscale private administration, bounded Ansible host playbooks and the restic backup controller are implemented and verified for the pilot. SOPS with age is not implemented. H0.3 only checks credential-reference syntax; runtime protection and encrypted backup have their own milestone evidence.</p>
 </div>
 <div class="paragraph">
 <p>The production controller/executor adapter belongs to H2. Deployment authorization and automatic rollback for the bounded demonstration target belong to H3. Passing foundation CI does not establish these runtime properties.</p>

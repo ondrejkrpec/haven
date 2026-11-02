@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H1.10: Operational acceptance of the existing pilot · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>H1.10: Operational acceptance of the existing pilot</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-11-02: the owner accepted the scope below. Step 1 defines the acceptance baseline; steps 2–8 remain pending. H1 is not yet accepted as a whole. Each step must finish its checks, source PR workflow, affected documentation publication and cleanup before the owner authorizes the next step.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_accepted_scope"><a class="anchor" href="#_accepted_scope"></a>Accepted scope</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>H1.10 covers the existing single Ubuntu VPS and its <a href="h1.6.1-capabilities.html" class="xref page">deterministic Nora profile</a>. Telegram serves one enrolled owner through <code>system.status</code> and <code>system.capabilities</code>, including their explicit Czech aliases. Unknown requests and remote administration remain refused. The profile blocks ordinary model calls, tools and cron workers independently of the plugin hook.</p>
+</div>
+<div class="paragraph">
+<p>The operational baseline includes the pinned Hermes runtime, systemd supervision, private SSH over Tailscale, owner-only static HTTPS documentation and a read-only dashboard. <a href="h1.9-backup-recovery.html" class="xref page">H1.9</a> supplies encrypted off-site backups, exact snapshot verification, isolated application recovery and independent external monitoring. Its earlier acceptance is evidence to review, not a new H1.10 test result.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Boundary</th>
+<th class="tableblock halign-left valign-top">Treatment in this acceptance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Model and credentials</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The configured subscription model was tested in H1.4/H1.5. The current service must add no model calls while handling operations or recovering. Historical dashboard totals need not be zero.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Quota recovery</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Review the pinned synthetic deferral/resumption and terminal-authentication tests separately from deterministic live operation. Deliberate real quota exhaustion, grant revocation and token refresh are not established by those tests.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Backup and disaster recovery</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Review the H1.9 evidence and current backup/monitor health. Clean isolated application recovery does not establish new VPS provisioning or a complete host replacement time.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maintenance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Preserve the shared maintenance lock and pending-resume recovery. Keep application rollback separate from database/credential restore. A documentation deployment does not authorize another operational step.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Access limits</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Carry forward unperformed unauthorized-tailnet-identity, public IPv6 and rescue-boot scenarios explicitly. Policy inspection is not a live negative test from another identity.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Infrastructure records</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keep unconfirmed VPS region/billing and independent recovery-material storage visible until evidenced. Do not infer them from application health.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_deferred_scope_and_later_milestones"><a class="anchor" href="#_deferred_scope_and_later_milestones"></a>Deferred scope and later milestones</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="h1.7-czech-voice.html" class="xref page">Czech voice</a>, WhatsApp and family sharing are owner-deferred and are not required passing scenarios for this pilot. Dashboard administration and ordinary AI chat remain disabled.</p>
+</div>
+<div class="paragraph">
+<p>OS updates remain owner-deferred as a future Security/Worker scenario. H1.10 does not enable coding dispatch or grant workers administrator access. The isolated controller/executor adapter, role authorization and review lifecycle belong to H2; bounded autonomous repair/deployment belongs to H3.</p>
+</div>
+<div class="paragraph">
+<p>A complete clean-host installation, another independent live instance and migration to macOS remain unverified. Acceptance of this existing pilot does not close the broader v0.1 requirements.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_steps_and_evidence"><a class="anchor" href="#_steps_and_evidence"></a>Steps and evidence</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 50%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Step</th>
+<th class="tableblock halign-left valign-top">Required outcome</th>
+<th class="tableblock halign-left valign-top">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1. Scope</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One acceptance baseline, aligned public/private owner documentation and explicit deferred items.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Scope agreed; verify documentation delivery at this step&#8217;s handoff.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2. Revisions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bind deployed components/configuration to exact checked public/private revisions.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pending owner authorization.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3. Telegram and policy</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Review sender authorization, allowed/refused operations, restart replies and zero added model usage.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4. Service and host restart</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Verify the current combined service, private web, backup and monitor stack returns without hidden repairs.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5. Failure and quota recovery</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Review deterministic credential-independent recovery and applicable isolated failure tests with their limits.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6. Backup and monitoring</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Review exact restore evidence, current accepted backup age, timers, recovery journal and external monitoring.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7. Access and runbooks</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check private access boundaries and usable current administration/recovery instructions.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8. H1 handoff</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Record scenario results, unresolved findings, accepted limits and the H2 boundary; decide overall H1 acceptance.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>For each scenario record the tested revisions, date, result, evidence and limits. Identify reused milestone evidence explicitly and rerun it when relevant implementation changed or the evidence is insufficient. Successful local source checks do not prove live runtime behavior or GitHub Actions execution.</p>
+</div>
+<div class="paragraph">
+<p>At each step boundary, merge checked topic branches, synchronize primary branches and remove completed topic branches only after checking that their tips are included. Preserve unrelated owner edits. Verify affected public/private HTTPS publication manifests and changed page hashes; a pushed source commit alone is not a documentation delivery receipt. Keep temporary evidence outside source inputs and remove disposable plaintext artifacts after retaining the necessary protected evidence.</p>
+</div>
+<div class="paragraph">
+<p>H1.10 is complete only when the required in-scope scenarios have supported results, failures are resolved or explicitly accepted, the runbooks match the installation and the final record states the remaining limits. Stopping after an individual step does not accept H1 as a whole.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>
