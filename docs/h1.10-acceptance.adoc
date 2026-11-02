@@ -1,0 +1,49 @@
+= H1.10: Operational acceptance of the existing pilot
+
+Status, 2026-11-02: the owner accepted the scope below. Step 1 defines the acceptance baseline; steps 2–8 remain pending. H1 is not yet accepted as a whole. Each step must finish its checks, source PR workflow, affected documentation publication and cleanup before the owner authorizes the next step.
+
+== Accepted scope
+
+H1.10 covers the existing single Ubuntu VPS and its link:h1.6.1-capabilities.adoc[deterministic Nora profile]. Telegram serves one enrolled owner through `system.status` and `system.capabilities`, including their explicit Czech aliases. Unknown requests and remote administration remain refused. The profile blocks ordinary model calls, tools and cron workers independently of the plugin hook.
+
+The operational baseline includes the pinned Hermes runtime, systemd supervision, private SSH over Tailscale, owner-only static HTTPS documentation and a read-only dashboard. link:h1.9-backup-recovery.adoc[H1.9] supplies encrypted off-site backups, exact snapshot verification, isolated application recovery and independent external monitoring. Its earlier acceptance is evidence to review, not a new H1.10 test result.
+
+[cols="1,3",options="header"]
+|===
+|Boundary |Treatment in this acceptance
+|Model and credentials |The configured subscription model was tested in H1.4/H1.5. The current service must add no model calls while handling operations or recovering. Historical dashboard totals need not be zero.
+|Quota recovery |Review the pinned synthetic deferral/resumption and terminal-authentication tests separately from deterministic live operation. Deliberate real quota exhaustion, grant revocation and token refresh are not established by those tests.
+|Backup and disaster recovery |Review the H1.9 evidence and current backup/monitor health. Clean isolated application recovery does not establish new VPS provisioning or a complete host replacement time.
+|Maintenance |Preserve the shared maintenance lock and pending-resume recovery. Keep application rollback separate from database/credential restore. A documentation deployment does not authorize another operational step.
+|Access limits |Carry forward unperformed unauthorized-tailnet-identity, public IPv6 and rescue-boot scenarios explicitly. Policy inspection is not a live negative test from another identity.
+|Infrastructure records |Keep unconfirmed VPS region/billing and independent recovery-material storage visible until evidenced. Do not infer them from application health.
+|===
+
+== Deferred scope and later milestones
+
+link:h1.7-czech-voice.adoc[Czech voice], WhatsApp and family sharing are owner-deferred and are not required passing scenarios for this pilot. Dashboard administration and ordinary AI chat remain disabled.
+
+OS updates remain owner-deferred as a future Security/Worker scenario. H1.10 does not enable coding dispatch or grant workers administrator access. The isolated controller/executor adapter, role authorization and review lifecycle belong to H2; bounded autonomous repair/deployment belongs to H3.
+
+A complete clean-host installation, another independent live instance and migration to macOS remain unverified. Acceptance of this existing pilot does not close the broader v0.1 requirements.
+
+== Steps and evidence
+
+[cols="1,3,2",options="header"]
+|===
+|Step |Required outcome |Status
+|1. Scope |One acceptance baseline, aligned public/private owner documentation and explicit deferred items. |Scope agreed; verify documentation delivery at this step's handoff.
+|2. Revisions |Bind deployed components/configuration to exact checked public/private revisions. |Pending owner authorization.
+|3. Telegram and policy |Review sender authorization, allowed/refused operations, restart replies and zero added model usage. |Pending.
+|4. Service and host restart |Verify the current combined service, private web, backup and monitor stack returns without hidden repairs. |Pending.
+|5. Failure and quota recovery |Review deterministic credential-independent recovery and applicable isolated failure tests with their limits. |Pending.
+|6. Backup and monitoring |Review exact restore evidence, current accepted backup age, timers, recovery journal and external monitoring. |Pending.
+|7. Access and runbooks |Check private access boundaries and usable current administration/recovery instructions. |Pending.
+|8. H1 handoff |Record scenario results, unresolved findings, accepted limits and the H2 boundary; decide overall H1 acceptance. |Pending.
+|===
+
+For each scenario record the tested revisions, date, result, evidence and limits. Identify reused milestone evidence explicitly and rerun it when relevant implementation changed or the evidence is insufficient. Successful local source checks do not prove live runtime behavior or GitHub Actions execution.
+
+At each step boundary, merge checked topic branches, synchronize primary branches and remove completed topic branches only after checking that their tips are included. Preserve unrelated owner edits. Verify affected public/private HTTPS publication manifests and changed page hashes; a pushed source commit alone is not a documentation delivery receipt. Keep temporary evidence outside source inputs and remove disposable plaintext artifacts after retaining the necessary protected evidence.
+
+H1.10 is complete only when the required in-scope scenarios have supported results, failures are resolved or explicitly accepted, the runbooks match the installation and the final record states the remaining limits. Stopping after an individual step does not accept H1 as a whole.

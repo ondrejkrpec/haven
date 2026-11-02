@@ -82,7 +82,7 @@ These are client-side checks on the configured checkouts. GitHub web edits and o
 
 link:../.github/workflows/checks.yml[GitHub Actions] retains a manual `workflow_dispatch` definition for possible future use, without push/PR triggers. The owner selected the local pipeline after GitHub rejected the first job at account level before runner allocation. A successful Actions run is no longer required for H1.1 acceptance. No claim is made that GitHub-hosted checks passed.
 
-The manual workflow selects Ubuntu 24.04, Python 3.12 and Node.js 24, with Actions pinned to full commits, read-only repository permissions and no instance secrets. Both source remotes are configured and MIT is selected. link:h1.1-publication.adoc[H1.1] records publication and local-pipeline acceptance. Hosting and private Tailscale documentation remain later work. link:h0.5-acceptance.adoc[H0.5] records the clean-checkout dependency installation.
+The manual workflow selects Ubuntu 24.04, Python 3.12 and Node.js 24, with Actions pinned to full commits, read-only repository permissions and no instance secrets. Both source remotes are configured and MIT is selected. link:h1.1-publication.adoc[H1.1] records publication and local-pipeline acceptance; link:h1.8-web-access.adoc[H1.8] records public hosting and private Tailscale documentation. link:h0.5-acceptance.adoc[H0.5] records the clean-checkout dependency installation.
 
 == Dependency updates and references
 

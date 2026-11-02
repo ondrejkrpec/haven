@@ -11,7 +11,7 @@
 ** xref:h1.6.1-capabilities.adoc[Deterministic capability guardrails]
 ** xref:h1.7-czech-voice.adoc[Czech voice (deferred)]
 ** xref:h1.8-web-access.adoc[Read-only dashboard and documentation hosting]
-** xref:h1.9-backup-recovery.adoc[Backup and recovery preparation]
+** xref:h1.9-backup-recovery.adoc[Backup and recovery]
 ** xref:h1.9-provider-options.adoc[Backup storage and monitoring options]
 ** xref:h1.9-scaleway-healthchecks.adoc[Scaleway and Healthchecks.io setup]
 ** xref:h1.6-whatsapp.adoc[WhatsApp text and access rules]
@@ -38,3 +38,4 @@
 ** xref:h0.4-acceptance.adoc[H0.4 documentation and checks]
 ** xref:h0.5-acceptance.adoc[H0.5 clean checkout and handoff]
 ** xref:h1.1-publication.adoc[H1.1 GitHub publication]
+** xref:h1.10-acceptance.adoc[H1.10 pilot acceptance]

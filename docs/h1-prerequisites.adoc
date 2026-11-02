@@ -6,7 +6,7 @@ link:h1.6-telegram.adoc[H1.6 owner-only Telegram text] is accepted on the existi
 
 The owner subsequently selected link:h1.6.1-capabilities.adoc[H1.6.1 deterministic operations] instead of ordinary AI chat. This profile is accepted with verified application rollback, idempotent repeat, restart and native execution guards. Four real owner messages produced two expected replies and two refusals without additional model calls or conversation rows; a live status reply after restart confirms transport recovery.
 
-link:h1.8-web-access.adoc[H1.8] adds verified prebuilt public Pages hosting, separately generated owner-only private runbooks and a static read-only operational snapshot. Private HTTPS, negative source-path checks, effective network filtering and release rollback are verified. The coordinator remains unchanged with no additional model calls. The guide records client/update acceptance and unperformed identity/IPv6 scenarios. The owner deferred link:h1.7-czech-voice.adoc[H1.7 Czech voice] on 2026-10-30; H1.9 off-site backup, isolated application recovery and external email delivery are accepted; H1.10 is next.
+link:h1.8-web-access.adoc[H1.8] adds verified prebuilt public Pages hosting, separately generated owner-only private runbooks and a static read-only operational snapshot. Private HTTPS, negative source-path checks, effective network filtering and release rollback are verified. The coordinator remains unchanged with no additional model calls. The guide records client/update acceptance and unperformed identity/IPv6 scenarios. The owner deferred link:h1.7-czech-voice.adoc[H1.7 Czech voice] on 2026-10-30; H1.9 off-site backup, isolated application recovery and external email delivery are accepted. On 2026-11-02 the owner accepted the link:h1.10-acceptance.adoc[H1.10 scope] and a step-by-step process with an explicit stop after each completed step. Combined operational acceptance remains pending.
 
 == H0 handoff
 
@@ -14,12 +14,12 @@ link:h0.5-acceptance.adoc[H0.5 acceptance] establishes the local foundation from
 
 Before reproducible deployment, establish the intended public-source revision and matching private configuration within the owner's commit/remote authorization. Real source commits and separate public/private GitHub remotes now exist. The owner selected MIT; authenticated repository-name checks and publication are recorded in link:h1.1-publication.adoc[H1.1]; automatic local push checks replace unavailable GitHub Actions with the owner's agreement. These are distinct from the host/account acceptance below.
 
-== Owner choices before provisioning
+== Accepted pilot inputs and remaining records
 
-* Select a VPS and region within the agreed infrastructure budget. The first delivered host runs Ubuntu 26.04 LTS rather than the earlier 24.04 proposal. The pinned core/service is verified on this existing pilot; clean-host installation, broader integrations and the actual billing region still require verification.
-* Select an off-site backup destination, retention policy and recovery-key storage. Git does not back up sessions or databases.
-* Create the first Telegram bot through official BotFather and complete private token/owner enrollment. Do not obtain a dedicated WhatsApp number for this pilot. A later WhatsApp migration depends on actual eligibility then.
-* Select actual model identifiers and confirm authentication eligibility. The public model and hostname are placeholders. H1.4 verified the pilot's selected model through live discovery and a native request; a subscription alone does not prove other integrations are supported.
+* The existing host runs Ubuntu 26.04 LTS rather than the earlier 24.04 proposal. Its service/security baseline is verified; exact billing region and cost still need an instance record. A complete clean-host installation remains unverified.
+* Scaleway Object Storage and Healthchecks.io are selected and accepted in link:h1.9-backup-recovery.adoc[H1.9]. Recovery access and the repository password must remain available independently of the VPS. Their independent storage is an owner record, not something inferred from a successful backup.
+* The Telegram bot and numeric owner are enrolled and accepted. Do not obtain a dedicated WhatsApp number for this pilot; family sharing and a later WhatsApp migration require separate implementation and acceptance.
+* H1.4/H1.5 verified the configured subscription model and independent service login. Current deterministic operations must not add model calls. Actual provider quota/revocation/refresh behavior remains outside the synthetic recovery evidence.
 
 == Technical work and evidence required
 
@@ -28,13 +28,13 @@ Before reproducible deployment, establish the intended public-source revision an
 |Area |Acceptance to establish in H1
 |Host |Document admin access, updates, firewall and service account; restrict internal services through the selected private access mechanism.
 |Hermes |Install the exact candidate and patch, translate Haven configuration to native inputs, supervise with systemd and survive a restart.
-|Credentials |Resolve references only for authorized services, reject missing credentials, and protect OAuth/WhatsApp runtime state outside Git.
-|Messaging and family access |Enroll eligible accounts privately, bind each connection to its verified owner, and test replies/restart recovery and negative cross-user access. Accept shared objects only after ownership/membership checks pass. Measure Czech voice quality and latency separately in H1.7.
-|Recovery |Exercise quota deferral/resumption and distinguish transient quota limits from revoked authentication; deterministic recovery must work without Nora's model.
+|Credentials |Protect service OAuth and Telegram credentials outside Git. Review failure handling without exposing or deliberately revoking a live account grant.
+|Messaging |Verify the one owner's deterministic operations, sender rejection, blocked administration and restart recovery. Voice, WhatsApp and family access are deferred.
+|Recovery |Verify model-independent live recovery and review the pinned synthetic quota deferral/resumption and terminal-authentication evidence separately. Full executor recovery belongs to H2.
 |Backup |link:h1.9-backup-recovery.adoc[H1.9] accepts encrypted production snapshots, exact restore, clean isolated application reconstruction and real external alerts with link:h1.9-scaleway-healthchecks.adoc[Scaleway + Healthchecks.io]. No second Telegram poller is started. New VPS/OS provisioning is outside the measured application recovery.
 |Documentation |Record the actually verified setup, interactive steps and recovery procedure without credentials, QR codes or session data.
 |===
 
-Tailscale private administration and the bounded Ansible host playbooks are implemented and verified for the pilot. SOPS with age and restic remain proposed implementation choices. H0.3 only checks credential-reference syntax; it does not implement encrypted storage or runtime authorization.
+Tailscale private administration, bounded Ansible host playbooks and the restic backup controller are implemented and verified for the pilot. SOPS with age is not implemented. H0.3 only checks credential-reference syntax; runtime protection and encrypted backup have their own milestone evidence.
 
 The production controller/executor adapter belongs to H2. Deployment authorization and automatic rollback for the bounded demonstration target belong to H3. Passing foundation CI does not establish these runtime properties.

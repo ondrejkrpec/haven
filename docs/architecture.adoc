@@ -8,6 +8,8 @@ H0.1 established a candidate based on Hermes v0.22.5 plus an exact upstream patc
 
 link:h1.4-model-configuration.adoc[H1.4] verifies the pinned core runtime, native subscription-provider configuration, independent service-owned OAuth and one request with no tools or fallback on the existing pilot. link:h1.5-service-recovery.adoc[H1.5] adds native systemd supervision, a guarded no-tools profile and a required user bus for restart-safe cron workers. Coding dispatch remains disabled; the controller/executor adapter belongs to H2.
 
+The active link:h1.6.1-capabilities.adoc[H1.6.1 profile] serves only deterministic owner operations and independently blocks model, tool and cron-worker execution. The link:h1.10-acceptance.adoc[H1.10 acceptance baseline] covers this existing pilot and its private web, backup and monitoring services. It keeps later autonomy and clean-host installation separate.
+
 Keep common source, general instructions and public examples here. Each instance owns its configuration and personal instructions in a separate private repository. Runtime state, account sessions and databases use the trusted link:h1.9-backup-recovery.adoc[H1.9 encrypted backup and recovery workflow] outside Git.
 
 The retained link:family-conversations.adoc[family design] has separate personal conversations and explicitly shared family objects. It is deferred beyond the link:h1.6-telegram.adoc[initial owner-only Telegram pilot]. Future members need separate authenticated identities and private state; a narrow service must enforce ownership and family membership before returning data to the model. This access layer is not implemented by selecting Hermes profiles.
