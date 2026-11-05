@@ -19,6 +19,33 @@ POLICY = {"schema_version": 1, "include": ["config.yaml", "state.db", "skills"],
 
 
 class BackupRuntimeTests(unittest.TestCase):
+    def test_repository_timeout_allows_interrupt_cleanup_before_reporting_failure(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary) / "released"
+            code = (
+                "import signal,sys; from pathlib import Path; "
+                f"marker=Path({str(marker)!r}); "
+                "signal.signal(signal.SIGINT, lambda *_: (marker.write_text('released'), sys.exit(0))); "
+                "signal.pause()"
+            )
+            with self.assertRaisesRegex(capture.CaptureError, "command_timeout"):
+                runtime.command([os.sys.executable, "-c", code], timeout=0.5)
+            self.assertEqual(marker.read_text(), "released")
+
+    def test_repository_timeout_kills_and_reaps_an_unresponsive_process(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pid_path = Path(temporary) / "pid"
+            code = (
+                "import os,signal; from pathlib import Path; "
+                "signal.signal(signal.SIGINT, signal.SIG_IGN); "
+                f"Path({str(pid_path)!r}).write_text(str(os.getpid())); signal.pause()"
+            )
+            with patch.object(runtime, "INTERRUPT_GRACE_SECONDS", 0.1):
+                with self.assertRaisesRegex(capture.CaptureError, "command_timeout"):
+                    runtime.command([os.sys.executable, "-c", code], timeout=0.5)
+            with self.assertRaises(ProcessLookupError):
+                os.kill(int(pid_path.read_text()), 0)
+
     def test_stopped_requires_no_main_process_and_an_empty_service_cgroup(self):
         controller = runtime.SystemController({})
         cases = [({"ActiveState": "inactive", "MainPID": "0", "ControlGroup": ""}, True),
