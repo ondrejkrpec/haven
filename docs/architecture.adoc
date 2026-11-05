@@ -35,7 +35,7 @@ Automatic deployment will initially be limited to the proposed `haven-health` de
 |H0.4 |Implemented locally: Antora documentation build, public check workflow, secret scan and link checks. Automatic local push checks replace unavailable GitHub Actions.
 |H0.5 |Accepted locally: fresh public clone, newly installed dependencies, independent private instance and public build checks. See link:h0.5-acceptance.adoc[acceptance and H1 handoff].
 |H1.1 |MIT selected; public/private GitHub remotes and source history exist. link:h1.1-publication.adoc[Local push checks] replace unavailable Actions with the owner's agreement.
-|H1 |Host/private administration, model access, bounded service/recovery and owner-only Telegram text verified; Encrypted off-site backup, isolated application restore and external alerts are accepted; overall H1.10 acceptance remains. Czech voice is deferred. WhatsApp and family sharing are deferred.
+|H1 |Host/private administration, model access, bounded service/recovery and owner-only Telegram text verified; encrypted off-site backup, isolated application restore and external alerts are accepted; overall H1.10 acceptance passed on 2026-11-05 for this existing deterministic pilot. Czech voice is deferred. WhatsApp and family sharing are deferred.
 |H2 |Controller adapter, separate roles, full executor isolation, negative access tests and review lifecycle.
 |H3 |Bounded automated repair and deployment with rollback.
 |===
