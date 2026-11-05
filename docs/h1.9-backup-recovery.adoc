@@ -41,13 +41,17 @@ A backup is accepted only after all of these succeed:
 
 `accepted.json` records capture time rather than upload completion time. A success heartbeat follows acceptance. Credentials or storage failures before capture do not stop Nora. Handled failure and `ExecStopPost` clean private staging; boot recovery retries a pending resume. Synthetic stop/SIGKILL/real-systemd recovery and cleanup passed. Physical power loss was not simulated.
 
-An uncertain upload is never repeated automatically and remote locks are not erased. Inspect its protected `run.json`, then use the explicit root operation:
+A timed-out subprocess first receives SIGINT and has 20 seconds to exit and release its lock before forced termination. The operation remains failed with `command_timeout`, even if cleanup exits successfully; snapshot acceptance still requires reconciliation.
+
+An uncertain upload is never repeated automatically. Repository locks are never cleared automatically. Inspect its protected `run.json`, then use the explicit root operation:
 
 [source,sh]
 ----
 sudo env PYTHONPATH=/usr/local/lib/haven-backup \
   python3 -m scripts.backup_runtime reconcile
 ----
+
+If an interrupted restic process leaves a lock, inspect its exact identity, host, age and owning PID under maintenance exclusion. Only after establishing that the owner is gone and no repository operation is active may an operator use standard `unlock`; never use `--remove-all` as a retry strategy. Unlocking is not snapshot acceptance: continue with reconciliation of the original run. The pinned https://github.com/restic/restic/blob/v0.19.1/cmd/restic/cmd_unlock.go[restic 0.19.1 implementation] distinguishes stale-lock removal from forced removal.
 
 Reconciliation searches only that run's exact tag/host, verifies any completed snapshot and restores it before acceptance. No matching snapshot closes the interrupted run without creating a new backup. A failed integrity/restore check preserves the uncertainty for operator review.
 

@@ -29,6 +29,7 @@ STATE = Path("/var/lib/haven-backup")
 CONFIG = Path("/etc/haven-backup")
 LOCK = Path("/run/lock/haven-maintenance.lock")
 TOOLS = Path("/usr/local/lib/haven-backup")
+INTERRUPT_GRACE_SECONDS = 20
 IDENTIFIER = re.compile(r"[0-9a-f]{64}")
 URL = re.compile(r"https://hc-ping\.com/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}")
 
@@ -138,13 +139,25 @@ class PauseJournal:
 
 
 def command(argv, *, timeout=30, cwd=None, env=None):
-    # Keep descriptor/credential data out of inherited environments and all output.
-    result = subprocess.run(argv, cwd=cwd, env=env or {"PATH": "/usr/sbin:/usr/bin:/bin", "LANG": "C.UTF-8"},
-                            stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
-    if result.returncode != 0:
-        raise CommandError(result.returncode)
-    require(len(result.stdout) <= 8 * 1024 * 1024, "command_output_limit")
-    return result.stdout
+    # Give restic time to release its lock before forcing a timed-out process down.
+    with subprocess.Popen(argv, cwd=cwd,
+                          env=env or {"PATH": "/usr/sbin:/usr/bin:/bin", "LANG": "C.UTF-8"},
+                          stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE) as process:
+        try:
+            output, _ = process.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            process.send_signal(signal.SIGINT)
+            try:
+                process.communicate(timeout=INTERRUPT_GRACE_SECONDS)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.communicate()
+            raise CaptureError("command_timeout") from None
+        if process.returncode != 0:
+            raise CommandError(process.returncode)
+    require(len(output) <= 8 * 1024 * 1024, "command_output_limit")
+    return output
 
 
 class SystemController:
