@@ -195,7 +195,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-02: scope and the read-only revision audit have supported results. Steps 3–8 remain pending and H1 is not yet accepted as a whole. Each step must finish its checks, source PR workflow, affected documentation publication and cleanup before the owner authorizes the next step.</p>
+<p>Status, 2026-11-05: H1 is accepted for the existing single-VPS deterministic pilot. All eight steps have supported results, with earlier evidence explicitly identified below. The owner authorized completion of the remaining H1.10 work in one instruction on this date, replacing the earlier requirement to stop for a separate instruction between steps. H2 has not started.</p>
 </div>
 </div>
 </div>
@@ -287,37 +287,37 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">2. Revisions</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Bind deployed components/configuration to exact checked public/private revisions.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Read-only audit passed; verify documentation delivery at this step&#8217;s handoff.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Passed on 2026-11-02 and repeated on 2026-11-05 after the backup controller fix.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">3. Telegram and policy</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Review sender authorization, allowed/refused operations, restart replies and zero added model usage.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Passed: four fresh owner messages and a post-reboot reply; unchanged native sender-denial evidence reused.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">4. Service and host restart</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Verify the current combined service, private web, backup and monitor stack returns without hidden repairs.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Passed: automatic recovery after SIGKILL and a real host reboot; services, access and timers returned.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">5. Failure and quota recovery</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Review deterministic credential-independent recovery and applicable isolated failure tests with their limits.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Passed: fresh deterministic crash recovery plus reviewed unchanged H1.5 synthetic quota/authentication evidence.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">6. Backup and monitoring</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Review exact restore evidence, current accepted backup age, timers, recovery journal and external monitoring.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Passed: interrupted run reconciled, fresh verified backups, clean pause/work state and successful monitoring; H1.9 isolated restore/email evidence reused.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">7. Access and runbooks</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Check private access boundaries and usable current administration/recovery instructions.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Passed for the enrolled owner: SSH/HTTPS, exact web hashes and source-path denials; unperformed identities/IPv6/rescue scenarios retained.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">8. H1 handoff</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Record scenario results, unresolved findings, accepted limits and the H2 boundary; decide overall H1 acceptance.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Pending.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accepted for this pilot, 2026-11-05; broader v0.1 and H2/H3 remain open.</p></td>
 </tr>
 </tbody>
 </table>
@@ -374,6 +374,45 @@
 </table>
 <div class="paragraph">
 <p>The audit reads only declared source/configuration inputs and package metadata. It does not read credential values, invoke a provider, restart services or start a backup/Telegram poller. OS package auditing, Telegram delivery, host restart and disaster-recovery behavior remain separate scenarios. Web publication has its own exact source manifests and delivery receipts; it is not evidence that every component was deployed from the newest documentation commit.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_final_combined_acceptance_2026_11_05"><a class="anchor" href="#_final_combined_acceptance_2026_11_05"></a>Final combined acceptance, 2026-11-05</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The fresh read-only revision audit matched the pinned Hermes source and the selected deployed files, native configuration, systemd definitions and dependency versions. The backup timeout fix was merged in <a href="https://github.com/ondrejkrpec/haven/pull/32">PR 32</a> and deployed through the explicit backup playbook under maintenance exclusion. Exact source pairs, hashes, timestamps and reproduction commands remain in private acceptance evidence.</p>
+</div>
+<div class="paragraph">
+<p>Four new owner messages produced the two permitted operations and two refusals. The owner confirmed their replies; the private audit independently recorded the expected decisions with zero added usage. Automatic service recovery after a killed main process and a real host reboot passed. A new owner status reply after reboot confirms transport recovery. Aggregate model-call, token and cost counters remained unchanged throughout. Package and access-file hashes were unchanged by the reboot, and private web/snapshot, backup recovery and monitoring returned without manual service repairs.</p>
+</div>
+<div class="paragraph">
+<p>A failed restore from 2026-11-03 had left one run awaiting reconciliation and one orphaned restic lock. Its exact host/PID and the absence of a live owner were checked before standard stale-lock removal. Full data verification and exact restoration then accepted the original snapshot; no upload was repeated. Fresh production backup and monitoring passed afterwards. The first failure&#8217;s opaque exception does not establish its original cause. Separately, regression tests reproduced the controller&#8217;s immediate kill on subprocess timeout; the fix gives SIGINT cleanup 20 seconds, reaps an unresponsive process and still fails the timed-out operation. It never clears locks or accepts snapshots automatically.</p>
+</div>
+<div class="paragraph">
+<p>The current read-only HTTPS pages match their publication manifests; attempts to retrieve configuration or traverse outside the static roots are refused. Tailscale Serve retains the two private listeners without Funnel. Owner-only access inspection and earlier client acceptance do not establish a new test from another tailnet identity or public IPv6.</p>
+</div>
+<div class="sect2">
+<h3 id="_reused_evidence_and_limits"><a class="anchor" href="#_reused_evidence_and_limits"></a>Reused evidence and limits</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>H1.6/H1.6.1 supply the earlier live denied-sender and native sender/group/administration boundaries; their deployed code and configuration remain unchanged. The four owner operations and post-reboot response were tested afresh.</p>
+</li>
+<li>
+<p>H1.5 supplies the pinned synthetic quota/cooldown, terminal-authentication and restart-safe worker results: 107 passed and one Windows-only skip on the isolated Ubuntu run. These tests were reviewed rather than rerun or relabeled as a live subscription quota experiment. Coding workers remain disabled.</p>
+</li>
+<li>
+<p>H1.9 supplies the exact isolated application reconstruction, disaster discovery without a VPS receipt, operator/version recovery and owner-confirmed missed-heartbeat email. Current full-data checks, exact snapshot restores, backup freshness, timers, pause recovery and successful monitor runs were checked again.</p>
+</li>
+<li>
+<p>Billing/region records, independent recovery-material storage, Scaleway account MFA and broader clean-host/rescue/access scenarios remain explicit owner or future-work records. Actual provider quota exhaustion/revocation/refresh and every installed wheel byte remain unverified. No OS update, account enrollment, firewall change or expansion of model/worker permissions was performed.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This closes H1 for the accepted pilot. H2 must implement the controller/executor boundary, role authorization and review lifecycle before coding tools or delegated host maintenance can be enabled. H3 owns bounded autonomous deployment. A new VPS installation, another independent live instance and macOS migration remain outside this acceptance.</p>
+</div>
 </div>
 </div>
 </div>
