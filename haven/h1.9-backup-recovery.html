@@ -290,13 +290,19 @@
 <p><code>accepted.json</code> records capture time rather than upload completion time. A success heartbeat follows acceptance. Credentials or storage failures before capture do not stop Nora. Handled failure and <code>ExecStopPost</code> clean private staging; boot recovery retries a pending resume. Synthetic stop/SIGKILL/real-systemd recovery and cleanup passed. Physical power loss was not simulated.</p>
 </div>
 <div class="paragraph">
-<p>An uncertain upload is never repeated automatically and remote locks are not erased. Inspect its protected <code>run.json</code>, then use the explicit root operation:</p>
+<p>A timed-out subprocess first receives SIGINT and has 20 seconds to exit and release its lock before forced termination. The operation remains failed with <code>command_timeout</code>, even if cleanup exits successfully; snapshot acceptance still requires reconciliation.</p>
+</div>
+<div class="paragraph">
+<p>An uncertain upload is never repeated automatically. Repository locks are never cleared automatically. Inspect its protected <code>run.json</code>, then use the explicit root operation:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo env PYTHONPATH=/usr/local/lib/haven-backup \
   python3 -m scripts.backup_runtime reconcile</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>If an interrupted restic process leaves a lock, inspect its exact identity, host, age and owning PID under maintenance exclusion. Only after establishing that the owner is gone and no repository operation is active may an operator use standard <code>unlock</code>; never use <code>--remove-all</code> as a retry strategy. Unlocking is not snapshot acceptance: continue with reconciliation of the original run. The pinned <a href="https://github.com/restic/restic/blob/v0.19.1/cmd/restic/cmd_unlock.go">restic 0.19.1 implementation</a> distinguishes stale-lock removal from forced removal.</p>
 </div>
 <div class="paragraph">
 <p>Reconciliation searches only that run&#8217;s exact tag/host, verifies any completed snapshot and restores it before acceptance. No matching snapshot closes the interrupted run without creating a new backup. A failed integrity/restore check preserves the uncertainty for operator review.</p>
