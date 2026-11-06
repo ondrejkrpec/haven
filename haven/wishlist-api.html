@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist v1: proposed interface and implementation units · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-api.html">Wishlist interface and implementation units</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="wishlist-feasibility.html">Wishlist direct-fetch feasibility</a>
+    
+  </li>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Wishlist v1: proposed interface and implementation units</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-11-06: concrete implementation proposal. Request/command shape validators and an offline extraction probe exist; no wishlist server, database, scheduler or Telegram handler is installed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_local_boundary"><a class="anchor" href="#_local_boundary"></a>Local boundary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Propose a Python domain process that exclusively owns SQLite writes. Use Linux Unix-domain stream sockets and kernel peer credentials, with separately permissioned ingress and collector sockets. Map exact allowed peer UIDs to roles in operator configuration, never to role claims in a JSON body. A local socket alone is not authentication. The model interpreter must run under a separate identity without either socket or database access; a Hermes profile alone cannot provide this separation.</p>
+</div>
+<div class="paragraph">
+<p>Use bounded UTF-8 JSON frames with a 64 KiB limit, nesting limit 32, duplicate-key and non-finite-number rejection, fixed socket deadlines and bounded connections. Reject extra fields. These transport checks remain implementation work. No general HTTP framework or broker is required for this first interface.</p>
+</div>
+<div class="paragraph">
+<p>Trusted ingress derives source fields from the admitted native Telegram event. Require an enrolled human owner, private chat, and matching user/chat identity. Recheck this in the domain service before owner-scoped operations. The source object cannot come from model output. Keep additional users disabled until enrollment and cross-user denial tests are accepted.</p>
+</div>
+<div class="paragraph">
+<p>The proposed wire envelope is <a href="_attachments/schemas/wishlist-request-v1.schema.json" class="xref attachment">request schema v1</a>. The model produces only its <code>$defs/command</code> object; trusted ingress adds <code>protocol_version</code>, <code>request_id</code> and <code>source</code>. <code>scripts/wishlist_contract.py</code> exposes separate shape validators. Schema validation does not prove sender identity, owner access, safe fetch destinations or future timestamps. Timestamp validation requires the supplied format checker; the schema&#8217;s <code>format</code> keyword alone is insufficient with the existing minimal dependency set.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_operations"><a class="anchor" href="#_operations"></a>Operations</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 37.5%;">
+<col style="width: 37.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Operation</th>
+<th class="tableblock halign-left valign-top">Arguments</th>
+<th class="tableblock halign-left valign-top">Result and behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wishlist.add</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTPS URL; optional label, purpose, purchase mode, recipient and note</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Commit the entry and source-shop permission first. Missing classification becomes <code>needs_details</code>; fetching is queued independently. A blocked or unsupported source does not undo entry creation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wishlist.list</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Optional state/purpose, limit up to 50 and opaque cursor</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return only the caller&#8217;s entries, latest observation time and collection status. Default state selection is active and paused. Bind pagination cursors to the owner and filter.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wishlist.get</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry ID</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return one owner-scoped entry and bounded recent observations; foreign and missing IDs have the same <code>not_found</code> result.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wishlist.update</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry ID, expected version and explicit field patch</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Update supplied fields only. <code>null</code> clears recipient/note. Contradictory gift/recurring details require clarification; they never silently change another field. Changing a source URL is outside this operation&#8217;s v1 scope.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wishlist.record_purchase</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry ID, expected version, optional explicit purchase timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A one-time item/gift becomes purchased. A recurring item pauses for one calendar month in the instance time zone, clipping to the last valid day. If purchase mode is unknown, ask first. Default timestamp comes from the service clock.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wishlist.pause</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry ID, expected version, offset-bearing <code>paused_until</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Require a future instant, stop scheduling and invalidate outstanding collection admission. Keep history.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wishlist.resume</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry ID and expected version</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resume a paused entry and make it due for collection. Purchased entries require a later explicit reopening design; do not silently reopen them.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Store entry lifecycle (<code>active</code>, <code>paused</code>, <code>purchased</code>), classification completeness and collection status separately. Collection status includes <code>pending</code>, <code>ok</code>, <code>blocked</code>, <code>unsupported</code>, <code>failed</code> and <code>stale</code>. A saved entry can therefore report successful intake and a failed source independently. Diagnostic state changes do not overwrite a successful historical observation.</p>
+</div>
+<div class="paragraph">
+<p>The service generates opaque entry IDs. User-facing field/state mutations increment the entry version; price arrivals do not. Stale expected versions produce <code>conflict</code> without modifying the entry. Resolve vague references such as "the pan" against the owner&#8217;s entries and ask if several match. Pending clarification belongs to a durable owner/chat record tied to the entry/version; unrelated messages must not answer it accidentally.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_receipts_and_responses"><a class="anchor" href="#_receipts_and_responses"></a>Receipts and responses</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Derive <code>request_id</code> from a canonical encoding of the deployment&#8217;s bot identity, platform, user, chat and message ID. Include the original message digest in <code>source.text_sha256</code>; do not store the raw message in diagnostic logs. The service recomputes the request identity from trusted context and uses a unique receipt key. Message edits are not new v1 operations; a changed body under the same request ID is a conflict.</p>
+</div>
+<div class="paragraph">
+<p>Atomically commit entry changes, domain events and the response receipt in one short database transaction. A repeated identical envelope replays the stored response; a changed command/source digest under the same ID does not execute. A failed or uncertain response delivery never rolls back a committed entry. This establishes operation idempotence, not exactly-once Telegram delivery. Do not hold a database write transaction while calling a model or fetching a page.</p>
+</div>
+<div class="paragraph">
+<p>Responses carry <code>protocol_version</code>, <code>request_id</code>, a fixed result code, whether a write committed, entry ID/version when applicable, and bounded data or clarification fields. Codes are <code>ok</code>, <code>needs_clarification</code>, <code>conflict</code>, <code>not_found</code>, <code>invalid_request</code>, <code>denied</code> and <code>unavailable</code>. An incomplete add may return <code>needs_clarification</code> with <code>committed=true</code>. Do not expose SQL errors, peer configuration, credentials or another owner&#8217;s existence. Escape shop/user text for the selected Telegram formatting mode.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_collection_and_model_interfaces"><a class="anchor" href="#_collection_and_model_interfaces"></a>Collection and model interfaces</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The scheduler asks the domain service to enqueue due work; it does not edit SQLite directly. Start with a systemd timer outside Hermes cron, an independent single-dispatch lease and a small SQLite job table. Exact service accounts, timer expression, queue limits and resource bounds belong to implementation configuration.</p>
+</div>
+<div class="paragraph">
+<p>A collector claims a bounded job and reports a result on its role-specific interface. Bind results to the current job, attempt, offer, source-URL digest and collection generation. Reject stale, replay-conflicting or unsolicited results. Pausing/purchasing invalidates pending admission so a delayed success cannot reactivate an entry. Store attempt status, HTTP status, observation time, parser/source version and available retry-after information; do not automatically retry 403/429 in a tight loop.</p>
+</div>
+<div class="paragraph">
+<p>Before network use, validate every destination/redirect and prevent access to private/local addresses, including DNS rebinding and proxy inheritance. The offline probe implements none of this network boundary. Accepted observations need shop-specific checks for exact variant, currency, quantity, membership/coupon conditions and price consistency; a generic extracted candidate is not yet accepted evidence of a deal.</p>
+</div>
+<div class="paragraph">
+<p>For natural-language intake, first evaluate a separate bounded no-tools Hermes interpreter against the pinned runtime. It receives only the message and necessary owner-filtered context and returns either a command proposal or clarification. Validate its output independently; no fallback enables the ordinary agent. On quota/provider failure, deterministic URL intake/list operations remain available. Do not add wishlist model calls inside the current independently guarded Telegram process. A provider request, credential delivery and new ingress behavior need their own scoped acceptance.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_implementation_units"><a class="anchor" href="#_implementation_units"></a>Implementation units</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 42.8571%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Unit</th>
+<th class="tableblock halign-left valign-top">Work</th>
+<th class="tableblock halign-left valign-top">Acceptance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W1: domain state</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SQLite migrations, owner-scoped entries/offers/events, command handling and receipts</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cross-owner denial, duplicate/conflicting receipts, incomplete intake, purchase/pause/resume, version conflicts and calendar boundaries.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W2: local service and ingress</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Peer-authenticated bounded sockets, deterministic Telegram operations and durable clarification</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unauthorized peer/role denial, malformed frames, correct owner identity, escaped replies, unchanged native guard and commit-before-confirmation after restart.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W3: collection</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restricted fetch process, first directly verified adapter, job admission and daily scheduling</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Safe redirects/DNS, exact variant/conditions, blocked source persistence, bounded retry, stale result rejection and continuation after restart without model calls.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W4: operations and recovery</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Packaging, systemd limits, dashboard freshness, bounded logs and explicit backup capture</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Measured resource headroom with Hermes/backups, consistent database restore, version compatibility and rollback that preserves history.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W5: bounded language interpretation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Separate no-tools model identity and validated command proposals</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Scoped provider check, quota/error fallback, no database/tool/host access and no identity selection by model output.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>These are implementation units within the first-release design, not a requirement to expose half-tested services in production. Deterministic collection can start before W5 if explicitly accepted as the initial usable slice. Cross-shop discovery, recommendations, Gmail, other users, coding tools and automatic host maintenance remain later stages.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

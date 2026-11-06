@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "1e689a1d59549e618a20e3e34bcb9a6089ce17d7",
-  "checked_at_utc": "2026-11-06T17:10:26.524367+00:00",
+  "source_revision": "f2c1a5b12d60a5fa0b69cc9f9c211ea10bb49c97",
+  "checked_at_utc": "2026-11-06T17:53:38.679298+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -76,168 +76,184 @@
       "sha256": "aa9a1df0bd3f102d23eb64f7625bf8c6db14d14011b73737f2c928813709591c"
     },
     {
+      "path": "haven/_attachments/research/wishlist/feasibility.json",
+      "sha256": "69131d7b8f25127b63b585a0d1e263c6a56a6c85afada34226df51c59b4aaea2"
+    },
+    {
       "path": "haven/_attachments/schemas/instance-v1.schema.json",
       "sha256": "93b62cddad82fdbe91a2a3aef79453b953ba9746ec6b38e3f541a51c3e6dc79d"
     },
     {
+      "path": "haven/_attachments/schemas/wishlist-request-v1.schema.json",
+      "sha256": "aa6bf6ecb69ef0c73bc9cf93fda0da8de9e6145186e1557d6d8f2fe63774acb9"
+    },
+    {
       "path": "haven/adr/0001-configuration-validation.html",
-      "sha256": "0d4ec1531b83f7ad6e072cf10349d6c198d53f49c902f234cc4537790ecd0e12"
+      "sha256": "3cfc936f4939818a6e5a94a35e43c46c06463e8c8e10ff0e1a15d4caf00aff9b"
     },
     {
       "path": "haven/adr/0002-documentation-and-checks.html",
-      "sha256": "6f3ea09bcba40576b26bff2864d019a11ac12b465e4fecbda827577a8796178e"
+      "sha256": "5e4ee50699930eb140b99349c39be802505b36a9ef9695e20bf04256d597d92b"
     },
     {
       "path": "haven/adr/0003-bounded-host-bootstrap.html",
-      "sha256": "b7480d74fa542f90fb1fbde266eb1b1d614d370b0c300f6211a47a024443220a"
+      "sha256": "74cb4d95085b5d3fc5d9ff6da8a9ba438e897ce229412f1fcec900a92b9afd8e"
     },
     {
       "path": "haven/adr/0004-supervised-coordinator.html",
-      "sha256": "82cc90af3a2c6949595dc8acbd9ac11f023d65966e547dce36141efd6f12624e"
+      "sha256": "8b410a088d6473aaca4bdc10418c3b45c7ae9acbdcb331457747d4ca5cda6e46"
     },
     {
       "path": "haven/adr/0005-private-whatsapp-text.html",
-      "sha256": "79b0df9b4e1b7e698b522bbf346508e638a4a448a21c162198aee0364157feae"
+      "sha256": "e8fc6a9dffd3da5f49cb4f3ce42ee57334974c192f8261e583012ae8f1e056a6"
     },
     {
       "path": "haven/adr/0006-personal-and-family-data.html",
-      "sha256": "aeb53990d3150a94bd7ffaea86fd22f60c2a56b522042ed09d9212c1ae291366"
+      "sha256": "996a6eef5088928cf9c3b690a73d7f5cbd42fa90c378b241125638cd897d6219"
     },
     {
       "path": "haven/adr/0007-telegram-first.html",
-      "sha256": "8f72c7fde8aacea9d83b40466e9c69fc9cf3b3b0350d8086df30196ad114735c"
+      "sha256": "e327a93c2ef230b6466eace6d8aa115534c1fb54ebc7cfe03b2e96ad7b3a290b"
     },
     {
       "path": "haven/adr/0008-deterministic-capabilities.html",
-      "sha256": "502c9ba46c1efd7c1fd2298f3bc6463afe1ff20d790b69cdc544cc3d6b2503cc"
+      "sha256": "e629ac70eb99156264f49dbb983e6548de4925df3860538a9c80b93d00771259"
     },
     {
       "path": "haven/adr/0009-read-only-web-access.html",
-      "sha256": "730e45dfbd751cc6b6336dd7791c0ffa57cc27c4c2dccd6878400b89619dae92"
+      "sha256": "87eec9fa571ac7515bb9f09bdd7d7b86a39ca112dfced48dfb802c9c02b58a21"
     },
     {
       "path": "haven/adr/0010-offsite-backup-providers.html",
-      "sha256": "d2bd01482a227f3e70f70048bc4fe77d1b55e3434f9bd3c14cb553af6bbe4ad4"
+      "sha256": "d9d1c4496a64b3843dae557614fba905a7819d5ae2655fa399efd86b037d03d4"
     },
     {
       "path": "haven/adr/0011-trusted-backup-controller.html",
-      "sha256": "e2a8661c05c72aa74958b7b9e0466a58d41688f18b828a29740e36222c61c291"
+      "sha256": "882b9a09a48dc365ec5b62212ebeb868bb6afdcd277daf36dc99f5a7b84a8eb0"
     },
     {
       "path": "haven/adr/0012-modular-domain-services.html",
-      "sha256": "a55ef09fa97fb13c3049daeaa48b960d7801e9d2a02bd1989920bba7b2628490"
+      "sha256": "376f842a2b94651c79bddb457c0e665a98789a3cee2ee4e83c3ff361582678bf"
     },
     {
       "path": "haven/architecture.html",
-      "sha256": "32a21afe2947dccebffd199d6c6cec373844f796f52db448f574adc2bba8b787"
+      "sha256": "a01b02fc26e66b42be4b6495dfbeec53d2ce2c2b615c144032f74b11afe69548"
     },
     {
       "path": "haven/configuration.html",
-      "sha256": "92c88559b105e60b12a0f10dfd3559d748c7a90ea7e215c8344444851aa40d42"
+      "sha256": "e8d6f1c4ef4895b0c7b408a06ea2d5d24b5391330b0babeeb7950037708c24d4"
     },
     {
       "path": "haven/documentation.html",
-      "sha256": "f18e7ab2dcb3924a48a2f5c9213982c11e00bfc76d2fa0fd2478d641cac7b177"
+      "sha256": "e1dd5a82f917ebabf6e40369699e9545ebd9d09b029907b8d2cba2f4d8d2b99c"
     },
     {
       "path": "haven/family-conversations.html",
-      "sha256": "420c1d137707752366e822c527b2ab2fea393c471005b84319c3eb031b04d42d"
+      "sha256": "cd64ff762fc2ec240a750960fa91191f77f39818166d95c86caaa93c5972da70"
     },
     {
       "path": "haven/h0.2-acceptance.html",
-      "sha256": "e6079715daa9bddcb88f94b876e0e511a6bcc186ef0171508bbb37a003a6b1f3"
+      "sha256": "404fd6beb82d7a71e228ee968441e44e360b0a3512fbbab285293e9e97573e48"
     },
     {
       "path": "haven/h0.4-acceptance.html",
-      "sha256": "00014a74467bf7db7a0cae5cae55b29c08fb9d7a2a82d12841fc7b20a00c35e8"
+      "sha256": "7b48d4eff738a72f954d29d875f5b875949ec8b73ef2dbc62b73e4bdbe6be376"
     },
     {
       "path": "haven/h0.5-acceptance.html",
-      "sha256": "f23978adfcba2abbcf3206234546984a4d6851cbf3826f1ade468fc4bafc0f81"
+      "sha256": "9123765838641305096e00c5f940aea472fce4f5c5fd06da6173b9a9402229b2"
     },
     {
       "path": "haven/h1-prerequisites.html",
-      "sha256": "3a2c1b14c952df92544751a8369f407c3eef15b74d9860454ad80a2885f2ea23"
+      "sha256": "2dbdf0383a970ef8ce26d35da2ef39db5e42e0d19a40222e95ef2c6995119d38"
     },
     {
       "path": "haven/h1.1-publication.html",
-      "sha256": "0e712a23d6230b2f18c091bba311113f1245b5b04eb224370b69c5f40b1d6757"
+      "sha256": "8919d187cba23bd611387cb4b29fe177df172e1404192e427946d6dc8d23f437"
     },
     {
       "path": "haven/h1.10-acceptance.html",
-      "sha256": "fc3f230c3f2f4fe087a18de6fadb70ef571eaca9e9aa55b65db1796df1002489"
+      "sha256": "177a4eecffec5dda91df03f9d96d284f11b0ed592b006dcf38aefbde3f6e09df"
     },
     {
       "path": "haven/h1.3-bootstrap.html",
-      "sha256": "6d68dc6c0d677eeb8359c42dfab1a1c315d3fea317526125f36717263e923cf0"
+      "sha256": "3f593620af2bbff164db24bb1be95e92d53de56b5da8a692db3812def5205d23"
     },
     {
       "path": "haven/h1.3-first-access.html",
-      "sha256": "abab64dc3225f89610aabf7776402130636b7ffdb4e8e90a9db4d04e0bdefb0f"
+      "sha256": "7b80b259eba11520af70f343ae0dce2faa5b34f4e1239a655ccffbd25710fc89"
     },
     {
       "path": "haven/h1.3-private-access.html",
-      "sha256": "8ee9a362f2bcd906737ed3506debd6e68869afa09fe4fe5a830ebc894c294ddd"
+      "sha256": "33caf2d37425fab7178b8ac513152b2df6e0c5007500db2af42e8e2259982b50"
     },
     {
       "path": "haven/h1.4-model-configuration.html",
-      "sha256": "dfa947027a9593f98b6763016085fe8f4a4d423a3f0cfb2b2c9e0820bb63482c"
+      "sha256": "5c92a52f93badaef3705134deb4206368a9b5d5935cdb761bef3a54c1c31329c"
     },
     {
       "path": "haven/h1.5-service-recovery.html",
-      "sha256": "1f539e2a4af5fd4e64710777375a13e176df00ed574041c6f47b9ad2688b39a1"
+      "sha256": "6e84aee1245dbadbe40ca54a7647b3cc8b1abe8ed9103e04898d9f6edfa908bd"
     },
     {
       "path": "haven/h1.6-agent-platform-assessment.html",
-      "sha256": "d2ea6f8464ab25b305460760aefd0e53b7f5630c39a9dab3b94b022cf164174f"
+      "sha256": "7751c14dc8ae1224c5ce1da7abb68c452cade8120480b9917a9c37a826dbdedd"
     },
     {
       "path": "haven/h1.6-telegram.html",
-      "sha256": "28dd14238e626cf9da4c7449e64fcd380064d095760dd60d802d963798cbad10"
+      "sha256": "70d8c8f80ab4f47ed3600201271083c98bfbf9e5564b818fe7a95f2cd656bdea"
     },
     {
       "path": "haven/h1.6-whatsapp.html",
-      "sha256": "e321eb4fa2ee23b8afba78b182fb87e6e601d5668958bfed05aaf97f2aaafe70"
+      "sha256": "a54cd20d30a42a11438d22523172534d83ea128a606b631995fa3a809f163a1c"
     },
     {
       "path": "haven/h1.6.1-capabilities.html",
-      "sha256": "7ec540cfdafd84d990b35924542aedf6d0cb640d5450fa3ce484e145d69873f3"
+      "sha256": "791d606b9dbb4323f2d03a6910f2bc41188c0e7ad9de84404c6f7b420c31b715"
     },
     {
       "path": "haven/h1.7-czech-voice.html",
-      "sha256": "73938e1b75f87e9af9e804d9c93fc4c16607e9c9d5d4d20b01868e3612e519e2"
+      "sha256": "464adef576d6c6af10d33ed15d9291c350fd6ea2e2ba9a3259074db618bd561c"
     },
     {
       "path": "haven/h1.8-web-access.html",
-      "sha256": "609036c85a61bcbacbcef2a7ad7aadb85cb0c2547a17149963f3d9a4cc8c318c"
+      "sha256": "bfe72792704d5274b6e93034ec40b14b9ace0074e17fddb5a6aa2be61c3dda5d"
     },
     {
       "path": "haven/h1.9-backup-recovery.html",
-      "sha256": "b4429f07bcea57a58120eeba5f90d29e5e9f4ebadf69425315d360a7270945ea"
+      "sha256": "77873065f7f3a3097ecf793c6846f12d8a4560170d5ed6d2accc17c10ea5b939"
     },
     {
       "path": "haven/h1.9-provider-options.html",
-      "sha256": "a71a09350d821bdc09b0c91533597c0e2cf5dd1d90fb9da2347e8b0b43890a21"
+      "sha256": "428b0767b8ad7741b319caea5057fa388cab260315dc19dc57d837aea5d3cf0d"
     },
     {
       "path": "haven/h1.9-scaleway-healthchecks.html",
-      "sha256": "cc31aad3c5511142f081e8b9682354645a4b4e7b4ff79a63b43c099ba82c701e"
+      "sha256": "c77b41b4d45bb62cde157c8ca4da0cb631989f448a8f50fbc721da15d0424a22"
     },
     {
       "path": "haven/index.html",
-      "sha256": "79b04c6ed90c9d87e8649b0a957797c5adbdeff42c4b6ac62af56bb2819efdd6"
+      "sha256": "928f5a8b92adcf79f00dee0feefd56138cb789a1e225c974aaf2e487276c21ab"
     },
     {
       "path": "haven/local-development.html",
-      "sha256": "a9ec93819a5f588c490ab736238eab26cb0ec2a5bcd2110bb1bcf5b7978a5b14"
+      "sha256": "d715d0a71af52602d45b37841da0642147ff12901eb6e958474e5db808e77031"
     },
     {
       "path": "haven/research/h0.1/README.html",
-      "sha256": "3148152c82298181fa96a6d2210ca68283ead27414f2d23d28bd07a21aa6021f"
+      "sha256": "c809a3878035ce26da9266f24d986b5fdd07054c2d17e885b67365820172ffca"
+    },
+    {
+      "path": "haven/wishlist-api.html",
+      "sha256": "2f94e8d555f78b4db57ec67c6757aa8de5ac36cac953c95cfda538c8c64f29cc"
     },
     {
       "path": "haven/wishlist-design.html",
-      "sha256": "b30aa7f24b571eba448a83eaea0da6c038dc9669c2fff904782cd7a9a023b73a"
+      "sha256": "c53a2c2a1a32e5bc2f9a53be1fc80fe508b8044888da76b62ffa34d83c600464"
+    },
+    {
+      "path": "haven/wishlist-feasibility.html",
+      "sha256": "cce900e3c5e2894d162ff45d0e8af11de50be93d47fdd2a166b4b61c7147272a"
     },
     {
       "path": "index.html",

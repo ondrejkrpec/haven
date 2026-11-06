@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist: first direct-fetch feasibility check · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-api.html">Wishlist interface and implementation units</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="wishlist-feasibility.html">Wishlist direct-fetch feasibility</a>
+    
+  </li>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Wishlist: first direct-fetch feasibility check</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-11-06: workstation and read-only VPS feasibility. One of three owner-supplied product pages returned usable structured data from the workstation; two returned usable data from the VPS. The third returned HTTP 403 from both origins. The source mapping, personal URLs and local captures remain private. No wishlist service, schedule or model-enabled Telegram operation was deployed.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_method_and_scope"><a class="anchor" href="#_method_and_scope"></a>Method and scope</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Source baseline: <code>1e689a1d59549e618a20e3e34bcb9a6089ce17d7</code>. The probe implementation is identified by its source hashes in <a href="_attachments/research/wishlist/feasibility.json" class="xref attachment">the sanitized receipt</a>; no self-referential commit hash is stored. The receipt is a measurement record, not a CI success or production acceptance.</p>
+</div>
+<div class="paragraph">
+<p>The operator explicitly supplied three HTTPS product URLs outside public sources. A temporary Python standard-library runner issued one unauthenticated GET per source with user agent <code>HavenWishlistFeasibility/0.1</code>, no cookie jar or proxy inheritance, TLS verification, a 20-second socket timeout, a 4 MiB body limit and redirects restricted to the explicitly named HTTPS hosts. The enclosing process had a 55-second deadline. No JavaScript, model, browser session or account login was used. Raw HTML and full source identities stayed outside public Git/build inputs.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 50.0002%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Private source</th>
+<th class="tableblock halign-left valign-top">HTTP</th>
+<th class="tableblock halign-left valign-top">Body bytes</th>
+<th class="tableblock halign-left valign-top">Local result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">200</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">342968</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Product-scoped microdata supplies name, SKU, price, currency and availability. Coupon/membership conditions are not independently verified.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">B</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">429</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1568</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Blocked/rate-limited response; no price inferred.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">C</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">65615</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Access refused; no price inferred.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The first SSH attempt was denied before execution. After the owner made the existing administrator key available, the same bounded GETs plus the offline extractor ran in memory through the verified SSH alias, on VPS Python 3.14.4. No source files, dependencies or services were installed or changed. Raw VPS HTML was not persisted; only result metadata, response digests and private extraction results returned to the workstation.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 50.0002%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Private source</th>
+<th class="tableblock halign-left valign-top">VPS HTTP</th>
+<th class="tableblock halign-left valign-top">Body bytes</th>
+<th class="tableblock halign-left valign-top">VPS result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">200</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">347830</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exact-offer microdata candidate, consistent identity/price/currency/availability with the local observation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">B</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">200</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1165293</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exact-offer JSON-LD candidate matching the requested variant URL, with name, SKU, price, currency and availability.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">C</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">65617</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Access refused; no price inferred. No retry-after header was returned.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>This demonstrates why workstation egress alone is insufficient. It establishes one successful direct extraction for two sources in the intended host environment, not a supported daily service or independently verified promotional conditions.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_repeatable_offline_extraction"><a class="anchor" href="#_repeatable_offline_extraction"></a>Repeatable offline extraction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>scripts/wishlist_extract.py</code> reads a saved response and its original HTTPS URL/status. It performs no network requests or model calls. It selects exact-offer structured data from scoped Product microdata or JSON-LD, preserves variant/query identity, uses decimal money and returns a candidate. It rejects conflicting prices, ambiguous identities, aggregates, unsupported conditions and missing data. It does not execute scripts, follow remote JSON-LD contexts or trust an unrelated recommendation&#8217;s cheaper price.</p>
+</div>
+<div class="paragraph">
+<p>With an explicitly reviewed response stored outside the repository:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.wishlist_extract \
+  --html "$WISHLIST_CAPTURE_FILE" --url "$WISHLIST_SOURCE_URL" \
+  --http-status "$WISHLIST_HTTP_STATUS"
+.venv/bin/python -m unittest tests.test_wishlist_extract tests.test_wishlist_contract -v</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Exit zero means <code>extracted</code>, not "verified deal". Every candidate carries <code>conditions_verification=not_verified</code>. Other results are <code>blocked</code>, <code>unavailable</code> or <code>needs_review</code>, with fixed reasons and no raw exception/source text. HTTP 401/403/429 is handled before parsing; an error page must not become a zero or stale-new price. UTF-8 capture and two-decimal positive prices are the current probe&#8217;s bounded subset, not universal shop/currency support.</p>
+</div>
+<div class="paragraph">
+<p>The 18 synthetic extraction/contract tests passed on Python 3.14.7 and in a fresh Python 3.12.14 environment using the existing hash-pinned runtime dependencies. The minimal dependency set does not register JSON Schema date-time validation automatically; the contract helper supplies a checker for real calendar dates and explicit UTC offsets. Tests deliberately demonstrate that valid JSON shape can still contain an unauthorized owner context or private fetch destination: those denials belong to the future service, not this probe.</p>
+</div>
+<div class="paragraph">
+<p>The live runner is deliberately not a production collector. The future client still needs pinned public destinations, safe redirect/DNS handling, retry-after/backoff, cancellation and current-run authorization. Repeated collection, sustained source access and promotional-condition verification remain unverified.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_decision_for_the_first_implementation"><a class="anchor" href="#_decision_for_the_first_implementation"></a>Decision for the first implementation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Proceed with independent link intake and collection status so blocked sources do not delay durable wishlist data. Start adapters with the two directly demonstrated structured-data paths, then verify repeated collection and shop conditions. Keep the third source visible as blocked/pending; evaluate a permitted feed, supported endpoint or other source separately before claiming automatic support. Do not expand the spike into browser/proxy infrastructure merely to make all three sources appear successful.</p>
+</div>
+<div class="paragraph">
+<p><a href="wishlist-api.html" class="xref page">The concrete interface proposal</a> defines command shapes, owner binding, receipts, clarification, collection admission and implementation units. Actual service behavior, transport security, database restore and Telegram acceptance are future work.</p>
+</div>
+<div class="paragraph">
+<p>References: <a href="https://docs.python.org/3.12/library/urllib.request.html">Python 3.12 urllib</a>, <a href="https://docs.python.org/3.12/library/html.parser.html">HTMLParser</a>, <a href="https://schema.org/Offer">Schema.org Offer</a> and the pinned <a href="https://github.com/NousResearch/hermes-agent/blob/bf0203a794a07aac3ff764972ab9087baa4e4f4e/website/docs/user-guide/features/hooks.md">Hermes admission hook</a>. Context7 had no Python 3.12-specific version; the matching official Python documentation was used for that version. The pinned Hermes hook remains fail-open, so the independent guard remains necessary.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

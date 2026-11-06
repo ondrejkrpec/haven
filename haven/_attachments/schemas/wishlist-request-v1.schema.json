@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:haven:wishlist:request:v1",
+  "title": "Proposed trusted wishlist ingress request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol_version", "request_id", "source", "command"],
+  "properties": {
+    "protocol_version": {"const": 1},
+    "request_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "user_id", "chat_id", "message_id", "text_sha256"],
+      "properties": {
+        "platform": {"const": "telegram"},
+        "user_id": {"type": "string", "pattern": "^[1-9][0-9]{0,15}$"},
+        "chat_id": {"type": "string", "pattern": "^[1-9][0-9]{0,15}$"},
+        "message_id": {"type": "string", "pattern": "^[1-9][0-9]{0,19}$"},
+        "text_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "command": {"$ref": "#/$defs/command"}
+  },
+  "$defs": {
+    "entryId": {"type": "string", "pattern": "^wi_[a-f0-9]{32}$"},
+    "entryRef": {
+      "type": "object",
+      "required": ["entry_id"],
+      "properties": {"entry_id": {"$ref": "#/$defs/entryId"}}
+    },
+    "entryVersion": {
+      "allOf": [
+        {"$ref": "#/$defs/entryRef"},
+        {
+          "type": "object",
+          "required": ["expected_version"],
+          "properties": {"expected_version": {"type": "integer", "minimum": 1}}
+        }
+      ]
+    },
+    "entryFields": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "label": {"type": "string", "minLength": 1, "maxLength": 200},
+        "purpose": {"enum": ["self", "gift"]},
+        "purchase_mode": {"enum": ["once", "recurring"]},
+        "recipient": {"type": ["string", "null"], "minLength": 1, "maxLength": 100},
+        "note": {"type": ["string", "null"], "maxLength": 2000}
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "arguments"],
+      "properties": {"operation": {"type": "string"}, "arguments": {"type": "object"}},
+      "oneOf": [
+        {
+          "properties": {
+            "operation": {"const": "wishlist.add"},
+            "arguments": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["url"],
+              "properties": {
+                "url": {"type": "string", "format": "uri", "pattern": "^https://[^\\s]+$", "maxLength": 4096},
+                "details": {"$ref": "#/$defs/entryFields"}
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "operation": {"const": "wishlist.list"},
+            "arguments": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "state": {"enum": ["active", "paused", "purchased", "all"]},
+                "purpose": {"enum": ["self", "gift"]},
+                "limit": {"type": "integer", "minimum": 1, "maximum": 50},
+                "cursor": {"type": "string", "minLength": 1, "maxLength": 256}
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "operation": {"const": "wishlist.get"},
+            "arguments": {"$ref": "#/$defs/entryRef", "unevaluatedProperties": false}
+          }
+        },
+        {
+          "properties": {
+            "operation": {"const": "wishlist.update"},
+            "arguments": {
+              "allOf": [
+                {"$ref": "#/$defs/entryVersion"},
+                {"type": "object", "required": ["patch"], "properties": {"patch": {"$ref": "#/$defs/entryFields"}}}
+              ],
+              "unevaluatedProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "operation": {"const": "wishlist.record_purchase"},
+            "arguments": {
+              "allOf": [
+                {"$ref": "#/$defs/entryVersion"},
+                {"type": "object", "properties": {"purchased_at": {"type": "string", "format": "date-time"}}}
+              ],
+              "unevaluatedProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "operation": {"const": "wishlist.pause"},
+            "arguments": {
+              "allOf": [
+                {"$ref": "#/$defs/entryVersion"},
+                {"type": "object", "required": ["paused_until"], "properties": {"paused_until": {"type": "string", "format": "date-time"}}}
+              ],
+              "unevaluatedProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "operation": {"const": "wishlist.resume"},
+            "arguments": {"$ref": "#/$defs/entryVersion", "unevaluatedProperties": false}
+          }
+        }
+      ]
+    }
+  }
+}
