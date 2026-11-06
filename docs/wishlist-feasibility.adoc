@@ -50,7 +50,7 @@ The live runner is deliberately not a production collector. The future client st
 
 == Decision for the first implementation
 
-Proceed with independent link intake and collection status so blocked sources do not delay durable wishlist data. Start adapters with the two directly demonstrated structured-data paths, then verify repeated collection and shop conditions. Keep the third source visible as blocked/pending; evaluate a permitted feed, supported endpoint or other source separately before claiming automatic support. Do not expand the spike into browser/proxy infrastructure merely to make all three sources appear successful.
+Proceed with independent link intake and collection status so blocked sources do not delay durable wishlist data. Start adapters with the two directly demonstrated structured-data paths, then verify repeated collection and shop conditions. Keep the third source visible as blocked/pending; evaluate a permitted feed, supported endpoint or other source separately before claiming automatic support. The owner subsequently requested link:wishlist-browser-feasibility.adoc[a bounded ordinary-browser experiment]; both workstation headless modes remained blocked, and no production browser infrastructure was added.
 
 link:wishlist-api.adoc[The concrete interface proposal] defines command shapes, owner binding, receipts, clarification, collection admission and implementation units. Actual service behavior, transport security, database restore and Telegram acceptance are future work.
 

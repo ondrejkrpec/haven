@@ -1,0 +1,46 @@
+= Wishlist: ordinary headless browser experiment
+
+Status, 2026-11-06: the owner requested a bounded browser follow-up to link:wishlist-feasibility.adoc[the direct-fetch probe]. Two ordinary headless Chromium modes were tested on the workstation. Both kept returning HTTP 403 with a human-verification page despite working JavaScript and cookies. No browser service or automatic fallback is selected or deployed.
+
+== Executed experiment
+
+Source baseline: `f2c1a5b12d60a5fa0b69cc9f9c211ea10bb49c97`. link:../research/wishlist/browser-feasibility.json[The sanitized receipt] records versions, timestamps, source hashes, resource samples and limits. Private source C is the same operator-supplied product URL as in the initial probe; its URL, captures and full results stay outside public sources.
+
+Playwright Python 1.64.1 launched Chromium 156.0.8078.4, revision 1248, first as Chromium Headless Shell and then as full Chromium with `channel="chromium"` in new headless mode. Each run had a fresh non-persistent context, JavaScript enabled, cookies available, downloads disabled and Chromium sandbox explicitly requested. No existing user profile, account login or exported storage state was used. Browser child environments contained only temporary home/cache paths, language and executable path. The enclosing process had a 70-second deadline; navigation allowed 30 seconds and observation after DOM load lasted 20 seconds.
+
+[cols="2,1,1,2,2",options="header"]
+|===
+|Mode |HTTP start/end |Cookies before/after |Outcome |Observed readable PSS peak
+|Headless Shell |403 / 403 |0 / 1 |Human-verification page, no product |708644864 bytes (about 676 MiB)
+|Full Chromium, new headless |403 / 403 |0 / 1 |Human-verification page, no product |890341376 bytes (about 849 MiB); samples not all complete
+|===
+
+Browser evaluation confirmed working JavaScript and `navigator.cookieEnabled` in both modes. Neither context received a clearance cookie. Each stayed on the challenge through the 0/2/5/10/20-second checkpoints. The first runner's English-only human-challenge boolean missed the Czech prompt; captured visible text and title established the result, and the retained runner adds the Czech marker. No interaction with the human-verification control was performed.
+
+Memory was sampled for the probe process and its descendants about every 150 ms using Linux `/proc`. RSS peaks were 1148891136 and 1784356864 bytes respectively; summed RSS double-counts shared pages. PSS covered all sampled processes in the shell run, but some full-browser samples were incomplete. These are workstation observations for a challenge page, not guaranteed maximums or measurements on the VPS.
+
+The workstation OS is outside Playwright's officially supported systems, so its installer selected the Ubuntu 24.04 fallback build. This is another reason not to claim server acceptance from these runs. The two downloaded browser trees were roughly 273 MiB and 403 MiB; the separate Python environment was roughly 142 MiB. Only the experimental environment received packages.
+
+== VPS preflight
+
+Read-only inspection found approximately 3.0 GiB available RAM and 2.0 billion free bytes on the filesystem containing `/tmp`. No browser or uv executable was present. The AppArmor unprivileged-user-namespace restriction was `1`. `unshare --user --map-root-user true` failed while writing `uid_map`, exit 1.
+
+No browser was installed or launched on the VPS, and no AppArmor, namespace or system setting was changed. This preflight identifies a sandbox prerequisite to investigate; it is not a direct Chromium startup test and does not establish what the target site would return to a VPS browser. Do not turn this workstation result into a production fetch-capability claim.
+
+== Reproduction inputs
+
+The retained link:../research/wishlist/browser_probe.py[opt-in probe] parameterizes the temporary paths and accepts exactly one explicitly reviewed target. It is a research runner, not a production network boundary. Its optional link:../research/wishlist/browser-requirements.txt[hash-pinned environment] is separate from application and public-check dependencies. The live measurements came from the private runner recorded in the receipt; the retained generalized runner was syntax/lint checked, not claimed as an additional live run.
+
+Prepare a fresh external working directory and a private one-element target JSON list. Set `WISHLIST_BROWSER_WORK`, `WISHLIST_BROWSER_TARGETS` and `PLAYWRIGHT_BROWSERS_PATH` explicitly. After installing the pinned optional environment, use `python -m playwright install chromium --only-shell` for the shell or `--no-shell` for full Chromium. Under a minimal environment, invoke `python research/wishlist/browser_probe.py run-label` or append `chromium` for the full mode. Run with an external process deadline as above. Raw HTML, screenshots and result files stay in the supplied private working directory; do not copy them into public sources or tests.
+
+The generalized runner and lock are retained to make the next scoped experiment reviewable. Public checks never install or launch Playwright and never contact the source.
+
+== Consequence for collection
+
+JavaScript/cookie support alone did not resolve this challenge in either tested headless mode. Cloudflare's https://developers.cloudflare.com/cloudflare-challenges/reference/supported-browsers/[supported-browser documentation] also excludes automated browsers from supported production challenge-solving environments. That describes platform support, not the exact site-specific trigger, which remains unknown.
+
+Keep browser fallback disabled pending a successful, bounded source-access and sandbox design. The next useful diagnostic could be an explicitly approved ordinary visible-browser check with any required human interaction left to the owner; persistence or future automation would still need independent validation. A permitted product feed or a matching product at another approved source are separate options, whose availability is not established here.
+
+For pages that genuinely require client-side rendering and can be accessed normally, an on-demand serial browser worker remains an architectural option. Its process, cookies, network and resource limits must be isolated from Nora and the domain database. This failed source test is not a reason to add an always-running browser or a hosted-browser subscription now.
+
+Primary references: https://playwright.dev/python/docs/browsers[Playwright browser modes], https://playwright.dev/python/docs/api/class-browsertype[launch options], https://playwright.dev/python/docs/browser-contexts[browser contexts] and https://developers.cloudflare.com/cloudflare-challenges/troubleshooting/challenge-solve-issues/[challenge troubleshooting]. Browser contexts separate cookies/storage, not operating-system permissions.

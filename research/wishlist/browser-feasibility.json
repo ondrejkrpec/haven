@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-06",
+  "source_base_revision": "f2c1a5b12d60a5fa0b69cc9f9c211ea10bb49c97",
+  "scope": "two workstation browser reads of one private product URL, fresh guest contexts; no production browser",
+  "retained_files": [
+    {
+      "path": "research/wishlist/browser_probe.py",
+      "sha256": "bcccf657077a1355277b09a0228ac72391e696dbcb68e3c9fe36c3f4b74feda9"
+    },
+    {
+      "path": "research/wishlist/browser-requirements.txt",
+      "sha256": "2b4560caa134b56a1f4e6db54994c8f743a11d09ddf4cd7e2542a3e7f829bf95"
+    }
+  ],
+  "executed_comparison_runner_sha256": "2160a3de4e402668d67bdc31719066083753e4327800eebdc2bfaff0203b5d09",
+  "retained_runner_changes": "Paths and target selection parameterized; two modes supported; Czech human-challenge marker added after the first run; no additional live run claimed",
+  "runs": [
+    {
+      "started_at_utc": "2026-11-06T18:26:26.043452+00:00",
+      "playwright": "1.64.1",
+      "mode": "headless-shell",
+      "sandbox_requested": true,
+      "fresh_context": true,
+      "browser_version": "156.0.8078.4",
+      "model_calls": 0,
+      "initial_status": 403,
+      "final_status": 403,
+      "cookies_before": 0,
+      "cookies_after": 1,
+      "cf_clearance_present": false,
+      "seconds": 20.924,
+      "memory": {
+        "samples": 111,
+        "peak_descendant_rss_bytes": 1148891136,
+        "peak_readable_pss_bytes": 708644864,
+        "all_pss_samples_complete": true,
+        "peak_process_count": 10
+      },
+      "source": "C",
+      "javascript_enabled": true,
+      "cookies_enabled": true,
+      "reviewed_human_challenge": true,
+      "observation_window_seconds": 20,
+      "final_title": "Just a moment...",
+      "result": "blocked"
+    },
+    {
+      "started_at_utc": "2026-11-06T18:29:58.634343+00:00",
+      "playwright": "1.64.1",
+      "mode": "chromium",
+      "sandbox_requested": true,
+      "fresh_context": true,
+      "browser_version": "156.0.8078.4",
+      "model_calls": 0,
+      "initial_status": 403,
+      "final_status": 403,
+      "cookies_before": 0,
+      "cookies_after": 1,
+      "cf_clearance_present": false,
+      "seconds": 21.136,
+      "memory": {
+        "samples": 108,
+        "peak_descendant_rss_bytes": 1784356864,
+        "peak_readable_pss_bytes": 890341376,
+        "all_pss_samples_complete": false,
+        "peak_process_count": 14
+      },
+      "source": "C",
+      "javascript_enabled": true,
+      "cookies_enabled": true,
+      "reviewed_human_challenge": true,
+      "observation_window_seconds": 20,
+      "final_title": "Just a moment...",
+      "result": "blocked"
+    }
+  ],
+  "vps_preflight": {
+    "browser_installed": false,
+    "browser_run": false,
+    "apparmor_userns_restriction": 1,
+    "namespace_command": "unshare --user --map-root-user true",
+    "namespace_exit": 1,
+    "namespace_error": "write failed /proc/self/uid_map: Operation not permitted",
+    "memory_total_kib": 3906228,
+    "memory_available_kib": 3179264,
+    "tmp_free_bytes": 1999990784,
+    "policy_changes": false
+  },
+  "limitations": [
+    "Workstation OS is not officially supported by Playwright; Ubuntu 24.04 fallback browser build was used",
+    "PSS for the full-browser run includes incomplete samples and is not a complete peak bound; RSS double-counts shared mappings",
+    "No CAPTCHA was clicked or solved, no identity modification, no account login or existing session was used",
+    "No browser fetch on the VPS; namespace preflight is not a direct Chromium launch test",
+    "No live acceptance or new application dependency; pinned packages remain optional research inputs"
+  ],
+  "environment": {
+    "python": "3.12.14",
+    "system": "Linux",
+    "kernel": "6.12.112-1-MANJARO",
+    "packages": {
+      "playwright": "1.64.1",
+      "greenlet": "3.5.6",
+      "pyee": "14.0.0",
+      "typing-extensions": "4.16.0"
+    }
+  }
+}
