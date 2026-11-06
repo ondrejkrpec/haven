@@ -1,0 +1,23 @@
+= ADR 0012: Modular Python domain services
+
+Date: 2026-11-06. Status: architecture direction accepted by the owner; implementation and operational acceptance remain pending.
+
+== Context
+
+The next useful feature is a private wishlist that starts collecting prices before the complete multi-agent maintenance workflow exists. Hermes supplies messaging and agent orchestration, but product ownership, price history and purchase state need explicit application rules. The existing deterministic pilot still blocks model, tool and cron-worker execution.
+
+The owner can review Java/Spring designs, but implementation and maintenance are delegated. That familiarity alone does not justify another runtime on the small VPS. No existing Haven integration currently establishes a need for a JVM service.
+
+== Decision
+
+Use Python as the default for Haven integrations. Build the wishlist as a modular domain service with its own SQLite database and a narrow authenticated local interface. Separate modules for application operations, persistence, shop adapters, collection and operational events. The exact transport, dependencies and process layout require an implementation design and feasibility checks.
+
+Nora interprets requests and presents results. Trusted ingress supplies the authenticated principal; the domain service enforces ownership and validates each operation independently of model output. Scheduled price collection runs without a model. A later user receives a separate private wishlist; shared household lists are outside the chosen scope.
+
+Separate deployment units where data ownership, permissions, lifecycle or resource use require them. A role does not automatically require its own service or database. A future domain may use Java when there is a concrete benefit; do not rewrite the accepted Python operations or introduce a general service framework in anticipation.
+
+== Consequences
+
+The first release can persist supplied product links and collect daily observations while cross-shop discovery, deal summaries and executor automation follow independently. link:../wishlist-design.adoc[The staged design] defines the release boundary and acceptance conditions.
+
+The new service needs explicit configuration, source packaging, backup capture, restore checks, bounded logs and health reporting. Database migrations must preserve collected history. Existing H1 acceptance does not cover the new service, a model-enabled Nora interface or multi-user admission. No production policy changes follow from this decision alone.

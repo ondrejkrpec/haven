@@ -10,6 +10,8 @@ link:h1.4-model-configuration.adoc[H1.4] verifies the pinned core runtime, nativ
 
 The active link:h1.6.1-capabilities.adoc[H1.6.1 profile] serves only deterministic owner operations and independently blocks model, tool and cron-worker execution. The link:h1.10-acceptance.adoc[H1.10 acceptance baseline] covers this existing pilot and its private web, backup and monitoring services. It keeps later autonomy and clean-host installation separate.
 
+The next selected product feature is a link:wishlist-design.adoc[private wishlist with daily price collection]. link:adr/0012-modular-domain-services.adoc[ADR 0012] selects a modular Python domain service with its own database and owner checks. Start with supplied links, then cross-shop offers; Security findings and the H2 executor/review lifecycle follow as separate stages. This is an accepted direction, not an installed capability. Concrete model ingress and local interfaces still need implementation design and acceptance.
+
 Keep common source, general instructions and public examples here. Each instance owns its configuration and personal instructions in a separate private repository. Runtime state, account sessions and databases use the trusted link:h1.9-backup-recovery.adoc[H1.9 encrypted backup and recovery workflow] outside Git.
 
 The retained link:family-conversations.adoc[family design] has separate personal conversations and explicitly shared family objects. It is deferred beyond the link:h1.6-telegram.adoc[initial owner-only Telegram pilot]. Future members need separate authenticated identities and private state; a narrow service must enforce ownership and family membership before returning data to the model. This access layer is not implemented by selecting Hermes profiles.

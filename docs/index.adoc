@@ -1,8 +1,8 @@
 = Haven documentation
 
-Haven is a personal agent system built around Hermes, with Telegram as its first phone interface and WhatsApp as a future option. Text comes first; inbound Czech voice is later H1 work. The first deployment uses one Ubuntu VPS and bounded automation. Nora is the coordinator's working name.
+Haven is a personal agent system built around Hermes, with Telegram as its first phone interface and WhatsApp as a future option. Inbound Czech voice is deferred. The first deployment uses one Ubuntu VPS and bounded automation. Nora is the coordinator's working name.
 
-The local foundation is accepted through a fresh checkout: public sources, a private-instance template, configuration v1 validation and a documentation/check workflow. The existing Ubuntu pilot also has accepted private administration, independent model authentication, a supervised coordinator and owner-only Telegram text. Czech voice and off-site restore remain later H1 work; WhatsApp is deferred.
+The existing deterministic pilot passed link:h1.10-acceptance.adoc[H1 acceptance] on 2026-11-05, including private access, Telegram owner operations, restart recovery, encrypted off-site backup and monitoring. The next selected feature is a link:wishlist-design.adoc[modular Python wishlist service]; implementation is pending. Isolated coding roles and review remain H2 work.
 
 == Start here
 
