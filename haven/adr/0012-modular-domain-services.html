@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ADR 0012: Modular Python domain services · Haven</title>
+  <link rel="stylesheet" href="../../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="../index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="../index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="../local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="../configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="../h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="../h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="../h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="../h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="../h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="../h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="../h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="../documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="../architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="../wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="../family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="../h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="../research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="../h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="../h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="../h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="../h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="../h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>ADR 0012: Modular Python domain services</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Date: 2026-11-06. Status: architecture direction accepted by the owner; implementation and operational acceptance remain pending.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_context"><a class="anchor" href="#_context"></a>Context</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The next useful feature is a private wishlist that starts collecting prices before the complete multi-agent maintenance workflow exists. Hermes supplies messaging and agent orchestration, but product ownership, price history and purchase state need explicit application rules. The existing deterministic pilot still blocks model, tool and cron-worker execution.</p>
+</div>
+<div class="paragraph">
+<p>The owner can review Java/Spring designs, but implementation and maintenance are delegated. That familiarity alone does not justify another runtime on the small VPS. No existing Haven integration currently establishes a need for a JVM service.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_decision"><a class="anchor" href="#_decision"></a>Decision</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use Python as the default for Haven integrations. Build the wishlist as a modular domain service with its own SQLite database and a narrow authenticated local interface. Separate modules for application operations, persistence, shop adapters, collection and operational events. The exact transport, dependencies and process layout require an implementation design and feasibility checks.</p>
+</div>
+<div class="paragraph">
+<p>Nora interprets requests and presents results. Trusted ingress supplies the authenticated principal; the domain service enforces ownership and validates each operation independently of model output. Scheduled price collection runs without a model. A later user receives a separate private wishlist; shared household lists are outside the chosen scope.</p>
+</div>
+<div class="paragraph">
+<p>Separate deployment units where data ownership, permissions, lifecycle or resource use require them. A role does not automatically require its own service or database. A future domain may use Java when there is a concrete benefit; do not rewrite the accepted Python operations or introduce a general service framework in anticipation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_consequences"><a class="anchor" href="#_consequences"></a>Consequences</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The first release can persist supplied product links and collect daily observations while cross-shop discovery, deal summaries and executor automation follow independently. <a href="../wishlist-design.html" class="xref page">The staged design</a> defines the release boundary and acceptance conditions.</p>
+</div>
+<div class="paragraph">
+<p>The new service needs explicit configuration, source packaging, backup capture, restore checks, bounded logs and health reporting. Database migrations must preserve collected history. Existing H1 acceptance does not cover the new service, a model-enabled Nora interface or multi-user admission. No production policy changes follow from this decision alone.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

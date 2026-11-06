@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist: staged domain service design · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Wishlist: staged domain service design</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-11-06: requirements and the modular Python direction are accepted; API, adapters, deployment and operational behavior are not implemented. <a href="adr/0012-modular-domain-services.html" class="xref page">ADR 0012</a> records the language and service boundary. The current <a href="h1.6.1-capabilities.html" class="xref page">deterministic pilot</a> remains unchanged.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_first_release"><a class="anchor" href="#_first_release"></a>First release</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Accept product links through Nora&#8217;s owner-only Telegram interface, list and update private wishlist entries, record purchases, and collect price and availability observations once a day from supported supplied URLs. Start collecting history before cross-shop discovery or the complete H2 executor lifecycle.</p>
+</div>
+<div class="paragraph">
+<p>Entries distinguish one-time purchases, recurring purchases and gifts for named recipients. A purchased one-time item or gift stops collection; a recurring item is paused for a configurable period, initially one month. Preserve historical observations. Infer classification from the user&#8217;s message where possible and ask when ambiguous; an incomplete classification must not discard the original link.</p>
+</div>
+<div class="paragraph">
+<p>The initial user is the enrolled owner. Model per-entry ownership from the beginning, but keep additional Telegram users disabled until separate admission and cross-user denial checks pass. Each wishlist is private. Administrator access to the server/database is outside this application-level separation; no additional encryption against the server administrator is required.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_service_and_trust_boundaries"><a class="anchor" href="#_service_and_trust_boundaries"></a>Service and trust boundaries</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Trusted Telegram ingress derives the principal and request identity. A bounded interpretation component may propose an operation and arguments; it cannot select another principal, write SQL, execute shell commands or grant permissions. The domain service authenticates callers, verifies ownership and validates every proposed operation. Confirm a write only after it commits; repeat delivery of the same Telegram request must not duplicate the write.</p>
+</div>
+<div class="paragraph">
+<p>Use a modular Python service with a dedicated SQLite database. Keep wishlist entries, exact product identities, shop offers, price observations, collection runs and application events distinct. Prices retain currency, conditions, availability and observation time. Internal IDs and exact interfaces remain implementation work.</p>
+</div>
+<div class="paragraph">
+<p>Only the service writes domain state. Collection jobs receive bounded offer/run inputs and submit results through a restricted result interface. They do not receive Nora&#8217;s credentials, personal context or arbitrary filesystem access. The current native model/tool/cron guard cannot be relaxed implicitly: first validate a separate bounded interpretation path against the pinned Hermes runtime. Local no-model commands remain usable if interpretation is unavailable.</p>
+</div>
+<div class="paragraph">
+<p>No HTTP framework, broker, container topology or new YAML fields are selected by this design. Add only dependencies and configuration supported by an implemented need. Measure memory and concurrent work on the existing small VPS before deployment.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_offers_and_collection"><a class="anchor" href="#_offers_and_collection"></a>Offers and collection</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Keep a global approved-shop registry plus per-entry shop permissions. A user-supplied URL from another shop grants collection scope only for that entry; it never edits the global registry. An unsupported shop may be saved with an explicit unsupported/pending collection status.</p>
+</div>
+<div class="paragraph">
+<p>Track the exact linked product and variant. Preserve identity-bearing URL parameters while removing only verified tracking parameters. Additional acceptable variants are explicit user choices. Validate destinations and redirects, including resolved addresses, before fetching so submitted URLs cannot reach local/private services.</p>
+</div>
+<div class="paragraph">
+<p>Prefer structured product data and small shop adapters. Bound response size, request duration, retries and concurrency. Website content is untrusted input. Distinguish ordinary prices from coupon, membership, quantity or variant-dependent offers. On failure retain the last valid observation with its original timestamp and show stale/failed collection; never invent a price or silently replace it with zero. Support must be demonstrated with direct fetches in the intended execution environment; browser/search-tool access is not sufficient acceptance.</p>
+</div>
+<div class="paragraph">
+<p>Collection runs daily independently of the model. Persist the next due work and run outcomes so restart recovery is bounded and does not create duplicate observations for one run. Scheduling and single-run ownership still require a concrete design.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_later_releases"><a class="anchor" href="#_later_releases"></a>Later releases</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Stage</th>
+<th class="tableblock halign-left valign-top">Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cross-shop deals</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Find the same product across approved shops; combine percentage and absolute savings with observed price history, offer conditions and availability. Show uncertainty while history is insufficient. Answer direct requests and send configurable interesting-offer summaries, initially every three days, with duplicate suppression.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Convenience</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Explicit acceptable variants, optional read-only order-email ingestion, separately enrolled users and later task controls through Nora or the dashboard. Email matching must handle uncertain, cancelled and refunded orders; Gmail is outside the first release.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Security tasks</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Introduce periodic read-only system/application/dependency checks and deduplicated Kanban findings, followed by isolated Worker/Reviewer execution and separately accepted bounded maintenance policies. Wishlist delivery does not depend on enabling coding tools.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Observability</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add searchable log aggregation, encrypted off-host archives with separate retention, and deduplicated issue creation from repeated errors. Logs are evidence, never execution authorization. A full ELK or self-hosted Sentry deployment is not selected.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The first release needs bounded structured logs, request/run correlation, health/freshness reporting and a read-only operational view. Audit application changes separately from diagnostic log retention. Daily observations stay in domain storage; repeated faults can later produce one Kanban issue. Agent reports and callbacks cannot bypass the existing controller/executor boundary.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_backup_and_acceptance"><a class="anchor" href="#_backup_and_acceptance"></a>Backup and acceptance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Extend the explicit backup capture policy for the new data and any new writer services; current H1 backup acceptance does not automatically include them. Define consistent capture, restore verification and schema/version compatibility before live use. Application rollback must not erase newly collected history.</p>
+</div>
+<div class="paragraph">
+<p>Acceptance must demonstrate link intake, owner-scoped list/update, one-time completion, recurring pause, daily observations from supported shops, repeat-message idempotence, invalid variant/price rejection, safe destination handling, collection failure visibility and recovery after restart. Use synthetic public fixtures and isolated identities; keep real entries and account data outside public tests and documentation.</p>
+</div>
+<div class="paragraph">
+<p>Live acceptance also verifies database restoration, dashboard freshness and no model calls from scheduled collection. No ordinary AI chat, coding dispatch, purchases, email access or host maintenance is enabled by this release.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>
