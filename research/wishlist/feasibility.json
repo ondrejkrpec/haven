@@ -26,7 +26,7 @@
     }
   ],
   "python": "3.14.7",
-  "scope": "single unauthenticated direct GET per reviewed private URL from workstation; offline extraction",
+  "scope": "one unauthenticated GET per reviewed private URL from each of workstation and VPS; memory-only VPS extraction",
   "runner": {
     "user_agent": "HavenWishlistFeasibility/0.1",
     "socket_timeout_seconds": 20,
@@ -70,14 +70,58 @@
     }
   ],
   "vps_probe": {
-    "result": "ssh_authentication_denied",
-    "executed": false
+    "result": "completed_read_only",
+    "executed": true,
+    "python": "3.14.4",
+    "source_revision": "863b7b885570d2d1ddf647c8c4fd5c49409d6b26",
+    "runner_sha256": "6640ef387c8421b6318af2aa209491aaf221e3c8b97df1eab4a0186fcbe64b24",
+    "captured_at_utc": "2026-11-06T17:48:21.369248+00:00",
+    "persistent_source_writes": false,
+    "dependency_installations": false,
+    "service_changes": false,
+    "initial_attempt": "SSH authentication denied; owner subsequently made existing key available",
+    "sources": [
+      {
+        "source": "A",
+        "http_status": 200,
+        "body_bytes": 347830,
+        "seconds": 1.225,
+        "result": "extracted",
+        "reason": "structured_offer_candidate",
+        "evidence": [
+          "microdata"
+        ],
+        "retry_after": null
+      },
+      {
+        "source": "B",
+        "http_status": 200,
+        "body_bytes": 1165293,
+        "seconds": 1.509,
+        "result": "extracted",
+        "reason": "structured_offer_candidate",
+        "evidence": [
+          "jsonld"
+        ],
+        "retry_after": null
+      },
+      {
+        "source": "C",
+        "http_status": 403,
+        "body_bytes": 65617,
+        "seconds": 0.09,
+        "result": "blocked",
+        "reason": "source_http_403",
+        "evidence": [],
+        "retry_after": null
+      }
+    ]
   },
   "limits": [
     "No service deployed",
-    "No intended-runtime fetch acceptance",
+    "Only one VPS-origin fetch per source, not daily collection acceptance",
     "Extracted conditions not verified",
-    "No repeated daily collection or native ingress tested"
+    "No native ingress, live scheduler or database restore tested"
   ],
   "verification": [
     {
