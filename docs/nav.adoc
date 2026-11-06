@@ -37,6 +37,7 @@
 ** xref:adr/0012-modular-domain-services.adoc[ADR 0012: Modular Python domain services]
 * Verification
 ** xref:wishlist-feasibility.adoc[Wishlist direct-fetch feasibility]
+** xref:wishlist-browser-feasibility.adoc[Wishlist headless browser experiment]
 ** xref:research/h0.1/README.adoc[H0.1 feasibility]
 ** xref:h0.2-acceptance.adoc[H0.2 foundation]
 ** xref:h0.4-acceptance.adoc[H0.4 documentation and checks]
