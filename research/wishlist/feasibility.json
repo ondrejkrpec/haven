@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-06",
+  "captured_at_utc": "2026-11-06T17:30:26.431654+00:00",
+  "source_base_revision": "1e689a1d59549e618a20e3e34bcb9a6089ce17d7",
+  "source_files": [
+    {
+      "path": "scripts/wishlist_extract.py",
+      "sha256": "3308d0a72d7ec1fa4a042eeb567024a783792f1e89ef3a4e5707d2eac5dfb9eb"
+    },
+    {
+      "path": "scripts/wishlist_contract.py",
+      "sha256": "98fdd176aef777e9bb05f0437f390fe80da3a3bcf92c3d087f85a114097b21ad"
+    },
+    {
+      "path": "schemas/wishlist-request-v1.schema.json",
+      "sha256": "aa6bf6ecb69ef0c73bc9cf93fda0da8de9e6145186e1557d6d8f2fe63774acb9"
+    },
+    {
+      "path": "tests/test_wishlist_extract.py",
+      "sha256": "7fd5deee84cf6188f35073daa9fa7ffb7bd4eb065e1d80e54e1dbbf3abee3c3f"
+    },
+    {
+      "path": "tests/test_wishlist_contract.py",
+      "sha256": "9f36ecee4faac50c41705719207384ffc63b09de7e1e638b9c9184127d51fbc3"
+    }
+  ],
+  "python": "3.14.7",
+  "scope": "one unauthenticated GET per reviewed private URL from each of workstation and VPS; memory-only VPS extraction",
+  "runner": {
+    "user_agent": "HavenWishlistFeasibility/0.1",
+    "socket_timeout_seconds": 20,
+    "process_deadline_seconds": 55,
+    "max_body_bytes": 4194304,
+    "cookies": false,
+    "proxy_inheritance": false,
+    "javascript": false,
+    "model_calls": 0,
+    "tls_verified": true
+  },
+  "sources": [
+    {
+      "source": "A",
+      "http_status": 200,
+      "body_bytes": 342968,
+      "seconds": 0.293,
+      "result": "extracted",
+      "reason": "structured_offer_candidate",
+      "evidence": [
+        "microdata"
+      ]
+    },
+    {
+      "source": "B",
+      "http_status": 429,
+      "body_bytes": 1568,
+      "seconds": 0.087,
+      "result": "blocked",
+      "reason": "source_http_429",
+      "evidence": []
+    },
+    {
+      "source": "C",
+      "http_status": 403,
+      "body_bytes": 65615,
+      "seconds": 0.072,
+      "result": "blocked",
+      "reason": "source_http_403",
+      "evidence": []
+    }
+  ],
+  "vps_probe": {
+    "result": "completed_read_only",
+    "executed": true,
+    "python": "3.14.4",
+    "source_revision": "863b7b885570d2d1ddf647c8c4fd5c49409d6b26",
+    "runner_sha256": "6640ef387c8421b6318af2aa209491aaf221e3c8b97df1eab4a0186fcbe64b24",
+    "captured_at_utc": "2026-11-06T17:48:21.369248+00:00",
+    "persistent_source_writes": false,
+    "dependency_installations": false,
+    "service_changes": false,
+    "initial_attempt": "SSH authentication denied; owner subsequently made existing key available",
+    "sources": [
+      {
+        "source": "A",
+        "http_status": 200,
+        "body_bytes": 347830,
+        "seconds": 1.225,
+        "result": "extracted",
+        "reason": "structured_offer_candidate",
+        "evidence": [
+          "microdata"
+        ],
+        "retry_after": null
+      },
+      {
+        "source": "B",
+        "http_status": 200,
+        "body_bytes": 1165293,
+        "seconds": 1.509,
+        "result": "extracted",
+        "reason": "structured_offer_candidate",
+        "evidence": [
+          "jsonld"
+        ],
+        "retry_after": null
+      },
+      {
+        "source": "C",
+        "http_status": 403,
+        "body_bytes": 65617,
+        "seconds": 0.09,
+        "result": "blocked",
+        "reason": "source_http_403",
+        "evidence": [],
+        "retry_after": null
+      }
+    ]
+  },
+  "limits": [
+    "No service deployed",
+    "Only one VPS-origin fetch per source, not daily collection acceptance",
+    "Extracted conditions not verified",
+    "No native ingress, live scheduler or database restore tested"
+  ],
+  "verification": [
+    {
+      "python": "3.14.7",
+      "command": ".venv/bin/python -m unittest tests.test_wishlist_extract tests.test_wishlist_contract -v",
+      "tests": 18,
+      "result": "passed"
+    },
+    {
+      "python": "3.12.14",
+      "command": "python -m unittest tests.test_wishlist_extract tests.test_wishlist_contract -v",
+      "dependency_source": "requirements.txt with required hashes in a fresh temporary environment",
+      "tests": 18,
+      "result": "passed"
+    }
+  ]
+}

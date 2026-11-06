@@ -1,0 +1,63 @@
+= Wishlist v1: proposed interface and implementation units
+
+Status, 2026-11-06: concrete implementation proposal. Request/command shape validators and an offline extraction probe exist; no wishlist server, database, scheduler or Telegram handler is installed. link:wishlist-design.adoc[The staged design] remains the product scope. link:wishlist-feasibility.adoc[The feasibility result] separates local extraction from live collection support.
+
+== Local boundary
+
+Propose a Python domain process that exclusively owns SQLite writes. Use Linux Unix-domain stream sockets and kernel peer credentials, with separately permissioned ingress and collector sockets. Map exact allowed peer UIDs to roles in operator configuration, never to role claims in a JSON body. A local socket alone is not authentication. The model interpreter must run under a separate identity without either socket or database access; a Hermes profile alone cannot provide this separation.
+
+Use bounded UTF-8 JSON frames with a 64 KiB limit, nesting limit 32, duplicate-key and non-finite-number rejection, fixed socket deadlines and bounded connections. Reject extra fields. These transport checks remain implementation work. No general HTTP framework or broker is required for this first interface.
+
+Trusted ingress derives source fields from the admitted native Telegram event. Require an enrolled human owner, private chat, and matching user/chat identity. Recheck this in the domain service before owner-scoped operations. The source object cannot come from model output. Keep additional users disabled until enrollment and cross-user denial tests are accepted.
+
+The proposed wire envelope is link:../schemas/wishlist-request-v1.schema.json[request schema v1]. The model produces only its `$defs/command` object; trusted ingress adds `protocol_version`, `request_id` and `source`. `scripts/wishlist_contract.py` exposes separate shape validators. Schema validation does not prove sender identity, owner access, safe fetch destinations or future timestamps. Timestamp validation requires the supplied format checker; the schema's `format` keyword alone is insufficient with the existing minimal dependency set.
+
+== Operations
+
+[cols="2,3,3",options="header"]
+|===
+|Operation |Arguments |Result and behavior
+|`wishlist.add` |HTTPS URL; optional label, purpose, purchase mode, recipient and note |Commit the entry and source-shop permission first. Missing classification becomes `needs_details`; fetching is queued independently. A blocked or unsupported source does not undo entry creation.
+|`wishlist.list` |Optional state/purpose, limit up to 50 and opaque cursor |Return only the caller's entries, latest observation time and collection status. Default state selection is active and paused. Bind pagination cursors to the owner and filter.
+|`wishlist.get` |Entry ID |Return one owner-scoped entry and bounded recent observations; foreign and missing IDs have the same `not_found` result.
+|`wishlist.update` |Entry ID, expected version and explicit field patch |Update supplied fields only. `null` clears recipient/note. Contradictory gift/recurring details require clarification; they never silently change another field. Changing a source URL is outside this operation's v1 scope.
+|`wishlist.record_purchase` |Entry ID, expected version, optional explicit purchase timestamp |A one-time item/gift becomes purchased. A recurring item pauses for one calendar month in the instance time zone, clipping to the last valid day. If purchase mode is unknown, ask first. Default timestamp comes from the service clock.
+|`wishlist.pause` |Entry ID, expected version, offset-bearing `paused_until` |Require a future instant, stop scheduling and invalidate outstanding collection admission. Keep history.
+|`wishlist.resume` |Entry ID and expected version |Resume a paused entry and make it due for collection. Purchased entries require a later explicit reopening design; do not silently reopen them.
+|===
+
+Store entry lifecycle (`active`, `paused`, `purchased`), classification completeness and collection status separately. Collection status includes `pending`, `ok`, `blocked`, `unsupported`, `failed` and `stale`. A saved entry can therefore report successful intake and a failed source independently. Diagnostic state changes do not overwrite a successful historical observation.
+
+The service generates opaque entry IDs. User-facing field/state mutations increment the entry version; price arrivals do not. Stale expected versions produce `conflict` without modifying the entry. Resolve vague references such as "the pan" against the owner's entries and ask if several match. Pending clarification belongs to a durable owner/chat record tied to the entry/version; unrelated messages must not answer it accidentally.
+
+== Receipts and responses
+
+Derive `request_id` from a canonical encoding of the deployment's bot identity, platform, user, chat and message ID. Include the original message digest in `source.text_sha256`; do not store the raw message in diagnostic logs. The service recomputes the request identity from trusted context and uses a unique receipt key. Message edits are not new v1 operations; a changed body under the same request ID is a conflict.
+
+Atomically commit entry changes, domain events and the response receipt in one short database transaction. A repeated identical envelope replays the stored response; a changed command/source digest under the same ID does not execute. A failed or uncertain response delivery never rolls back a committed entry. This establishes operation idempotence, not exactly-once Telegram delivery. Do not hold a database write transaction while calling a model or fetching a page.
+
+Responses carry `protocol_version`, `request_id`, a fixed result code, whether a write committed, entry ID/version when applicable, and bounded data or clarification fields. Codes are `ok`, `needs_clarification`, `conflict`, `not_found`, `invalid_request`, `denied` and `unavailable`. An incomplete add may return `needs_clarification` with `committed=true`. Do not expose SQL errors, peer configuration, credentials or another owner's existence. Escape shop/user text for the selected Telegram formatting mode.
+
+== Collection and model interfaces
+
+The scheduler asks the domain service to enqueue due work; it does not edit SQLite directly. Start with a systemd timer outside Hermes cron, an independent single-dispatch lease and a small SQLite job table. Exact service accounts, timer expression, queue limits and resource bounds belong to implementation configuration.
+
+A collector claims a bounded job and reports a result on its role-specific interface. Bind results to the current job, attempt, offer, source-URL digest and collection generation. Reject stale, replay-conflicting or unsolicited results. Pausing/purchasing invalidates pending admission so a delayed success cannot reactivate an entry. Store attempt status, HTTP status, observation time, parser/source version and available retry-after information; do not automatically retry 403/429 in a tight loop.
+
+Before network use, validate every destination/redirect and prevent access to private/local addresses, including DNS rebinding and proxy inheritance. The offline probe implements none of this network boundary. Accepted observations need shop-specific checks for exact variant, currency, quantity, membership/coupon conditions and price consistency; a generic extracted candidate is not yet accepted evidence of a deal.
+
+For natural-language intake, first evaluate a separate bounded no-tools Hermes interpreter against the pinned runtime. It receives only the message and necessary owner-filtered context and returns either a command proposal or clarification. Validate its output independently; no fallback enables the ordinary agent. On quota/provider failure, deterministic URL intake/list operations remain available. Do not add wishlist model calls inside the current independently guarded Telegram process. A provider request, credential delivery and new ingress behavior need their own scoped acceptance.
+
+== Implementation units
+
+[cols="1,3,3",options="header"]
+|===
+|Unit |Work |Acceptance
+|W1: domain state |SQLite migrations, owner-scoped entries/offers/events, command handling and receipts |Cross-owner denial, duplicate/conflicting receipts, incomplete intake, purchase/pause/resume, version conflicts and calendar boundaries.
+|W2: local service and ingress |Peer-authenticated bounded sockets, deterministic Telegram operations and durable clarification |Unauthorized peer/role denial, malformed frames, correct owner identity, escaped replies, unchanged native guard and commit-before-confirmation after restart.
+|W3: collection |Restricted fetch process, first directly verified adapter, job admission and daily scheduling |Safe redirects/DNS, exact variant/conditions, blocked source persistence, bounded retry, stale result rejection and continuation after restart without model calls.
+|W4: operations and recovery |Packaging, systemd limits, dashboard freshness, bounded logs and explicit backup capture |Measured resource headroom with Hermes/backups, consistent database restore, version compatibility and rollback that preserves history.
+|W5: bounded language interpretation |Separate no-tools model identity and validated command proposals |Scoped provider check, quota/error fallback, no database/tool/host access and no identity selection by model output.
+|===
+
+These are implementation units within the first-release design, not a requirement to expose half-tested services in production. Deterministic collection can start before W5 if explicitly accepted as the initial usable slice. Cross-shop discovery, recommendations, Gmail, other users, coding tools and automatic host maintenance remain later stages.

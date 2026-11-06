@@ -19,6 +19,7 @@ ATTACHMENTS = (
     "research/h0.1/evidence/h0.2-portable-isolation.json",
     ".github/workflows/checks.yml",
     "research/h0.5/acceptance.json", "research/h0.5/source-manifest.json",
+    "schemas/wishlist-request-v1.schema.json", "research/wishlist/feasibility.json",
 )
 LOCAL_LINK = re.compile(r"link:([^\s\[]+)\[")
 ATTACHMENT_ALIASES = {
