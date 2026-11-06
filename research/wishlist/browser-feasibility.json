@@ -2,11 +2,11 @@
   "schema_version": 1,
   "date": "2026-11-06",
   "source_base_revision": "f2c1a5b12d60a5fa0b69cc9f9c211ea10bb49c97",
-  "scope": "two workstation browser reads of one private product URL, fresh guest contexts; no production browser",
+  "scope": "five workstation reads of one private product URL: three true headless and two ordinary headed (desktop and Xvfb); fresh guest contexts; no production browser",
   "retained_files": [
     {
       "path": "research/wishlist/browser_probe.py",
-      "sha256": "bcccf657077a1355277b09a0228ac72391e696dbcb68e3c9fe36c3f4b74feda9"
+      "sha256": "4961ab95c258e5cde0739e853aeed8eea9670ec5f41039029d455cd5d37fa736"
     },
     {
       "path": "research/wishlist/browser-requirements.txt",
@@ -14,7 +14,7 @@
     }
   ],
   "executed_comparison_runner_sha256": "2160a3de4e402668d67bdc31719066083753e4327800eebdc2bfaff0203b5d09",
-  "retained_runner_changes": "Paths and target selection parameterized; two modes supported; Czech human-challenge marker added after the first run; no additional live run claimed",
+  "retained_runner_changes": "Paths and target selection parameterized; Czech marker corrected; third run used prior retained runner; current runner adds explicit headed mode and was syntax/lint checked, not claimed as a sixth live run. Fourth/fifth used the private headed variant; fifth additionally used an authenticated temporary Xvfb wrapper.",
   "runs": [
     {
       "started_at_utc": "2026-11-06T18:26:26.043452+00:00",
@@ -73,6 +73,126 @@
       "observation_window_seconds": 20,
       "final_title": "Just a moment...",
       "result": "blocked"
+    },
+    {
+      "started_at_utc": "2026-11-06T18:44:32.961849+00:00",
+      "playwright": "1.64.1",
+      "mode": "chromium",
+      "sandbox_requested": true,
+      "fresh_context": true,
+      "browser_version": "156.0.8078.4",
+      "model_calls": 0,
+      "initial_status": 403,
+      "final_status": 403,
+      "cookies_before": 0,
+      "cookies_after": 1,
+      "cf_clearance_present": false,
+      "seconds": 21.141,
+      "memory": {
+        "samples": 106,
+        "peak_descendant_rss_bytes": 1741508608,
+        "peak_readable_pss_bytes": 854885376,
+        "all_pss_samples_complete": false,
+        "peak_process_count": 14
+      },
+      "source": "C",
+      "url_form": "original full supplied URL with search parameters",
+      "javascript_enabled": true,
+      "cookies_enabled": true,
+      "reviewed_human_challenge": true,
+      "observation_window_seconds": 20,
+      "result": "blocked",
+      "executed_runner_sha256": "bcccf657077a1355277b09a0228ac72391e696dbcb68e3c9fe36c3f4b74feda9",
+      "source_revision": "f1aec28cb861bc0de76e7229042cca9480c601f9"
+    },
+    {
+      "started_at_utc": "2026-11-06T18:47:51.330675+00:00",
+      "playwright": "1.64.1",
+      "mode": "headed",
+      "sandbox_requested": true,
+      "fresh_context": true,
+      "browser_version": "156.0.8078.4",
+      "model_calls": 0,
+      "initial_status": 200,
+      "final_status": 200,
+      "cookies_before": 0,
+      "cookies_after": 7,
+      "cf_clearance_present": false,
+      "seconds": 22.885,
+      "memory": {
+        "samples": 116,
+        "peak_descendant_rss_bytes": 1690931200,
+        "peak_readable_pss_bytes": 882446336,
+        "all_pss_samples_complete": false,
+        "peak_process_count": 12
+      },
+      "source": "C",
+      "url_form": "original full supplied URL with search parameters",
+      "javascript_enabled": true,
+      "cookies_enabled": true,
+      "reviewed_human_challenge": false,
+      "observation_window_seconds": 20,
+      "result": "accessible_needs_adapter",
+      "executed_runner_sha256": "eeeba63d350a65ba80387c96bf33768700349beb2f7fa9f84e20025ac9304dfe",
+      "source_revision": "f1aec28cb861bc0de76e7229042cca9480c601f9",
+      "original_url_extraction": "needs_review: exact_offer_missing",
+      "canonical_offline_extraction": "structured JSON-LD candidate; conditions not verified",
+      "price_consistency": "metadata/display rounding difference; public/member offers need shop-specific validation"
+    },
+    {
+      "started_at_utc": "2026-11-06T18:55:59.034982+00:00",
+      "playwright": "1.64.1",
+      "sandbox_requested": true,
+      "fresh_context": true,
+      "browser_version": "156.0.8078.4",
+      "model_calls": 0,
+      "initial_status": 200,
+      "final_status": 200,
+      "cookies_before": 0,
+      "cookies_after": 7,
+      "cf_clearance_present": false,
+      "seconds": 22.542,
+      "memory": {
+        "samples": 114,
+        "peak_descendant_rss_bytes": 1664507904,
+        "peak_readable_pss_bytes": 883324928,
+        "all_pss_samples_complete": false,
+        "peak_process_count": 12
+      },
+      "source": "C",
+      "mode": "headed_on_xvfb",
+      "url_form": "original full supplied URL with search parameters",
+      "javascript_enabled": true,
+      "cookies_enabled": true,
+      "reviewed_human_challenge": false,
+      "result": "accessible_needs_adapter",
+      "source_prior_revision": "f1aec28cb861bc0de76e7229042cca9480c601f9",
+      "executed_wrapper_sha256": "be610abd6243999cd023b1ef4d7832b6ce2adf60a082ed3c637208476dc7671f",
+      "executed_browser_runner_sha256": "eeeba63d350a65ba80387c96bf33768700349beb2f7fa9f84e20025ac9304dfe",
+      "wrapper_measurement": {
+        "seconds": 23.139,
+        "memory_including_xvfb": {
+          "samples": 117,
+          "peak_descendant_rss_bytes": 1757138944,
+          "peak_readable_pss_bytes": 924762112,
+          "all_pss_samples_complete": false,
+          "peak_process_count": 15
+        },
+        "xvfb_stopped": true,
+        "temporary_display_authorization_removed": true
+      },
+      "xvfb_package": {
+        "name": "xorg-server-xvfb",
+        "version": "21.1.24-1",
+        "distribution": "Manjaro",
+        "package_sha256": "fec274b876d775b2a3a92aad0fd430b554b521ad0f72565c7ed6965e28c75c54",
+        "binary_sha256": "5bfd315a8c7bc626d0b183d176e130c34f910a4a1279d9d53ea45769f62a3351",
+        "signature_verified_with_system_public_keyring": true,
+        "signer_fingerprint": "688E8F82879D0E25CE541426150C200743ED46D8",
+        "system_installation": false,
+        "tcp_listener": false,
+        "temporary_display_authorization": true
+      }
     }
   ],
   "vps_preflight": {
@@ -104,5 +224,10 @@
       "pyee": "14.0.0",
       "typing-extensions": "4.16.0"
     }
+  },
+  "owner_reported_controls": {
+    "manual_standard_browser": "product accessible",
+    "manual_private_window_without_login": "product accessible",
+    "independently_captured": false
   }
 }

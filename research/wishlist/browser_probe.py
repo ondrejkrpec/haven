@@ -48,9 +48,9 @@ def sample_tree(root_pid):
 
 def main():
     if len(sys.argv) not in (2, 3) or not re.fullmatch(r'[a-z][a-z0-9-]{0,63}', sys.argv[1]):
-        raise SystemExit('Usage: browser_probe.py run-label [chromium]')
-    if len(sys.argv) == 3 and sys.argv[2] != 'chromium':
-        raise SystemExit('Only shell and standard chromium headless modes are supported')
+        raise SystemExit('Usage: browser_probe.py run-label [chromium|headed]')
+    if len(sys.argv) == 3 and sys.argv[2] not in ('chromium', 'headed'):
+        raise SystemExit('Only shell, standard chromium headless and headed modes are supported')
     from playwright.sync_api import sync_playwright
     output = ROOT / sys.argv[1]
     output.mkdir(mode=0o700, exist_ok=False)
@@ -74,17 +74,21 @@ def main():
     thread = threading.Thread(target=monitor, daemon=True)
     thread.start()
     mode = sys.argv[2] if len(sys.argv) > 2 else 'headless-shell'
+    browser_environment = {'HOME': str(output / 'home'), 'TMPDIR': str(output / 'tmp'),
+                           'XDG_CACHE_HOME': str(output / 'cache'), 'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8'}
+    if mode == 'headed':
+        if not os.environ.get('DISPLAY') or not os.environ.get('XAUTHORITY'):
+            raise SystemExit('Headed mode requires an explicit authorized display')
+        browser_environment.update({key: os.environ[key] for key in ('DISPLAY', 'XAUTHORITY')})
     result = {'started_at_utc': datetime.now(timezone.utc).isoformat(),
               'playwright': importlib.metadata.version('playwright'),
               'mode': mode, 'sandbox_requested': True, 'fresh_context': True,
               'model_calls': 0, 'target': target['url']}
     try:
         with sync_playwright() as pw:
-            browser = pw.chromium.launch(headless=True, channel='chromium' if mode == 'chromium' else None,
+            browser = pw.chromium.launch(headless=mode != 'headed', channel='chromium' if mode in ('chromium', 'headed') else None,
                                          chromium_sandbox=True, timeout=20000,
-                                         env={'HOME': str(output / 'home'), 'TMPDIR': str(output / 'tmp'),
-                                              'XDG_CACHE_HOME': str(output / 'cache'),
-                                              'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8'})
+                                         env=browser_environment)
             result['browser_version'] = browser.version
             context = browser.new_context(java_script_enabled=True, accept_downloads=False)
             result['cookies_before'] = len(context.cookies())
