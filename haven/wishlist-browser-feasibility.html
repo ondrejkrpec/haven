@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wishlist: ordinary headless browser experiment · Haven</title>
+  <title>Wishlist: ordinary browser mode experiments · Haven</title>
   <link rel="stylesheet" href="../_/css/site.css">
 </head>
 <body>
@@ -174,7 +174,7 @@
     
   </li>
   <li>
-    <a href="wishlist-browser-feasibility.html">Wishlist headless browser experiment</a>
+    <a href="wishlist-browser-feasibility.html">Wishlist browser mode experiments</a>
     
   </li>
   <li>
@@ -211,11 +211,11 @@
 </nav>
     <main id="main" tabindex="-1">
       <article>
-        <h1>Wishlist: ordinary headless browser experiment</h1>
+        <h1>Wishlist: ordinary browser mode experiments</h1>
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-06: the owner requested a bounded browser follow-up to <a href="wishlist-feasibility.html" class="xref page">the direct-fetch probe</a>. Two ordinary headless Chromium modes were tested on the workstation. Both kept returning HTTP 403 with a human-verification page despite working JavaScript and cookies. No browser service or automatic fallback is selected or deployed.</p>
+<p>Status, 2026-11-06: bounded workstation follow-up to <a href="wishlist-feasibility.html" class="xref page">the direct-fetch probe</a>. Both true headless Chromium modes returned HTTP 403 despite working JavaScript/cookies, including an exact-URL control. Fresh ordinary headed Chromium returned HTTP 200 and the expected product both on the desktop and on an authenticated temporary Xvfb display, without human verification. No VPS browser service or automatic fallback is deployed.</p>
 </div>
 </div>
 </div>
@@ -226,7 +226,7 @@
 <p>Source baseline: <code>f2c1a5b12d60a5fa0b69cc9f9c211ea10bb49c97</code>. <a href="_attachments/research/wishlist/browser-feasibility.json" class="xref attachment">The sanitized receipt</a> records versions, timestamps, source hashes, resource samples and limits. Private source C is the same operator-supplied product URL as in the initial probe; its URL, captures and full results stay outside public sources.</p>
 </div>
 <div class="paragraph">
-<p>Playwright Python 1.64.1 launched Chromium 156.0.8078.4, revision 1248, first as Chromium Headless Shell and then as full Chromium with <code>channel="chromium"</code> in new headless mode. Each run had a fresh non-persistent context, JavaScript enabled, cookies available, downloads disabled and Chromium sandbox explicitly requested. No existing user profile, account login or exported storage state was used. Browser child environments contained only temporary home/cache paths, language and executable path. The enclosing process had a 70-second deadline; navigation allowed 30 seconds and observation after DOM load lasted 20 seconds.</p>
+<p>Playwright Python 1.64.1 launched Chromium 156.0.8078.4, revision 1248, first as Chromium Headless Shell and then as full Chromium with <code>channel="chromium"</code> in new headless mode. Each run had a fresh non-persistent context, JavaScript enabled, cookies available, downloads disabled and Chromium sandbox explicitly requested. No existing user profile, account login or exported storage state was used. Browser child environments contained temporary home/cache paths, language and executable path; the headed run also received display authorization metadata. The enclosing process had a 70-second deadline; navigation allowed 30 seconds and observation after DOM load lasted 20 seconds.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -260,13 +260,43 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Human-verification page, no product</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">890341376 bytes (about 849 MiB); samples not all complete</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Full Chromium, exact original URL, headless</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403 / 403</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 / 1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same challenge with original search parameters</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">854885376 bytes (about 815 MiB); samples not all complete</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Full Chromium, exact original URL, headed</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">200 / 200</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 / 7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Expected product without human verification</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">882446336 bytes (about 842 MiB); samples not all complete</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Full Chromium, exact original URL, headed on Xvfb</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">200 / 200</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 / 7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Expected product, no physical window or human verification</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">924762112 bytes (about 882 MiB), including Xvfb/wrapper; samples not all complete</p></td>
+</tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>Browser evaluation confirmed working JavaScript and <code>navigator.cookieEnabled</code> in both modes. Neither context received a clearance cookie. Each stayed on the challenge through the 0/2/5/10/20-second checkpoints. The first runner&#8217;s English-only human-challenge boolean missed the Czech prompt; captured visible text and title established the result, and the retained runner adds the Czech marker. No interaction with the human-verification control was performed.</p>
+<p>Browser evaluation confirmed working JavaScript and <code>navigator.cookieEnabled</code>. None of the contexts received a clearance cookie. The three headless runs stayed on the challenge through the 0/2/5/10/20-second checkpoints. The first runner&#8217;s English-only human-challenge boolean missed the Czech prompt; captured visible text and title established the result, and the retained runner adds the Czech marker. No interaction with the human-verification control was performed.</p>
 </div>
 <div class="paragraph">
-<p>Memory was sampled for the probe process and its descendants about every 150 ms using Linux <code>/proc</code>. RSS peaks were 1148891136 and 1784356864 bytes respectively; summed RSS double-counts shared pages. PSS covered all sampled processes in the shell run, but some full-browser samples were incomplete. These are workstation observations for a challenge page, not guaranteed maximums or measurements on the VPS.</p>
+<p>The owner reported that the exact original URL worked both in their regular browser and in a fresh private window without login. A headless control used that exact URL, including search parameters, and remained blocked. The ordinary headed comparison then succeeded in a new guest context with the same browser version and no custom identity overrides. This supports testing ordinary headed rendering separately from true headless mode; it does not identify the site&#8217;s exact decision rule or guarantee future access.</p>
+</div>
+<div class="paragraph">
+<p>The headed page supplied the expected product identity and structured offer data. The generic extractor initially rejected the original URL&#8217;s extra search parameters as an identity mismatch. Offline comparison against the matching canonical product URL produced a candidate. A shop adapter must validate product identity before normalizing known tracking parameters. The page also exposed distinct public/member offers and a structured/display price rounding difference, so these candidates are not accepted deal observations yet.</p>
+</div>
+<div class="paragraph">
+<p>The final comparison used Xvfb 21.1.24-1 from the configured Manjaro repository. Its package signature was verified with the system public keyring before extracting only the executable to the private temporary directory; no system package was installed. Xvfb used a temporary MIT-MAGIC-COOKIE-1 authorization file and <code>-nolisten tcp</code>, with a private display selected outside existing sockets. An outer wrapper ran the same fresh headed browser on that display and measured the combined tree. It obtained HTTP 200 and the same product candidate. The wrapper then terminated Xvfb and removed its display authorization file. This is a local Linux result, not an Ubuntu package/dependency acceptance.</p>
+</div>
+<div class="paragraph">
+<p>Memory was sampled for the probe process and its descendants about every 150 ms using Linux <code>/proc</code>. For the first two runs, RSS peaks were 1148891136 and 1784356864 bytes respectively; summed RSS double-counts shared pages. PSS covered all sampled processes in the shell run, but some full-browser samples were incomplete. These are workstation observations, not guaranteed maximums or measurements on the VPS.</p>
 </div>
 <div class="paragraph">
 <p>The workstation OS is outside Playwright&#8217;s officially supported systems, so its installer selected the Ubuntu 24.04 fallback build. This is another reason not to claim server acceptance from these runs. The two downloaded browser trees were roughly 273 MiB and 403 MiB; the separate Python environment was roughly 142 MiB. Only the experimental environment received packages.</p>
@@ -288,10 +318,10 @@
 <h2 id="_reproduction_inputs"><a class="anchor" href="#_reproduction_inputs"></a>Reproduction inputs</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The retained <a href="_attachments/research/wishlist/browser_probe.py" class="xref attachment">opt-in probe</a> parameterizes the temporary paths and accepts exactly one explicitly reviewed target. It is a research runner, not a production network boundary. Its optional <a href="_attachments/research/wishlist/browser-requirements.txt" class="xref attachment">hash-pinned environment</a> is separate from application and public-check dependencies. The live measurements came from the private runner recorded in the receipt; the retained generalized runner was syntax/lint checked, not claimed as an additional live run.</p>
+<p>The retained <a href="_attachments/research/wishlist/browser_probe.py" class="xref attachment">opt-in probe</a> parameterizes temporary paths and accepts one reviewed target. It is a research runner, not a production network boundary. Its optional <a href="_attachments/research/wishlist/browser-requirements.txt" class="xref attachment">hash-pinned environment</a> is separate from application/public-check dependencies. The first two measurements used the private runner; the exact-URL headless control used the prior retained runner and the two headed comparisons used a private variation, the last through an Xvfb wrapper. The current runner adds an explicit headed mode and was syntax/lint checked, not claimed as a sixth live run.</p>
 </div>
 <div class="paragraph">
-<p>Prepare a fresh external working directory and a private one-element target JSON list. Set <code>WISHLIST_BROWSER_WORK</code>, <code>WISHLIST_BROWSER_TARGETS</code> and <code>PLAYWRIGHT_BROWSERS_PATH</code> explicitly. After installing the pinned optional environment, use <code>python -m playwright install chromium --only-shell</code> for the shell or <code>--no-shell</code> for full Chromium. Under a minimal environment, invoke <code>python research/wishlist/browser_probe.py run-label</code> or append <code>chromium</code> for the full mode. Run with an external process deadline as above. Raw HTML, screenshots and result files stay in the supplied private working directory; do not copy them into public sources or tests.</p>
+<p>Prepare a fresh external working directory and a private one-element target JSON list. Set <code>WISHLIST_BROWSER_WORK</code>, <code>WISHLIST_BROWSER_TARGETS</code> and <code>PLAYWRIGHT_BROWSERS_PATH</code> explicitly. After installing the pinned optional environment, use <code>python -m playwright install chromium --only-shell</code> for the shell or <code>--no-shell</code> for full Chromium. Under a minimal environment, invoke <code>python research/wishlist/browser_probe.py run-label</code> or append <code>chromium</code> for full headless. Appending <code>headed</code> requires an authorized <code>DISPLAY</code> and <code>XAUTHORITY</code>; it opens and closes a separate window without using the owner&#8217;s profile. Run with an external process deadline as above. Raw HTML, screenshots and result files stay in the supplied private working directory; do not copy them into public sources or tests.</p>
 </div>
 <div class="paragraph">
 <p>The generalized runner and lock are retained to make the next scoped experiment reviewable. Public checks never install or launch Playwright and never contact the source.</p>
@@ -305,13 +335,13 @@
 <p>JavaScript/cookie support alone did not resolve this challenge in either tested headless mode. Cloudflare&#8217;s <a href="https://developers.cloudflare.com/cloudflare-challenges/reference/supported-browsers/">supported-browser documentation</a> also excludes automated browsers from supported production challenge-solving environments. That describes platform support, not the exact site-specific trigger, which remains unknown.</p>
 </div>
 <div class="paragraph">
-<p>Keep browser fallback disabled pending a successful, bounded source-access and sandbox design. The next useful diagnostic could be an explicitly approved ordinary visible-browser check with any required human interaction left to the owner; persistence or future automation would still need independent validation. A permitted product feed or a matching product at another approved source are separate options, whose availability is not established here.</p>
+<p>Keep production fallback disabled pending a bounded source-access and sandbox design. Ordinary Chromium on Xvfb is now a locally demonstrated collection path, using windowed rendering without a physical desktop. The next experiment is an isolated Ubuntu/VPS browser with a working sandbox, a dedicated identity and resource limits. Source access from that IP, repeated collection, shop-price validation and recovery still need acceptance. A permitted product feed or a matching product at another approved source remain separate options.</p>
 </div>
 <div class="paragraph">
-<p>For pages that genuinely require client-side rendering and can be accessed normally, an on-demand serial browser worker remains an architectural option. Its process, cookies, network and resource limits must be isolated from Nora and the domain database. This failed source test is not a reason to add an always-running browser or a hosted-browser subscription now.</p>
+<p>An on-demand serial browser worker is now a concrete architectural option to validate. Its process, cookies, network and resource limits must be isolated from Nora and the domain database. These bounded observations do not justify an always-running browser or hosted-browser subscription by themselves.</p>
 </div>
 <div class="paragraph">
-<p>Primary references: <a href="https://playwright.dev/python/docs/browsers">Playwright browser modes</a>, <a href="https://playwright.dev/python/docs/api/class-browsertype">launch options</a>, <a href="https://playwright.dev/python/docs/browser-contexts">browser contexts</a> and <a href="https://developers.cloudflare.com/cloudflare-challenges/troubleshooting/challenge-solve-issues/">challenge troubleshooting</a>. Browser contexts separate cookies/storage, not operating-system permissions.</p>
+<p>Primary references: <a href="https://playwright.dev/python/docs/browsers">Playwright browser modes</a>, <a href="https://playwright.dev/python/docs/api/class-browsertype">launch options</a>, <a href="https://playwright.dev/python/docs/browser-contexts">browser contexts</a>, <a href="https://developers.cloudflare.com/cloudflare-challenges/troubleshooting/challenge-solve-issues/">challenge troubleshooting</a> and <a href="https://xorg.freedesktop.org/releases/X11R6.8.2/doc/Xvfb.1.html">Xvfb&#8217;s virtual-display model</a>. Browser contexts separate cookies/storage, not operating-system permissions.</p>
 </div>
 </div>
 </div>
