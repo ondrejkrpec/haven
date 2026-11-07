@@ -1,0 +1,75 @@
+= Wishlist W5: bounded natural conversation
+
+Status, 2026-11-07: implemented and accepted locally, ahead of W3 at the owner's request. Scope is natural conversation about the owner's wishlist. General chat, web search, prices, coding tools and additional users are outside this change. No VPS, production profile or real account was changed. Live provider interpretation and owner acceptance remain prerequisites of the minimum W4 deployment slice described below.
+
+== Conversation and priority
+
+The optional mode accepts ordinary Czech messages through the existing admitted Telegram connection: adding a supplied product link with details, listing entries, showing an item, changing details, recording purchase and pausing/resuming. Follow-up messages can answer a question without a `wl` command or clarification token. For example, a bare link is saved first; “Je to dárek pro mámu” can complete its classification. “Tu pánev už jsem koupil” must ask which item when several pans match, then retain the purchase intent for “tu modrou”. One message proposes at most one operation.
+
+The domain service constructs replies from committed results and fixed questions. Model prose never becomes a confirmation. Price questions receive a fixed explanation that collection is unavailable. Explicit W2 commands and bare HTTPS links remain deterministic, including when the provider fails. A failed natural-language request reports uncertainty without acknowledging a write; the user can resend after the cooldown or submit the bare URL.
+
+The accepted order is W1/W2 → W5 source/local acceptance → minimum W4 conversational deployment → W3 collection → remaining W4 collection/operations acceptance. W4 is still a prerequisite for a usable production bot. The current H1 bot remains the deployed deterministic pilot.
+
+== Authority and native route
+
+The Telegram coordinator retains the independent H1.6.1 model/tool/cron guard. `natural_language=true` is an explicit wishlist ingress setting, rendered through the existing bounded service profile. It routes unrecognized text to the wishlist service after admission; existing system status/capability operations stay deterministic. It adds no poller.
+
+`scripts/wishlist_language.py` reads bounded owner-scoped context from the domain database, reserves an interpretation attempt, then releases the transaction before model I/O. `scripts/wishlist_interpreter.py` exposes a second peer-authenticated Unix socket. Only the configured domain UID can call it. The domain client authenticates its server UID. Production configuration rejects a model UID shared with the coordinator or domain owner. Both sockets require their own private directory and ingress lease.
+
+The interpreter starts one short-lived `scripts.wishlist_model` subprocess. Its environment contains explicit interpreter/profile paths, no inherited credentials or proxies. The profile must match the bounded H1.4 native configuration, apart from the upstream version marker. It uses its own separately enrolled Hermes subscription credentials, the fixed Codex route and pinned native adapter; never copy workstation or coordinator login caches. It does not instantiate `AIAgent` or the general auxiliary router. The independent native guard is armed before its single low-level no-tools request. Source assumptions are checked against the accepted Hermes revision and additional language-runtime hashes.
+
+A separate UID and profile must be combined with filesystem and systemd isolation in W4: the interpreter must not read the wishlist database, coordinator home, bot token, backups or unrelated host data. The source implementation and same-UID test fixtures do not establish deployed OS isolation. The interpreter needs only its own credentials/profile, read-only runtime and restricted provider connectivity; it receives no domain ingress permission.
+
+== Proposal and validation
+
+The model receives current text/time/time zone, opaque request/attempt IDs and at most 20 scoped entries. A snapshot includes ID/version/reference, label, classification, state and bounded source URL; stored note fields are omitted. Recent conversation includes up to six user/reply pairs, each side truncated to 500 characters, plus focus, last list and pending intent. User-supplied private text in this context is sent to the configured provider; it is not diagnostic logging. Sessions expire after 24 hours.
+
+The system instruction includes the existing command schema. The answer must be exactly a command proposal or one enumerated clarification reason and up to five known item IDs. Extra fields, arbitrary reply text, identity claims, unknown IDs, stale snapshot versions and URLs absent from the current message are refused. Lists use ten items and an opaque continuation bound to the last filters. Owner/source identity is added only by trusted domain code.
+
+Independent conservative reference checks compare explicit item numbers, label/shop word stems, listed ordinals and focus. Multiple matching items produce a fixed choice question even when the model guesses an ID. This heuristic deliberately asks again when it cannot distinguish a target; it is not proof of semantic correctness. Live language quality still requires the owner/provider scenarios below.
+
+== Transactions, replay and limits
+
+Migration 3 preserves W1/W2 data and adds conversation sessions, interpretation runs and attempt outcomes/optional token usage. Older binaries refuse the newer database. W4 must include this state and schema compatibility in backup and rollback procedures.
+
+A run binds the original Telegram fingerprint, session version and random attempt nonce. One interpretation is pending per owner/chat, with a 30-second lease. Identical committed messages replay their stored reply without another model call; changed text under the same identity conflicts. Failed attempts have a 60-second cooldown; all interpretation attempts, including failures, count toward a fixed limit of 30 per hour for this single-owner database. Bare links and explicit commands bypass that model limit.
+
+On return, a short transaction rechecks nonce, lease and conversation generation before domain execution. W1 then checks ownership and expected entry version. A changed conversation, stale pending question or expired attempt cannot apply an old proposal. Session/question, domain mutation, events and Telegram reply commit together. Delivery failure retains the receipt; this is operation idempotence, not exactly-once Telegram delivery.
+
+The snapshot/context is reduced toward 24 KiB before framing; the existing strict JSON wire limit remains 64 KiB. Model output is at most 8 KiB. There is one worker/request and no provider retry, fallback or tool loop. The provider request has a 10-second total deadline and eight-second inactivity limit; the process is killed/reaped after 16 seconds or request cancellation. IPC deadlines are 18/20 seconds at client/interpreter, 24 seconds at the domain server and 26 seconds at ingress; Telegram send has three seconds within the native 30-second callback budget. Worker limits are 2 GiB address space, 16 CPU seconds, 128 descriptors and 4 MiB files; these are ceilings, not measured VPS usage.
+
+The subscription adapter omits unsupported generic Responses options, including output-token/schema controls. Local schema validation and process/output/attempt limits remain necessary; there is no claimed provider-side token or cost cap. Token counts are recorded only when actually returned. Unknown usage is not zero.
+
+== Explicit configuration
+
+The W2 domain configuration gains an optional `language` member; all existing fields remain required. Synthetic example:
+
+[source,json]
+----
+"language": {"socket": "/run/haven-wishlist-language/request.sock", "service_uid": 2303}
+----
+
+The interpreter configuration is a separate operator-owned file. Synthetic example, with domain UID 2301 and a dedicated IPC group:
+
+[source,json]
+----
+{
+  "schema_version": 1,
+  "socket": "/run/haven-wishlist-language/request.sock",
+  "socket_gid": 2304,
+  "client_uid": 2301,
+  "source": "/opt/haven/hermes",
+  "home": "/var/lib/haven-wishlist-language/.hermes",
+  "python": "/opt/haven/hermes-python/bin/python"
+}
+----
+
+Run `python -m scripts.wishlist_interpreter --config "$WISHLIST_LANGUAGE_CONFIG"` under the distinct interpretation identity. Configure the existing native ingress with the W2 settings plus `"natural_language":true`. Absent these options, the existing command-only behavior is retained. These examples are source interfaces, not a production installation procedure.
+
+== Evidence and remaining acceptance
+
+link:../research/w5/acceptance.json[The W5 receipt] records baseline, maintained-source hashes, exact commands, successful runs and earlier fixture failures. Unit acceptance uses real SQLite transactions, Linux peer sockets, restarts, races and cancellable worker processes with scripted interpretation. The optional native test uses the exact Hermes Codex adapter with a fake SDK boundary, plus the real Telegram adapter/admission/plugin flow with a fake bot send. It establishes wiring and guard behavior, not real-model understanding, account refresh, provider availability or cost.
+
+The minimum W4 slice must package both services and the expanded plugin/runtime, install separate users/groups and systemd restrictions, enroll independent interpretation credentials, update explicit backup capture, test consistent restore/schema-aware rollback, and measure resource headroom with the current pilot/backups. Do not enable the integration before these pass. Use the existing production poller only.
+
+Live acceptance must exercise add plus gift follow-up, ambiguous pans plus selection, list/continuation, update, one-time and recurring purchase, pause/resume, unsupported requests and missing prices. Include a controlled provider failure and retry, restart mid-question, duplicate delivery and unchanged deterministic status/recovery. Record actual proposals and committed outcomes privately. Completion of these checks, not synthetic test counts, establishes readiness for ordinary wishlist conversations.

@@ -1,16 +1,16 @@
 = Wishlist v1: interface and implementation units
 
-Status, 2026-11-07: link:wishlist-domain.adoc[W1 domain state] and link:wishlist-service.adoc[W2 local service/Telegram ingress] are implemented and tested locally. W3–W5 remain proposed; no wishlist service, production database, scheduler or handler is deployed. link:wishlist-design.adoc[The staged design] remains the product scope. link:wishlist-feasibility.adoc[The feasibility result] separates local extraction from live collection support.
+Status, 2026-11-07: link:wishlist-domain.adoc[W1 domain state] and link:wishlist-service.adoc[W2 local service/Telegram ingress] are implemented and tested locally. link:wishlist-language.adoc[W5 bounded wishlist conversation] is also implemented locally, ahead of collection; W3/W4 and live language acceptance remain pending; no wishlist service, production database, scheduler or handler is deployed. link:wishlist-design.adoc[The staged design] remains the product scope. link:wishlist-feasibility.adoc[The feasibility result] separates local extraction from live collection support.
 
 == Local boundary
 
-W2 implements a Python domain process that exclusively owns SQLite writes. Its Linux Unix-domain ingress socket authenticates the exact allowed peer UID through kernel credentials and the client verifies the server UID. The separately permissioned collector socket remains W3. Role claims in a JSON body grant no access. The future model interpreter must run under a separate identity without socket or database access; a Hermes profile alone cannot provide this separation.
+W2 implements a Python domain process that exclusively owns SQLite writes. Its Linux Unix-domain ingress socket authenticates the exact allowed peer UID through kernel credentials and the client verifies the server UID. The separately permissioned collector socket remains W3. Role claims in a JSON body grant no access. The W5 model interpreter must run under a separate identity without domain socket or database access; a Hermes profile alone cannot provide this separation.
 
 W2 uses bounded UTF-8 JSON frames with a 64 KiB limit, nesting limit 32, duplicate-key and non-finite-number rejection, fixed socket deadlines and bounded connections. Extra schema fields are rejected. link:wishlist-service.adoc[The service guide] specifies framing, limits, message commands and the additional Telegram application envelope. No general HTTP framework or broker is required.
 
 Trusted ingress derives source fields from the admitted native Telegram event. Require an enrolled human owner, private chat, and matching user/chat identity. Recheck this in the domain service before owner-scoped operations. The source object cannot come from model output. Keep additional users disabled until enrollment and cross-user denial tests are accepted.
 
-Structured domain calls use link:../schemas/wishlist-request-v1.schema.json[request schema v1]. In future W5, the model produces only its `$defs/command` object; trusted ingress adds `protocol_version`, `request_id` and `source`. W2 parses explicit commands without a model. `scripts/wishlist_contract.py` exposes separate shape validators. Schema validation does not prove sender identity, owner access, safe fetch destinations or future timestamps. Timestamp validation requires the supplied format checker; the schema's `format` keyword alone is insufficient with the existing minimal dependency set.
+Structured domain calls use link:../schemas/wishlist-request-v1.schema.json[request schema v1]. In W5, the model proposes only its `$defs/command` object or an enumerated clarification; trusted ingress adds `protocol_version`, `request_id` and `source`. W2 parses explicit commands without a model. `scripts/wishlist_contract.py` exposes separate shape validators. Schema validation does not prove sender identity, owner access, safe fetch destinations or future timestamps. Timestamp validation requires the supplied format checker; the schema's `format` keyword alone is insufficient with the existing minimal dependency set.
 
 == Operations
 
@@ -40,7 +40,7 @@ Atomically commit entry changes, domain events and the response receipt in one s
 
 Responses carry `protocol_version`, `request_id`, a fixed result code, whether a write committed, entry ID/version when applicable, and bounded data or clarification fields. Codes are `ok`, `needs_clarification`, `conflict`, `not_found`, `invalid_request`, `denied` and `unavailable`. An incomplete add may return `needs_clarification` with `committed=true`. Do not expose SQL errors, peer configuration, credentials or another owner's existence. Escape shop/user text for the selected Telegram formatting mode.
 
-== Collection and model interfaces (planned W3/W5)
+== Collection (planned W3) and language (local W5)
 
 The scheduler asks the domain service to enqueue due work; it does not edit SQLite directly. Start with a systemd timer outside Hermes cron, an independent single-dispatch lease and a small SQLite job table. Exact service accounts, timer expression, queue limits and resource bounds belong to implementation configuration.
 
@@ -48,7 +48,7 @@ A collector claims a bounded job and reports a result on its role-specific inter
 
 Before network use, validate every destination/redirect and prevent access to private/local addresses, including DNS rebinding and proxy inheritance. The offline probe implements none of this network boundary. Accepted observations need shop-specific checks for exact variant, currency, quantity, membership/coupon conditions and price consistency; a generic extracted candidate is not yet accepted evidence of a deal.
 
-For natural-language intake, first evaluate a separate bounded no-tools Hermes interpreter against the pinned runtime. It receives only the message and necessary owner-filtered context and returns either a command proposal or clarification. Validate its output independently; no fallback enables the ordinary agent. On quota/provider failure, deterministic URL intake/list operations remain available. Do not add wishlist model calls inside the current independently guarded Telegram process. A provider request, credential delivery and new ingress behavior need their own scoped acceptance.
+link:wishlist-language.adoc[W5] implements a separate bounded no-tools native interpreter with strict proposal validation, versioned conversational context and trusted replies. It never enables a model inside the guarded Telegram process. Bare URL intake and explicit commands remain available on provider failure. Production identity isolation, independent account enrollment and live provider/owner acceptance remain prerequisites of the minimum W4 slice.
 
 == Implementation units
 
@@ -59,7 +59,7 @@ For natural-language intake, first evaluate a separate bounded no-tools Hermes i
 |W2: local service and ingress (locally implemented) |Peer-authenticated bounded sockets, deterministic Telegram operations and durable clarification |link:wishlist-service.adoc[Local acceptance]: unauthorized peer/role denial, malformed frames, correct owner identity, literal plain-text replies, unchanged native guard and commit-before-confirmation after restart.
 |W3: collection |Restricted fetch process, first directly verified adapter, job admission and daily scheduling |Safe redirects/DNS, exact variant/conditions, blocked source persistence, bounded retry, stale result rejection and continuation after restart without model calls.
 |W4: operations and recovery |Packaging, systemd limits, dashboard freshness, bounded logs and explicit backup capture |Measured resource headroom with Hermes/backups, consistent database restore, version compatibility and rollback that preserves history.
-|W5: bounded language interpretation |Separate no-tools model identity and validated command proposals |Scoped provider check, quota/error fallback, no database/tool/host access and no identity selection by model output.
+|W5: bounded language interpretation (locally implemented) |Separate no-tools model identity and validated command proposals |Local synthetic/native acceptance; separate UID, OS restrictions and live provider/owner checks remain required before enablement.
 |===
 
-These are implementation units within the first-release design, not a requirement to expose half-tested services in production. Deterministic collection can start before W5 if explicitly accepted as the initial usable slice. Cross-shop discovery, recommendations, Gmail, other users, coding tools and automatic host maintenance remain later stages.
+These are implementation units within the first-release design, not a requirement to expose half-tested services in production. The owner selected wishlist conversation first: W5 local implementation → minimum W4 conversational deployment → W3 → remaining W4 acceptance. Cross-shop discovery, recommendations, Gmail, other users, coding tools and automatic host maintenance remain later stages.

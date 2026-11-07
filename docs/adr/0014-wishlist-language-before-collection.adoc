@@ -1,0 +1,19 @@
+= ADR 0014: Wishlist conversation before collection
+
+Date: 2026-11-07. Status: source implemented and locally accepted; live interpretation and production enablement remain pending.
+
+== Context
+
+W1/W2 provide durable domain operations and deterministic Telegram commands. The owner wants to converse naturally about the wishlist before W3 collection, without enabling general chat or coding capabilities. The current coordinator independently forbids model/tool/cron execution, and confirmation must remain tied to stored state.
+
+== Decision
+
+Implement W5 ahead of W3 as an optional wishlist-only interpretation path. Preserve the guarded coordinator and its existing admitted bot connection. The domain service sends only bounded owner-scoped context to a separate peer-authenticated interpretation service, which starts a short-lived no-tools native provider worker under its own identity and profile. Keep credentials independent; install OS restrictions before live use.
+
+The model proposes one existing schema command or a fixed clarification reason. Domain code independently validates scope/target/version, supplies trusted identity and composes the reply. Reserve an attempt before model I/O without holding a database transaction; bind completion to the exact nonce, conversation generation and lease. Commit the session, operation and reply together. Retain bare URL and explicit command handling without a model.
+
+After local W5 acceptance, complete the minimum W4 packaging/isolation, backup/restore and live conversation checks before W3. Keep the remaining collection/operational acceptance after W3. This reorders delivery; it does not bypass production requirements or enable arbitrary assistant chat.
+
+== Consequences
+
+Schema 3 adds bounded conversational context and interpretation accounting. Model quota/failure cannot discard deterministic intake or unlock the ordinary coordinator agent. Local tests with scripted proposals and a fake native SDK establish mechanics and containment; real-provider semantic quality and deployed identity isolation require distinct evidence. link:../wishlist-language.adoc[The language guide] defines limits and the remaining acceptance.

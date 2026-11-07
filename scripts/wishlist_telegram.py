@@ -92,7 +92,7 @@ class TelegramApplication:
         return {"protocol_version": 1, "request_id": request_id, "code": code,
                 "committed": committed, "reply": reply or REPLIES.get(code, UNAVAILABLE)}
 
-    def handle(self, event):
+    def handle(self, event, *, executor=None):
         request_id = None
         try:
             context = validate_event(event, bot_id=self.domain.bot_id, owner_id=self.domain.owner_id)
@@ -107,7 +107,7 @@ class TelegramApplication:
                     return json.loads(previous["response"])
                 db.execute("SAVEPOINT telegram_operation")
                 try:
-                    result = self._execute(db, context, event["text"].strip())
+                    result = (executor or self._execute)(db, context, event["text"].strip())
                     if len(result["reply"].encode("utf-16-le")) > 7600:
                         raise ValueError("telegram_reply_size")
                 except (ValueError, TypeError, OverflowError, RecursionError):

@@ -27,7 +27,7 @@ class Client:
             raise ValueError("wishlist_socket_untrusted")
         writer = None
         try:
-            async with asyncio.timeout(DEADLINE):
+            async with asyncio.timeout(26 if self.settings.get("natural_language") else DEADLINE):
                 reader, writer = await asyncio.open_unix_connection(path, limit=65536)
                 if peer_uid(writer.get_extra_info("socket")) != self.settings["service_uid"]:
                     raise PermissionError("wishlist_server_denied")
@@ -75,7 +75,7 @@ class Bridge:
         return {"action": "allow"}
 
     async def consume(self, session_key, platform, source, message_id, text, **kwargs):
-        if not relevant(text):
+        if not relevant(text) and not self.settings.get("natural_language"):
             return None
         captured = self.captured.get()
         self.captured.set(None)
@@ -91,7 +91,7 @@ class Bridge:
             result = await self.client.request(event)
             # Explicit None disables bot defaults. User/shop text is never Markdown or HTML.
             from telegram import ReplyParameters
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(3 if self.settings.get("natural_language") else 10):
                 await bot.send_message(chat_id=int(event["chat_id"]), text=result["reply"], parse_mode=None,
                                        disable_web_page_preview=True,
                                        reply_parameters=ReplyParameters(message_id=int(message_id),
@@ -99,7 +99,9 @@ class Bridge:
             return {"action": "handled"}  # Existing bot delivered the plain-text reply.
         except Exception:
             # The independent model/tool guard remains armed even if this consumer fails.
-            return {"action": "handled", "reply": UNAVAILABLE}
+            reply = ("Výsledek wishlistu teď nemohu ověřit. Než změnu zopakuješ, zeptej se, co máš na wishlistu."
+                     if self.settings.get("natural_language") else UNAVAILABLE)
+            return {"action": "handled", "reply": reply}
 
 
 def check_runtime(source):

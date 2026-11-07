@@ -14,13 +14,16 @@ def register(ctx):
         ctx.register_hook("pre_gateway_dispatch", bridge.capture)
 
         async def consume(**kwargs):
-            response = await bridge.consume(**kwargs)
-            if response is not None:
-                return response
+            system = service.aliases.get(normalized(kwargs.get("text")))
+            if system not in ("system.status", "system.capabilities"):
+                response = await bridge.consume(**kwargs)
+                if response is not None:
+                    return response
             response = service.consume(**kwargs)
             if (service.aliases.get(normalized(kwargs.get("text"))) == "system.capabilities"
                     and response["reply"].startswith("Můžeš se zeptat:")):
-                response["reply"] += " · Wishlist: wl pomoc"
+                response["reply"] += (" · O wishlistu mi můžeš napsat běžnou větou."
+                                       if settings.get("natural_language") else " · Wishlist: wl pomoc")
             return response
 
         ctx.register_hook("post_gateway_admission", consume)

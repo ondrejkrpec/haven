@@ -1,0 +1,41 @@
+{
+  "hermes_commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+  "sources": [
+    {
+      "path": "agent/auxiliary_client.py",
+      "sha256": "0d69fed4db1897ac1f3b5b023f876c95859b900618b1b4341c68e8a0db414872"
+    },
+    {
+      "path": "agent/deterministic_policy.py",
+      "sha256": "703f84b479c624b811e76b26e305f7cc50011f3c2357e294cc05e3c8b275a939"
+    },
+    {
+      "path": "agent/auxiliary_codex_response.py",
+      "sha256": "c3dde8e9cd05d2f9f8d6bc220aee4bb87a95dbe06ebca182f3c3ff527257d06b"
+    },
+    {
+      "path": "agent/codex_headers.py",
+      "sha256": "54d165f64bb3988c16254f587a5dccac2efa988e57e86027714bf98f16bbbca9"
+    },
+    {
+      "path": "agent/codex_runtime.py",
+      "sha256": "31799bc1eafb00933cdf6e770b79f95ba8e59837c1cab230734811bdd03db4e8"
+    },
+    {
+      "path": "agent/codex_responses_adapter.py",
+      "sha256": "c86e14ebe721e94f86a1a50266272c364ccea9660a6da456eb00fa109e5f054d"
+    },
+    {
+      "path": "agent/sdk_transform_bypass.py",
+      "sha256": "6887046105bd5e666631aa9a0d0a81488392ba8978ede650ae4e31abc36ccbd6"
+    },
+    {
+      "path": "hermes_cli/auth_codex.py",
+      "sha256": "e821a11d699d954a96c11c5e5637f1627573c00894bdf762667aa1bd3d3e29d8"
+    },
+    {
+      "path": "hermes_cli/plugins.py",
+      "sha256": "a1ae6586cb5d968cb1fb6a499960c6a75e078f355ef328b5c906f73ec64aff20"
+    }
+  ]
+}
