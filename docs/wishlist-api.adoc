@@ -1,6 +1,6 @@
 = Wishlist v1: proposed interface and implementation units
 
-Status, 2026-11-06: concrete implementation proposal. Request/command shape validators and an offline extraction probe exist; no wishlist server, database, scheduler or Telegram handler is installed. link:wishlist-design.adoc[The staged design] remains the product scope. link:wishlist-feasibility.adoc[The feasibility result] separates local extraction from live collection support.
+Status, 2026-11-07: link:wishlist-domain.adoc[W1 domain state] is implemented and tested locally, including SQLite migrations, owner-scoped commands and receipts. W2–W5 remain proposed; no wishlist server, production database, scheduler or Telegram handler is installed. link:wishlist-design.adoc[The staged design] remains the product scope. link:wishlist-feasibility.adoc[The feasibility result] separates local extraction from live collection support.
 
 == Local boundary
 
@@ -53,7 +53,7 @@ For natural-language intake, first evaluate a separate bounded no-tools Hermes i
 [cols="1,3,3",options="header"]
 |===
 |Unit |Work |Acceptance
-|W1: domain state |SQLite migrations, owner-scoped entries/offers/events, command handling and receipts |Cross-owner denial, duplicate/conflicting receipts, incomplete intake, purchase/pause/resume, version conflicts and calendar boundaries.
+|W1: domain state (locally implemented) |SQLite migrations, owner-scoped entries/offers/events, command handling and receipts |link:wishlist-domain.adoc[Local acceptance]: cross-owner denial, duplicate/conflicting receipts, incomplete intake, purchase/pause/resume, version conflicts and calendar boundaries.
 |W2: local service and ingress |Peer-authenticated bounded sockets, deterministic Telegram operations and durable clarification |Unauthorized peer/role denial, malformed frames, correct owner identity, escaped replies, unchanged native guard and commit-before-confirmation after restart.
 |W3: collection |Restricted fetch process, first directly verified adapter, job admission and daily scheduling |Safe redirects/DNS, exact variant/conditions, blocked source persistence, bounded retry, stale result rejection and continuation after restart without model calls.
 |W4: operations and recovery |Packaging, systemd limits, dashboard freshness, bounded logs and explicit backup capture |Measured resource headroom with Hermes/backups, consistent database restore, version compatibility and rollback that preserves history.

@@ -1,0 +1,55 @@
+= Wishlist W1: local domain state
+
+Status, 2026-11-07: implemented and tested locally. W1 adds SQLite state and an in-process Python command API. It does not install a service, change the deployed Nora profile, fetch prices or authenticate a Telegram event. link:wishlist-api.adoc[W2–W5] retain their separate transport, collection, operations and interpretation acceptance.
+
+== Modules and identity
+
+`scripts/wishlist_domain.py` implements `Wishlist`, the immutable `IngressContext` and the first-release commands. `scripts/wishlist_store.py` owns the SQLite schema and transactions. Both use Python 3.12+ and the existing locked dependencies; no framework or extra dependency is added.
+
+Initialize `Wishlist(path, bot_id=..., owner_id=..., timezone="Europe/Prague")` with an explicit disposable database path for local work. The bot identity is a stable non-secret deployment identifier, never a bot token. One human owner is enrolled. The database binds the bot identity, owner and time zone; reopening with another binding fails. A later enrollment/time-zone migration needs an explicit design.
+
+`handle(envelope, context)` validates the request schema, then checks the independently supplied context against the enrolled owner, private chat, bot identity and exact source fields. `context.request_id` is SHA-256 of the compact ASCII JSON array `[bot_id, platform, user_id, chat_id, message_id]`; every element is a string. Text digests and commands belong to the envelope fingerprint, not the message identity. An edit therefore conflicts with an existing receipt rather than creating a new operation.
+
+The context class is not an authentication mechanism. A process with Python/database access can construct it. W2 must derive its contents from trusted native admission and restrict socket peers; model output must never create the context. Unknown senders and mismatched source/request identities are rejected before receipt lookup. Every entry/offer query and mutation is owner scoped; foreign and absent IDs return the same `not_found` shape.
+
+== Durable state and behavior
+
+[cols="1,3",options="header"]
+|===
+|Table |Purpose
+|`entries` |Opaque entry ID, owner, optimistic version, lifecycle, classification, details and timestamps.
+|`offers` |One exact source URL per entry in v1, per-entry source permission, URL digest, shop host, collection status/generation and last observation time.
+|`purchases` |Append-only purchase timestamps associated with the operation receipt.
+|`events` |Committed operation, entry/version, request identity and service timestamp; no raw Telegram message or SQL error.
+|`receipts` |Canonical envelope fingerprint and complete original response, including reads and normal command refusals.
+|`metadata` |Database binding and a randomly generated persistent cursor signing key.
+|===
+
+An add stores its source even when classification is incomplete or contradictory and returns `needs_clarification` with `committed=true`. Missing purpose, purchase mode or gift recipient are explicit clarification fields. A gift marked recurring, or a self purchase retaining a recipient, requires correction. An update that introduces these contradictions returns clarification without writing or silently clearing fields. A purchase needs complete, consistent classification. Durable chat-to-clarification matching belongs to W2.
+
+Successful user mutations increment the entry version; stale expected versions return `conflict`. One-time purchases and gifts become `purchased` and cannot be reopened with `resume`. Recurring purchases become `paused` until one calendar month after the purchase in the configured zone, clipping the day to the end of the month. At a DST overlap select the first occurrence (`fold=0`); for a nonexistent local time move forward by the UTC roundtrip. Future purchase timestamps and nonfuture explicit pause deadlines are refused. W1 records expired deadlines without automatically changing state; due-work handling belongs to W3.
+
+Pause, purchase and resume increment the offer generation so future collectors can reject obsolete admission. Resume sets collection status to `pending`; historical observation time remains intact. No collector or result-admission interface exists yet. W1 does not store actual price observations; W3 adds that history and its shop-specific validation.
+
+Lists default to active and paused entries and accept explicit lifecycle/purpose filters. Signed opaque keyset cursors bind owner, filters, page limit and the initial maximum entry sequence. Later additions do not enter an existing traversal; concurrent updates can change membership, so this is not a frozen database snapshot. Cursors survive restart with the same database. Pages respect both the requested limit and a response-size budget; callers must follow the returned cursor even when a page contains fewer entries than requested.
+
+== Transactions, migration and failure
+
+The schema has explicit ordered migrations and SQLite `user_version`. Migration statements, version update and identity binding run in one `BEGIN IMMEDIATE` transaction; an unknown newer version or a nonempty unversioned database is rejected. SQLite foreign keys and full synchronous writes are enabled. The current implementation uses the default rollback journal and a one-second lock timeout.
+
+Each admitted command uses a short immediate transaction. Entry/offer changes, purchase record, event and response receipt commit together. Identical repeats return the original stored response, even after restart or later entry updates. A changed envelope under the same identity returns `conflict`. Storage failure rolls back the transaction and returns only `unavailable`, with `committed=false`; retrying the same request is safe. Invalid shape, identity, semantic parsing or oversized results do not leave partial writes. Receipts establish domain idempotence; they do not establish exactly-once Telegram delivery.
+
+Request and response JSON are bounded to 64 KiB in the domain API. Bounded raw frames, duplicate JSON key rejection, nesting/deadline/peer limits and escaping Telegram output remain W2. URL intake rejects malformed destinations, userinfo, fragments, nonstandard ports and non-public literal IP addresses. It never resolves DNS or makes a request. A hostname passing intake is not approved for network access; DNS rebinding, redirect, proxy and private-address enforcement remain W3.
+
+The database contains private wishlist data and complete response receipts. W1 provides no deployment, retention policy, filesystem permission setup, backup capture or production restore acceptance; those remain W4. Keep local databases outside Git and public documentation inputs. The accepted H1 backup does not automatically include them.
+
+== Local acceptance
+
+[source,sh]
+----
+.venv/bin/python -m unittest tests.test_wishlist_domain tests.test_wishlist_contract tests.test_wishlist_extract -v
+----
+
+The W1 tests use real temporary SQLite files, separate connections, concurrent command races, injected transaction/migration failures and deterministic clocks. They cover owner/source denial before receipt replay, cross-owner entry denial, duplicate/edited requests, incomplete intake, explicit patches, purchase/pause/resume, pagination across restart, response bounds and calendar/DST boundaries. No production database, network, Telegram token or model is used.
+
+Context7 supplied transaction references but no Python 3.12-specific version. Matching primary references are https://docs.python.org/3.12/library/sqlite3.html[Python 3.12 sqlite3 transaction control] and https://docs.python.org/3.12/library/zoneinfo.html[Python 3.12 zoneinfo].

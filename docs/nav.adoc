@@ -21,6 +21,7 @@
 ** xref:architecture.adoc[System boundaries]
 ** xref:wishlist-design.adoc[Wishlist staged design]
 ** xref:wishlist-api.adoc[Wishlist interface and implementation units]
+** xref:wishlist-domain.adoc[Wishlist W1 domain state]
 ** xref:family-conversations.adoc[Personal conversations and family sharing]
 ** xref:h1-prerequisites.adoc[H1 prerequisites]
 ** xref:adr/0001-configuration-validation.adoc[ADR 0001: Configuration validation]
