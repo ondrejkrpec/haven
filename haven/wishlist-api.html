@@ -108,6 +108,10 @@
     
   </li>
   <li>
+    <a href="wishlist-domain.html">Wishlist W1 domain state</a>
+    
+  </li>
+  <li>
     <a href="family-conversations.html">Personal conversations and family sharing</a>
     
   </li>
@@ -215,7 +219,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-06: concrete implementation proposal. Request/command shape validators and an offline extraction probe exist; no wishlist server, database, scheduler or Telegram handler is installed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
+<p>Status, 2026-11-07: <a href="wishlist-domain.html" class="xref page">W1 domain state</a> is implemented and tested locally, including SQLite migrations, owner-scoped commands and receipts. W2–W5 remain proposed; no wishlist server, production database, scheduler or Telegram handler is installed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
 </div>
 </div>
 </div>
@@ -347,9 +351,9 @@
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">W1: domain state</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W1: domain state (locally implemented)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">SQLite migrations, owner-scoped entries/offers/events, command handling and receipts</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Cross-owner denial, duplicate/conflicting receipts, incomplete intake, purchase/pause/resume, version conflicts and calendar boundaries.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="wishlist-domain.html" class="xref page">Local acceptance</a>: cross-owner denial, duplicate/conflicting receipts, incomplete intake, purchase/pause/resume, version conflicts and calendar boundaries.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">W2: local service and ingress</p></td>

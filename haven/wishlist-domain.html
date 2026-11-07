@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist W1: local domain state · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-api.html">Wishlist interface and implementation units</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-domain.html">Wishlist W1 domain state</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="wishlist-feasibility.html">Wishlist direct-fetch feasibility</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-browser-feasibility.html">Wishlist browser mode experiments</a>
+    
+  </li>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Wishlist W1: local domain state</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-11-07: implemented and tested locally. W1 adds SQLite state and an in-process Python command API. It does not install a service, change the deployed Nora profile, fetch prices or authenticate a Telegram event. <a href="wishlist-api.html" class="xref page">W2–W5</a> retain their separate transport, collection, operations and interpretation acceptance.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_modules_and_identity"><a class="anchor" href="#_modules_and_identity"></a>Modules and identity</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>scripts/wishlist_domain.py</code> implements <code>Wishlist</code>, the immutable <code>IngressContext</code> and the first-release commands. <code>scripts/wishlist_store.py</code> owns the SQLite schema and transactions. Both use Python 3.12+ and the existing locked dependencies; no framework or extra dependency is added.</p>
+</div>
+<div class="paragraph">
+<p>Initialize <code>Wishlist(path, bot_id=&#8230;&#8203;, owner_id=&#8230;&#8203;, timezone="Europe/Prague")</code> with an explicit disposable database path for local work. The bot identity is a stable non-secret deployment identifier, never a bot token. One human owner is enrolled. The database binds the bot identity, owner and time zone; reopening with another binding fails. A later enrollment/time-zone migration needs an explicit design.</p>
+</div>
+<div class="paragraph">
+<p><code>handle(envelope, context)</code> validates the request schema, then checks the independently supplied context against the enrolled owner, private chat, bot identity and exact source fields. <code>context.request_id</code> is SHA-256 of the compact ASCII JSON array <code>[bot_id, platform, user_id, chat_id, message_id]</code>; every element is a string. Text digests and commands belong to the envelope fingerprint, not the message identity. An edit therefore conflicts with an existing receipt rather than creating a new operation.</p>
+</div>
+<div class="paragraph">
+<p>The context class is not an authentication mechanism. A process with Python/database access can construct it. W2 must derive its contents from trusted native admission and restrict socket peers; model output must never create the context. Unknown senders and mismatched source/request identities are rejected before receipt lookup. Every entry/offer query and mutation is owner scoped; foreign and absent IDs return the same <code>not_found</code> shape.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_durable_state_and_behavior"><a class="anchor" href="#_durable_state_and_behavior"></a>Durable state and behavior</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Table</th>
+<th class="tableblock halign-left valign-top">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>entries</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Opaque entry ID, owner, optimistic version, lifecycle, classification, details and timestamps.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>offers</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One exact source URL per entry in v1, per-entry source permission, URL digest, shop host, collection status/generation and last observation time.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>purchases</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Append-only purchase timestamps associated with the operation receipt.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>events</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Committed operation, entry/version, request identity and service timestamp; no raw Telegram message or SQL error.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>receipts</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Canonical envelope fingerprint and complete original response, including reads and normal command refusals.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>metadata</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Database binding and a randomly generated persistent cursor signing key.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>An add stores its source even when classification is incomplete or contradictory and returns <code>needs_clarification</code> with <code>committed=true</code>. Missing purpose, purchase mode or gift recipient are explicit clarification fields. A gift marked recurring, or a self purchase retaining a recipient, requires correction. An update that introduces these contradictions returns clarification without writing or silently clearing fields. A purchase needs complete, consistent classification. Durable chat-to-clarification matching belongs to W2.</p>
+</div>
+<div class="paragraph">
+<p>Successful user mutations increment the entry version; stale expected versions return <code>conflict</code>. One-time purchases and gifts become <code>purchased</code> and cannot be reopened with <code>resume</code>. Recurring purchases become <code>paused</code> until one calendar month after the purchase in the configured zone, clipping the day to the end of the month. At a DST overlap select the first occurrence (<code>fold=0</code>); for a nonexistent local time move forward by the UTC roundtrip. Future purchase timestamps and nonfuture explicit pause deadlines are refused. W1 records expired deadlines without automatically changing state; due-work handling belongs to W3.</p>
+</div>
+<div class="paragraph">
+<p>Pause, purchase and resume increment the offer generation so future collectors can reject obsolete admission. Resume sets collection status to <code>pending</code>; historical observation time remains intact. No collector or result-admission interface exists yet. W1 does not store actual price observations; W3 adds that history and its shop-specific validation.</p>
+</div>
+<div class="paragraph">
+<p>Lists default to active and paused entries and accept explicit lifecycle/purpose filters. Signed opaque keyset cursors bind owner, filters, page limit and the initial maximum entry sequence. Later additions do not enter an existing traversal; concurrent updates can change membership, so this is not a frozen database snapshot. Cursors survive restart with the same database. Pages respect both the requested limit and a response-size budget; callers must follow the returned cursor even when a page contains fewer entries than requested.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_transactions_migration_and_failure"><a class="anchor" href="#_transactions_migration_and_failure"></a>Transactions, migration and failure</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The schema has explicit ordered migrations and SQLite <code>user_version</code>. Migration statements, version update and identity binding run in one <code>BEGIN IMMEDIATE</code> transaction; an unknown newer version or a nonempty unversioned database is rejected. SQLite foreign keys and full synchronous writes are enabled. The current implementation uses the default rollback journal and a one-second lock timeout.</p>
+</div>
+<div class="paragraph">
+<p>Each admitted command uses a short immediate transaction. Entry/offer changes, purchase record, event and response receipt commit together. Identical repeats return the original stored response, even after restart or later entry updates. A changed envelope under the same identity returns <code>conflict</code>. Storage failure rolls back the transaction and returns only <code>unavailable</code>, with <code>committed=false</code>; retrying the same request is safe. Invalid shape, identity, semantic parsing or oversized results do not leave partial writes. Receipts establish domain idempotence; they do not establish exactly-once Telegram delivery.</p>
+</div>
+<div class="paragraph">
+<p>Request and response JSON are bounded to 64 KiB in the domain API. Bounded raw frames, duplicate JSON key rejection, nesting/deadline/peer limits and escaping Telegram output remain W2. URL intake rejects malformed destinations, userinfo, fragments, nonstandard ports and non-public literal IP addresses. It never resolves DNS or makes a request. A hostname passing intake is not approved for network access; DNS rebinding, redirect, proxy and private-address enforcement remain W3.</p>
+</div>
+<div class="paragraph">
+<p>The database contains private wishlist data and complete response receipts. W1 provides no deployment, retention policy, filesystem permission setup, backup capture or production restore acceptance; those remain W4. Keep local databases outside Git and public documentation inputs. The accepted H1 backup does not automatically include them.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_local_acceptance"><a class="anchor" href="#_local_acceptance"></a>Local acceptance</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m unittest tests.test_wishlist_domain tests.test_wishlist_contract tests.test_wishlist_extract -v</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The W1 tests use real temporary SQLite files, separate connections, concurrent command races, injected transaction/migration failures and deterministic clocks. They cover owner/source denial before receipt replay, cross-owner entry denial, duplicate/edited requests, incomplete intake, explicit patches, purchase/pause/resume, pagination across restart, response bounds and calendar/DST boundaries. No production database, network, Telegram token or model is used.</p>
+</div>
+<div class="paragraph">
+<p>Context7 supplied transaction references but no Python 3.12-specific version. Matching primary references are <a href="https://docs.python.org/3.12/library/sqlite3.html">Python 3.12 sqlite3 transaction control</a> and <a href="https://docs.python.org/3.12/library/zoneinfo.html">Python 3.12 zoneinfo</a>.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>
