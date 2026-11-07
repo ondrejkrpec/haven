@@ -112,6 +112,10 @@
     
   </li>
   <li>
+    <a href="wishlist-service.html">Wishlist W2 local service and Telegram ingress</a>
+    
+  </li>
+  <li>
     <a href="family-conversations.html">Personal conversations and family sharing</a>
     
   </li>
@@ -167,6 +171,10 @@
     <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
     
   </li>
+  <li>
+    <a href="adr/0013-wishlist-local-admission.html">ADR 0013: Wishlist local admission</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -219,7 +227,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-07: implemented and tested locally. W1 adds SQLite state and an in-process Python command API. It does not install a service, change the deployed Nora profile, fetch prices or authenticate a Telegram event. <a href="wishlist-api.html" class="xref page">W2–W5</a> retain their separate transport, collection, operations and interpretation acceptance.</p>
+<p>Status, 2026-11-07: implemented and tested locally. W1 adds SQLite state and an in-process Python command API. <a href="wishlist-service.html" class="xref page">W2 now extends it</a> with a locally accepted service, native ingress and schema migration 2. The deployed Nora profile remains unchanged; collection, production/recovery and interpretation retain their separate <a href="wishlist-api.html" class="xref page">W3–W5 acceptance</a>.</p>
 </div>
 </div>
 </div>

@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist W2: local service and Telegram ingress · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-api.html">Wishlist interface and implementation units</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-domain.html">Wishlist W1 domain state</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-service.html">Wishlist W2 local service and Telegram ingress</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+  <li>
+    <a href="adr/0013-wishlist-local-admission.html">ADR 0013: Wishlist local admission</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="wishlist-feasibility.html">Wishlist direct-fetch feasibility</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-browser-feasibility.html">Wishlist browser mode experiments</a>
+    
+  </li>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Wishlist W2: local service and Telegram ingress</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-11-07: implemented and accepted locally against temporary databases, real Linux Unix sockets and the pinned native Hermes/Telegram APIs. W2 extends <a href="wishlist-domain.html" class="xref page">W1</a> with an explicit service, authenticated local ingress and durable clarification. No production profile or VPS was changed. Deployment, service identities, database backup capture and owner live acceptance remain <a href="wishlist-api.html" class="xref page">W4</a>; collection remains W3.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_components_and_trust"><a class="anchor" href="#_components_and_trust"></a>Components and trust</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>scripts/wishlist_service.py</code> runs one process that owns SQLite writes. <code>scripts/wishlist_protocol.py</code> defines framing, strict JSON and kernel peer checks. <code>scripts/wishlist_telegram.py</code> parses explicit operations and stores their replies/questions. <code>scripts/wishlist_ingress.py</code> connects the existing native bot to this service. No new dependency, HTTP listener, model request or Telegram poller is added.</p>
+</div>
+<div class="paragraph">
+<p>The service admits exactly the configured ingress UID using Linux <code>SO_PEERCRED</code>, before reading request contents. The client independently checks the server UID and socket ownership/mode. The ingress socket has no collector role: collector operations and JSON role claims are refused. W3 must provide its own separately permissioned collector interface. A process sharing an allowed UID has that UID&#8217;s trust; production must put the domain owner, trusted ingress and future lower-trust interpretation/collection under their intended separate identities.</p>
+</div>
+<div class="paragraph">
+<p>The optional native integration uses the existing <code>haven-capabilities</code> plugin and unchanged independent model/tool/cron guard. A synchronous <code>pre_gateway_dispatch</code> callback captures only an original private human text message from the configured bot and owner. It checks the native PTB message against the normalized source and text. Edited, media, thread, transformed and combined messages are refused for wishlist writes. Hidden-link expansion or rapid-message batching can therefore require resending a single plain-text command. Capture performs no domain operation or send before native admission.</p>
+</div>
+<div class="paragraph">
+<p>After authorization, <code>post_gateway_admission</code> compares the captured identity and text again, then calls the peer-authenticated service. The capture lives in a task context variable; it is not a cross-message global queue. Exact native admission/dispatch/adapter source hashes are pinned in <code>config/wishlist-runtime.json</code> and checked when the optional profile starts. The pinned core remains Hermes <code>bf0203a794a07aac3ff764972ab9087baa4e4f4e</code>, with its existing patches and PTB 22.8.</p>
+</div>
+<div class="paragraph">
+<p>Responses use the receiving message&#8217;s existing bot connection with <code>parse_mode=None</code> and link previews disabled. Shop/user text is sent literally, including Markdown/HTML-looking content. The consumer returns <code>handled</code> after that send, preventing a second gateway reply. On service or send uncertainty it returns a fixed status message; the independent native guard still prevents any ordinary model/tool fallback. Delivery uses this explicit native bot call rather than the ordinary gateway final-reply ledger. Domain receipts prevent repeat writes; Telegram delivery itself can still repeat or fail.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_deterministic_owner_commands"><a class="anchor" href="#_deterministic_owner_commands"></a>Deterministic owner commands</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Messages are single-line text, up to Telegram&#8217;s 4096 UTF-16 units. Send one operation per message. Item references such as <code>#1</code> identify the owner&#8217;s entries; the application resolves them and reads the expected version within the operation transaction. Structured domain callers can still supply explicit versions using the W1 envelope.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Message</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://shop.example/product" class="bare">https://shop.example/product</a></code> or <code>wl přidat <a href="https://shop.example/product" class="bare">https://shop.example/product</a></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Save the exact link and ask for missing classification.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl pomoc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Show deterministic command help.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl seznam</code>, <code>wl seznam vše</code>, <code>wl seznam koupené</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List active/paused, all, or purchased entries, at most ten per page.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl dále CURSOR</code>, optionally followed by <code>vše</code> or <code>koupené</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Continue the same list; copy the complete continuation command from the preceding reply to retain its filter.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl detail #1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Show state, source, classification and bounded note/recipient details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl upravit #1 {"label":"Nový název","note":null}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Patch only explicit supported fields; use strict JSON for detailed edits.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl koupeno #1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Record purchase using the service clock and W1 lifecycle rules.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl pauza #1 2026-12-01T12:00:00+01:00</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pause until an explicit future instant. The date is an example.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl obnovit #1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resume a paused item; purchased items are not reopened.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl dopln KÓD pro mě jednorázově</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Answer the specific pending question with a complete self/once classification.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl dopln KÓD pro mě opakovaně</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Select self/recurring classification.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wl dopln KÓD dárek pro JMÉNO</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Select a one-time gift with that recipient.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Unaccented command variants and the documented English operation aliases are also accepted by the parser. <code>wl dopln KÓD {"purpose":"self","purchase_mode":"once"}</code> supports an explicit field patch. Unknown prose remains outside deterministic interpretation; bounded natural-language proposals belong to W5. Wishlist help is appended to <code>Co umíš?</code> only when the optional integration is explicitly selected.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_durable_replies_and_questions"><a class="anchor" href="#_durable_replies_and_questions"></a>Durable replies and questions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Schema migration 2 adds <code>telegram_receipts</code> and <code>clarifications</code>. Migration preserves W1 entries, source offers, event/command receipts and the existing pagination signing key. An older W1 binary rejects this newer database instead of attempting an implicit downgrade. W4 must account for schema compatibility when preparing a production rollback.</p>
+</div>
+<div class="paragraph">
+<p>The application validates bot/owner/private-chat/message identity and rejects edits before receipt lookup. It fingerprints the original text and source facts. In one immediate transaction it parses the operation, applies the W1 command, stores any question and records the complete plain-text response. A repeat of the same message returns the original response even after restart or after a question was answered. Changed text under the same message identity conflicts. Read receipts are historical replies; a fresh list request provides current state.</p>
+</div>
+<div class="paragraph">
+<p>A clarification has a random token, owner/chat binding, entry ID, expected entry version and a 24-hour expiry. Only an explicit <code>wl dopln TOKEN &#8230;&#8203;</code> can answer it. Unrelated messages, old/replaced tokens, another owner, expired questions and stale versions cannot silently update the item. Missing classification never discards the original link. A failed final receipt insert rolls back the entry, event, W1 receipt and question together.</p>
+</div>
+<div class="paragraph">
+<p>An invalid command from an otherwise valid message also receives a durable refusal receipt. A savepoint removes any partial operation before storing that refusal. Reusing its message identity with changed text therefore conflicts even when the original syntax was invalid. Storage failures remain retryable and do not become permanent refusal receipts.</p>
+</div>
+<div class="paragraph">
+<p>Losing the socket response or failing to send Telegram does not undo a committed operation. Native redelivery of the same message is safe for domain state. Manually sending a new Telegram message creates a new request identity; the uncertainty message therefore directs the owner to inspect <code>wl seznam</code> before repeating a write.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_socket_protocol_and_bounded_recovery"><a class="anchor" href="#_socket_protocol_and_bounded_recovery"></a>Socket protocol and bounded recovery</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Each connection carries one request and one response. A frame is a four-byte unsigned big-endian byte length followed by a UTF-8 JSON object, limited to 65536 bytes. Nesting is limited to 32; duplicate keys, non-finite numbers, malformed Unicode and extra schema fields are refused. Request deadlines are five seconds, there are at most eight admitted connections and no unbounded application wait queue. SQLite uses the existing one-second lock timeout. Shutdown cancels active connections and closes them with a bounded grace period.</p>
+</div>
+<div class="paragraph">
+<p>An admitted peer can submit the existing W1 request envelope. It can also submit exactly <code>{"protocol_version":1,"operation":"telegram.message","event":&#8230;&#8203;}</code>. The event has only <code>bot_id</code>, <code>user_id</code>, <code>chat_id</code>, <code>message_id</code>, <code>text</code>, <code>chat_type="private"</code>, <code>is_bot=false</code> and <code>edited=false</code>; it is constructed by trusted ingress, never by a model. The service rechecks the enrolled identities before parsing it. Additional frames on a connection are not executed.</p>
+</div>
+<div class="paragraph">
+<p>The state directory must be owned by the domain service with mode 0700. The database must be a regular, singly linked, service-owned file with mode 0600. The IPC directory is service-owned mode 0700 or 0750, and the socket is mode 0660 with the explicit ingress group. Clients cannot write or unlink objects in that directory. Symlinked paths, shared database files and unexpected socket ownership/modes fail closed.</p>
+</div>
+<div class="paragraph">
+<p>An exclusive private lock prevents a second service from owning the socket. On restart, the service removes only a verified, service-owned stale socket that refuses a connection while the lease is held. It preserves live/unrelated sockets and files. A real SIGKILL/restart test verifies committed reply recovery without removing the database or accepting a duplicate write.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_explicit_local_configuration"><a class="anchor" href="#_explicit_local_configuration"></a>Explicit local configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use a separate operator-owned JSON file, outside public Git. This synthetic layout illustrates the configuration, not an installed account or production deployment:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "schema_version": 1,
+  "database": "/var/lib/haven-wishlist/state/wishlist.sqlite3",
+  "socket": "/run/haven-wishlist/ingress.sock",
+  "socket_gid": 2303,
+  "ingress_uid": 2302,
+  "bot_id": "200001",
+  "owner_id": "100001",
+  "timezone": "Europe/Prague"
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Run <code>python -m scripts.wishlist_service --config "$WISHLIST_SERVICE_CONFIG"</code> under the intended domain identity after preparing the private directories and IPC group. No credentials are required by this process. It emits fixed ready/failure diagnostics and never logs raw messages, source URLs or database exception text. Receipt retention and operational freshness reporting remain W4.</p>
+</div>
+<div class="paragraph">
+<p>The corresponding explicit native ingress settings are <code>{"socket":"/run/haven-wishlist/ingress.sock","service_uid":2301,"bot_id":"200001"}</code>. Here 2301 is the domain service&#8217;s UID; 2302 is the trusted Telegram process UID. Supply them through <code>scripts.render_model --service --capabilities --wishlist-settings "$WISHLIST_INGRESS_SETTINGS"</code> together with the existing instance and fresh output arguments. Rendering reads no token. Ordinary rendering without this option retains the existing profile. Production packaging/playbooks and the expanded rollback/backup capture are W4 prerequisites; the H1 service playbook alone does not package the new service.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_local_acceptance"><a class="anchor" href="#_local_acceptance"></a>Local acceptance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Run the public wishlist tests with <code>.venv/bin/python -m unittest tests.test_wishlist_domain tests.test_wishlist_service tests.test_wishlist_contract tests.test_wishlist_extract -v</code>. These use private temporary paths, real local sockets/peer credentials, a real subprocess daemon, deterministic clocks and fake Telegram sends. A sandbox that forbids Unix socket binding cannot establish this acceptance; run it in a permitted local Linux environment rather than counting skipped socket tests as a pass.</p>
+</div>
+<div class="paragraph">
+<p>The opt-in <code>research/w2/test_native_wishlist.py</code> additionally uses the actual native Telegram adapter, PTB messages, plugin discovery, full <code>GatewayRunner._handle_message</code> and the existing native execution guard. Only <code>Bot.send_message</code> is replaced; its callback verifies the committed database from another connection and checks plain-text arguments. It starts no poller and uses no account token or provider. Invoke it through the pinned upstream <code>scripts/run_tests.sh</code> with the existing Telegram test environment. The retained H1.6.1 native tests and Telegram allowlist/callback tests are checked alongside it; the original post-admission scenarios use the separate core environment with its required <code>aiohttp</code> extra.</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/research/w2/acceptance.json" class="xref attachment">The local acceptance receipt</a> records exact maintained-source hashes, baseline/native revisions, commands and results: 69 wishlist tests on Python 3.12.14, 13 native integration/guard/Telegram checks and five original post-admission checks. Counts overlap across environments and retained scenarios. The earlier sandbox bind refusal and overlong native fixture path are recorded separately from successful runs; none establishes production acceptance.</p>
+</div>
+<div class="paragraph">
+<p>Context7 had no exact Python 3.12 or PTB 22.8 documentation version. Python behavior was checked against <a href="https://docs.python.org/3.12/library/asyncio-stream.html">3.12 streams</a> and <a href="https://docs.python.org/3.12/library/socket.html">3.12 sockets</a>; Telegram behavior uses the exact installed 22.8 source and pinned Hermes source. No newer <code>cleanup_socket</code> or socket <code>mode</code> asyncio arguments are assumed.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

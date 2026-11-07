@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wishlist v1: proposed interface and implementation units · Haven</title>
+  <title>Wishlist v1: interface and implementation units · Haven</title>
   <link rel="stylesheet" href="../_/css/site.css">
 </head>
 <body>
@@ -112,6 +112,10 @@
     
   </li>
   <li>
+    <a href="wishlist-service.html">Wishlist W2 local service and Telegram ingress</a>
+    
+  </li>
+  <li>
     <a href="family-conversations.html">Personal conversations and family sharing</a>
     
   </li>
@@ -167,6 +171,10 @@
     <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
     
   </li>
+  <li>
+    <a href="adr/0013-wishlist-local-admission.html">ADR 0013: Wishlist local admission</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -215,11 +223,11 @@
 </nav>
     <main id="main" tabindex="-1">
       <article>
-        <h1>Wishlist v1: proposed interface and implementation units</h1>
+        <h1>Wishlist v1: interface and implementation units</h1>
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-07: <a href="wishlist-domain.html" class="xref page">W1 domain state</a> is implemented and tested locally, including SQLite migrations, owner-scoped commands and receipts. W2–W5 remain proposed; no wishlist server, production database, scheduler or Telegram handler is installed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
+<p>Status, 2026-11-07: <a href="wishlist-domain.html" class="xref page">W1 domain state</a> and <a href="wishlist-service.html" class="xref page">W2 local service/Telegram ingress</a> are implemented and tested locally. W3–W5 remain proposed; no wishlist service, production database, scheduler or handler is deployed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
 </div>
 </div>
 </div>
@@ -227,22 +235,25 @@
 <h2 id="_local_boundary"><a class="anchor" href="#_local_boundary"></a>Local boundary</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Propose a Python domain process that exclusively owns SQLite writes. Use Linux Unix-domain stream sockets and kernel peer credentials, with separately permissioned ingress and collector sockets. Map exact allowed peer UIDs to roles in operator configuration, never to role claims in a JSON body. A local socket alone is not authentication. The model interpreter must run under a separate identity without either socket or database access; a Hermes profile alone cannot provide this separation.</p>
+<p>W2 implements a Python domain process that exclusively owns SQLite writes. Its Linux Unix-domain ingress socket authenticates the exact allowed peer UID through kernel credentials and the client verifies the server UID. The separately permissioned collector socket remains W3. Role claims in a JSON body grant no access. The future model interpreter must run under a separate identity without socket or database access; a Hermes profile alone cannot provide this separation.</p>
 </div>
 <div class="paragraph">
-<p>Use bounded UTF-8 JSON frames with a 64 KiB limit, nesting limit 32, duplicate-key and non-finite-number rejection, fixed socket deadlines and bounded connections. Reject extra fields. These transport checks remain implementation work. No general HTTP framework or broker is required for this first interface.</p>
+<p>W2 uses bounded UTF-8 JSON frames with a 64 KiB limit, nesting limit 32, duplicate-key and non-finite-number rejection, fixed socket deadlines and bounded connections. Extra schema fields are rejected. <a href="wishlist-service.html" class="xref page">The service guide</a> specifies framing, limits, message commands and the additional Telegram application envelope. No general HTTP framework or broker is required.</p>
 </div>
 <div class="paragraph">
 <p>Trusted ingress derives source fields from the admitted native Telegram event. Require an enrolled human owner, private chat, and matching user/chat identity. Recheck this in the domain service before owner-scoped operations. The source object cannot come from model output. Keep additional users disabled until enrollment and cross-user denial tests are accepted.</p>
 </div>
 <div class="paragraph">
-<p>The proposed wire envelope is <a href="_attachments/schemas/wishlist-request-v1.schema.json" class="xref attachment">request schema v1</a>. The model produces only its <code>$defs/command</code> object; trusted ingress adds <code>protocol_version</code>, <code>request_id</code> and <code>source</code>. <code>scripts/wishlist_contract.py</code> exposes separate shape validators. Schema validation does not prove sender identity, owner access, safe fetch destinations or future timestamps. Timestamp validation requires the supplied format checker; the schema&#8217;s <code>format</code> keyword alone is insufficient with the existing minimal dependency set.</p>
+<p>Structured domain calls use <a href="_attachments/schemas/wishlist-request-v1.schema.json" class="xref attachment">request schema v1</a>. In future W5, the model produces only its <code>$defs/command</code> object; trusted ingress adds <code>protocol_version</code>, <code>request_id</code> and <code>source</code>. W2 parses explicit commands without a model. <code>scripts/wishlist_contract.py</code> exposes separate shape validators. Schema validation does not prove sender identity, owner access, safe fetch destinations or future timestamps. Timestamp validation requires the supplied format checker; the schema&#8217;s <code>format</code> keyword alone is insufficient with the existing minimal dependency set.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_operations"><a class="anchor" href="#_operations"></a>Operations</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>W1/W2 implement these domain operations and deterministic Telegram commands. Actual price observations and their history are W3 work.</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 25%;">
@@ -317,7 +328,7 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_collection_and_model_interfaces"><a class="anchor" href="#_collection_and_model_interfaces"></a>Collection and model interfaces</h2>
+<h2 id="_collection_and_model_interfaces_planned_w3w5"><a class="anchor" href="#_collection_and_model_interfaces_planned_w3w5"></a>Collection and model interfaces (planned W3/W5)</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The scheduler asks the domain service to enqueue due work; it does not edit SQLite directly. Start with a systemd timer outside Hermes cron, an independent single-dispatch lease and a small SQLite job table. Exact service accounts, timer expression, queue limits and resource bounds belong to implementation configuration.</p>
@@ -356,9 +367,9 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="wishlist-domain.html" class="xref page">Local acceptance</a>: cross-owner denial, duplicate/conflicting receipts, incomplete intake, purchase/pause/resume, version conflicts and calendar boundaries.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">W2: local service and ingress</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W2: local service and ingress (locally implemented)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Peer-authenticated bounded sockets, deterministic Telegram operations and durable clarification</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Unauthorized peer/role denial, malformed frames, correct owner identity, escaped replies, unchanged native guard and commit-before-confirmation after restart.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="wishlist-service.html" class="xref page">Local acceptance</a>: unauthorized peer/role denial, malformed frames, correct owner identity, literal plain-text replies, unchanged native guard and commit-before-confirmation after restart.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">W3: collection</p></td>

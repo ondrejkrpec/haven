@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-11-07T09:47:35.595309+00:00",
+  "source_baseline": "f0e70fa83b785e538b6d585602537f2decc131a6",
+  "maintained_source_sha256": {
+    "scripts/wishlist_domain.py": "46d2c49ee51d17882f6bbb36b5459d1115d36a5f7b900a174c70c6ce6325e041",
+    "scripts/wishlist_store.py": "af067239da3acad8a4f3d76bf01576f35a0afeea8a72567879ef257a4e6f3270",
+    "scripts/wishlist_protocol.py": "f96924aad5bfa0c9e7d5f8dab33c18943546d1d06a1b75f210fe209771219876",
+    "scripts/wishlist_service.py": "f09f4c523cb96e120d7cb0799a565ecc89770e8daf9c20b65660f4307e56cd1b",
+    "scripts/wishlist_telegram.py": "ab0c0449f44025ea1c9f0589be203f06d2644a22137aa70a8523b28e83eb628f",
+    "scripts/wishlist_ingress.py": "ffe8e8bc7ecc2019a62f1e1bcc4567636d7d37b09caf42ad3b084b93abec008f",
+    "scripts/model_contract.py": "d96244b76ad1096c4f1dc5b914c77698298eca802993e0eaa1d35a8774777395",
+    "scripts/render_model.py": "e9409a4109e294641f5a51db35ab3e35c50de19c8044f3480313bbcf367230ef",
+    "scripts/service_runtime.py": "92dd333ffc987901d83fa74ba585f8c0c9b98610a659cfcca3342da7a035ceac",
+    "plugins/haven-capabilities/__init__.py": "aa38d44a0416da9e0ce482f91de3d5fd5a711e71469208df24c4a567efc6a737",
+    "plugins/haven-capabilities/plugin.yaml": "f3b155264466e5e4898b78801b7d4a67919addfe5dd65d1032901fa3cb818ae9",
+    "config/wishlist-runtime.json": "e91dae7c9a3657d854d1f7d6e4f1bdfc7eb355f47e3e5cbf7b234be96c31ba50",
+    "schemas/wishlist-request-v1.schema.json": "aa6bf6ecb69ef0c73bc9cf93fda0da8de9e6145186e1557d6d8f2fe63774acb9",
+    "tests/test_wishlist_service.py": "4045c81529a423c6bb99101cf6eb8052ee134b70744b7e3365e93e99f7c1b577",
+    "tests/test_wishlist_domain.py": "f2303a5e714571f265978d21a0d93db8fa281209ecaf07acbf420d2c7481e911",
+    "research/w2/test_native_wishlist.py": "355d1c23d60f3705acddb8b946ca54cd29250bb3bd97611f69a726b2237bb686"
+  },
+  "hermes_commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+  "native_python": "3.14.9",
+  "native_python_telegram_bot": "22.8",
+  "checks": [
+    {
+      "command": "python3.12 -W error::ResourceWarning -m unittest tests.test_wishlist_domain tests.test_wishlist_service tests.test_wishlist_contract tests.test_wishlist_extract -v",
+      "python": "3.12.14",
+      "passed": 69,
+      "failed": 0
+    },
+    {
+      "command": "HERMES_PYTHON=\"$HERMES_TELEGRAM_TEST_PYTHON\" HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 2 \"$HAVEN_ROOT/research/w2/test_native_wishlist.py\" \"$HAVEN_ROOT/research/h1.6.1/test_native_capabilities.py\" tests/plugins/platforms/telegram/test_allowlist_json_adapter.py tests/gateway/test_telegram_callback_auth_fail_closed.py",
+      "cwd": "pinned Hermes checkout",
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "command": "HERMES_PYTHON=\"$HERMES_CORE_TEST_PYTHON\" HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 2 tests/gateway/test_post_gateway_admission.py",
+      "cwd": "pinned Hermes checkout",
+      "passed": 5,
+      "failed": 0
+    }
+  ],
+  "scope": [
+    "Temporary local SQLite databases and Linux Unix sockets",
+    "Real kernel peer UID checks and daemon SIGKILL/restart",
+    "Exact native adapter, plugin discovery and GatewayRunner with fake Bot.send_message",
+    "No production state, account credentials, model requests or added poller"
+  ],
+  "initial_failures": [
+    "Sandbox refused Unix socket bind; acceptance ran in a permitted local environment",
+    "Native fixture socket path exceeded the bounded Linux path length; shortened the temporary fixture"
+  ],
+  "limits": [
+    "Local source acceptance only; not GitHub Actions or live production acceptance",
+    "Deployment identities, packaging, backup capture, restore and live owner checks remain W4",
+    "Collection and bounded model interpretation remain W3 and W5",
+    "Counts overlap with existing tests and across interpreter runs"
+  ]
+}
