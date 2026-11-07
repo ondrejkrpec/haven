@@ -116,6 +116,10 @@
     
   </li>
   <li>
+    <a href="wishlist-language.html">Wishlist W5 bounded natural conversation</a>
+    
+  </li>
+  <li>
     <a href="family-conversations.html">Personal conversations and family sharing</a>
     
   </li>
@@ -175,6 +179,10 @@
     <a href="adr/0013-wishlist-local-admission.html">ADR 0013: Wishlist local admission</a>
     
   </li>
+  <li>
+    <a href="adr/0014-wishlist-language-before-collection.html">ADR 0014: Wishlist conversation before collection</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -227,7 +235,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-07: <a href="wishlist-domain.html" class="xref page">W1 domain state</a> and <a href="wishlist-service.html" class="xref page">W2 local service/Telegram ingress</a> are implemented and tested locally. W3–W5 remain proposed; no wishlist service, production database, scheduler or handler is deployed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
+<p>Status, 2026-11-07: <a href="wishlist-domain.html" class="xref page">W1 domain state</a> and <a href="wishlist-service.html" class="xref page">W2 local service/Telegram ingress</a> are implemented and tested locally. <a href="wishlist-language.html" class="xref page">W5 bounded wishlist conversation</a> is also implemented locally, ahead of collection; W3/W4 and live language acceptance remain pending; no wishlist service, production database, scheduler or handler is deployed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
 </div>
 </div>
 </div>
@@ -235,7 +243,7 @@
 <h2 id="_local_boundary"><a class="anchor" href="#_local_boundary"></a>Local boundary</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>W2 implements a Python domain process that exclusively owns SQLite writes. Its Linux Unix-domain ingress socket authenticates the exact allowed peer UID through kernel credentials and the client verifies the server UID. The separately permissioned collector socket remains W3. Role claims in a JSON body grant no access. The future model interpreter must run under a separate identity without socket or database access; a Hermes profile alone cannot provide this separation.</p>
+<p>W2 implements a Python domain process that exclusively owns SQLite writes. Its Linux Unix-domain ingress socket authenticates the exact allowed peer UID through kernel credentials and the client verifies the server UID. The separately permissioned collector socket remains W3. Role claims in a JSON body grant no access. The W5 model interpreter must run under a separate identity without domain socket or database access; a Hermes profile alone cannot provide this separation.</p>
 </div>
 <div class="paragraph">
 <p>W2 uses bounded UTF-8 JSON frames with a 64 KiB limit, nesting limit 32, duplicate-key and non-finite-number rejection, fixed socket deadlines and bounded connections. Extra schema fields are rejected. <a href="wishlist-service.html" class="xref page">The service guide</a> specifies framing, limits, message commands and the additional Telegram application envelope. No general HTTP framework or broker is required.</p>
@@ -244,7 +252,7 @@
 <p>Trusted ingress derives source fields from the admitted native Telegram event. Require an enrolled human owner, private chat, and matching user/chat identity. Recheck this in the domain service before owner-scoped operations. The source object cannot come from model output. Keep additional users disabled until enrollment and cross-user denial tests are accepted.</p>
 </div>
 <div class="paragraph">
-<p>Structured domain calls use <a href="_attachments/schemas/wishlist-request-v1.schema.json" class="xref attachment">request schema v1</a>. In future W5, the model produces only its <code>$defs/command</code> object; trusted ingress adds <code>protocol_version</code>, <code>request_id</code> and <code>source</code>. W2 parses explicit commands without a model. <code>scripts/wishlist_contract.py</code> exposes separate shape validators. Schema validation does not prove sender identity, owner access, safe fetch destinations or future timestamps. Timestamp validation requires the supplied format checker; the schema&#8217;s <code>format</code> keyword alone is insufficient with the existing minimal dependency set.</p>
+<p>Structured domain calls use <a href="_attachments/schemas/wishlist-request-v1.schema.json" class="xref attachment">request schema v1</a>. In W5, the model proposes only its <code>$defs/command</code> object or an enumerated clarification; trusted ingress adds <code>protocol_version</code>, <code>request_id</code> and <code>source</code>. W2 parses explicit commands without a model. <code>scripts/wishlist_contract.py</code> exposes separate shape validators. Schema validation does not prove sender identity, owner access, safe fetch destinations or future timestamps. Timestamp validation requires the supplied format checker; the schema&#8217;s <code>format</code> keyword alone is insufficient with the existing minimal dependency set.</p>
 </div>
 </div>
 </div>
@@ -328,7 +336,7 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_collection_and_model_interfaces_planned_w3w5"><a class="anchor" href="#_collection_and_model_interfaces_planned_w3w5"></a>Collection and model interfaces (planned W3/W5)</h2>
+<h2 id="_collection_planned_w3_and_language_local_w5"><a class="anchor" href="#_collection_planned_w3_and_language_local_w5"></a>Collection (planned W3) and language (local W5)</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The scheduler asks the domain service to enqueue due work; it does not edit SQLite directly. Start with a systemd timer outside Hermes cron, an independent single-dispatch lease and a small SQLite job table. Exact service accounts, timer expression, queue limits and resource bounds belong to implementation configuration.</p>
@@ -340,7 +348,7 @@
 <p>Before network use, validate every destination/redirect and prevent access to private/local addresses, including DNS rebinding and proxy inheritance. The offline probe implements none of this network boundary. Accepted observations need shop-specific checks for exact variant, currency, quantity, membership/coupon conditions and price consistency; a generic extracted candidate is not yet accepted evidence of a deal.</p>
 </div>
 <div class="paragraph">
-<p>For natural-language intake, first evaluate a separate bounded no-tools Hermes interpreter against the pinned runtime. It receives only the message and necessary owner-filtered context and returns either a command proposal or clarification. Validate its output independently; no fallback enables the ordinary agent. On quota/provider failure, deterministic URL intake/list operations remain available. Do not add wishlist model calls inside the current independently guarded Telegram process. A provider request, credential delivery and new ingress behavior need their own scoped acceptance.</p>
+<p><a href="wishlist-language.html" class="xref page">W5</a> implements a separate bounded no-tools native interpreter with strict proposal validation, versioned conversational context and trusted replies. It never enables a model inside the guarded Telegram process. Bare URL intake and explicit commands remain available on provider failure. Production identity isolation, independent account enrollment and live provider/owner acceptance remain prerequisites of the minimum W4 slice.</p>
 </div>
 </div>
 </div>
@@ -382,14 +390,14 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Measured resource headroom with Hermes/backups, consistent database restore, version compatibility and rollback that preserves history.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">W5: bounded language interpretation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W5: bounded language interpretation (locally implemented)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Separate no-tools model identity and validated command proposals</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Scoped provider check, quota/error fallback, no database/tool/host access and no identity selection by model output.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Local synthetic/native acceptance; separate UID, OS restrictions and live provider/owner checks remain required before enablement.</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>These are implementation units within the first-release design, not a requirement to expose half-tested services in production. Deterministic collection can start before W5 if explicitly accepted as the initial usable slice. Cross-shop discovery, recommendations, Gmail, other users, coding tools and automatic host maintenance remain later stages.</p>
+<p>These are implementation units within the first-release design, not a requirement to expose half-tested services in production. The owner selected wishlist conversation first: W5 local implementation → minimum W4 conversational deployment → W3 → remaining W4 acceptance. Cross-shop discovery, recommendations, Gmail, other users, coding tools and automatic host maintenance remain later stages.</p>
 </div>
 </div>
 </div>

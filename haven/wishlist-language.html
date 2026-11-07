@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist W5: bounded natural conversation · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-api.html">Wishlist interface and implementation units</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-domain.html">Wishlist W1 domain state</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-service.html">Wishlist W2 local service and Telegram ingress</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-language.html">Wishlist W5 bounded natural conversation</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+  <li>
+    <a href="adr/0013-wishlist-local-admission.html">ADR 0013: Wishlist local admission</a>
+    
+  </li>
+  <li>
+    <a href="adr/0014-wishlist-language-before-collection.html">ADR 0014: Wishlist conversation before collection</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="wishlist-feasibility.html">Wishlist direct-fetch feasibility</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-browser-feasibility.html">Wishlist browser mode experiments</a>
+    
+  </li>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Wishlist W5: bounded natural conversation</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-11-07: implemented and accepted locally, ahead of W3 at the owner&#8217;s request. Scope is natural conversation about the owner&#8217;s wishlist. General chat, web search, prices, coding tools and additional users are outside this change. No VPS, production profile or real account was changed. Live provider interpretation and owner acceptance remain prerequisites of the minimum W4 deployment slice described below.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conversation_and_priority"><a class="anchor" href="#_conversation_and_priority"></a>Conversation and priority</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The optional mode accepts ordinary Czech messages through the existing admitted Telegram connection: adding a supplied product link with details, listing entries, showing an item, changing details, recording purchase and pausing/resuming. Follow-up messages can answer a question without a <code>wl</code> command or clarification token. For example, a bare link is saved first; “Je to dárek pro mámu” can complete its classification. “Tu pánev už jsem koupil” must ask which item when several pans match, then retain the purchase intent for “tu modrou”. One message proposes at most one operation.</p>
+</div>
+<div class="paragraph">
+<p>The domain service constructs replies from committed results and fixed questions. Model prose never becomes a confirmation. Price questions receive a fixed explanation that collection is unavailable. Explicit W2 commands and bare HTTPS links remain deterministic, including when the provider fails. A failed natural-language request reports uncertainty without acknowledging a write; the user can resend after the cooldown or submit the bare URL.</p>
+</div>
+<div class="paragraph">
+<p>The accepted order is W1/W2 → W5 source/local acceptance → minimum W4 conversational deployment → W3 collection → remaining W4 collection/operations acceptance. W4 is still a prerequisite for a usable production bot. The current H1 bot remains the deployed deterministic pilot.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_authority_and_native_route"><a class="anchor" href="#_authority_and_native_route"></a>Authority and native route</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Telegram coordinator retains the independent H1.6.1 model/tool/cron guard. <code>natural_language=true</code> is an explicit wishlist ingress setting, rendered through the existing bounded service profile. It routes unrecognized text to the wishlist service after admission; existing system status/capability operations stay deterministic. It adds no poller.</p>
+</div>
+<div class="paragraph">
+<p><code>scripts/wishlist_language.py</code> reads bounded owner-scoped context from the domain database, reserves an interpretation attempt, then releases the transaction before model I/O. <code>scripts/wishlist_interpreter.py</code> exposes a second peer-authenticated Unix socket. Only the configured domain UID can call it. The domain client authenticates its server UID. Production configuration rejects a model UID shared with the coordinator or domain owner. Both sockets require their own private directory and ingress lease.</p>
+</div>
+<div class="paragraph">
+<p>The interpreter starts one short-lived <code>scripts.wishlist_model</code> subprocess. Its environment contains explicit interpreter/profile paths, no inherited credentials or proxies. The profile must match the bounded H1.4 native configuration, apart from the upstream version marker. It uses its own separately enrolled Hermes subscription credentials, the fixed Codex route and pinned native adapter; never copy workstation or coordinator login caches. It does not instantiate <code>AIAgent</code> or the general auxiliary router. The independent native guard is armed before its single low-level no-tools request. Source assumptions are checked against the accepted Hermes revision and additional language-runtime hashes.</p>
+</div>
+<div class="paragraph">
+<p>A separate UID and profile must be combined with filesystem and systemd isolation in W4: the interpreter must not read the wishlist database, coordinator home, bot token, backups or unrelated host data. The source implementation and same-UID test fixtures do not establish deployed OS isolation. The interpreter needs only its own credentials/profile, read-only runtime and restricted provider connectivity; it receives no domain ingress permission.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_proposal_and_validation"><a class="anchor" href="#_proposal_and_validation"></a>Proposal and validation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The model receives current text/time/time zone, opaque request/attempt IDs and at most 20 scoped entries. A snapshot includes ID/version/reference, label, classification, state and bounded source URL; stored note fields are omitted. Recent conversation includes up to six user/reply pairs, each side truncated to 500 characters, plus focus, last list and pending intent. User-supplied private text in this context is sent to the configured provider; it is not diagnostic logging. Sessions expire after 24 hours.</p>
+</div>
+<div class="paragraph">
+<p>The system instruction includes the existing command schema. The answer must be exactly a command proposal or one enumerated clarification reason and up to five known item IDs. Extra fields, arbitrary reply text, identity claims, unknown IDs, stale snapshot versions and URLs absent from the current message are refused. Lists use ten items and an opaque continuation bound to the last filters. Owner/source identity is added only by trusted domain code.</p>
+</div>
+<div class="paragraph">
+<p>Independent conservative reference checks compare explicit item numbers, label/shop word stems, listed ordinals and focus. Multiple matching items produce a fixed choice question even when the model guesses an ID. This heuristic deliberately asks again when it cannot distinguish a target; it is not proof of semantic correctness. Live language quality still requires the owner/provider scenarios below.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_transactions_replay_and_limits"><a class="anchor" href="#_transactions_replay_and_limits"></a>Transactions, replay and limits</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Migration 3 preserves W1/W2 data and adds conversation sessions, interpretation runs and attempt outcomes/optional token usage. Older binaries refuse the newer database. W4 must include this state and schema compatibility in backup and rollback procedures.</p>
+</div>
+<div class="paragraph">
+<p>A run binds the original Telegram fingerprint, session version and random attempt nonce. One interpretation is pending per owner/chat, with a 30-second lease. Identical committed messages replay their stored reply without another model call; changed text under the same identity conflicts. Failed attempts have a 60-second cooldown; all interpretation attempts, including failures, count toward a fixed limit of 30 per hour for this single-owner database. Bare links and explicit commands bypass that model limit.</p>
+</div>
+<div class="paragraph">
+<p>On return, a short transaction rechecks nonce, lease and conversation generation before domain execution. W1 then checks ownership and expected entry version. A changed conversation, stale pending question or expired attempt cannot apply an old proposal. Session/question, domain mutation, events and Telegram reply commit together. Delivery failure retains the receipt; this is operation idempotence, not exactly-once Telegram delivery.</p>
+</div>
+<div class="paragraph">
+<p>The snapshot/context is reduced toward 24 KiB before framing; the existing strict JSON wire limit remains 64 KiB. Model output is at most 8 KiB. There is one worker/request and no provider retry, fallback or tool loop. The provider request has a 10-second total deadline and eight-second inactivity limit; the process is killed/reaped after 16 seconds or request cancellation. IPC deadlines are 18/20 seconds at client/interpreter, 24 seconds at the domain server and 26 seconds at ingress; Telegram send has three seconds within the native 30-second callback budget. Worker limits are 2 GiB address space, 16 CPU seconds, 128 descriptors and 4 MiB files; these are ceilings, not measured VPS usage.</p>
+</div>
+<div class="paragraph">
+<p>The subscription adapter omits unsupported generic Responses options, including output-token/schema controls. Local schema validation and process/output/attempt limits remain necessary; there is no claimed provider-side token or cost cap. Token counts are recorded only when actually returned. Unknown usage is not zero.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_explicit_configuration"><a class="anchor" href="#_explicit_configuration"></a>Explicit configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The W2 domain configuration gains an optional <code>language</code> member; all existing fields remain required. Synthetic example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">"language": {"socket": "/run/haven-wishlist-language/request.sock", "service_uid": 2303}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The interpreter configuration is a separate operator-owned file. Synthetic example, with domain UID 2301 and a dedicated IPC group:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "schema_version": 1,
+  "socket": "/run/haven-wishlist-language/request.sock",
+  "socket_gid": 2304,
+  "client_uid": 2301,
+  "source": "/opt/haven/hermes",
+  "home": "/var/lib/haven-wishlist-language/.hermes",
+  "python": "/opt/haven/hermes-python/bin/python"
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Run <code>python -m scripts.wishlist_interpreter --config "$WISHLIST_LANGUAGE_CONFIG"</code> under the distinct interpretation identity. Configure the existing native ingress with the W2 settings plus <code>"natural_language":true</code>. Absent these options, the existing command-only behavior is retained. These examples are source interfaces, not a production installation procedure.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_evidence_and_remaining_acceptance"><a class="anchor" href="#_evidence_and_remaining_acceptance"></a>Evidence and remaining acceptance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="_attachments/research/w5/acceptance.json" class="xref attachment">The W5 receipt</a> records baseline, maintained-source hashes, exact commands, successful runs and earlier fixture failures. Unit acceptance uses real SQLite transactions, Linux peer sockets, restarts, races and cancellable worker processes with scripted interpretation. The optional native test uses the exact Hermes Codex adapter with a fake SDK boundary, plus the real Telegram adapter/admission/plugin flow with a fake bot send. It establishes wiring and guard behavior, not real-model understanding, account refresh, provider availability or cost.</p>
+</div>
+<div class="paragraph">
+<p>The minimum W4 slice must package both services and the expanded plugin/runtime, install separate users/groups and systemd restrictions, enroll independent interpretation credentials, update explicit backup capture, test consistent restore/schema-aware rollback, and measure resource headroom with the current pilot/backups. Do not enable the integration before these pass. Use the existing production poller only.</p>
+</div>
+<div class="paragraph">
+<p>Live acceptance must exercise add plus gift follow-up, ambiguous pans plus selection, list/continuation, update, one-time and recurring purchase, pause/resume, unsupported requests and missing prices. Include a controlled provider failure and retry, restart mid-question, duplicate delivery and unchanged deterministic status/recovery. Record actual proposals and committed outcomes privately. Completion of these checks, not synthetic test counts, establishes readiness for ordinary wishlist conversations.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>
