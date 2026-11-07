@@ -54,6 +54,18 @@ MIGRATIONS = ((
         entry_id TEXT NOT NULL, entry_version INTEGER NOT NULL,
         expires_at TEXT NOT NULL, UNIQUE (owner_id, chat_id, entry_id),
         FOREIGN KEY (entry_id, owner_id) REFERENCES entries (entry_id, owner_id))""",
+), (
+    """CREATE TABLE language_sessions (
+        owner_id TEXT NOT NULL, chat_id TEXT NOT NULL, version INTEGER NOT NULL,
+        state TEXT NOT NULL, expires_at TEXT NOT NULL, PRIMARY KEY (owner_id, chat_id))""",
+    """CREATE TABLE language_runs (
+        request_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, chat_id TEXT NOT NULL,
+        fingerprint TEXT NOT NULL, attempt_id TEXT NOT NULL, session_version INTEGER NOT NULL,
+        prepared TEXT NOT NULL, expires_at TEXT NOT NULL, status TEXT NOT NULL)""",
+    """CREATE TABLE language_attempts (
+        attempt_id TEXT PRIMARY KEY, request_id TEXT NOT NULL, created_at TEXT NOT NULL,
+        result TEXT NOT NULL, usage TEXT,
+        FOREIGN KEY (request_id) REFERENCES language_runs (request_id))""",
 ))
 
 

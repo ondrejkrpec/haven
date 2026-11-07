@@ -2,6 +2,8 @@
 
 Status, 2026-11-07: implemented and accepted locally against temporary databases, real Linux Unix sockets and the pinned native Hermes/Telegram APIs. W2 extends link:wishlist-domain.adoc[W1] with an explicit service, authenticated local ingress and durable clarification. No production profile or VPS was changed. Deployment, service identities, database backup capture and owner live acceptance remain link:wishlist-api.adoc[W4]; collection remains W3.
 
+W5 optionally adds link:wishlist-language.adoc[natural wishlist conversation] without changing the command-only default or coordinator guard. Its separate interpretation service, schema 3 and longer bounded request deadlines supersede the W2-only limits below when explicitly enabled. This W2 acceptance remains historical evidence for the deterministic path.
+
 == Components and trust
 
 `scripts/wishlist_service.py` runs one process that owns SQLite writes. `scripts/wishlist_protocol.py` defines framing, strict JSON and kernel peer checks. `scripts/wishlist_telegram.py` parses explicit operations and stores their replies/questions. `scripts/wishlist_ingress.py` connects the existing native bot to this service. No new dependency, HTTP listener, model request or Telegram poller is added.

@@ -23,6 +23,7 @@
 ** xref:wishlist-api.adoc[Wishlist interface and implementation units]
 ** xref:wishlist-domain.adoc[Wishlist W1 domain state]
 ** xref:wishlist-service.adoc[Wishlist W2 local service and Telegram ingress]
+** xref:wishlist-language.adoc[Wishlist W5 bounded natural conversation]
 ** xref:family-conversations.adoc[Personal conversations and family sharing]
 ** xref:h1-prerequisites.adoc[H1 prerequisites]
 ** xref:adr/0001-configuration-validation.adoc[ADR 0001: Configuration validation]
@@ -38,6 +39,7 @@
 ** xref:adr/0011-trusted-backup-controller.adoc[ADR 0011: Trusted backup and recovery]
 ** xref:adr/0012-modular-domain-services.adoc[ADR 0012: Modular Python domain services]
 ** xref:adr/0013-wishlist-local-admission.adoc[ADR 0013: Wishlist local admission]
+** xref:adr/0014-wishlist-language-before-collection.adoc[ADR 0014: Wishlist conversation before collection]
 * Verification
 ** xref:wishlist-feasibility.adoc[Wishlist direct-fetch feasibility]
 ** xref:wishlist-browser-feasibility.adoc[Wishlist browser mode experiments]

@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-11-07T15:03:52.653575+00:00",
+  "source_baseline": "ad45640c2ce111ee5ec2b695b3454b7f45bd2c8e",
+  "maintained_source_sha256": {
+    "config/wishlist-language-runtime.json": "12e042baf00880f5f04a7a65b0b2d8342068c4bcbc1ef226cf757688a4839aad",
+    "config/wishlist-runtime.json": "e91dae7c9a3657d854d1f7d6e4f1bdfc7eb355f47e3e5cbf7b234be96c31ba50",
+    "plugins/haven-capabilities/__init__.py": "b75ce62fc7c741483de9f0efc5fffdde67b673c80394410c21dc9a765fd9fe1a",
+    "plugins/haven-capabilities/plugin.yaml": "f3b155264466e5e4898b78801b7d4a67919addfe5dd65d1032901fa3cb818ae9",
+    "research/w2/test_native_wishlist.py": "355d1c23d60f3705acddb8b946ca54cd29250bb3bd97611f69a726b2237bb686",
+    "research/w5/test_native_language.py": "d5b9649828debb31cfd452d9d5e9c6824bf11a2e1e9c75f78a2b061d613e6c10",
+    "schemas/wishlist-request-v1.schema.json": "aa6bf6ecb69ef0c73bc9cf93fda0da8de9e6145186e1557d6d8f2fe63774acb9",
+    "scripts/model_contract.py": "d96244b76ad1096c4f1dc5b914c77698298eca802993e0eaa1d35a8774777395",
+    "scripts/wishlist_contract.py": "98fdd176aef777e9bb05f0437f390fe80da3a3bcf92c3d087f85a114097b21ad",
+    "scripts/wishlist_domain.py": "46d2c49ee51d17882f6bbb36b5459d1115d36a5f7b900a174c70c6ce6325e041",
+    "scripts/wishlist_extract.py": "3308d0a72d7ec1fa4a042eeb567024a783792f1e89ef3a4e5707d2eac5dfb9eb",
+    "scripts/wishlist_ingress.py": "6f806f6fac01229d4aa8aec04a67d574fe76d2e8dfefa718d6bafaba9944b5e3",
+    "scripts/wishlist_interpreter.py": "db1f291c45ba139f09e722870ed71ba18f9f8e7e79ded4352576fbf2fd56bc2b",
+    "scripts/wishlist_language.py": "b38fb99b49b3621392971686b44caa03021830064a2b8e170c718f5adf9d9f96",
+    "scripts/wishlist_language_contract.py": "108e95ee6f10b1da62bbcc7f6aa391b92da897e3d149bec7613bd81814acb4f6",
+    "scripts/wishlist_model.py": "7fc770f5ac4c446300f5cb3ada6be7151cdf6e88270f28b65521ed3ee159c86c",
+    "scripts/wishlist_protocol.py": "f96924aad5bfa0c9e7d5f8dab33c18943546d1d06a1b75f210fe209771219876",
+    "scripts/wishlist_service.py": "d172f08e2776f54a2e5fb4a6d303442d4109460ad381918341820163ade695a0",
+    "scripts/wishlist_socket.py": "0194c9c932af9e0237fb131f2038d9d8058466fa6f84c71561842a9d497420e8",
+    "scripts/wishlist_store.py": "25ac4b4c1f201b13d0162e07032f347bd43c58ef2c4efb4dfb731b11ac42fccb",
+    "scripts/wishlist_telegram.py": "d43f83a976bfcd0fd8cc44257de5aaca067cd72ee5fd939d2f2c7002065d001b",
+    "tests/test_wishlist_domain.py": "f2303a5e714571f265978d21a0d93db8fa281209ecaf07acbf420d2c7481e911",
+    "tests/test_wishlist_language.py": "58e28ac17333dbbaaa7b89ff643cb9ed19b94eb74040b7427a8ed44072d02a41",
+    "tests/test_wishlist_service.py": "4045c81529a423c6bb99101cf6eb8052ee134b70744b7e3365e93e99f7c1b577",
+    "tests/test_wishlist_worker.py": "77b543f983d77b420589cd482725639192724e68b24bb5d89af83e909c91ba5b"
+  },
+  "hermes_commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+  "native_python": "3.14.9",
+  "native_python_telegram_bot": "22.8",
+  "checks": [
+    {
+      "command": "python -W error::ResourceWarning -m unittest tests.test_wishlist_domain tests.test_wishlist_service tests.test_wishlist_language tests.test_wishlist_worker tests.test_wishlist_contract tests.test_wishlist_extract -v",
+      "python": "3.14.7",
+      "passed": 92,
+      "failed": 0
+    },
+    {
+      "command": "python -W error::ResourceWarning -m unittest tests.test_wishlist_domain tests.test_wishlist_service tests.test_wishlist_language tests.test_wishlist_worker tests.test_wishlist_contract tests.test_wishlist_extract -v",
+      "python": "3.12.14",
+      "passed": 92,
+      "failed": 0
+    },
+    {
+      "command": "HERMES_PYTHON=\"$HERMES_TELEGRAM_TEST_PYTHON\" HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 2 \"$HAVEN_ROOT/research/w5/test_native_language.py\" \"$HAVEN_ROOT/research/w2/test_native_wishlist.py\" \"$HAVEN_ROOT/research/h1.6.1/test_native_capabilities.py\" tests/plugins/platforms/telegram/test_allowlist_json_adapter.py tests/gateway/test_telegram_callback_auth_fail_closed.py",
+      "cwd": "pinned Hermes checkout",
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "command": "HERMES_PYTHON=\"$HERMES_CORE_TEST_PYTHON\" HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 2 tests/gateway/test_post_gateway_admission.py",
+      "cwd": "pinned Hermes checkout",
+      "passed": 5,
+      "failed": 0
+    }
+  ],
+  "scope": [
+    "Temporary SQLite databases, real Linux peer-authenticated Unix sockets and worker processes",
+    "Scripted proposals validate conversation mechanics, races, restart, transaction rollback and populated W2 migration",
+    "Exact native Codex adapter with fake SDK request boundary and synthetic profile/auth",
+    "Real native Telegram admission/plugin/adapter with fake send; independent execution guard remains armed",
+    "No production account, state, provider request, new poller or VPS change"
+  ],
+  "initial_failures": [
+    "Sandbox denied Unix socket bind and native runner scratch writes; acceptance ran in a permitted local environment",
+    "Two fixture sockets initially shared one ingress lease directory; fixtures now use separate private directories",
+    "Native fixture expected SDK input at top level; corrected it to merge the pinned adapter extra_body transform",
+    "Native fixture imports collided with upstream test namespaces; isolated helper imports and synthetic backend resolved collection/runtime failures",
+    "Secret scanner mistook a native auth-source digest for a key; separated source paths and SHA-256 fields without a scan exception"
+  ],
+  "limits": [
+    "Local source/native acceptance only; no GitHub Actions or live semantic/provider acceptance",
+    "Reference resolution is a conservative heuristic, not a proof of the model understanding owner intent",
+    "Independent model enrollment, OS isolation, packaging, resource measurement, backup/restore and live owner scenarios remain minimum W4 before enablement",
+    "No claimed provider-side structured-output support, output-token or cost cap on the subscription route",
+    "Natural conversation is wishlist-only; price collection remains W3 and general chat stays disabled",
+    "Counts overlap retained W1/W2 tests and runs on different interpreters"
+  ]
+}
