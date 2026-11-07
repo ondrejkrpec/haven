@@ -1,0 +1,92 @@
+= Wishlist W2: local service and Telegram ingress
+
+Status, 2026-11-07: implemented and accepted locally against temporary databases, real Linux Unix sockets and the pinned native Hermes/Telegram APIs. W2 extends link:wishlist-domain.adoc[W1] with an explicit service, authenticated local ingress and durable clarification. No production profile or VPS was changed. Deployment, service identities, database backup capture and owner live acceptance remain link:wishlist-api.adoc[W4]; collection remains W3.
+
+== Components and trust
+
+`scripts/wishlist_service.py` runs one process that owns SQLite writes. `scripts/wishlist_protocol.py` defines framing, strict JSON and kernel peer checks. `scripts/wishlist_telegram.py` parses explicit operations and stores their replies/questions. `scripts/wishlist_ingress.py` connects the existing native bot to this service. No new dependency, HTTP listener, model request or Telegram poller is added.
+
+The service admits exactly the configured ingress UID using Linux `SO_PEERCRED`, before reading request contents. The client independently checks the server UID and socket ownership/mode. The ingress socket has no collector role: collector operations and JSON role claims are refused. W3 must provide its own separately permissioned collector interface. A process sharing an allowed UID has that UID's trust; production must put the domain owner, trusted ingress and future lower-trust interpretation/collection under their intended separate identities.
+
+The optional native integration uses the existing `haven-capabilities` plugin and unchanged independent model/tool/cron guard. A synchronous `pre_gateway_dispatch` callback captures only an original private human text message from the configured bot and owner. It checks the native PTB message against the normalized source and text. Edited, media, thread, transformed and combined messages are refused for wishlist writes. Hidden-link expansion or rapid-message batching can therefore require resending a single plain-text command. Capture performs no domain operation or send before native admission.
+
+After authorization, `post_gateway_admission` compares the captured identity and text again, then calls the peer-authenticated service. The capture lives in a task context variable; it is not a cross-message global queue. Exact native admission/dispatch/adapter source hashes are pinned in `config/wishlist-runtime.json` and checked when the optional profile starts. The pinned core remains Hermes `bf0203a794a07aac3ff764972ab9087baa4e4f4e`, with its existing patches and PTB 22.8.
+
+Responses use the receiving message's existing bot connection with `parse_mode=None` and link previews disabled. Shop/user text is sent literally, including Markdown/HTML-looking content. The consumer returns `handled` after that send, preventing a second gateway reply. On service or send uncertainty it returns a fixed status message; the independent native guard still prevents any ordinary model/tool fallback. Delivery uses this explicit native bot call rather than the ordinary gateway final-reply ledger. Domain receipts prevent repeat writes; Telegram delivery itself can still repeat or fail.
+
+== Deterministic owner commands
+
+Messages are single-line text, up to Telegram's 4096 UTF-16 units. Send one operation per message. Item references such as `#1` identify the owner's entries; the application resolves them and reads the expected version within the operation transaction. Structured domain callers can still supply explicit versions using the W1 envelope.
+
+[cols="2,3",options="header"]
+|===
+|Message |Behavior
+|`https://shop.example/product` or `wl přidat https://shop.example/product` |Save the exact link and ask for missing classification.
+|`wl pomoc` |Show deterministic command help.
+|`wl seznam`, `wl seznam vše`, `wl seznam koupené` |List active/paused, all, or purchased entries, at most ten per page.
+|`wl dále CURSOR`, optionally followed by `vše` or `koupené` |Continue the same list; copy the complete continuation command from the preceding reply to retain its filter.
+|`wl detail #1` |Show state, source, classification and bounded note/recipient details.
+|`wl upravit #1 {"label":"Nový název","note":null}` |Patch only explicit supported fields; use strict JSON for detailed edits.
+|`wl koupeno #1` |Record purchase using the service clock and W1 lifecycle rules.
+|`wl pauza #1 2026-12-01T12:00:00+01:00` |Pause until an explicit future instant. The date is an example.
+|`wl obnovit #1` |Resume a paused item; purchased items are not reopened.
+|`wl dopln KÓD pro mě jednorázově` |Answer the specific pending question with a complete self/once classification.
+|`wl dopln KÓD pro mě opakovaně` |Select self/recurring classification.
+|`wl dopln KÓD dárek pro JMÉNO` |Select a one-time gift with that recipient.
+|===
+
+Unaccented command variants and the documented English operation aliases are also accepted by the parser. `wl dopln KÓD {"purpose":"self","purchase_mode":"once"}` supports an explicit field patch. Unknown prose remains outside deterministic interpretation; bounded natural-language proposals belong to W5. Wishlist help is appended to `Co umíš?` only when the optional integration is explicitly selected.
+
+== Durable replies and questions
+
+Schema migration 2 adds `telegram_receipts` and `clarifications`. Migration preserves W1 entries, source offers, event/command receipts and the existing pagination signing key. An older W1 binary rejects this newer database instead of attempting an implicit downgrade. W4 must account for schema compatibility when preparing a production rollback.
+
+The application validates bot/owner/private-chat/message identity and rejects edits before receipt lookup. It fingerprints the original text and source facts. In one immediate transaction it parses the operation, applies the W1 command, stores any question and records the complete plain-text response. A repeat of the same message returns the original response even after restart or after a question was answered. Changed text under the same message identity conflicts. Read receipts are historical replies; a fresh list request provides current state.
+
+A clarification has a random token, owner/chat binding, entry ID, expected entry version and a 24-hour expiry. Only an explicit `wl dopln TOKEN ...` can answer it. Unrelated messages, old/replaced tokens, another owner, expired questions and stale versions cannot silently update the item. Missing classification never discards the original link. A failed final receipt insert rolls back the entry, event, W1 receipt and question together.
+
+An invalid command from an otherwise valid message also receives a durable refusal receipt. A savepoint removes any partial operation before storing that refusal. Reusing its message identity with changed text therefore conflicts even when the original syntax was invalid. Storage failures remain retryable and do not become permanent refusal receipts.
+
+Losing the socket response or failing to send Telegram does not undo a committed operation. Native redelivery of the same message is safe for domain state. Manually sending a new Telegram message creates a new request identity; the uncertainty message therefore directs the owner to inspect `wl seznam` before repeating a write.
+
+== Socket protocol and bounded recovery
+
+Each connection carries one request and one response. A frame is a four-byte unsigned big-endian byte length followed by a UTF-8 JSON object, limited to 65536 bytes. Nesting is limited to 32; duplicate keys, non-finite numbers, malformed Unicode and extra schema fields are refused. Request deadlines are five seconds, there are at most eight admitted connections and no unbounded application wait queue. SQLite uses the existing one-second lock timeout. Shutdown cancels active connections and closes them with a bounded grace period.
+
+An admitted peer can submit the existing W1 request envelope. It can also submit exactly `{"protocol_version":1,"operation":"telegram.message","event":...}`. The event has only `bot_id`, `user_id`, `chat_id`, `message_id`, `text`, `chat_type="private"`, `is_bot=false` and `edited=false`; it is constructed by trusted ingress, never by a model. The service rechecks the enrolled identities before parsing it. Additional frames on a connection are not executed.
+
+The state directory must be owned by the domain service with mode 0700. The database must be a regular, singly linked, service-owned file with mode 0600. The IPC directory is service-owned mode 0700 or 0750, and the socket is mode 0660 with the explicit ingress group. Clients cannot write or unlink objects in that directory. Symlinked paths, shared database files and unexpected socket ownership/modes fail closed.
+
+An exclusive private lock prevents a second service from owning the socket. On restart, the service removes only a verified, service-owned stale socket that refuses a connection while the lease is held. It preserves live/unrelated sockets and files. A real SIGKILL/restart test verifies committed reply recovery without removing the database or accepting a duplicate write.
+
+== Explicit local configuration
+
+Use a separate operator-owned JSON file, outside public Git. This synthetic layout illustrates the configuration, not an installed account or production deployment:
+
+[source,json]
+----
+{
+  "schema_version": 1,
+  "database": "/var/lib/haven-wishlist/state/wishlist.sqlite3",
+  "socket": "/run/haven-wishlist/ingress.sock",
+  "socket_gid": 2303,
+  "ingress_uid": 2302,
+  "bot_id": "200001",
+  "owner_id": "100001",
+  "timezone": "Europe/Prague"
+}
+----
+
+Run `python -m scripts.wishlist_service --config "$WISHLIST_SERVICE_CONFIG"` under the intended domain identity after preparing the private directories and IPC group. No credentials are required by this process. It emits fixed ready/failure diagnostics and never logs raw messages, source URLs or database exception text. Receipt retention and operational freshness reporting remain W4.
+
+The corresponding explicit native ingress settings are `{"socket":"/run/haven-wishlist/ingress.sock","service_uid":2301,"bot_id":"200001"}`. Here 2301 is the domain service's UID; 2302 is the trusted Telegram process UID. Supply them through `scripts.render_model --service --capabilities --wishlist-settings "$WISHLIST_INGRESS_SETTINGS"` together with the existing instance and fresh output arguments. Rendering reads no token. Ordinary rendering without this option retains the existing profile. Production packaging/playbooks and the expanded rollback/backup capture are W4 prerequisites; the H1 service playbook alone does not package the new service.
+
+== Local acceptance
+
+Run the public wishlist tests with `.venv/bin/python -m unittest tests.test_wishlist_domain tests.test_wishlist_service tests.test_wishlist_contract tests.test_wishlist_extract -v`. These use private temporary paths, real local sockets/peer credentials, a real subprocess daemon, deterministic clocks and fake Telegram sends. A sandbox that forbids Unix socket binding cannot establish this acceptance; run it in a permitted local Linux environment rather than counting skipped socket tests as a pass.
+
+The opt-in `research/w2/test_native_wishlist.py` additionally uses the actual native Telegram adapter, PTB messages, plugin discovery, full `GatewayRunner._handle_message` and the existing native execution guard. Only `Bot.send_message` is replaced; its callback verifies the committed database from another connection and checks plain-text arguments. It starts no poller and uses no account token or provider. Invoke it through the pinned upstream `scripts/run_tests.sh` with the existing Telegram test environment. The retained H1.6.1 native tests and Telegram allowlist/callback tests are checked alongside it; the original post-admission scenarios use the separate core environment with its required `aiohttp` extra.
+
+link:../research/w2/acceptance.json[The local acceptance receipt] records exact maintained-source hashes, baseline/native revisions, commands and results: 69 wishlist tests on Python 3.12.14, 13 native integration/guard/Telegram checks and five original post-admission checks. Counts overlap across environments and retained scenarios. The earlier sandbox bind refusal and overlong native fixture path are recorded separately from successful runs; none establishes production acceptance.
+
+Context7 had no exact Python 3.12 or PTB 22.8 documentation version. Python behavior was checked against https://docs.python.org/3.12/library/asyncio-stream.html[3.12 streams] and https://docs.python.org/3.12/library/socket.html[3.12 sockets]; Telegram behavior uses the exact installed 22.8 source and pinned Hermes source. No newer `cleanup_socket` or socket `mode` asyncio arguments are assumed.

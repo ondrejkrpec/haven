@@ -1,0 +1,21 @@
+= ADR 0013: Wishlist local admission and durable Telegram replies
+
+Date: 2026-11-07. Status: implemented and locally accepted; production enablement remains W4.
+
+== Context
+
+W1 owns domain state, but its Python context object cannot authenticate another process or a Telegram message. The current deterministic Hermes profile independently blocks models, tools and cron workers. Its post-admission hook is fail-open and supplies normalized text/source facts without the original native message. W2 needs trusted intake, durable clarification and usable replies while preserving those execution limits.
+
+== Decision
+
+Use a Linux Unix stream socket with bounded length-prefixed strict JSON. Authenticate the trusted ingress UID through kernel peer credentials and verify the server UID at the client. The domain service alone writes its private SQLite database. The future collector receives a separate role/interface; no role claim in a request body grants permissions.
+
+Make integration an explicit option of the existing guarded plugin. A synchronous pre-dispatch hook captures the original native human/private message and configured bot identity without acting on it. The post-admission hook rechecks that capture and calls the domain service. Pin the native adapter, admission and dispatch assumptions, including synchronous callback/context behavior. Keep the independent execution-policy patch unchanged.
+
+Commit operation state, question and the complete response together. Bind questions to a random token, owner/chat, entry/version and expiry. Use the existing bot connection for literal plain-text responses with formatting disabled. Domain receipts survive an uncertain send; Telegram delivery is not exactly once, and the normal final-reply ledger does not cover this explicit bot send.
+
+== Consequences
+
+The service and native flow can be accepted without live credentials or a competing poller. W2 does not enable model interpretation, price collection or production access. A process under the same trusted UID has the same local permissions; W4 must install separate identities and correct directory/group boundaries before production use. W5 must keep its model identity outside those permissions.
+
+Schema migration 2 preserves W1 state and adds durable Telegram replies/questions. A binary supporting only schema 1 refuses the upgraded database. Production backup, rollback compatibility, account/socket setup, limits and live owner acceptance therefore remain explicit W4 work. link:../wishlist-service.adoc[The W2 guide] records commands, local evidence and remaining limits.
