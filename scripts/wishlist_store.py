@@ -45,7 +45,16 @@ MIGRATIONS = ((
         purchased_at TEXT NOT NULL, recorded_at TEXT NOT NULL,
         FOREIGN KEY (entry_id, owner_id) REFERENCES entries (entry_id, owner_id),
         FOREIGN KEY (request_id) REFERENCES receipts (request_id) DEFERRABLE INITIALLY DEFERRED)""",
-),)
+), (
+    """CREATE TABLE telegram_receipts (
+        request_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL,
+        fingerprint TEXT NOT NULL, response TEXT NOT NULL, created_at TEXT NOT NULL)""",
+    """CREATE TABLE clarifications (
+        token TEXT PRIMARY KEY, owner_id TEXT NOT NULL, chat_id TEXT NOT NULL,
+        entry_id TEXT NOT NULL, entry_version INTEGER NOT NULL,
+        expires_at TEXT NOT NULL, UNIQUE (owner_id, chat_id, entry_id),
+        FOREIGN KEY (entry_id, owner_id) REFERENCES entries (entry_id, owner_id))""",
+))
 
 
 class Store:

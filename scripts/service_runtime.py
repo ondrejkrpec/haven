@@ -34,6 +34,10 @@ def check(source, home):
         if name == "plugins" and capability_mode(config):
             from scripts.capability_runtime import check_runtime
             check_runtime(source, home)
+            settings = config["plugins"]["entries"]["haven-capabilities"]["settings"]
+            if "wishlist" in settings:
+                from scripts.wishlist_ingress import check_runtime as check_wishlist_runtime
+                check_wishlist_runtime(source)
             continue
         if path.is_symlink() or (path.exists() and any(path.iterdir())):
             raise ProbeError("unexpected_service_input")

@@ -2,7 +2,7 @@
 
 Haven is a personal agent system built around Hermes, with Telegram as its first phone interface and WhatsApp as a future option. Inbound Czech voice is deferred. The first deployment uses one Ubuntu VPS and bounded automation. Nora is the coordinator's working name.
 
-The existing deterministic pilot passed link:h1.10-acceptance.adoc[H1 acceptance] on 2026-11-05, including private access, Telegram owner operations, restart recovery, encrypted off-site backup and monitoring. The next selected feature is a link:wishlist-design.adoc[modular Python wishlist service]; link:wishlist-domain.adoc[W1 domain state] is implemented locally. Telegram intake, collection and deployment remain pending. Isolated coding roles and review remain H2 work.
+The existing deterministic pilot passed link:h1.10-acceptance.adoc[H1 acceptance] on 2026-11-05, including private access, Telegram owner operations, restart recovery, encrypted off-site backup and monitoring. The selected link:wishlist-design.adoc[modular Python wishlist] has locally implemented link:wishlist-domain.adoc[W1 domain state] and link:wishlist-service.adoc[W2 local service/Telegram ingress]. Collection and production deployment remain pending. Isolated coding roles and review remain H2 work.
 
 == Start here
 

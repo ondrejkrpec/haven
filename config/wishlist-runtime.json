@@ -1,0 +1,15 @@
+{
+  "hermes_commit": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+  "python_telegram_bot": "22.8",
+  "source_sha256": {
+    "gateway/run_inbound.py": "e1148cc822a69802c60c07c03afea08a3661975e6d16d57798673e1e87937d60",
+    "gateway/run_inbound_hooks.py": "556b2c944315c33bf85c169b1702ec0a73fd29ef00cde20fa86eb61f68329fa0",
+    "gateway/run_inbound_consumer.py": "792de0590d946b1dc1b3232af0e00c53988ba5cd1bee44b28195326e71a58489",
+    "gateway/session.py": "ed560fb1b416e1bc111ed9c1e20945238fc2632c60121852a428b4ec02b60d5c",
+    "gateway/platforms/event.py": "629770dd61c610bde1a62c6735e2a0ccf04df0399731cc40c40b33d30c8480e8",
+    "hermes_cli/plugins_dispatch.py": "a3960ec7a3c4ebfa4053f3019dcb67b73de5df384bfa4c0a8484a7815972833c",
+    "plugins/platforms/telegram/adapter.py": "12c04c343b455dd88f4d87680e89c058f7d2e7489170924333ffe8639a3006f8",
+    "plugins/platforms/telegram/telegram_entities.py": "5693326e8ccd0db9918790df008ad02bdafefb6adf249e688efd10178f04aa2b",
+    "plugins/platforms/telegram/update_admission.py": "ebb805a38ea2fc5f1c252f5e936db5f1badd2ec2dc4ab6145255d86343a1e002"
+  }
+}

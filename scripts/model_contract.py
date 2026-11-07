@@ -67,7 +67,7 @@ def check_native(config):
     return model["default"]
 
 
-def service_config(config, *, capabilities=False):
+def service_config(config, *, capabilities=False, wishlist=None):
     """Supervised coordinator; one optional private transport, no coding executors."""
     base = deepcopy(config)
     base["whatsapp"]["enabled"] = False
@@ -140,6 +140,15 @@ def service_config(config, *, capabilities=False):
         native["plugins"] = {"enabled": ["haven-capabilities"], "entries": {
             "haven-capabilities": {"settings": {"owner_id": telegram["owner_id"]}},
         }}
+    if wishlist is not None:
+        if not capabilities:
+            raise ModelConfigError("Wishlist requires the deterministic capability profile")
+        from scripts.wishlist_service import validate_settings
+        try:
+            settings = validate_settings(wishlist)
+        except (ValueError, TypeError, OSError):
+            raise ModelConfigError("Wishlist settings are invalid") from None
+        native["plugins"]["entries"]["haven-capabilities"]["settings"]["wishlist"] = settings
     return native
 
 
@@ -158,7 +167,9 @@ def check_service(config):
                                    "telegram": {"enabled": telegram.get("enabled", False),
                                                 "owner_id": owners[0] if len(owners) == 1 else None},
                                    "instance": {"timezone": config["timezone"]}},
-                                  capabilities=capability_mode(config))
+                                  capabilities=capability_mode(config),
+                                  wishlist=config.get("plugins", {}).get("entries", {}).get(
+                                      "haven-capabilities", {}).get("settings", {}).get("wishlist"))
         # Compare the whole bounded profile, permitting only upstream's version marker.
         actual = {key: value for key, value in config.items() if key != "_config_version"}
         if actual != expected:

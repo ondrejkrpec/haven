@@ -382,7 +382,7 @@ class WishlistTests(unittest.TestCase):
                 "CREATE TABLE future_table (value TEXT)", "INVALID SQL"),)):
             with self.assertRaises(sqlite3.Error):
                 self.open()
-        self.assertEqual(self.domain.store.db.execute("PRAGMA user_version").fetchone()[0], 1)
+        self.assertEqual(self.domain.store.db.execute("PRAGMA user_version").fetchone()[0], len(MIGRATIONS))
         self.assertIsNone(self.domain.store.db.execute(
             "SELECT name FROM sqlite_master WHERE name = 'future_table'").fetchone())
         self.assertEqual(self.send("wishlist.get", {"entry_id": entry["entry_id"]})["data"]["entry"], entry)

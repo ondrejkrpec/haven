@@ -1,6 +1,6 @@
 = Wishlist: staged domain service design
 
-Status, 2026-11-07: requirements and the modular Python direction are accepted. link:wishlist-domain.adoc[W1 domain state] is implemented and tested locally; link:wishlist-feasibility.adoc[an extraction probe] and request-shape validators also exist. Remaining link:wishlist-api.adoc[implementation units W2–W5] cover the service, adapters, deployment and operational behavior. link:adr/0012-modular-domain-services.adoc[ADR 0012] records the language and service boundary. The current link:h1.6.1-capabilities.adoc[deterministic pilot] remains unchanged.
+Status, 2026-11-07: requirements and the modular Python direction are accepted. link:wishlist-domain.adoc[W1 domain state] and link:wishlist-service.adoc[W2 local service/Telegram ingress] are implemented and tested locally; link:wishlist-feasibility.adoc[an extraction probe] also exists. Remaining link:wishlist-api.adoc[implementation units W3–W5] cover collection, deployment/recovery and optional language interpretation. ADRs link:adr/0012-modular-domain-services.adoc[0012] and link:adr/0013-wishlist-local-admission.adoc[0013] record the boundaries. The deployed link:h1.6.1-capabilities.adoc[deterministic pilot] remains unchanged.
 
 == First release
 

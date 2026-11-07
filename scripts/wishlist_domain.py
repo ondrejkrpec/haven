@@ -7,6 +7,7 @@ It never fetches a URL, starts a collector or calls a model.
 import base64
 import calendar
 from dataclasses import asdict, dataclass
+from contextlib import nullcontext
 from datetime import UTC, datetime
 import hashlib
 import hmac
@@ -119,7 +120,8 @@ class Wishlist:
         return {"protocol_version": 1, "request_id": request_id, "code": code,
                 "committed": committed, **data}
 
-    def handle(self, envelope, context):
+    def handle(self, envelope, context, *, in_transaction=False):
+        """The W2 application can compose a command in its existing atomic transaction."""
         request_id = None
         try:
             encoded = canonical(envelope)
@@ -134,7 +136,10 @@ class Wishlist:
                     or context.request_id != request_id):
                 return self.response(request_id, "denied")
             fingerprint = digest(envelope)
-            with self.store.transaction() as db:
+            if in_transaction and not self.store.db.in_transaction:
+                raise RuntimeError("wishlist_transaction_required")
+            transaction = nullcontext(self.store.db) if in_transaction else self.store.transaction()
+            with transaction as db:
                 previous = db.execute("SELECT * FROM receipts WHERE request_id = ? AND owner_id = ?",
                                       (request_id, self.owner_id)).fetchone()
                 if previous:
@@ -158,8 +163,12 @@ class Wishlist:
                            (request_id, self.owner_id, fingerprint, canonical(result), occurred_at))
                 return result
         except (TypeError, ValueError, OverflowError, RecursionError):
+            if in_transaction:
+                raise
             return self.response(request_id, "invalid_request")
         except sqlite3.Error:
+            if in_transaction:
+                raise
             return self.response(request_id, "unavailable")
 
     def _entry(self, db, entry_id):
@@ -169,7 +178,8 @@ class Wishlist:
             WHERE e.entry_id = ? AND e.owner_id = ?""", (entry_id, self.owner_id)).fetchone()
         if row is None:
             return None
-        return {key: row[key] for key in row.keys() if key not in ("sequence", "owner_id")}
+        return {**{key: row[key] for key in row.keys() if key not in ("sequence", "owner_id")},
+                "reference": f"#{row['sequence']}"}
 
     def _result(self, db, request_id, entry_id, *, committed):
         entry = self._entry(db, entry_id)

@@ -11,11 +11,13 @@ from scripts.model_contract import ModelConfigError, native_config, service_conf
 from scripts.validate_config import ConfigError, load_config
 
 
-def render(config, output, overrides=(), *, service=False, capabilities=False):
+def render(config, output, overrides=(), *, service=False, capabilities=False, wishlist=None):
     if capabilities and not service:
         raise ModelConfigError("Capability mode requires --service")
+    if wishlist is not None and not (service and capabilities):
+        raise ModelConfigError("Wishlist requires --service --capabilities")
     config = load_config(Path(config), overrides)
-    native = service_config(config, capabilities=capabilities) if service else native_config(config)
+    native = service_config(config, capabilities=capabilities, wishlist=wishlist) if service else native_config(config)
     # O_EXCL refuses an existing file or symlink; do not clobber runtime state.
     descriptor = os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
@@ -30,9 +32,18 @@ def main(argv=None):
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--service", action="store_true", help="Render the bounded supervised service profile")
     parser.add_argument("--capabilities", action="store_true", help="Disable AI chat; permit only deterministic operations")
+    parser.add_argument("--wishlist-settings", type=Path, help="Explicit JSON socket, service UID and bot identity")
     args = parser.parse_args(argv)
     try:
-        render(args.config, args.output, args.override, service=args.service, capabilities=args.capabilities)
+        wishlist = None
+        if args.wishlist_settings is not None:
+            from scripts.wishlist_protocol import decode
+            try:
+                wishlist = decode(args.wishlist_settings.read_bytes())
+            except ValueError:
+                raise ModelConfigError("Wishlist settings are invalid") from None
+        render(args.config, args.output, args.override, service=args.service, capabilities=args.capabilities,
+               wishlist=wishlist)
     except (ConfigError, ModelConfigError) as error:
         print(f"Cannot render runtime: {error}", file=sys.stderr)
         return 1
