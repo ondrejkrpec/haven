@@ -1,6 +1,8 @@
 = Wishlist W5: bounded natural conversation
 
-Status, 2026-11-07: implemented and accepted locally, ahead of W3 at the owner's request. Scope is natural conversation about the owner's wishlist. General chat, web search, prices, coding tools and additional users are outside this change. No VPS, production profile or real account was changed. Live provider interpretation and owner acceptance remain prerequisites of the minimum W4 deployment slice described below.
+Historical local acceptance, 2026-11-07: implemented and accepted locally, ahead of W3 at the owner's request. Scope is natural conversation about the owner's wishlist. General chat, web search, prices, coding tools and additional users are outside this change. No VPS, production profile or real account was changed. Live provider interpretation and owner acceptance remain prerequisites of the minimum W4 deployment slice described below.
+
+Current pilot installation, schema-4 conversation repairs and remaining owner acceptance are tracked in link:wishlist-operations.adoc[W4 operations]. The local acceptance below retains its original scope.
 
 == Conversation and priority
 

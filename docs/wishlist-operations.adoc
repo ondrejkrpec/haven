@@ -1,6 +1,6 @@
 = Wishlist W4: service preparation and recovery
 
-Status, 2026-11-08: isolated services and the existing Telegram ingress are running on the pilot with independent model enrollment. Installed-unit isolation, process kill/restart, measured capacity during backup and a three-component encrypted snapshot/isolated restore passed. Real-model synthetic conversations passed, but the owner's first conversation exposed shared-link follow-up, source-display and missing-removal defects. Their source fix has passed a separate real-model reproduction; production upgrade and owner retry remain pending. W3 collection, dashboard interpretation accounting and receipt retention remain open.
+Status, 2026-11-08: isolated services and the existing Telegram ingress are running on the pilot with independent model enrollment. Isolation under the installed-unit restrictions, process kill/restart, measured capacity during backup and a three-component encrypted snapshot/isolated restore passed. Real-model synthetic conversations passed, but the owner's first conversation exposed shared-link follow-up, source-display and missing-removal defects. Their fix passed a separate real-model reproduction and is deployed with schema 4; the fresh schema-4 encrypted snapshot and isolated reconstruction passed. Owner retry remains pending. W3 collection, dashboard interpretation accounting and receipt retention remain open.
 
 == Installation boundary
 
@@ -73,7 +73,9 @@ Before selecting an older application version, run its database compatibility ch
 
 For the schema-4 upgrade, accept a current schema-3 backup first, then install the backward-compatible backup helpers before any new domain writer opens the database. Stop wishlist services before using the preparation playbook; update the schema/modules in the coordinator as well. Restart only after installation and verify a fresh three-component backup/isolated restore. Migration appends a nullable column and preserves existing conversation and receipts; old messages keep their cached replies and are never reinterpreted as new removals.
 
-== Remaining live acceptance
+The pilot used a reviewed offline batch of the six changed public files in both installed code roots. It checked the previous/new hashes, compatible backup helper and accepted pre-migration snapshot, held the shared maintenance lock, stopped all three services, preserved file ownership/modes and retained a root-only code snapshot. Starting the new domain migrated the database; health checks then passed. The exact one-off driver, manifest and receipt remain private operational evidence. That code snapshot cannot undo the schema migration or replace newer conversation history.
+
+== Live acceptance checklist
 
 * Prepare the independent runtime and repeat the playbook with no unintended changes. Confirm exact native pins and imports under each identity.
 * Enroll the model identity separately. Verify profile/auth permissions and the no-tools route without adopting workstation/coordinator credentials.
@@ -82,6 +84,14 @@ For the schema-4 upgrade, accept a current schema-3 backup first, then install t
 * Accept a fresh encrypted off-site snapshot with all three components. Restore into new isolated paths and check conversation context, purchases, receipts, ownership and schema compatibility.
 * Enable only the existing Telegram poller, exercise the link:wishlist-language.adoc[W5 live scenarios] with the owner and a real model, including provider failure, restart mid-question and duplicate messages. Confirm existing deterministic operations still work.
 * Update private instructions and the operational dashboard with actual service/data freshness. Collector freshness and W3 recovery follow when daily collection exists.
+
+== Pilot evidence, 2026-11-08
+
+The pilot separately enrolled the interpretation account and uses the existing admitted Telegram poller. Repeated preparation preserved existing state. Copies of the installed units with identical isolation directives passed filesystem/socket denial and permitted-own-state checks. Killing each new production process produced an automatic restart and retained database state.
+
+A 40-second sample during a backup recorded at least 2.8 GiB available memory and a 119 MiB interpreter cgroup peak; a simultaneous interpretation succeeded. This is a measured sample, not a guarantee for future collector load. A first three-component encrypted snapshot was reconstructed into isolated directories without starting services; a second accepted snapshot protected actual owner data immediately before schema migration.
+
+Fourteen initial real-model synthetic scenarios did not expose the owner's shared-link and removal problems. The repaired source then passed twelve focused scenarios, including split classification across restart, exact source display, explicit-number removal with another item focused and restoration. All twelve scenarios also passed through the installed peer-authenticated interpretation service under the domain identity. The fresh schema-4 snapshot was reconstructed as home/domain/interpreter components with exact file hashes, ownership and conversation records intact; no restored service was started, and temporary plaintext copies were removed. Owner acceptance remains open until the repaired flow is retried; dashboard interpretation accounting and retention remain work for the remaining W4 scope.
 
 == Verification scope
 

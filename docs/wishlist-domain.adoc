@@ -1,6 +1,8 @@
 = Wishlist W1: local domain state
 
-Status, 2026-11-07: implemented and tested locally. W1 adds SQLite state and an in-process Python command API. link:wishlist-service.adoc[W2 now extends it] with a locally accepted service, native ingress and schema migration 2. The deployed Nora profile remains unchanged; collection, production/recovery and interpretation retain their separate link:wishlist-api.adoc[W3–W5 acceptance].
+Historical local acceptance, 2026-11-07: implemented and tested locally. W1 adds SQLite state and an in-process Python command API. link:wishlist-service.adoc[W2 now extends it] with a locally accepted service, native ingress and schema migration 2. The deployed Nora profile remains unchanged; collection, production/recovery and interpretation retain their separate link:wishlist-api.adoc[W3–W5 acceptance].
+
+Current pilot installation, schema-4 conversation repairs and remaining owner acceptance are tracked in link:wishlist-operations.adoc[W4 operations]. The local acceptance below retains its original scope.
 
 == Modules and identity
 
