@@ -187,6 +187,10 @@
     <a href="adr/0014-wishlist-language-before-collection.html">ADR 0014: Wishlist conversation before collection</a>
     
   </li>
+  <li>
+    <a href="adr/0015-reversible-wishlist-removal.html">ADR 0015: Reversible wishlist removal</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -239,7 +243,10 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-07: <a href="wishlist-domain.html" class="xref page">W1 domain state</a> and <a href="wishlist-service.html" class="xref page">W2 local service/Telegram ingress</a> are implemented and tested locally. <a href="wishlist-language.html" class="xref page">W5 bounded wishlist conversation</a> is also implemented locally, ahead of collection; W3 and live language acceptance remain pending; <a href="wishlist-operations.html" class="xref page">the first W4 source slice</a> adds staged service installation and recovery support, with live operational acceptance still pending; no wishlist service, production database, scheduler or handler is deployed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
+<p>Historical local acceptance, 2026-11-07: <a href="wishlist-domain.html" class="xref page">W1 domain state</a> and <a href="wishlist-service.html" class="xref page">W2 local service/Telegram ingress</a> are implemented and tested locally. <a href="wishlist-language.html" class="xref page">W5 bounded wishlist conversation</a> is also implemented locally, ahead of collection; W3 and live language acceptance remain pending; <a href="wishlist-operations.html" class="xref page">the first W4 source slice</a> adds staged service installation and recovery support, with live operational acceptance still pending; no wishlist service, production database, scheduler or handler is deployed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
+</div>
+<div class="paragraph">
+<p>Current pilot installation, schema-4 conversation repairs and remaining owner acceptance are tracked in <a href="wishlist-operations.html" class="xref page">W4 operations</a>. The local acceptance below retains its original scope.</p>
 </div>
 </div>
 </div>
@@ -314,6 +321,16 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>wishlist.resume</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Entry ID and expected version</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Resume a paused entry and make it due for collection. Purchased entries require a later explicit reopening design; do not silently reopen them.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wishlist.remove</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry ID and expected version</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hide the entry reversibly, invalidate collection admission and preserve all history. Repeated removal is a no-op at the current version.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>wishlist.restore</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry ID and expected version</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restore a removed entry with its original lifecycle. It does not reopen a purchased entry. Normal lists, including <code>all</code>, exclude removed entries; use <code>state=removed</code> explicitly.</p></td>
 </tr>
 </tbody>
 </table>

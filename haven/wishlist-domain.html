@@ -187,6 +187,10 @@
     <a href="adr/0014-wishlist-language-before-collection.html">ADR 0014: Wishlist conversation before collection</a>
     
   </li>
+  <li>
+    <a href="adr/0015-reversible-wishlist-removal.html">ADR 0015: Reversible wishlist removal</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -239,7 +243,10 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-07: implemented and tested locally. W1 adds SQLite state and an in-process Python command API. <a href="wishlist-service.html" class="xref page">W2 now extends it</a> with a locally accepted service, native ingress and schema migration 2. The deployed Nora profile remains unchanged; collection, production/recovery and interpretation retain their separate <a href="wishlist-api.html" class="xref page">W3–W5 acceptance</a>.</p>
+<p>Historical local acceptance, 2026-11-07: implemented and tested locally. W1 adds SQLite state and an in-process Python command API. <a href="wishlist-service.html" class="xref page">W2 now extends it</a> with a locally accepted service, native ingress and schema migration 2. The deployed Nora profile remains unchanged; collection, production/recovery and interpretation retain their separate <a href="wishlist-api.html" class="xref page">W3–W5 acceptance</a>.</p>
+</div>
+<div class="paragraph">
+<p>Current pilot installation, schema-4 conversation repairs and remaining owner acceptance are tracked in <a href="wishlist-operations.html" class="xref page">W4 operations</a>. The local acceptance below retains its original scope.</p>
 </div>
 </div>
 </div>
@@ -309,6 +316,9 @@
 </div>
 <div class="paragraph">
 <p>Pause, purchase and resume increment the offer generation so future collectors can reject obsolete admission. Resume sets collection status to <code>pending</code>; historical observation time remains intact. No collector or result-admission interface exists yet. W1 does not store actual price observations; W3 adds that history and its shop-specific validation.</p>
+</div>
+<div class="paragraph">
+<p>Schema 4 adds reversible removal through <code>removed_at</code>. <code>remove</code> hides an entry without deleting its source, purchases, events or receipts; <code>restore</code> retains its previous active/paused/purchased lifecycle. Both require the current entry version and invalidate collection admission. Removed entries accept only get/remove/restore. Normal and <code>all</code> lists exclude them; <code>state=removed</code> selects them explicitly. This is not a retention policy. See <a href="adr/0015-reversible-wishlist-removal.html" class="xref page">ADR 0015</a>.</p>
 </div>
 <div class="paragraph">
 <p>Lists default to active and paused entries and accept explicit lifecycle/purpose filters. Signed opaque keyset cursors bind owner, filters, page limit and the initial maximum entry sequence. Later additions do not enter an existing traversal; concurrent updates can change membership, so this is not a frozen database snapshot. Cursors survive restart with the same database. Pages respect both the requested limit and a response-size budget; callers must follow the returned cursor even when a page contains fewer entries than requested.</p>

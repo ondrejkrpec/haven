@@ -187,6 +187,10 @@
     <a href="adr/0014-wishlist-language-before-collection.html">ADR 0014: Wishlist conversation before collection</a>
     
   </li>
+  <li>
+    <a href="adr/0015-reversible-wishlist-removal.html">ADR 0015: Reversible wishlist removal</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -239,7 +243,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-08: the first W4 source slice adds staged installation, separate service identities, bounded units and backup/restore support. Local acceptance uses temporary databases and service doubles. It does not establish a deployed wishlist, independent model login, provider interpretation, OS isolation or VPS resource headroom. W4 remains open until the live checklist below passes.</p>
+<p>Status, 2026-11-08: isolated services and the existing Telegram ingress are running on the pilot with independent model enrollment. Isolation under the installed-unit restrictions, process kill/restart, measured capacity during backup and a three-component encrypted snapshot/isolated restore passed. Real-model synthetic conversations passed, but the owner&#8217;s first conversation exposed shared-link follow-up, source-display and missing-removal defects. Their fix passed a separate real-model reproduction and is deployed with schema 4; the fresh schema-4 encrypted snapshot and isolated reconstruction passed. Owner retry remains pending. W3 collection, dashboard interpretation accounting and receipt retention remain open.</p>
 </div>
 </div>
 </div>
@@ -280,7 +284,10 @@
 </tbody>
 </table>
 <div class="paragraph">
-<p>The independently cloned native source and frozen core dependencies live under <code>/opt/haven-wishlist/native</code>. Public scripts/schema are installed explicitly under <code>/opt/haven-wishlist</code>. Build caches contain no service login. Neither service reads the coordinator&#8217;s home to import Python or native code. Source pins are rechecked without credentials. The worker trusts only the explicit root-owned native checkout for Git revision inspection.</p>
+<p>The native source is cloned shallowly at the retained tag and checked against the exact commit before execution. Its frozen core dependencies live under <code>/opt/haven-wishlist/native</code>. Public scripts/schema are installed explicitly under <code>/opt/haven-wishlist</code>. Build caches contain no service login. Neither service reads the coordinator&#8217;s home to import Python or native code. Source pins are rechecked without credentials. The worker trusts only the explicit root-owned native checkout for Git revision inspection.</p>
+</div>
+<div class="paragraph">
+<p>The host baseline permits only the declared supplementary <code>haven-wishlist-ingress</code> group, with its reviewed members; administrator/unknown groups remain refused. Bootstrap preserves that approved membership. Async preparation explicitly fixes the root-only wrapper/poller directory independently of build HOME.</p>
 </div>
 <div class="paragraph">
 <p>The domain has a 256 MiB memory limit; the interpreter has a 1 GiB cgroup limit and one CPU. Process limits and deadlines from <a href="wishlist-language.html" class="xref page">W5</a> still apply. These limits do not establish available capacity on the pilot. The interpreter has IP connectivity for the provider; destination-level egress filtering is not implemented in this source slice.</p>
@@ -338,7 +345,7 @@
 <p>Before stopping any writer, a durable journal records all services to resume. Stop order is coordinator, domain, interpreter; start order is reversed. Boot/ExecStopPost recovery reads the journal even when settings are missing or have since changed. A failed restart leaves the intent for recovery. Readiness verifies the existing coordinator heartbeat, both service states and peer-authenticated denial on both sockets without a model call.</p>
 </div>
 <div class="paragraph">
-<p>All components are copied during the same pause. The manifest retains the existing <code>home</code> capture and adds exactly <code>wishlist</code> and <code>language</code> components. Domain capture requires <code>config.json</code> and <code>state/wishlist.sqlite3</code>; language capture requires its own <code>config.yaml</code> and <code>auth.json</code>. Unreviewed files fail capture. SQLite normalization preserves committed WAL data; exact restore verifies each component&#8217;s file set, hashes, integrity and database version before acceptance. Application binaries and dependencies are recreated from pins, not captured from the native build tree.</p>
+<p>All components are copied during the same pause. The manifest retains the existing <code>home</code> capture and adds exactly <code>wishlist</code> and <code>language</code> components. Domain capture requires <code>config.json</code> and <code>state/wishlist.sqlite3</code>; language capture requires its own <code>config.yaml</code> and <code>auth.json</code> and preserves the known native bootstrap files/directories. Native caches and domain Ansible transfer state are excluded explicitly. Unreviewed files fail capture. SQLite normalization preserves committed WAL data; exact restore verifies each component&#8217;s file set, hashes, integrity and database version before acceptance. Application binaries and dependencies are recreated from pins, not captured from the native build tree.</p>
 </div>
 <div class="paragraph">
 <p><code>backup_restore --component home|wishlist|language</code> reconstructs one verified component into a new isolated directory with explicit UID/GID mappings. It never replaces an existing target or starts a poller. The default remains <code>home</code> for old snapshots. Mapping must include the captured root identity as well as child identities. Example for the domain component:</p>
@@ -351,12 +358,18 @@
 </div>
 </div>
 <div class="paragraph">
-<p>Before selecting an older application version, run its database compatibility check against a private copy with the target&#8217;s maximum supported schema. A version-2 binary cannot open the W5 version-3 database. Refuse that rollback; preserve current history and use a compatible forward fix or disable optional ingress. Restoring an old database over new purchases/messages is not an application rollback. Historical restoration stays isolated until external effects are reconciled.</p>
+<p>Before selecting an older application version, run its database compatibility check against a private copy with the target&#8217;s maximum supported schema. A version-2 binary cannot open the W5 version-3 database, and a version-3 binary cannot open schema 4 with reversible removal. Refuse that rollback; preserve current history and use a compatible forward fix or disable optional ingress. Restoring an old database over new purchases/messages is not an application rollback. Historical restoration stays isolated until external effects are reconciled.</p>
+</div>
+<div class="paragraph">
+<p>For the schema-4 upgrade, accept a current schema-3 backup first, then install the backward-compatible backup helpers before any new domain writer opens the database. Stop wishlist services before using the preparation playbook; update the schema/modules in the coordinator as well. Restart only after installation and verify a fresh three-component backup/isolated restore. Migration appends a nullable column and preserves existing conversation and receipts; old messages keep their cached replies and are never reinterpreted as new removals.</p>
+</div>
+<div class="paragraph">
+<p>The pilot used a reviewed offline batch of the six changed public files in both installed code roots. It checked the previous/new hashes, compatible backup helper and accepted pre-migration snapshot, held the shared maintenance lock, stopped all three services, preserved file ownership/modes and retained a root-only code snapshot. Starting the new domain migrated the database; health checks then passed. The exact one-off driver, manifest and receipt remain private operational evidence. That code snapshot cannot undo the schema migration or replace newer conversation history.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_remaining_live_acceptance"><a class="anchor" href="#_remaining_live_acceptance"></a>Remaining live acceptance</h2>
+<h2 id="_live_acceptance_checklist"><a class="anchor" href="#_live_acceptance_checklist"></a>Live acceptance checklist</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -382,6 +395,20 @@
 <p>Update private instructions and the operational dashboard with actual service/data freshness. Collector freshness and W3 recovery follow when daily collection exists.</p>
 </li>
 </ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pilot_evidence_2026_11_08"><a class="anchor" href="#_pilot_evidence_2026_11_08"></a>Pilot evidence, 2026-11-08</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The pilot separately enrolled the interpretation account and uses the existing admitted Telegram poller. Repeated preparation preserved existing state. Copies of the installed units with identical isolation directives passed filesystem/socket denial and permitted-own-state checks. Killing each new production process produced an automatic restart and retained database state.</p>
+</div>
+<div class="paragraph">
+<p>A 40-second sample during a backup recorded at least 2.8 GiB available memory and a 119 MiB interpreter cgroup peak; a simultaneous interpretation succeeded. This is a measured sample, not a guarantee for future collector load. A first three-component encrypted snapshot was reconstructed into isolated directories without starting services; a second accepted snapshot protected actual owner data immediately before schema migration.</p>
+</div>
+<div class="paragraph">
+<p>Fourteen initial real-model synthetic scenarios did not expose the owner&#8217;s shared-link and removal problems. The repaired source then passed twelve focused scenarios, including split classification across restart, exact source display, explicit-number removal with another item focused and restoration. All twelve scenarios also passed through the installed peer-authenticated interpretation service under the domain identity. The fresh schema-4 snapshot was reconstructed as home/domain/interpreter components with exact file hashes, ownership and conversation records intact; no restored service was started, and temporary plaintext copies were removed. Owner acceptance remains open until the repaired flow is retried; dashboard interpretation accounting and retention remain work for the remaining W4 scope.</p>
 </div>
 </div>
 </div>
