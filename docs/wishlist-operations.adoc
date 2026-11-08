@@ -1,6 +1,6 @@
 = Wishlist W4: service preparation and recovery
 
-Status, 2026-11-08: the first W4 source slice adds staged installation, separate service identities, bounded units and backup/restore support. Local acceptance uses temporary databases and service doubles. It does not establish a deployed wishlist, independent model login, provider interpretation, OS isolation or VPS resource headroom. W4 remains open until the live checklist below passes.
+Status, 2026-11-08: staged services, independent model enrollment, socket readiness, one real wishlist-list interpretation and isolation probes using the installed unit restrictions passed on the pilot. Telegram wishlist ingress, expanded off-site backup/restore, capacity and owner conversation acceptance remain pending. The earlier local suite covers temporary databases and service doubles; these results have separate scopes. W4 remains open until the live checklist below passes.
 
 == Installation boundary
 
@@ -15,7 +15,9 @@ Status, 2026-11-08: the first W4 source slice adds staged installation, separate
 |`haven-wishlist-build` |Unprivileged dependency preparation only; no runtime state, enrollment or IPC groups. Prepared code is subsequently root-owned.
 |===
 
-The independently cloned native source and frozen core dependencies live under `/opt/haven-wishlist/native`. Public scripts/schema are installed explicitly under `/opt/haven-wishlist`. Build caches contain no service login. Neither service reads the coordinator's home to import Python or native code. Source pins are rechecked without credentials. The worker trusts only the explicit root-owned native checkout for Git revision inspection.
+The native source is cloned shallowly at the retained tag and checked against the exact commit before execution. Its frozen core dependencies live under `/opt/haven-wishlist/native`. Public scripts/schema are installed explicitly under `/opt/haven-wishlist`. Build caches contain no service login. Neither service reads the coordinator's home to import Python or native code. Source pins are rechecked without credentials. The worker trusts only the explicit root-owned native checkout for Git revision inspection.
+
+The host baseline permits only the declared supplementary `haven-wishlist-ingress` group, with its reviewed members; administrator/unknown groups remain refused. Bootstrap preserves that approved membership. Async preparation explicitly fixes the root-only wrapper/poller directory independently of build HOME.
 
 The domain has a 256 MiB memory limit; the interpreter has a 1 GiB cgroup limit and one CPU. Process limits and deadlines from link:wishlist-language.adoc[W5] still apply. These limits do not establish available capacity on the pilot. The interpreter has IP connectivity for the provider; destination-level egress filtering is not implemented in this source slice.
 
@@ -56,7 +58,7 @@ The optional boolean `wishlist_enabled: true` in explicit backup runtime inputs 
 
 Before stopping any writer, a durable journal records all services to resume. Stop order is coordinator, domain, interpreter; start order is reversed. Boot/ExecStopPost recovery reads the journal even when settings are missing or have since changed. A failed restart leaves the intent for recovery. Readiness verifies the existing coordinator heartbeat, both service states and peer-authenticated denial on both sockets without a model call.
 
-All components are copied during the same pause. The manifest retains the existing `home` capture and adds exactly `wishlist` and `language` components. Domain capture requires `config.json` and `state/wishlist.sqlite3`; language capture requires its own `config.yaml` and `auth.json`. Unreviewed files fail capture. SQLite normalization preserves committed WAL data; exact restore verifies each component's file set, hashes, integrity and database version before acceptance. Application binaries and dependencies are recreated from pins, not captured from the native build tree.
+All components are copied during the same pause. The manifest retains the existing `home` capture and adds exactly `wishlist` and `language` components. Domain capture requires `config.json` and `state/wishlist.sqlite3`; language capture requires its own `config.yaml` and `auth.json` and preserves the known native bootstrap files/directories. Native caches and domain Ansible transfer state are excluded explicitly. Unreviewed files fail capture. SQLite normalization preserves committed WAL data; exact restore verifies each component's file set, hashes, integrity and database version before acceptance. Application binaries and dependencies are recreated from pins, not captured from the native build tree.
 
 `backup_restore --component home|wishlist|language` reconstructs one verified component into a new isolated directory with explicit UID/GID mappings. It never replaces an existing target or starts a poller. The default remains `home` for old snapshots. Mapping must include the captured root identity as well as child identities. Example for the domain component:
 

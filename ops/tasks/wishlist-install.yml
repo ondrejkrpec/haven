@@ -159,10 +159,21 @@
       ansible.builtin.git:
         repo: "{{ haven_wishlist_pins.hermes.repository }}"
         dest: /opt/haven-wishlist/native
-        version: "{{ haven_wishlist_pins.hermes.commit }}"
+        version: "{{ haven_wishlist_pins.hermes.tag }}"
+        depth: 1
         update: false
       become: true
       become_user: haven-wishlist-build
+
+    - name: Verify the shallow checkout commit before executing any native code
+      ansible.builtin.command:
+        argv: [git, -C, /opt/haven-wishlist/native, rev-parse, HEAD]
+      become: true
+      become_user: haven-wishlist-build
+      register: haven_wishlist_native_head
+      changed_when: false
+      failed_when: haven_wishlist_native_head.stdout != haven_wishlist_pins.hermes.commit
+      check_mode: false
 
     - name: Check all retained dependency locks before executing PM
       ansible.builtin.stat:
@@ -239,6 +250,9 @@
         HOME: /opt/haven-wishlist/install-home
         HERMES_HOME: /opt/haven-wishlist/install-home/profile
         HERMES_RUNTIME_DIR: /opt/haven-wishlist/install-home/tools
+        ANSIBLE_ASYNC_DIR: /root/.ansible_async
+      vars:
+        ansible_async_dir: /root/.ansible_async
       async: 1800
       poll: 10
       when: not ansible_check_mode
