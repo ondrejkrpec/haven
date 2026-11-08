@@ -1,0 +1,84 @@
+= Wishlist W4: service preparation and recovery
+
+Status, 2026-11-08: the first W4 source slice adds staged installation, separate service identities, bounded units and backup/restore support. Local acceptance uses temporary databases and service doubles. It does not establish a deployed wishlist, independent model login, provider interpretation, OS isolation or VPS resource headroom. W4 remains open until the live checklist below passes.
+
+== Installation boundary
+
+`ops/wishlist.yml` prepares two services on the existing pilot under the backup maintenance lock. It does not start them, enable ingress, enroll credentials or change the deployed coordinator profile. Repeating preparation while either wishlist service is running is refused. This first-install procedure is not an online upgrade procedure.
+
+[cols="1,3",options="header"]
+|===
+|Identity |Access
+|`haven` |Existing guarded Telegram coordinator; membership of `haven-wishlist-ingress` permits domain IPC. No wishlist database or interpreter credential access.
+|`haven-wishlist` |Domain database under `/var/lib/haven-wishlist/state`, domain ingress socket and interpreter client. Its unit has no IP networking.
+|`haven-language` |Own profile under `/var/lib/haven-language/.hermes`, interpreter socket and provider networking. Its unit hides coordinator, database, backup state and domain ingress.
+|`haven-wishlist-build` |Unprivileged dependency preparation only; no runtime state, enrollment or IPC groups. Prepared code is subsequently root-owned.
+|===
+
+The independently cloned native source and frozen core dependencies live under `/opt/haven-wishlist/native`. Public scripts/schema are installed explicitly under `/opt/haven-wishlist`. Build caches contain no service login. Neither service reads the coordinator's home to import Python or native code. Source pins are rechecked without credentials. The worker trusts only the explicit root-owned native checkout for Git revision inspection.
+
+The domain has a 256 MiB memory limit; the interpreter has a 1 GiB cgroup limit and one CPU. Process limits and deadlines from link:wishlist-language.adoc[W5] still apply. These limits do not establish available capacity on the pilot. The interpreter has IP connectivity for the provider; destination-level egress filtering is not implemented in this source slice.
+
+== Explicit preparation
+
+Render the separate no-tools model profile with `render_model --wishlist-interpreter` from the intended instance. This disables both transports in the generated interpretation profile. Do not pass the coordinator's service profile. Use the existing link:h1.4-model-configuration.adoc[renderer and independent enrollment procedure], targeting the new `haven-language` identity and its profile; never copy an existing auth cache.
+
+Wishlist requires JSON Schema dependencies absent from the native core/Telegram installation. Build the separate artifact using the existing hash-pinned Haven requirements subset. The builder uses uv with hashes, binary wheels and an exclusive target, then records an exact file manifest. Native virtual environments remain unchanged. Build with Linux Python 3.14 for the pinned native Python; verify again before deployment:
+
+[source,sh]
+----
+.venv/bin/python -m scripts.wishlist_dependencies build --directory "$NEW_DEPENDENCY_DIRECTORY"
+.venv/bin/python -m scripts.wishlist_dependencies bundle --directory "$NEW_DEPENDENCY_DIRECTORY"
+.venv/bin/python -m scripts.wishlist_dependencies verify-bundle --directory "$NEW_DEPENDENCY_DIRECTORY"
+.venv/bin/python -m scripts.render_model "$PRIVATE_INSTANCE_CONFIG" \
+  --wishlist-interpreter --output "$NEW_INTERPRETER_PROFILE"
+----
+
+Both coordinator and interpreter explicitly include their root-owned `vendor` directory in `PYTHONPATH`. A different installed dependency manifest is refused rather than overwritten, preserving artifacts referenced by application rollback. Updating those dependency versions needs a separately designed versioned-artifact upgrade.
+
+Run the controller with the documented environment and an explicit private inventory. Set these variables in a protected private extra-vars file: `haven_wishlist_install_authorized: true`, `haven_wishlist_profile` (freshly rendered file), `haven_wishlist_dependencies` (verified artifact directory), `haven_wishlist_bot_id`, `haven_wishlist_owner_id`, and `haven_wishlist_timezone`. IDs are strings. Then run:
+
+[source,sh]
+----
+.venv/bin/ansible-playbook -i "$WISHLIST_INVENTORY" ops/wishlist.yml \
+  -e @"$WISHLIST_INPUTS"
+----
+
+Existing model profiles are preserved, including enrollment metadata. Preparation installs `/etc/haven-wishlist/ingress.json` for later use with the existing `render_model --service --capabilities --wishlist-settings` path. `ops/service.yml` packages the schema, modules and separately verified dependency archive needed by that optional ingress. Its expanded application snapshot includes those files, but never the domain database or model auth.
+
+After independent enrollment, `ops/wishlist-start.yml -e haven_wishlist_start_authorized=true` checks the new identity's credentials locally and starts only the two wishlist services. Kernel-peer readiness checks send no model request. Services remain disabled at boot unless `haven_wishlist_enable=true` is explicitly selected after live acceptance. This step does not modify Telegram ingress. Start them for isolation/model/backup acceptance before switching the coordinator.
+
+Preparation alone must not be reported as a usable bot. Do not enable the integration before independent login, backup/restore, runtime isolation, capacity and live conversation checks pass.
+
+== Backup and isolated restore
+
+The optional boolean `wishlist_enabled: true` in explicit backup runtime inputs expands the existing controller to three fixed services and three captured roots. Existing H1 settings and snapshots remain supported. For an existing accepted H1 installation, `ops/wishlist-backup.yml` upgrades code, explicitly rendered non-secret settings and the health unit while preserving on-host credentials, capture policy and timer state. Use `haven_wishlist_backup_authorized: true` and an explicit `haven_backup_settings` file. New backup installations still use `ops/backup.yml`. The controller also needs the installed W4 helper modules; copying only `backup_runtime.py` is insufficient.
+
+Before stopping any writer, a durable journal records all services to resume. Stop order is coordinator, domain, interpreter; start order is reversed. Boot/ExecStopPost recovery reads the journal even when settings are missing or have since changed. A failed restart leaves the intent for recovery. Readiness verifies the existing coordinator heartbeat, both service states and peer-authenticated denial on both sockets without a model call.
+
+All components are copied during the same pause. The manifest retains the existing `home` capture and adds exactly `wishlist` and `language` components. Domain capture requires `config.json` and `state/wishlist.sqlite3`; language capture requires its own `config.yaml` and `auth.json`. Unreviewed files fail capture. SQLite normalization preserves committed WAL data; exact restore verifies each component's file set, hashes, integrity and database version before acceptance. Application binaries and dependencies are recreated from pins, not captured from the native build tree.
+
+`backup_restore --component home|wishlist|language` reconstructs one verified component into a new isolated directory with explicit UID/GID mappings. It never replaces an existing target or starts a poller. The default remains `home` for old snapshots. Mapping must include the captured root identity as well as child identities. Example for the domain component:
+
+[source,sh]
+----
+.venv/bin/python -m scripts.backup_restore --payload "$RESTORED_PAYLOAD" \
+  --destination "$NEW_WISHLIST_DIRECTORY" --manifest-sha256 "$MANIFEST_SHA256" \
+  --owners "$EXPLICIT_OWNER_MAPPING" --component wishlist
+----
+
+Before selecting an older application version, run its database compatibility check against a private copy with the target's maximum supported schema. A version-2 binary cannot open the W5 version-3 database. Refuse that rollback; preserve current history and use a compatible forward fix or disable optional ingress. Restoring an old database over new purchases/messages is not an application rollback. Historical restoration stays isolated until external effects are reconciled.
+
+== Remaining live acceptance
+
+* Prepare the independent runtime and repeat the playbook with no unintended changes. Confirm exact native pins and imports under each identity.
+* Enroll the model identity separately. Verify profile/auth permissions and the no-tools route without adopting workstation/coordinator credentials.
+* Test filesystem and socket denials inside the installed units, not only under service UIDs. Confirm the interpreter cannot read the domain database, bot token, coordinator home or backup material. Verify the domain cannot use IP networking.
+* Measure memory, disk and CPU while Hermes, interpretation and backups run. Exercise actual process kill/restart and a stopped-writer backup; verify recovery after an interrupted pause.
+* Accept a fresh encrypted off-site snapshot with all three components. Restore into new isolated paths and check conversation context, purchases, receipts, ownership and schema compatibility.
+* Enable only the existing Telegram poller, exercise the link:wishlist-language.adoc[W5 live scenarios] with the owner and a real model, including provider failure, restart mid-question and duplicate messages. Confirm existing deterministic operations still work.
+* Update private instructions and the operational dashboard with actual service/data freshness. Collector freshness and W3 recovery follow when daily collection exists.
+
+== Verification scope
+
+`tests.test_wishlist_operations` exercises real SQLite capture/reconstruction, newer-schema refusal without writes, component corruption, interrupted multiunit recovery, legacy journals and unit parsing. Existing backup/capture/runtime and W5 worker suites cover their earlier boundaries. Service calls are doubles; no local result establishes host isolation or provider quality. Context7 did not expose documentation for installed ansible-core 2.21.5, so the implementation also used official Ansible 2.21 module docs and systemd execution documentation; installed parsers/lint verify syntax.

@@ -10,7 +10,7 @@ WorkingDirectory=/var/lib/haven/releases/hermes-bf0203a-785f2646
 Environment=HOME=/var/lib/haven
 Environment=PATH=/usr/bin:/bin
 Environment=HERMES_HOME=/var/lib/haven/.hermes
-Environment=PYTHONPATH=/var/lib/haven/haven-tools
+Environment=PYTHONPATH=/var/lib/haven/haven-tools:/var/lib/haven/haven-tools/vendor
 Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStart=/var/lib/haven/telegram/venv/bin/python -m scripts.service_runtime health --source /var/lib/haven/releases/hermes-bf0203a-785f2646 --home /var/lib/haven/.hermes
 TimeoutStartSec=20

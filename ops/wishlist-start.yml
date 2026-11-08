@@ -1,0 +1,60 @@
+---
+- name: Verify private access before starting wishlist services
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Start staged wishlist services without enabling Telegram ingress
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - name: Require explicit live service authorization
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_wishlist_start_authorized | default(false) | bool
+
+    - name: Verify independently enrolled model credentials without a provider request
+      ansible.builtin.command:
+        argv: [/opt/haven-wishlist/native/venv/bin/python, -B, -m, scripts.model_probe, check-auth,
+               --source, /opt/haven-wishlist/native, --home, /var/lib/haven-language/.hermes]
+        chdir: /opt/haven-wishlist
+      environment:
+        HERMES_HOME: /var/lib/haven-language/.hermes
+        PYTHONPATH: /opt/haven-wishlist:/opt/haven-wishlist/vendor
+        GIT_CONFIG_COUNT: '1'
+        GIT_CONFIG_KEY_0: safe.directory
+        GIT_CONFIG_VALUE_0: /opt/haven-wishlist/native
+      become: true
+      become_user: haven-language
+      changed_when: false
+      when: not ansible_check_mode
+
+  tasks:
+    - name: Start interpretation before the domain service
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        state: started
+        enabled: "{{ haven_wishlist_enable | default(false) | bool }}"
+      loop: [haven-wishlist-language.service, haven-wishlist.service]
+
+    - name: Verify peer identity and rejected root admission without model calls
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/python3
+          - -B
+          - -c
+          - >-
+            import pwd;
+            from pathlib import Path;
+            from scripts.wishlist_health import check_socket;
+            check_socket(Path('/run/haven-wishlist/ingress.sock'), pwd.getpwnam('haven-wishlist').pw_uid);
+            check_socket(Path('/run/haven-wishlist-language/request.sock'), pwd.getpwnam('haven-language').pw_uid)
+        chdir: /opt/haven-wishlist
+      environment:
+        PYTHONPATH: /opt/haven-wishlist
+      register: haven_wishlist_readiness
+      changed_when: false
+      until: haven_wishlist_readiness.rc == 0
+      retries: 6
+      delay: 2
+      when: not ansible_check_mode

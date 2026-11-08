@@ -21,7 +21,7 @@ Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{{ haven_uid.stdout }}/
 Environment=HERMES_HOME={{ haven_state }}
 Environment=HERMES_RUNTIME_DIR={{ haven_state }}/tools
 Environment=HERMES_SUPERVISED_CHILD=1
-Environment=PYTHONPATH={{ haven_tools }}
+Environment=PYTHONPATH={{ haven_tools }}:{{ haven_tools }}/vendor
 Environment=PATH={{ haven_python | dirname }}:/usr/local/bin:/usr/bin:/bin
 ExecStart={{ haven_python }} -m scripts.service_runtime run --source {{ haven_source }} --home {{ haven_state }}
 Restart=always

@@ -15,12 +15,18 @@ from scripts.backup_runtime import validate_payload
 from scripts.private_enrollment import parent_directory
 
 
-def rebuild(payload, destination, digest, owners):
+def rebuild(payload, destination, digest, owners, *, component="home"):
     manifest = validate_payload(payload, digest)
-    files = manifest["capture"]["files"]
+    require(component in {"home", "wishlist", "language"}, "invalid_restore_component")
+    selected = manifest if component == "home" else manifest.get("additional", {}).get(component)
+    require(selected is not None, "missing_restore_component")
+    files = selected["capture"]["files"]
+    root = selected["capture"].get("root_metadata")
+    if root is None:
+        root = files["config.yaml"]
     require(set(owners) == {"uids", "gids"}, "invalid_owner_mapping")
     for name, field in (("uids", "uid"), ("gids", "gid")):
-        require(set(owners[name]) == {str(row[field]) for row in files.values()}
+        require(set(owners[name]) == {str(row[field]) for row in [*files.values(), root]}
                 and all(type(value) is int and 0 <= value < 2 ** 31 for value in owners[name].values()), "owner_mapping_incomplete")
     for row in files.values():
         require(type(row["mode"]) is int and 0 <= row["mode"] <= 0o777
@@ -38,7 +44,7 @@ def rebuild(payload, destination, digest, owners):
                 if row["kind"] == "directory":
                     target.mkdir(mode=0o700)
                 else:
-                    with (payload / "home" / name).open("rb") as source, target.open("xb") as output:
+                    with (payload / component / name).open("rb") as source, target.open("xb") as output:
                         os.fchmod(output.fileno(), 0o600)
                         shutil.copyfileobj(source, output)
                         output.flush()
@@ -50,7 +56,7 @@ def rebuild(payload, destination, digest, owners):
                 os.chmod(target, row["mode"], follow_symlinks=False)
                 os.utime(target, ns=(row["mtime_ns"], row["mtime_ns"]), follow_symlinks=False)
             # The captured profile itself belongs to the owner of its config.
-            os.fchown(descriptor, owners["uids"][str(files["config.yaml"]["uid"])], owners["gids"][str(files["config.yaml"]["gid"])])
+            os.fchown(descriptor, owners["uids"][str(root["uid"])], owners["gids"][str(root["gid"])])
             os.fchmod(descriptor, 0o700)
             os.fsync(descriptor)
             os.fsync(parent)
@@ -68,10 +74,11 @@ def main(argv=None):
     parser.add_argument("--destination", type=Path, required=True)
     parser.add_argument("--manifest-sha256", required=True)
     parser.add_argument("--owners", type=Path, required=True)
+    parser.add_argument("--component", choices=("home", "wishlist", "language"), default="home")
     args = parser.parse_args(argv)
     os.umask(0o077)
     try:
-        result = rebuild(args.payload, args.destination, args.manifest_sha256, json.loads(args.owners.read_text()))
+        result = rebuild(args.payload, args.destination, args.manifest_sha256, json.loads(args.owners.read_text()), component=args.component)
     except Exception:
         print('{"result":"failed","code":"isolated_restore_failed"}')
         return 1

@@ -1,6 +1,6 @@
 = Wishlist v1: interface and implementation units
 
-Status, 2026-11-07: link:wishlist-domain.adoc[W1 domain state] and link:wishlist-service.adoc[W2 local service/Telegram ingress] are implemented and tested locally. link:wishlist-language.adoc[W5 bounded wishlist conversation] is also implemented locally, ahead of collection; W3/W4 and live language acceptance remain pending; no wishlist service, production database, scheduler or handler is deployed. link:wishlist-design.adoc[The staged design] remains the product scope. link:wishlist-feasibility.adoc[The feasibility result] separates local extraction from live collection support.
+Status, 2026-11-07: link:wishlist-domain.adoc[W1 domain state] and link:wishlist-service.adoc[W2 local service/Telegram ingress] are implemented and tested locally. link:wishlist-language.adoc[W5 bounded wishlist conversation] is also implemented locally, ahead of collection; W3 and live language acceptance remain pending; link:wishlist-operations.adoc[the first W4 source slice] adds staged service installation and recovery support, with live operational acceptance still pending; no wishlist service, production database, scheduler or handler is deployed. link:wishlist-design.adoc[The staged design] remains the product scope. link:wishlist-feasibility.adoc[The feasibility result] separates local extraction from live collection support.
 
 == Local boundary
 
@@ -58,7 +58,7 @@ link:wishlist-language.adoc[W5] implements a separate bounded no-tools native in
 |W1: domain state (locally implemented) |SQLite migrations, owner-scoped entries/offers/events, command handling and receipts |link:wishlist-domain.adoc[Local acceptance]: cross-owner denial, duplicate/conflicting receipts, incomplete intake, purchase/pause/resume, version conflicts and calendar boundaries.
 |W2: local service and ingress (locally implemented) |Peer-authenticated bounded sockets, deterministic Telegram operations and durable clarification |link:wishlist-service.adoc[Local acceptance]: unauthorized peer/role denial, malformed frames, correct owner identity, literal plain-text replies, unchanged native guard and commit-before-confirmation after restart.
 |W3: collection |Restricted fetch process, first directly verified adapter, job admission and daily scheduling |Safe redirects/DNS, exact variant/conditions, blocked source persistence, bounded retry, stale result rejection and continuation after restart without model calls.
-|W4: operations and recovery |Packaging, systemd limits, dashboard freshness, bounded logs and explicit backup capture |Measured resource headroom with Hermes/backups, consistent database restore, version compatibility and rollback that preserves history.
+|W4: operations and recovery (first source slice) |Staged packaging, separate identities, systemd limits and multi-component backup/restore; live acceptance and dashboard freshness remain pending |Measured resource headroom with Hermes/backups, consistent database restore, version compatibility and rollback that preserves history.
 |W5: bounded language interpretation (locally implemented) |Separate no-tools model identity and validated command proposals |Local synthetic/native acceptance; separate UID, OS restrictions and live provider/owner checks remain required before enablement.
 |===
 

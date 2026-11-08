@@ -11,6 +11,7 @@
     haven_state: /var/lib/haven/.hermes
     haven_tools: /var/lib/haven/haven-tools
     haven_capabilities_enabled: "{{ (lookup('ansible.builtin.file', haven_model_config) | from_yaml).get('plugins', {}).get('enabled', []) == ['haven-capabilities'] }}"
+    haven_wishlist_enabled: "{{ 'wishlist' in (lookup('ansible.builtin.file', haven_model_config) | from_yaml).get('plugins', {}).get('entries', {}).get('haven-capabilities', {}).get('settings', {}) }}"
     haven_whatsapp_enabled: "{{ (lookup('ansible.builtin.file', haven_model_config) | from_yaml).get('platforms', {}).get('whatsapp', {}).get('enabled', false) }}"
     haven_telegram_enabled: "{{ (lookup('ansible.builtin.file', haven_model_config) | from_yaml).get('platforms', {}).get('telegram', {}).get('enabled', false) }}"
     haven_python: >-
@@ -29,6 +30,36 @@
       ansible.builtin.stat:
         path: "{{ haven_state }}/config.yaml"
       register: haven_existing_config
+
+    - name: Require the separately prepared dependency artifact for wishlist ingress
+      ansible.builtin.assert:
+        that: haven_wishlist_dependencies is defined
+      when: haven_wishlist_enabled | bool
+
+    - name: Verify the explicit wishlist dependency artifact before deployment
+      ansible.builtin.command:
+        argv: ["{{ ansible_playbook_python }}", -m, scripts.wishlist_dependencies, verify-bundle,
+               --directory, "{{ haven_wishlist_dependencies }}"]
+        chdir: "{{ playbook_dir }}/.."
+      delegate_to: localhost
+      become: false
+      changed_when: false
+      check_mode: false
+      when: haven_wishlist_enabled | bool
+
+    - name: Inspect the existing coordinator dependency manifest
+      ansible.builtin.stat:
+        path: "{{ haven_tools }}/vendor/wishlist-dependencies.json"
+        checksum_algorithm: sha256
+      register: haven_coordinator_vendor_manifest
+      when: haven_wishlist_enabled | bool
+
+    - name: Preserve dependency artifacts referenced by application rollback
+      ansible.builtin.assert:
+        that: haven_coordinator_vendor_manifest.stat.checksum == lookup('ansible.builtin.file', haven_wishlist_dependencies + '/wishlist-dependencies.json', rstrip=false) | hash('sha256')
+      when:
+        - haven_wishlist_enabled | bool
+        - haven_coordinator_vendor_manifest.stat.exists
 
     - name: Require the accepted runtime profile
       ansible.builtin.assert:
@@ -163,6 +194,37 @@
                   loop: [capabilities.json, capability-runtime.json]
                   notify: Restart Haven
 
+                - name: Install wishlist ingress dependencies with the capability plugin
+                  ansible.builtin.copy:
+                    src: "../scripts/{{ item }}.py"
+                    dest: "{{ haven_tools }}/scripts/{{ item }}.py"
+                    owner: root
+                    group: haven
+                    mode: '0640'
+                  loop: [wishlist_contract, wishlist_domain, wishlist_ingress, wishlist_interpreter,
+                         wishlist_language, wishlist_language_contract, wishlist_model, wishlist_protocol,
+                         wishlist_service, wishlist_socket, wishlist_store, wishlist_telegram, wishlist_dependencies]
+                  notify: Restart Haven
+
+                - name: Prepare the wishlist schema directory
+                  ansible.builtin.file:
+                    path: "{{ haven_tools }}/schemas"
+                    state: directory
+                    owner: root
+                    group: haven
+                    mode: '0750'
+
+                - name: Install the exact wishlist schema and source contracts
+                  ansible.builtin.copy:
+                    src: "../{{ item }}"
+                    dest: "{{ haven_tools }}/{{ item }}"
+                    owner: root
+                    group: haven
+                    mode: '0640'
+                  loop: [schemas/wishlist-request-v1.schema.json, config/wishlist-runtime.json,
+                         config/wishlist-language-runtime.json]
+                  notify: Restart Haven
+
                 - name: Stage the bounded native host policy patch
                   ansible.builtin.copy:
                     src: ../research/h1.6.1/deterministic-policy.patch
@@ -179,7 +241,7 @@
                       - haven
                       - --
                       - /usr/bin/env
-                      - "PYTHONPATH={{ haven_tools }}"
+                      - "PYTHONPATH={{ haven_tools }}:{{ haven_tools }}/vendor"
                       - "{{ haven_python }}"
                       - -m
                       - scripts.prepare_capabilities
@@ -207,7 +269,7 @@
                       - haven
                       - --
                       - /usr/bin/env
-                      - "PYTHONPATH={{ haven_tools }}"
+                      - "PYTHONPATH={{ haven_tools }}:{{ haven_tools }}/vendor"
                       - "{{ haven_python }}"
                       - -m
                       - scripts.prepare_capabilities
@@ -245,6 +307,49 @@
                   loop: "{{ [haven_tools + '/plugins/haven-capabilities', haven_state + '/plugins/haven-capabilities'] | product(['plugin.yaml', '__init__.py']) | list }}"
                   notify: Restart Haven
 
+            - name: Create the coordinator dependency directory
+              ansible.builtin.file:
+                path: "{{ haven_tools }}/vendor"
+                state: directory
+                owner: root
+                group: haven
+                mode: '0750'
+              when: haven_wishlist_enabled | bool
+
+            - name: Install the independently prepared wishlist dependencies
+              ansible.builtin.unarchive:
+                src: "{{ haven_wishlist_dependencies }}.tar.gz"
+                dest: "{{ haven_tools }}/vendor"
+                owner: root
+                group: haven
+                mode: 'u=rwX,g=rX,o='
+              when: haven_wishlist_enabled | bool
+              notify: Restart Haven
+
+            - name: Install the independent wishlist dependency lock
+              ansible.builtin.copy:
+                src: ../requirements-wishlist.txt
+                dest: "{{ haven_tools }}/requirements-wishlist.txt"
+                owner: root
+                group: haven
+                mode: '0640'
+              when: haven_wishlist_enabled | bool
+              notify: Restart Haven
+
+            - name: Verify the installed coordinator dependency artifact
+              ansible.builtin.command:
+                argv: ["{{ haven_python }}", -B, -m, scripts.wishlist_dependencies, verify,
+                       --directory, "{{ haven_tools }}/vendor"]
+                chdir: "{{ haven_tools }}"
+              environment:
+                PYTHONPATH: "{{ haven_tools }}"
+              become: true
+              become_user: haven
+              changed_when: false
+              when:
+                - haven_wishlist_enabled | bool
+                - not ansible_check_mode
+
             - name: Validate the service policy without resolving credentials
               ansible.builtin.command:
                 argv:
@@ -254,7 +359,7 @@
                   - --
                   - /usr/bin/env
                   - "HERMES_HOME={{ haven_state }}"
-                  - "PYTHONPATH={{ haven_tools }}"
+                  - "PYTHONPATH={{ haven_tools }}:{{ haven_tools }}/vendor"
                   - "{{ haven_python }}"
                   - -m
                   - scripts.service_runtime
@@ -300,7 +405,7 @@
                   - --
                   - /usr/bin/env
                   - "HERMES_HOME={{ haven_state }}"
-                  - "PYTHONPATH={{ haven_tools }}"
+                  - "PYTHONPATH={{ haven_tools }}:{{ haven_tools }}/vendor"
                   - "{{ haven_python }}"
                   - -m
                   - scripts.service_runtime
