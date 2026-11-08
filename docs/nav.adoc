@@ -41,6 +41,7 @@
 ** xref:adr/0012-modular-domain-services.adoc[ADR 0012: Modular Python domain services]
 ** xref:adr/0013-wishlist-local-admission.adoc[ADR 0013: Wishlist local admission]
 ** xref:adr/0014-wishlist-language-before-collection.adoc[ADR 0014: Wishlist conversation before collection]
+** xref:adr/0015-reversible-wishlist-removal.adoc[ADR 0015: Reversible wishlist removal]
 * Verification
 ** xref:wishlist-feasibility.adoc[Wishlist direct-fetch feasibility]
 ** xref:wishlist-browser-feasibility.adoc[Wishlist browser mode experiments]

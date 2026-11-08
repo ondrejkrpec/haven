@@ -31,6 +31,8 @@ Successful user mutations increment the entry version; stale expected versions r
 
 Pause, purchase and resume increment the offer generation so future collectors can reject obsolete admission. Resume sets collection status to `pending`; historical observation time remains intact. No collector or result-admission interface exists yet. W1 does not store actual price observations; W3 adds that history and its shop-specific validation.
 
+Schema 4 adds reversible removal through `removed_at`. `remove` hides an entry without deleting its source, purchases, events or receipts; `restore` retains its previous active/paused/purchased lifecycle. Both require the current entry version and invalidate collection admission. Removed entries accept only get/remove/restore. Normal and `all` lists exclude them; `state=removed` selects them explicitly. This is not a retention policy. See link:adr/0015-reversible-wishlist-removal.adoc[ADR 0015].
+
 Lists default to active and paused entries and accept explicit lifecycle/purpose filters. Signed opaque keyset cursors bind owner, filters, page limit and the initial maximum entry sequence. Later additions do not enter an existing traversal; concurrent updates can change membership, so this is not a frozen database snapshot. Cursors survive restart with the same database. Pages respect both the requested limit and a response-size budget; callers must follow the returned cursor even when a page contains fewer entries than requested.
 
 == Transactions, migration and failure

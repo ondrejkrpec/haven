@@ -26,6 +26,8 @@ W1/W2 implement these domain operations and deterministic Telegram commands. Act
 |`wishlist.record_purchase` |Entry ID, expected version, optional explicit purchase timestamp |A one-time item/gift becomes purchased. A recurring item pauses for one calendar month in the instance time zone, clipping to the last valid day. If purchase mode is unknown, ask first. Default timestamp comes from the service clock.
 |`wishlist.pause` |Entry ID, expected version, offset-bearing `paused_until` |Require a future instant, stop scheduling and invalidate outstanding collection admission. Keep history.
 |`wishlist.resume` |Entry ID and expected version |Resume a paused entry and make it due for collection. Purchased entries require a later explicit reopening design; do not silently reopen them.
+|`wishlist.remove` |Entry ID and expected version |Hide the entry reversibly, invalidate collection admission and preserve all history. Repeated removal is a no-op at the current version.
+|`wishlist.restore` |Entry ID and expected version |Restore a removed entry with its original lifecycle. It does not reopen a purchased entry. Normal lists, including `all`, exclude removed entries; use `state=removed` explicitly.
 |===
 
 Store entry lifecycle (`active`, `paused`, `purchased`), classification completeness and collection status separately. Collection status includes `pending`, `ok`, `blocked`, `unsupported`, `failed` and `stale`. A saved entry can therefore report successful intake and a failed source independently. Diagnostic state changes do not overwrite a successful historical observation.

@@ -66,6 +66,8 @@ MIGRATIONS = ((
         attempt_id TEXT PRIMARY KEY, request_id TEXT NOT NULL, created_at TEXT NOT NULL,
         result TEXT NOT NULL, usage TEXT,
         FOREIGN KEY (request_id) REFERENCES language_runs (request_id))""",
+), (
+    "ALTER TABLE entries ADD COLUMN removed_at TEXT",
 ))
 
 

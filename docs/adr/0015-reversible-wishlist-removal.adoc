@@ -1,0 +1,19 @@
+= ADR 0015: Preserve wishlist history on removal
+
+Date: 2026-11-08. Status: implemented; production acceptance is recorded separately.
+
+== Context
+
+Owner conversation exposed missing removal commands and lost intake context when a shared shopping link prompted a question before being stored. A list displayed only the shop hostname, which did not let the owner verify the original source.
+
+== Decision
+
+Store a current, explicitly supplied link before asking for missing classification. Retain the rule that conversation history alone cannot authorize a new source URL. Show the exact stored URL in ordinary lists and details when it fits; use an explicit length notice rather than a misleading truncated URL.
+
+Add versioned `remove` and `restore` commands. Schema 4 appends a nullable `removed_at` column, retaining the underlying lifecycle, purchases, offers, events and receipts. Removed entries are excluded from normal and `all` lists, and appear through an explicit `removed` filter. Restore clears the marker and preserves the prior lifecycle; it does not reopen a purchased entry. Both operations invalidate collector admission. Other mutations of removed entries are refused.
+
+Resolve explicit item numbers before considering conversational focus. Unknown or multiple references require clarification, even when the model guesses a known item. Keep all command, event and reply changes in the existing transaction.
+
+== Consequences
+
+Removal is reversible rather than a retention/deletion policy. Schema-3 binaries must refuse the upgraded database; rollback cannot replace current history with an old copy. Upgrade backup compatibility helpers before starting schema-4 writers and verify a fresh isolated restore. Historical message receipts retain their original replies and must not be replayed as new removal requests.
