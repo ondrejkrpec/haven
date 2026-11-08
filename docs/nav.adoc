@@ -24,6 +24,7 @@
 ** xref:wishlist-domain.adoc[Wishlist W1 domain state]
 ** xref:wishlist-service.adoc[Wishlist W2 local service and Telegram ingress]
 ** xref:wishlist-language.adoc[Wishlist W5 bounded natural conversation]
+** xref:wishlist-operations.adoc[Wishlist W4 service preparation and recovery]
 ** xref:family-conversations.adoc[Personal conversations and family sharing]
 ** xref:h1-prerequisites.adoc[H1 prerequisites]
 ** xref:adr/0001-configuration-validation.adoc[ADR 0001: Configuration validation]

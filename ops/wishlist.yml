@@ -1,0 +1,77 @@
+---
+- name: Verify private access before wishlist preparation
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Stage isolated wishlist services without enabling Telegram ingress
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  vars:
+    haven_wishlist_root: /opt/haven-wishlist
+    haven_wishlist_native: /opt/haven-wishlist/native
+    haven_wishlist_pins: "{{ lookup('ansible.builtin.file', '../research/h0.1/pins.json') | from_json }}"
+  pre_tasks:
+    - name: Require explicit preparation inputs
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - ansible_version.full == '2.21.5'
+          - haven_wishlist_install_authorized | default(false) | bool
+          - haven_wishlist_profile is defined
+          - haven_wishlist_dependencies is defined
+          - haven_wishlist_bot_id is defined
+          - haven_wishlist_owner_id is defined
+          - haven_wishlist_timezone is defined
+        fail_msg: Explicit wishlist preparation and a separately rendered model profile are required.
+
+    - name: Refuse to replace code while wishlist services are running
+      ansible.builtin.command:
+        argv: [systemctl, show, haven-wishlist.service, haven-wishlist-language.service, '-p', ActiveState]
+      register: haven_wishlist_existing
+      changed_when: false
+      failed_when: "'ActiveState=active' in haven_wishlist_existing.stdout or 'ActiveState=activating' in haven_wishlist_existing.stdout or 'ActiveState=deactivating' in haven_wishlist_existing.stdout"
+      check_mode: false
+
+    - name: Verify the separate dependency artifact on the controller
+      ansible.builtin.command:
+        argv: ["{{ ansible_playbook_python }}", -m, scripts.wishlist_dependencies, verify-bundle,
+               --directory, "{{ haven_wishlist_dependencies }}"]
+        chdir: "{{ playbook_dir }}/.."
+      delegate_to: localhost
+      become: false
+      changed_when: false
+      check_mode: false
+
+    - name: Select an exclusive preparation lease
+      ansible.builtin.set_fact:
+        haven_wishlist_lease: "haven-maintenance-{{ lookup('ansible.builtin.password', '/dev/null', length=24, chars=['ascii_lowercase', 'digits']) }}"
+
+    - name: Hold the existing backup maintenance exclusion
+      ansible.builtin.command:
+        argv:
+          - systemd-run
+          - "--unit={{ haven_wishlist_lease }}"
+          - --collect
+          - --property=Type=notify
+          - --property=TimeoutStartSec=10
+          - --property=UMask=0077
+          - --setenv=PYTHONPATH=/usr/local/lib/haven-backup
+          - --setenv=PYTHONDONTWRITEBYTECODE=1
+          - /usr/bin/python3
+          - -m
+          - scripts.backup_runtime
+          - maintenance
+      changed_when: true
+      when: not ansible_check_mode
+
+  tasks:
+    - name: Prepare the independent runtime under maintenance exclusion
+      block:
+        - name: Install the explicitly selected wishlist components
+          ansible.builtin.import_tasks: tasks/wishlist-install.yml
+      always:
+        - name: Release preparation exclusion
+          ansible.builtin.systemd_service:
+            name: "{{ haven_wishlist_lease }}.service"
+            state: stopped
+          when: not ansible_check_mode

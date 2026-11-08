@@ -11,6 +11,7 @@ import fcntl
 import hashlib
 import json
 import os
+import pwd
 from pathlib import Path
 import re
 import shutil
@@ -116,18 +117,26 @@ def maintenance_lock(path=LOCK):
 
 
 class PauseJournal:
-    def __init__(self, state):
+    def __init__(self, state, units=None):
         self.path = state / "resume.json"
+        self.units = units or ("haven.service",)
 
     def pending(self):
         if not self.path.exists():
             require(not self.path.is_symlink(), "invalid_pause_journal")
             return False
-        require(load(self.path) == {"resume": "haven.service", "schema_version": 1}, "invalid_pause_journal")
+        value = load(self.path)
+        if value == {"resume": "haven.service", "schema_version": 1}:
+            self.units = ("haven.service",)
+        else:
+            from scripts.wishlist_operations import UNITS
+            require(value == {"resume": list(UNITS), "schema_version": 2}, "invalid_pause_journal")
+            self.units = UNITS
         return True
 
     def arm(self):
-        save(self.path, {"schema_version": 1, "resume": "haven.service"})
+        save(self.path, {"schema_version": 1, "resume": "haven.service"} if self.units == ("haven.service",)
+             else {"schema_version": 2, "resume": list(self.units)})
 
     def disarm(self):
         self.path.unlink()
@@ -164,6 +173,10 @@ class SystemController:
     def __init__(self, settings, *, unit="haven.service"):
         self.settings = settings
         self.unit = unit
+        self.units = (unit,)
+        if settings.get("wishlist_enabled", False) and unit == "haven.service":
+            from scripts.wishlist_operations import UNITS
+            self.units = UNITS
 
     def state(self):
         output = command(["/usr/bin/systemctl", "show", self.unit, "-p", "ActiveState", "-p", "SubState", "-p", "MainPID",
@@ -177,14 +190,29 @@ class SystemController:
             # PID 1 starts a fixed unprivileged, network-denied read-only check.
             # No setuid helper or additional capabilities enter the backup unit.
             command(["/usr/bin/systemctl", "start", "haven-backup-health.service"], timeout=30)
+            if len(self.units) > 1:
+                from scripts.wishlist_health import check_socket
+                for unit, path, user in (
+                    ("haven-wishlist.service", "/run/haven-wishlist/ingress.sock", "haven-wishlist"),
+                    ("haven-wishlist-language.service", "/run/haven-wishlist-language/request.sock", "haven-language"),
+                ):
+                    require(b"SubState=running" in command(["/usr/bin/systemctl", "show", unit, "-p", "SubState"]),
+                            "wishlist_not_running")
+                    check_socket(Path(path), pwd.getpwnam(user).pw_uid)
             return True
-        except (CaptureError, subprocess.TimeoutExpired):
+        except (CaptureError, OSError, ValueError, subprocess.TimeoutExpired):
             return False
 
     def stop(self):
-        command(["/usr/bin/systemctl", "stop", self.unit], timeout=195)
+        for unit in self.units:
+            command(["/usr/bin/systemctl", "stop", unit], timeout=195)
 
     def stopped(self):
+        if len(self.units) > 1:
+            return all(SystemController(self.settings, unit=unit)._stopped_one() for unit in self.units)
+        return self._stopped_one()
+
+    def _stopped_one(self):
         state = self.state()
         stopped = (state.get("ActiveState") in {"inactive", "failed"} and state.get("MainPID") == "0"
                    and (state.get("ControlGroup") == "" or state.get("TasksCurrent") == "0"))
@@ -197,7 +225,8 @@ class SystemController:
         return stopped
 
     def start(self):
-        command(["/usr/bin/systemctl", "start", self.unit], timeout=195)
+        for unit in reversed(self.units):
+            command(["/usr/bin/systemctl", "start", unit], timeout=195)
         for _ in range(12):
             if self.healthy():
                 return
@@ -210,9 +239,10 @@ def settings_from(config):
 
 
 def validate_settings(settings):
-    require(set(settings) == {"schema_version", "repository", "repository_id", "restic_sha256", "source_home",
+    require(set(settings) - {"wishlist_enabled"} == {"schema_version", "repository", "repository_id", "restic_sha256", "source_home",
                               "runtime_source", "runtime_python", "public_revision", "private_revision", "hostname"}
             and settings["schema_version"] == 1, "invalid_backup_settings")
+    require("wishlist_enabled" not in settings or type(settings["wishlist_enabled"]) is bool, "invalid_backup_settings")
     require(re.fullmatch(r"s3:https://s3\.fr-par\.scw\.cloud/[a-z0-9][a-z0-9-]{1,61}[a-z0-9]/[a-z][a-z0-9-]{0,31}",
                          settings["repository"]), "invalid_repository")
     for field in ("repository_id", "restic_sha256"):
@@ -281,7 +311,18 @@ def validate_payload(payload, expected_digest):
     manifest_path = payload / "restore-manifest.json"
     require(hashlib.sha256(read_private(manifest_path, 4 * 1024 * 1024)).hexdigest() == expected_digest, "restore_manifest_mismatch")
     manifest = json.loads(manifest_path.read_bytes())
-    files = manifest["capture"]["files"]
+    components = {"home": {"capture": manifest["capture"], "policy": manifest["policy"]}}
+    additional = manifest.get("additional", {})
+    require(isinstance(additional, dict) and (not additional or set(additional) == {"wishlist", "language"}),
+            "invalid_restore_components")
+    components.update(additional)
+    expected_files = {}
+    for prefix, component in components.items():
+        validate_policy(component["policy"])
+        for name, row in component["capture"]["files"].items():
+            require(isinstance(name, str) and str(Path(name)) == name and not Path(name).is_absolute()
+                    and all(part not in {".", ".."} for part in Path(name).parts), "invalid_restore_path")
+            expected_files[prefix + "/" + name] = row
     actual = set()
     require(not payload.is_symlink() and payload.is_dir(), "invalid_restore_tree")
     for path in payload.rglob("*"):
@@ -291,25 +332,28 @@ def validate_payload(payload, expected_digest):
         name = path.relative_to(payload).as_posix()
         if name == "restore-manifest.json":
             continue
-        if name == "home":
+        if name in components:
             require(path.is_dir(), "invalid_restore_tree")
             continue
-        require(name.startswith("home/") and name[5:] in files, "unexpected_restore_path")
-        name = name[5:]
-        expected = files[name]
+        require(name in expected_files, "unexpected_restore_path")
+        expected = expected_files[name]
         actual.add(name)
         require(stat.S_IMODE(info.st_mode) == (0o700 if expected["kind"] == "directory" else 0o600), "restore_mode_mismatch")
         if expected["kind"] == "file":
             require(stat.S_ISREG(info.st_mode) and hashlib.sha256(path.read_bytes()).hexdigest() == expected["sha256"], "restore_hash_mismatch")
         else:
             require(stat.S_ISDIR(info.st_mode), "invalid_restore_type")
-    require(actual == set(files), "missing_restore_paths")
-    for name in manifest["policy"]["sqlite"]:
-        if name in files:
-            path = payload / "home" / name
-            with closing(sqlite3.connect(path.as_uri() + "?mode=ro&immutable=1", uri=True, timeout=1)) as db:
-                db.execute("PRAGMA trusted_schema=OFF")
-                require(db.execute("PRAGMA integrity_check").fetchall() == [("ok",)], "restored_database_invalid")
+    require(actual == set(expected_files), "missing_restore_paths")
+    for prefix, component in components.items():
+        for name in component["policy"]["sqlite"]:
+            if name in component["capture"]["files"]:
+                path = payload / prefix / name
+                with closing(sqlite3.connect(path.as_uri() + "?mode=ro&immutable=1", uri=True, timeout=1)) as db:
+                    db.execute("PRAGMA trusted_schema=OFF")
+                    require(db.execute("PRAGMA integrity_check").fetchall() == [("ok",)], "restored_database_invalid")
+                if prefix == "wishlist":
+                    from scripts.wishlist_operations import database_status
+                    database_status(path)
     return manifest
 
 
@@ -347,7 +391,11 @@ def accept_snapshot(repo, journal, state, config):
 
 def recover(settings, state):
     # ExecStopPost and boot recovery hold the same lock as every backup/maintenance.
-    recover_pause(SystemController(settings), PauseJournal(state))
+    journal = PauseJournal(state)
+    if journal.pending():
+        controller = SystemController(settings)
+        controller.units = journal.units
+        recover_pause(controller, journal)
     clear_workspace(state)
 
 
@@ -369,7 +417,16 @@ def backup(settings, state, config, policy):
     journal["stage"] = "capturing"
     save(state / "run.json", journal)
     try:
-        receipt = capture_with_pause(SystemController(settings), PauseJournal(state), Path(settings["source_home"]), payload / "home", policy)
+        controller = SystemController(settings)
+        additional = {}
+        if settings.get("wishlist_enabled", False):
+            from scripts.wishlist_operations import BASE, LANGUAGE_HOME, DOMAIN_POLICY, LANGUAGE_POLICY
+            additional["components"] = {
+                "wishlist": {"source": BASE, "policy": DOMAIN_POLICY},
+                "language": {"source": LANGUAGE_HOME, "policy": LANGUAGE_POLICY},
+            }
+        receipt = capture_with_pause(controller, PauseJournal(state, controller.units),
+                                     Path(settings["source_home"]), payload / "home", policy, **additional)
     except CaptureError as error:
         if str(error) == "unreviewed_source_path" and hasattr(error, "relative_path"):
             journal["unreviewed_source_path"] = error.relative_path
@@ -377,6 +434,8 @@ def backup(settings, state, config, policy):
         raise
     manifest = {"schema_version": 1, "run_id": journal["run_id"], "capture": receipt, "policy": policy,
                 "provenance": {key: settings[key] for key in ("public_revision", "private_revision", "runtime_source", "runtime_python")}}
+    if "additional" in receipt:
+        manifest["additional"] = receipt.pop("additional")
     save(payload / "restore-manifest.json", manifest)
     journal.update(stage="uploading", manifest_sha256=hashlib.sha256((payload / "restore-manifest.json").read_bytes()).hexdigest())
     save(state / "run.json", journal)  # An uncertain upload is reconciled, never retried blindly.

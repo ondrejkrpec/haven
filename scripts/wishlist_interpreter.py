@@ -59,7 +59,12 @@ class NativeWorker:
                    "--source", str(self.source), "--home", str(self.home)]
         environment = {"PATH": str(self.python.parent) + ":/usr/bin:/bin", "HOME": str(self.home.parent),
                        "HERMES_HOME": str(self.home), "HERMES_RUNTIME_DIR": str(self.home / "tools"),
-                       "PYTHONPATH": str(ROOT), "PYTHONDONTWRITEBYTECODE": "1", "LANG": "C.UTF-8"}
+                       "PYTHONPATH": str(ROOT) + os.pathsep + str(ROOT / "vendor"),
+                       "PYTHONDONTWRITEBYTECODE": "1", "LANG": "C.UTF-8"}
+        # The independently installed native source is root-owned and read-only.
+        # Trust only this explicit path; do not inherit a global Git exception.
+        environment.update(GIT_CONFIG_COUNT="1", GIT_CONFIG_KEY_0="safe.directory",
+                           GIT_CONFIG_VALUE_0=str(self.source))
         process = await asyncio.create_subprocess_exec(*command, cwd=self.source, env=environment,
             stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
             start_new_session=True, limit=8192)

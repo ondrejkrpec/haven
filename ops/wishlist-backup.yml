@@ -1,0 +1,93 @@
+---
+- name: Verify private access before expanding backup capture
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Upgrade an existing backup controller for wishlist capture without transferring secrets
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - name: Require explicit settings and an existing accepted backup installation
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_wishlist_backup_authorized | default(false) | bool
+          - haven_backup_settings is defined
+
+    - name: Select an exclusive backup upgrade lease
+      ansible.builtin.set_fact:
+        haven_wishlist_backup_lease: "haven-maintenance-{{ lookup('ansible.builtin.password', '/dev/null', length=24, chars=['ascii_lowercase', 'digits']) }}"
+
+    - name: Hold maintenance exclusion during controller changes
+      ansible.builtin.command:
+        argv:
+          - systemd-run
+          - "--unit={{ haven_wishlist_backup_lease }}"
+          - --collect
+          - --property=Type=notify
+          - --property=TimeoutStartSec=10
+          - --property=UMask=0077
+          - --setenv=PYTHONPATH=/usr/local/lib/haven-backup
+          - --setenv=PYTHONDONTWRITEBYTECODE=1
+          - /usr/bin/python3
+          - -m
+          - scripts.backup_runtime
+          - maintenance
+      changed_when: true
+      when: not ansible_check_mode
+
+  tasks:
+    - name: Upgrade only code non-secret settings and health policy
+      block:
+        - name: Install the trusted controller and W4 helpers
+          ansible.builtin.copy:
+            src: "../scripts/{{ item }}"
+            dest: "/usr/local/lib/haven-backup/scripts/{{ item }}"
+            owner: root
+            group: root
+            mode: '0600'
+          loop: [backup_runtime.py, backup_capture.py, backup_restore.py, private_enrollment.py,
+                 wishlist_operations.py, wishlist_store.py, wishlist_health.py]
+
+        - name: Install explicitly rendered backup settings
+          ansible.builtin.copy:
+            src: "{{ haven_backup_settings }}"
+            dest: /etc/haven-backup/settings.json
+            owner: root
+            group: root
+            mode: '0600'
+
+        - name: Verify settings locally without provider access
+          ansible.builtin.command:
+            argv: [/usr/bin/python3, -B, -c,
+                   "from pathlib import Path; from scripts.backup_runtime import settings_from; settings_from(Path('/etc/haven-backup'))"]
+            chdir: /usr/local/lib/haven-backup
+          environment:
+            PYTHONPATH: /usr/local/lib/haven-backup
+          changed_when: false
+          when: not ansible_check_mode
+
+        - name: Update the read-only native health environment
+          ansible.builtin.template:
+            src: haven-backup-health.service.j2
+            dest: /etc/systemd/system/haven-backup-health.service
+            owner: root
+            group: root
+            mode: '0644'
+
+        - name: Verify health unit syntax
+          ansible.builtin.command:
+            argv: [systemd-analyze, verify, /etc/systemd/system/haven-backup-health.service]
+          changed_when: false
+          when: not ansible_check_mode
+
+        - name: Reload the existing controller units
+          ansible.builtin.systemd_service:
+            daemon_reload: true
+
+      always:
+        - name: Release the backup upgrade lease
+          ansible.builtin.systemd_service:
+            name: "{{ haven_wishlist_backup_lease }}.service"
+            state: stopped
+          when: not ansible_check_mode

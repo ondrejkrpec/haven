@@ -20,7 +20,7 @@ LEGACY_FILES = (
     "/var/lib/haven/haven-tools/config/whatsapp-runtime.json",
     "/var/lib/haven/haven-tools/config/telegram-runtime.json",
 )
-FILES = LEGACY_FILES + (
+CAPABILITY_FILES = LEGACY_FILES + (
     *(f"/var/lib/haven/haven-tools/scripts/{name}.py"
       for name in ("capability_runtime", "capability_gateway", "capability_policy", "prepare_capabilities")),
     *(f"/var/lib/haven/haven-tools/config/{name}"
@@ -32,6 +32,16 @@ FILES = LEGACY_FILES + (
     *(f"/var/lib/haven/releases/hermes-bf0203a-785f2646/{name}"
       for name in ("agent/agent_init.py", "agent/auxiliary_client.py", "model_tools.py",
                    "tools/registry.py", "cron/scheduler.py", "agent/deterministic_policy.py")),
+)
+FILES = CAPABILITY_FILES + (
+    *(f"/var/lib/haven/haven-tools/scripts/{name}.py" for name in (
+        "wishlist_contract", "wishlist_domain", "wishlist_ingress", "wishlist_interpreter",
+        "wishlist_language", "wishlist_language_contract", "wishlist_model", "wishlist_protocol",
+        "wishlist_service", "wishlist_socket", "wishlist_store", "wishlist_telegram", "wishlist_dependencies")),
+    "/var/lib/haven/haven-tools/schemas/wishlist-request-v1.schema.json",
+    "/var/lib/haven/haven-tools/config/wishlist-runtime.json",
+    "/var/lib/haven/haven-tools/config/wishlist-language-runtime.json",
+    "/var/lib/haven/haven-tools/requirements-wishlist.txt",
 )
 
 
@@ -70,7 +80,7 @@ def snapshot():
 
 def read_manifest(root):
     manifest = json.loads((root / "manifest.json").read_text())
-    if tuple(row["path"] for row in manifest["files"]) not in (FILES, LEGACY_FILES):
+    if tuple(row["path"] for row in manifest["files"]) not in (FILES, CAPABILITY_FILES, LEGACY_FILES):
         raise ValueError("Snapshot scope differs")
     # Verify every receipt before changing any live file.
     for index, row in enumerate(manifest["files"]):

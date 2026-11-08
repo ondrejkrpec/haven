@@ -1,0 +1,5 @@
+{{ {'schema_version': 1, 'database': '/var/lib/haven-wishlist/state/wishlist.sqlite3',
+    'socket': '/run/haven-wishlist/ingress.sock', 'socket_gid': haven_wishlist_ingress_gid | int,
+    'ingress_uid': haven_wishlist_coordinator_uid | int, 'bot_id': haven_wishlist_bot_id | string,
+    'owner_id': haven_wishlist_owner_id | string, 'timezone': haven_wishlist_timezone,
+    'language': {'socket': '/run/haven-wishlist-language/request.sock', 'service_uid': haven_wishlist_language_uid | int}} | to_json }}

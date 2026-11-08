@@ -1,0 +1,363 @@
+---
+- name: Create distinct application and IPC groups
+  ansible.builtin.group:
+    name: "{{ item }}"
+    system: true
+  loop: [haven-wishlist, haven-language, haven-wishlist-build, haven-wishlist-ingress, haven-wishlist-language]
+
+- name: Create separate non-login identities
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    group: "{{ item.name }}"
+    groups: "{{ item.groups }}"
+    home: "{{ item.home }}"
+    create_home: false
+    shell: /usr/sbin/nologin
+    system: true
+  loop:
+    - {name: haven-wishlist, groups: 'haven-wishlist-ingress,haven-wishlist-language', home: /var/lib/haven-wishlist}
+    - {name: haven-language, groups: haven-wishlist-language, home: /var/lib/haven-language}
+    - {name: haven-wishlist-build, groups: '', home: /opt/haven-wishlist/install-home}
+
+- name: Permit only the trusted coordinator to reach domain ingress
+  ansible.builtin.user:
+    name: haven
+    groups: haven-wishlist-ingress
+    append: true
+
+- name: Create private domain and model state directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+    mode: '0700'
+  loop:
+    - {path: /var/lib/haven-wishlist, owner: haven-wishlist}
+    - {path: /var/lib/haven-wishlist/state, owner: haven-wishlist}
+    - {path: /var/lib/haven-language, owner: haven-language}
+    - {path: /var/lib/haven-language/.hermes, owner: haven-language}
+
+- name: Create trusted code and private configuration directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - {path: /opt/haven-wishlist, group: root, mode: '0755'}
+    - {path: /opt/haven-wishlist/scripts, group: root, mode: '0755'}
+    - {path: /opt/haven-wishlist/config, group: root, mode: '0755'}
+    - {path: /opt/haven-wishlist/schemas, group: root, mode: '0755'}
+    - {path: /etc/haven-wishlist, group: haven-language, mode: '0750'}
+
+- name: Install only declared public service modules
+  ansible.builtin.copy:
+    src: "../scripts/{{ item }}.py"
+    dest: "/opt/haven-wishlist/scripts/{{ item }}.py"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - wishlist_store
+    - wishlist_domain
+    - wishlist_contract
+    - wishlist_protocol
+    - wishlist_socket
+    - wishlist_service
+    - wishlist_telegram
+    - wishlist_ingress
+    - wishlist_language
+    - wishlist_language_contract
+    - wishlist_interpreter
+    - wishlist_model
+    - wishlist_operations
+    - wishlist_health
+    - model_contract
+    - model_probe
+    - capability_runtime
+    - capability_policy
+    - prepare_capabilities
+    - wishlist_dependencies
+
+- name: Install the dependency lock used to verify the artifact
+  ansible.builtin.copy:
+    src: ../requirements-wishlist.txt
+    dest: /opt/haven-wishlist/requirements-wishlist.txt
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Inspect the installed dependency manifest before replacement
+  ansible.builtin.stat:
+    path: /opt/haven-wishlist/vendor/wishlist-dependencies.json
+    checksum_algorithm: sha256
+  register: haven_wishlist_vendor_manifest
+
+- name: Refuse an in-place dependency version replacement
+  ansible.builtin.assert:
+    that: haven_wishlist_vendor_manifest.stat.checksum == lookup('ansible.builtin.file', haven_wishlist_dependencies + '/wishlist-dependencies.json', rstrip=false) | hash('sha256')
+  when: haven_wishlist_vendor_manifest.stat.exists
+
+- name: Create the public dependency directory
+  ansible.builtin.file:
+    path: /opt/haven-wishlist/vendor
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install separately hash-pinned wishlist dependencies outside native environments
+  ansible.builtin.unarchive:
+    src: "{{ haven_wishlist_dependencies }}.tar.gz"
+    dest: /opt/haven-wishlist/vendor
+    owner: root
+    group: root
+    mode: 'u=rwX,go=rX'
+
+- name: Verify the installed dependency artifact
+  ansible.builtin.command:
+    argv: [/usr/bin/python3, -B, -m, scripts.wishlist_dependencies, verify, --directory, /opt/haven-wishlist/vendor]
+    chdir: /opt/haven-wishlist
+  environment:
+    PYTHONPATH: /opt/haven-wishlist
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Install schema and exact native source contracts
+  ansible.builtin.copy:
+    src: "../{{ item }}"
+    dest: "/opt/haven-wishlist/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - schemas/wishlist-request-v1.schema.json
+    - config/wishlist-runtime.json
+    - config/wishlist-language-runtime.json
+    - config/capability-runtime.json
+
+- name: Inspect the independently frozen native runtime
+  ansible.builtin.stat:
+    path: /opt/haven-wishlist/.native-prepared
+  register: haven_wishlist_prepared
+
+- name: Prepare a separate pinned native installation
+  when: not haven_wishlist_prepared.stat.exists
+  block:
+    - name: Create unprivileged build directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: haven-wishlist-build
+        group: haven-wishlist-build
+        mode: '0755'
+      loop: [/opt/haven-wishlist/native, /opt/haven-wishlist/install-home]
+
+    - name: Clone the exact native release independently of coordinator state
+      ansible.builtin.git:
+        repo: "{{ haven_wishlist_pins.hermes.repository }}"
+        dest: /opt/haven-wishlist/native
+        version: "{{ haven_wishlist_pins.hermes.commit }}"
+        update: false
+      become: true
+      become_user: haven-wishlist-build
+
+    - name: Check all retained dependency locks before executing PM
+      ansible.builtin.stat:
+        path: "/opt/haven-wishlist/native/{{ item.key }}"
+        checksum_algorithm: sha256
+      loop: "{{ haven_wishlist_pins.hermes.source_hashes_sha256 | dict2items }}"
+      register: haven_wishlist_source_hashes
+
+    - name: Require exact native locks
+      ansible.builtin.assert:
+        that: item.stat.checksum == item.item.value
+        quiet: true
+      loop: "{{ haven_wishlist_source_hashes.results }}"
+      loop_control:
+        label: "{{ item.item.key }}"
+
+    - name: Stage the attributed candidate patch
+      ansible.builtin.copy:
+        src: ../research/h0.1/patches/upstream-117820.patch
+        dest: /opt/haven-wishlist/recovery.patch
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Check whether the candidate patch is already applied
+      ansible.builtin.command:
+        argv: [git, apply, --reverse, --check, /opt/haven-wishlist/recovery.patch]
+        chdir: /opt/haven-wishlist/native
+      become: true
+      become_user: haven-wishlist-build
+      register: haven_wishlist_patch
+      failed_when: haven_wishlist_patch.rc not in [0, 1]
+      changed_when: false
+      check_mode: false
+
+    - name: Apply the retained recovery patch
+      ansible.builtin.command:
+        argv: [git, apply, /opt/haven-wishlist/recovery.patch]
+        chdir: /opt/haven-wishlist/native
+      become: true
+      become_user: haven-wishlist-build
+      changed_when: true
+      when: haven_wishlist_patch.rc == 1
+
+    - name: Stage the independent execution guard patch
+      ansible.builtin.copy:
+        src: ../research/h1.6.1/deterministic-policy.patch
+        dest: /opt/haven-wishlist/guard.patch
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Prepare the exact execution guard
+      ansible.builtin.command:
+        argv: [/usr/bin/python3, -m, scripts.prepare_capabilities, --source, /opt/haven-wishlist/native,
+               --patch, /opt/haven-wishlist/guard.patch, --apply]
+        chdir: /opt/haven-wishlist
+      environment:
+        PYTHONPATH: /opt/haven-wishlist:/opt/haven-wishlist/vendor
+        PYTHONDONTWRITEBYTECODE: '1'
+        GIT_CONFIG_COUNT: '1'
+        GIT_CONFIG_KEY_0: safe.directory
+        GIT_CONFIG_VALUE_0: /opt/haven-wishlist/native
+      register: haven_wishlist_guard
+      changed_when: (haven_wishlist_guard.stdout | from_json).changed | bool
+
+    - name: Build only the native core through its frozen PM lock
+      ansible.builtin.command:
+        argv: [/usr/sbin/runuser, -u, haven-wishlist-build, --, /usr/bin/python3, -m, pm.build_env,
+               --source, /opt/haven-wishlist/native, --out, /opt/haven-wishlist/native/venv]
+        chdir: /opt/haven-wishlist/native
+        creates: /opt/haven-wishlist/native/venv/bin/python
+      environment:
+        HOME: /opt/haven-wishlist/install-home
+        HERMES_HOME: /opt/haven-wishlist/install-home/profile
+        HERMES_RUNTIME_DIR: /opt/haven-wishlist/install-home/tools
+      async: 1800
+      poll: 10
+      when: not ansible_check_mode
+
+    - name: Freeze public native code and dependencies
+      ansible.builtin.file:
+        path: "{{ item }}"
+        recurse: true
+        owner: root
+        group: root
+        mode: 'u=rwX,go=rX'
+      loop: [/opt/haven-wishlist/native, /opt/haven-wishlist/install-home]
+
+    - name: Record completed native preparation
+      ansible.builtin.copy:
+        content: "{{ haven_wishlist_pins | to_json }}\n"
+        dest: /opt/haven-wishlist/.native-prepared
+        owner: root
+        group: root
+        mode: '0644'
+      when: not ansible_check_mode
+
+- name: Check shared public dependencies under the domain identity
+  ansible.builtin.command:
+    argv: [/opt/haven-wishlist/native/venv/bin/python, -B, -c,
+           'import jsonschema, openai, httpx; from ruamel.yaml import YAML; from scripts.wishlist_operations import configurations']
+    chdir: /opt/haven-wishlist
+  environment:
+    PYTHONPATH: /opt/haven-wishlist:/opt/haven-wishlist/vendor
+  become: true
+  become_user: haven-wishlist
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Verify exact native source contracts without credentials or model calls
+  ansible.builtin.command:
+    argv:
+      - /opt/haven-wishlist/native/venv/bin/python
+      - -B
+      - -c
+      - >-
+        from pathlib import Path;
+        from scripts.model_probe import check_candidate;
+        from scripts.wishlist_ingress import check_runtime;
+        source = Path('/opt/haven-wishlist/native');
+        check_candidate(source); check_runtime(source)
+    chdir: /opt/haven-wishlist
+  environment:
+    PYTHONPATH: /opt/haven-wishlist:/opt/haven-wishlist/vendor
+    GIT_CONFIG_COUNT: '1'
+    GIT_CONFIG_KEY_0: safe.directory
+    GIT_CONFIG_VALUE_0: /opt/haven-wishlist/native
+  become: true
+  become_user: haven-language
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Resolve fixed account and IPC group numbers
+  ansible.builtin.getent:
+    database: "{{ item.database }}"
+    key: "{{ item.key }}"
+  loop:
+    - {database: passwd, key: haven}
+    - {database: passwd, key: haven-wishlist}
+    - {database: passwd, key: haven-language}
+    - {database: group, key: haven-wishlist-ingress}
+    - {database: group, key: haven-wishlist-language}
+  register: haven_wishlist_identities
+  when: not ansible_check_mode
+
+- name: Select exact identities for kernel peer authentication
+  ansible.builtin.set_fact:
+    haven_wishlist_coordinator_uid: "{{ haven_wishlist_identities.results[0].ansible_facts.getent_passwd['haven'][1] }}"
+    haven_wishlist_domain_uid: "{{ haven_wishlist_identities.results[1].ansible_facts.getent_passwd['haven-wishlist'][1] }}"
+    haven_wishlist_language_uid: "{{ haven_wishlist_identities.results[2].ansible_facts.getent_passwd['haven-language'][1] }}"
+    haven_wishlist_ingress_gid: "{{ haven_wishlist_identities.results[3].ansible_facts.getent_group['haven-wishlist-ingress'][1] }}"
+    haven_wishlist_language_gid: "{{ haven_wishlist_identities.results[4].ansible_facts.getent_group['haven-wishlist-language'][1] }}"
+  when: not ansible_check_mode
+
+- name: Install explicit private service configurations
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: "{{ item.group }}"
+    mode: '0640'
+  loop:
+    - {src: wishlist-domain.json.j2, dest: /var/lib/haven-wishlist/config.json, group: haven-wishlist}
+    - {src: wishlist-language.json.j2, dest: /etc/haven-wishlist/language.json, group: haven-language}
+    - {src: wishlist-ingress.json.j2, dest: /etc/haven-wishlist/ingress.json, group: root}
+  no_log: true
+  when: not ansible_check_mode
+
+- name: Install the independently rendered model profile without overwriting an enrolled profile
+  ansible.builtin.copy:
+    src: "{{ haven_wishlist_profile }}"
+    dest: /var/lib/haven-language/.hermes/config.yaml
+    owner: haven-language
+    group: haven-language
+    mode: '0600'
+    force: false
+  no_log: true
+
+- name: Install bounded units without starting services or another poller
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: [haven-wishlist.service, haven-wishlist-language.service]
+
+- name: Verify staged units before loading them
+  ansible.builtin.command:
+    argv: [systemd-analyze, verify, /etc/systemd/system/haven-wishlist.service,
+           /etc/systemd/system/haven-wishlist-language.service]
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Load staged units without changing their enabled state
+  ansible.builtin.systemd_service:
+    daemon_reload: true

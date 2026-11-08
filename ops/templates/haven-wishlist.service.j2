@@ -1,0 +1,47 @@
+[Unit]
+Description=Haven wishlist database service
+After=haven-wishlist-language.service
+Wants=haven-wishlist-language.service
+Before=haven.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=exec
+User=haven-wishlist
+Group=haven-wishlist-ingress
+SupplementaryGroups=haven-wishlist haven-wishlist-language
+RuntimeDirectory=haven-wishlist
+RuntimeDirectoryMode=0750
+WorkingDirectory=/opt/haven-wishlist
+Environment=PYTHONPATH=/opt/haven-wishlist:/opt/haven-wishlist/vendor
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=HOME=/var/lib/haven-wishlist
+ExecStart=/opt/haven-wishlist/native/venv/bin/python -B -m scripts.wishlist_service --config /var/lib/haven-wishlist/config.json
+Restart=on-failure
+RestartSec=5
+RestartPreventExitStatus=78
+TimeoutStopSec=30
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictSUIDSGID=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ReadWritePaths=/var/lib/haven-wishlist/state
+ReadOnlyPaths=/opt/haven-wishlist /var/lib/haven-wishlist/config.json
+InaccessiblePaths=-/var/lib/haven -/var/lib/haven-language -/var/lib/haven-backup -/etc/haven-backup
+MemoryMax=256M
+TasksMax=32
+StandardOutput=journal
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target

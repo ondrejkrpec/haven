@@ -246,6 +246,8 @@ def stage_stopped(source, destination, policy, *, max_bytes=256 * 1024 * 1024, m
             return {"schema_version": 1, "captured_at_utc": datetime.now(timezone.utc).isoformat(),
                     "policy_sha256": hashlib.sha256(json.dumps(policy, sort_keys=True).encode()).hexdigest(),
                     "files": metadata, "excluded": excluded, "source_bytes": size,
+                    "root_metadata": {"uid": initial[""][3], "gid": initial[""][4],
+                                      "mode": stat.S_IMODE(initial[""][2])},
                     "absent_optional": [name for name in policy["include"] if name not in metadata],
                     "consistency": "caller stopped writers; source metadata unchanged across copy"}
         except BaseException:
@@ -258,7 +260,7 @@ def stage_stopped(source, destination, policy, *, max_bytes=256 * 1024 * 1024, m
             os.close(directory)
 
 
-def capture_with_pause(controller, journal, source, destination, policy, **limits):
+def capture_with_pause(controller, journal, source, destination, policy, *, components=None, **limits):
     """Adapters provide a durable intent, one unit's control, and full health."""
     require(not journal.pending(), "unfinished_capture_requires_recovery")
     validate_policy(policy)
@@ -269,6 +271,14 @@ def capture_with_pause(controller, journal, source, destination, policy, **limit
         controller.stop()
         require(controller.stopped(), "service_not_stopped")
         receipt = stage_stopped(source, destination, policy, **limits)
+        if components:
+            receipt["additional"] = {}
+            for name, component in components.items():
+                receipt["additional"][name] = {
+                    "policy": component["policy"],
+                    "capture": stage_stopped(component["source"], destination.parent / name,
+                                             component["policy"], **limits),
+                }
         succeeded = True
     finally:
         try:

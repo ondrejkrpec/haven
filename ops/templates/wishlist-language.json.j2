@@ -1,0 +1,4 @@
+{{ {'schema_version': 1, 'socket': '/run/haven-wishlist-language/request.sock',
+    'socket_gid': haven_wishlist_language_gid | int, 'client_uid': haven_wishlist_domain_uid | int,
+    'source': '/opt/haven-wishlist/native', 'home': '/var/lib/haven-language/.hermes',
+    'python': '/opt/haven-wishlist/native/venv/bin/python'} | to_json }}

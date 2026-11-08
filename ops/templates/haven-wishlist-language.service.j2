@@ -1,0 +1,46 @@
+[Unit]
+Description=Haven bounded wishlist interpretation service
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=exec
+User=haven-language
+Group=haven-wishlist-language
+SupplementaryGroups=haven-language
+RuntimeDirectory=haven-wishlist-language
+RuntimeDirectoryMode=0750
+WorkingDirectory=/opt/haven-wishlist
+Environment=PYTHONPATH=/opt/haven-wishlist:/opt/haven-wishlist/vendor
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=HOME=/var/lib/haven-language
+ExecStart=/opt/haven-wishlist/native/venv/bin/python -B -m scripts.wishlist_interpreter --config /etc/haven-wishlist/language.json
+Restart=on-failure
+RestartSec=5
+RestartPreventExitStatus=78
+TimeoutStopSec=25
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ReadWritePaths=/var/lib/haven-language/.hermes
+ReadOnlyPaths=/opt/haven-wishlist /etc/haven-wishlist
+InaccessiblePaths=-/var/lib/haven -/var/lib/haven-wishlist -/var/lib/haven-backup -/etc/haven-backup -/run/haven-wishlist
+MemoryMax=1G
+TasksMax=32
+CPUQuota=100%
+StandardOutput=journal
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target
