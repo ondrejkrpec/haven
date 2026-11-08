@@ -59,6 +59,48 @@ class WishlistTests(unittest.TestCase):
     def count(self, table):
         return self.domain.store.db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
 
+    def test_remove_hides_entry_without_erasing_history_and_restore_keeps_purchase(self):
+        entry = self.add()
+        purchased = self.change("wishlist.record_purchase", entry)["data"]["entry"]
+        request = self.request("wishlist.remove", {"entry_id": entry["entry_id"], "expected_version": purchased["version"]})
+        removed = self.domain.handle(*request)
+        self.assertTrue(removed["committed"])
+        item = removed["data"]["entry"]
+        self.assertEqual(item["state"], "removed")
+        self.assertEqual(item["url"], entry["url"])
+        self.assertEqual(self.count("purchases"), 1)
+        self.assertEqual(self.send("wishlist.list", {"state": "all"})["data"]["entries"], [])
+        self.assertEqual(self.send("wishlist.list", {"state": "removed"})["data"]["entries"][0]["entry_id"], entry["entry_id"])
+        self.assertEqual(self.change("wishlist.update", item, patch={"label": "Wrong"})["code"], "not_found")
+        self.assertEqual(self.change("wishlist.remove", purchased)["code"], "conflict")
+        self.domain.close()
+        self.domain = self.open()
+        self.assertEqual(self.domain.handle(*request), removed)
+        restored = self.change("wishlist.restore", item)["data"]["entry"]
+        self.assertEqual((restored["state"], restored["removed_at"]), ("purchased", None))
+        self.assertEqual(self.count("purchases"), 1)
+        self.assertGreater(restored["collection_generation"], item["collection_generation"])
+
+    def test_removal_of_incomplete_entry_needs_no_classification_and_rolls_back_with_receipt(self):
+        added = self.send("wishlist.add", {"url": "https://shop.example/incomplete"})["data"]["entry"]
+        db = self.domain.store.db
+        db.execute("CREATE TRIGGER fail_remove_receipt BEFORE INSERT ON receipts BEGIN SELECT RAISE(ABORT, 'synthetic'); END")
+        failed = self.change("wishlist.remove", added)
+        self.assertEqual(failed["code"], "unavailable")
+        self.assertIsNone(self.domain._entry(db, added["entry_id"])["removed_at"])
+        db.execute("DROP TRIGGER fail_remove_receipt")
+        result = self.change("wishlist.remove", added)
+        self.assertEqual((result["code"], result["committed"]), ("ok", True))
+        self.assertEqual(self.send("wishlist.list", {})["data"]["entries"], [])
+
+    def test_new_removal_operations_deny_foreign_entries(self):
+        foreign = self.foreign_entry()
+        for operation in ("wishlist.remove", "wishlist.restore"):
+            a = self.send(operation, {"entry_id": foreign, "expected_version": 1})
+            b = self.send(operation, {"entry_id": "wi_" + "0" * 32, "expected_version": 1})
+            self.assertEqual(a["code"], b["code"])
+            self.assertEqual(a["code"], "not_found")
+
     def test_incomplete_intake_keeps_link_offer_and_receipt_after_restart(self):
         envelope, context = self.request("wishlist.add", {"url": "https://shop.example/x"})
         result = self.domain.handle(envelope, context)

@@ -231,6 +231,30 @@ class ApplicationTests(unittest.TestCase):
         finally:
             upgraded.close()
 
+    def test_source_links_are_exact_and_long_links_are_not_silently_truncated(self):
+        url = "https://shop.example/original?variant=blue&pack=4"
+        self.send(url)
+        self.assertIn(url, self.send("wl seznam")["reply"])
+        self.assertIn(url, self.send("wl detail 1")["reply"])
+        long_url = "https://shop.example/" + "x" * 3000
+        self.send(long_url)
+        result = self.send("wl detail 2")
+        self.assertIn("Celý odkaz přesahuje limit", result["reply"])
+        self.assertNotIn(long_url[:800], result["reply"])
+        self.assertEqual(self.domain.store.db.execute(
+            "SELECT url FROM offers WHERE url=?", (long_url,)).fetchone()[0], long_url)
+
+    def test_deterministic_remove_and_restore_are_reversible_and_replay_safe(self):
+        self.complete(recurring=True)
+        removed = self.send("wl odstranit 1")
+        self.assertTrue(removed["committed"])
+        self.assertIsNotNone(self.row()["removed_at"])
+        self.assertNotIn("#1", self.send("wl seznam vše")["reply"])
+        self.assertIn("#1", self.send("wl seznam odstraněné")["reply"])
+        self.assertTrue(self.send("wl vrátit #1")["committed"])
+        self.assertIsNone(self.row()["removed_at"])
+        self.assertEqual(self.row()["purchase_mode"], "recurring")
+
 
 class SocketTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):

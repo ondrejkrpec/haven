@@ -179,11 +179,12 @@ class Wishlist:
         if row is None:
             return None
         return {**{key: row[key] for key in row.keys() if key not in ("sequence", "owner_id")},
+                "state": "removed" if "removed_at" in row.keys() and row["removed_at"] else row["state"],
                 "reference": f"#{row['sequence']}"}
 
     def _result(self, db, request_id, entry_id, *, committed):
         entry = self._entry(db, entry_id)
-        missing = classification(entry)
+        missing = classification(entry) if entry["state"] != "removed" else []
         return self.response(request_id, "needs_clarification" if missing else "ok",
                              committed=committed, entry_id=entry_id, version=entry["version"],
                              data={"entry": entry}, clarification=missing)
@@ -218,9 +219,23 @@ class Wishlist:
             return self._result(db, request_id, entry["entry_id"], committed=False)
         if entry["version"] != args["expected_version"]:
             return reply("conflict")
+        if entry["state"] == "removed" and operation not in ("wishlist.remove", "wishlist.restore"):
+            return reply("not_found")
         updates = {}
         invalidate = False
-        if operation == "wishlist.update":
+        if operation == "wishlist.remove":
+            if entry["state"] == "removed":
+                return self._result(db, request_id, entry["entry_id"], committed=False)
+            updates = {"removed_at": stamp(now)}
+            db.execute("DELETE FROM clarifications WHERE entry_id=? AND owner_id=?",
+                       (entry["entry_id"], self.owner_id))
+            invalidate = True
+        elif operation == "wishlist.restore":
+            if entry["state"] != "removed":
+                return reply("conflict")
+            updates = {"removed_at": None}
+            invalidate = True
+        elif operation == "wishlist.update":
             self._validate_details(args["patch"])
             proposed = {**entry, **args["patch"]}
             missing = classification(proposed)
@@ -264,7 +279,7 @@ class Wishlist:
             db.execute("""UPDATE offers SET collection_generation = collection_generation + 1,
                 collection_status = CASE WHEN ? = 'active' THEN 'pending' ELSE collection_status END
                 WHERE entry_id = ? AND owner_id = ?""",
-                       (updates["state"], entry["entry_id"], self.owner_id))
+                       (self._entry(db, entry["entry_id"])["state"], entry["entry_id"], self.owner_id))
         return self._result(db, request_id, entry["entry_id"], committed=True)
 
     @staticmethod
@@ -290,9 +305,10 @@ class Wishlist:
             except (ValueError, TypeError, UnicodeError):
                 return self.response(request_id, "invalid_request")
         where, params = ["owner_id = ?", "sequence > ?", "sequence <= ?"], [self.owner_id, after, ceiling]
+        where.append("removed_at IS NOT NULL" if state == "removed" else "removed_at IS NULL")
         if state == "default":
             where.append("state IN ('active', 'paused')")
-        elif state != "all":
+        elif state not in ("all", "removed"):
             where.append("state = ?")
             params.append(state)
         if purpose:

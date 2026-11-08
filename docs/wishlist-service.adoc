@@ -28,6 +28,8 @@ Messages are single-line text, up to Telegram's 4096 UTF-16 units. Send one oper
 |`wl seznam`, `wl seznam vše`, `wl seznam koupené` |List active/paused, all, or purchased entries, at most ten per page.
 |`wl dále CURSOR`, optionally followed by `vše` or `koupené` |Continue the same list; copy the complete continuation command from the preceding reply to retain its filter.
 |`wl detail #1` |Show state, source, classification and bounded note/recipient details.
+|`wl odstranit #1`, `wl vrátit #1` |Remove reversibly or restore the original lifecycle. Bare numeric references such as `1` are also accepted.
+|`wl seznam odstraněné` |Show removed entries; ordinary lists, including `vše`, exclude them.
 |`wl upravit #1 {"label":"Nový název","note":null}` |Patch only explicit supported fields; use strict JSON for detailed edits.
 |`wl koupeno #1` |Record purchase using the service clock and W1 lifecycle rules.
 |`wl pauza #1 2026-12-01T12:00:00+01:00` |Pause until an explicit future instant. The date is an example.

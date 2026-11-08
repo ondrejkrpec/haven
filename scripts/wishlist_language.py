@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from scripts.wishlist_domain import canonical, classification, digest, stamp
 from scripts.wishlist_language_contract import QUESTIONS, resolve_target, validate_decision
-from scripts.wishlist_telegram import _reply_text, validate_event
+from scripts.wishlist_telegram import _reply_text, source_text, validate_event
 
 LANGUAGE_UNAVAILABLE = "Teď zprávě nemohu spolehlivě porozumět. Samotný odkaz můžu uložit i tak; ostatní změny zatím neprovedu."
 CONFLICT = "Mezitím se wishlist nebo rozhovor změnil. Napiš prosím znovu, kterou položku chceš řešit."
@@ -46,7 +46,8 @@ class LanguageFlow:
     def _compose(self, db, result, operation, arguments, text):
         result = self._entry_result(db, result)
         _, state = self._session(db)
-        state["pending"] = None
+        if operation not in ("wishlist.get", "wishlist.list"):
+            state["pending"] = None
         data = result.get("data", {})
         entry = data.get("entry")
         if "entries" in data:
@@ -59,12 +60,15 @@ class LanguageFlow:
             reply = CONFLICT
         elif result["code"] == "invalid_request":
             reply = "Tomu jsem nerozuměla dost přesně. Jak chceš položku upravit?"
-        elif result["code"] == "needs_clarification" and entry:
+        elif result["code"] == "needs_clarification" and entry and operation != "wishlist.get":
             missing = result.get("clarification") or classification(entry)
             reason = next((key for key in ("purpose", "purchase_mode", "recipient") if key in missing), "request")
             state["pending"] = {"reason": reason, "entry_ids": [entry["entry_id"]],
                                 "versions": {entry["entry_id"]: entry["version"]}, "intent": text[:1000]}
-            reply = ("Odkaz jsem uložila. " if result["committed"] else "") + QUESTIONS[reason]
+            prefixes = {"wishlist.add": "Odkaz jsem uložila. ", "wishlist.update": "Údaje jsem doplnila. ",
+                        "wishlist.restore": "Položku jsem vrátila. "}
+            reply = (prefixes.get(operation, "") if result["committed"] else "") + QUESTIONS[reason]
+            reply += "\n" + source_text(entry)
         else:
             reply = _reply_text(result, operation, arguments)
             if entry and result["committed"]:
@@ -73,9 +77,12 @@ class LanguageFlow:
                          "wishlist.update": f"Upravila jsem položku: {label}.",
                          "wishlist.record_purchase": f"Zaznamenala jsem nákup: {label}.",
                          "wishlist.pause": f"Pozastavila jsem sledování: {label}.",
-                         "wishlist.resume": f"Obnovila jsem sledování: {label}."}
+                         "wishlist.resume": f"Obnovila jsem sledování: {label}.",
+                         "wishlist.remove": f"Odstranila jsem položku z wishlistu: {label}. Vrátit ji lze pomocí „wl vrátit {entry['reference']}“.",
+                         "wishlist.restore": f"Vrátila jsem položku do wishlistu: {label}."}
                 reply = verbs.get(operation, reply)
-                if entry["paused_until"]:
+                reply += "\n" + source_text(entry)
+                if entry["paused_until"] and entry["state"] != "removed":
                     reply += " Pozastaveno do " + entry["paused_until"] + "."
             if "Další položky:" in reply:
                 reply = reply.split("\nDalší položky:")[0] + "\nMám ukázat další položky?"
@@ -125,7 +132,7 @@ class LanguageFlow:
             version, state = self._session(db)
             wanted = [state.get("focus"), *(state.get("pending") or {}).get("entry_ids", []), *state.get("listed", [])]
             wanted += [row[0] for row in db.execute(
-                "SELECT entry_id FROM entries WHERE owner_id = ? ORDER BY sequence DESC LIMIT 20",
+                "SELECT entry_id FROM entries WHERE owner_id = ? AND removed_at IS NULL ORDER BY sequence DESC LIMIT 20",
                 (self.domain.owner_id,))]
             entries, seen = [], set()
             fields = ("entry_id", "version", "reference", "label", "purpose", "purchase_mode", "recipient", "state", "url", "shop_host")
@@ -189,6 +196,15 @@ class LanguageFlow:
                         or answer["code"] != "ok"):
                     raise ValueError("language_answer")
                 decision = resolve_target(validate_decision(answer["decision"], prepared), prepared)
+                # An intake clarification with one supplied link must not discard that link.
+                # Only this message's literal URL can become a command; history grants no URL authority.
+                if (decision["kind"] == "clarify" and not decision["entry_ids"]
+                        and decision["reason"] in {"purpose", "purchase_mode", "recipient"}):
+                    urls = list(dict.fromkeys(match.rstrip('.,!;)]}') for match in
+                        re.findall(r'https://[^\s<>"\u201c\u201d]+', prepared["text"])))
+                    if len(urls) == 1:
+                        decision = validate_decision({"kind": "command", "command": {
+                            "operation": "wishlist.add", "arguments": {"url": urls[0]}}}, prepared)
             except Exception:
                 self._failed(prepared, "unavailable")
                 return self.application.response(context.request_id, "unavailable", reply=LANGUAGE_UNAVAILABLE)
@@ -210,7 +226,7 @@ class LanguageFlow:
                     state["pending"] = ({"reason": decision["reason"], "entry_ids": ids,
                                          "versions": {key: by_id[key]["version"] for key in ids},
                                          "intent": (state.get("pending") or {}).get("intent", text[:1000])}
-                                        if decision["reason"] not in ("unsupported", "prices_unavailable") else None)
+                                        if decision["reason"] not in ("unsupported", "prices_unavailable", "help") else state.get("pending"))
                     self._save_session(db, state, text, reply)
                     response = self.application.response(current.request_id, "needs_clarification", reply=reply)
                 else:

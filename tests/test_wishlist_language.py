@@ -93,6 +93,55 @@ class ConversationTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("note", prepared["entries"][0])
         self.assertNotIn("wl ", answer["reply"])
 
+    async def test_shared_link_is_saved_before_clarification_then_short_replies_complete_it(self):
+        url = "https://shop.example/sponge?variant=2"
+        self.interpreter.decision = {"kind": "clarify", "reason": "purpose", "entry_ids": []}
+        first = await self.send("Odesláno z aplikace Obchod: " + url + " dej mi to na wishlist")
+        self.assertEqual((first["code"], first["committed"]), ("needs_clarification", True))
+        self.assertIn(url, first["reply"])
+        self.assertEqual(self.row()["state"], "active")
+        self.interpreter.decision = lambda p: command("update", entry_id=p["context"]["focus"],
+            expected_version=p["entries"][0]["version"], patch={"purpose": "self", "recipient": None})
+        self.assertTrue((await self.send("Pro me"))["committed"])
+        self.domain.close()
+        self.domain = Wishlist(self.path, bot_id=BOT, owner_id=OWNER, clock=lambda: self.now)
+        self.interpreter = Interpreter(self.domain)
+        self.flow = LanguageFlow(self.domain, TelegramApplication(self.domain), self.interpreter)
+        self.interpreter.decision = lambda p: command("update", entry_id=p["context"]["focus"],
+            expected_version=p["entries"][0]["version"], patch={"purchase_mode": "recurring"})
+        result = await self.send("Opakovany")
+        self.assertTrue(result["committed"])
+        self.assertEqual((self.row()["classification"], self.row()["purchase_mode"]), ("complete", "recurring"))
+        self.assertEqual(self.domain.store.db.execute("SELECT url FROM offers").fetchone()[0], url)
+        self.assertEqual(self.domain.store.db.execute("SELECT COUNT(*) FROM entries").fetchone()[0], 1)
+
+    async def test_shared_link_help_or_price_question_never_adds_an_entry(self):
+        for reason in ("help", "unsupported", "prices_unavailable", "request"):
+            self.interpreter.decision = {"kind": "clarify", "reason": reason, "entry_ids": []}
+            result = await self.send("Co víš o https://shop.example/item ?")
+            self.assertFalse(result["committed"])
+        self.assertEqual(self.domain.store.db.execute("SELECT COUNT(*) FROM entries").fetchone()[0], 0)
+
+    async def test_natural_remove_uses_explicit_bare_number_not_recent_focus(self):
+        blue = await self.add("Modrá pánev", "https://shop.example/blue")
+        await self.add("Červená pánev", "https://shop.example/red")
+        self.interpreter.decision = command("remove", entry_id=blue["entry_id"], expected_version=1)
+        result = await self.send("Dej pryc 1")
+        self.assertTrue(result["committed"], result)
+        self.assertIsNotNone(self.row(1)["removed_at"])
+        self.assertIsNone(self.row(2)["removed_at"])
+        self.interpreter.decision = command("restore", entry_id=blue["entry_id"], expected_version=2)
+        self.assertTrue((await self.send("Vrat 1"))["committed"])
+        self.assertIsNone(self.row(1)["removed_at"])
+
+    async def test_unknown_or_multiple_numbered_targets_never_remove_focused_item(self):
+        item = await self.add("Pánev")
+        for text in ("Odstran 999", "Odstran #999", "Odstran 1 a 999"):
+            self.interpreter.decision = command("remove", entry_id=item["entry_id"], expected_version=1)
+            result = await self.send(text)
+            self.assertFalse(result["committed"])
+            self.assertIsNone(self.row()["removed_at"])
+
     async def test_combined_link_and_gift_message_commits_and_never_uses_model_confirmation(self):
         self.interpreter.decision = command("add", url="https://shop.example/gift?variant=2",
             details={"label": "Pánev", "purpose": "gift", "purchase_mode": "once", "recipient": "máma"})
@@ -135,12 +184,43 @@ class ConversationTests(unittest.IsolatedAsyncioTestCase):
             old.close()
         upgraded = Wishlist(path, bot_id=BOT, owner_id=OWNER)
         try:
-            self.assertEqual(upgraded.store.db.execute("PRAGMA user_version").fetchone()[0], 3)
+            self.assertEqual(upgraded.store.db.execute("PRAGMA user_version").fetchone()[0], len(MIGRATIONS))
             for table in tables:
-                self.assertEqual([tuple(row) for row in upgraded.store.db.execute(f"SELECT * FROM {table}")], previous[table], table)
+                self.assertEqual([tuple(row)[:len(previous[table][0])] if previous[table] else tuple(row) for row in upgraded.store.db.execute(f"SELECT * FROM {table}")], previous[table], table)
             self.assertEqual(TelegramApplication(upgraded).handle(event("https://shop.example/item")), reply)
         finally:
             upgraded.close()
+
+    async def test_schema_three_upgrade_preserves_conversation_and_old_code_refuses_new_schema(self):
+        from scripts.wishlist_store import MIGRATIONS
+        path = self.path.with_name("schema-three.sqlite3")
+        with patch("scripts.wishlist_store.MIGRATIONS", MIGRATIONS[:3]):
+            old = Wishlist(path, bot_id=BOT, owner_id=OWNER)
+            old.store.db.execute("INSERT INTO language_sessions VALUES (?,?,1,?,?)",
+                                 (OWNER, OWNER, '{"pending":{"reason":"purchase_mode"}}', "2030-01-01"))
+            reply = TelegramApplication(old).handle(event("https://shop.example/existing?exact=1"))
+            tables = [row[0] for row in old.store.db.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")]
+            columns = {table: [row[1] for row in old.store.db.execute(f"PRAGMA table_info({table})")]
+                       for table in tables}
+            previous = {table: [tuple(row) for row in old.store.db.execute(f"SELECT * FROM {table}")]
+                        for table in tables}
+            old.close()
+        upgraded = Wishlist(path, bot_id=BOT, owner_id=OWNER)
+        try:
+            for table in tables:
+                projection = ','.join(columns[table])
+                self.assertEqual([tuple(row) for row in upgraded.store.db.execute(
+                    f"SELECT {projection} FROM {table}")], previous[table], table)
+            self.assertIsNone(upgraded.store.db.execute("SELECT removed_at FROM entries").fetchone()[0])
+            self.assertEqual(TelegramApplication(upgraded).handle(event("https://shop.example/existing?exact=1")), reply)
+        finally:
+            upgraded.close()
+        before = path.read_bytes()
+        with patch("scripts.wishlist_store.MIGRATIONS", MIGRATIONS[:3]):
+            with self.assertRaisesRegex(ValueError, "Unsupported wishlist database version"):
+                Wishlist(path, bot_id=BOT, owner_id=OWNER)
+        self.assertEqual(path.read_bytes(), before)
 
     async def test_vague_pan_is_disambiguated_even_when_model_guesses_and_followup_keeps_intent(self):
         blue = await self.add("Modrá pánev", "https://shop.example/blue")

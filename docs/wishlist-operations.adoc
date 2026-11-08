@@ -1,6 +1,6 @@
 = Wishlist W4: service preparation and recovery
 
-Status, 2026-11-08: staged services, independent model enrollment, socket readiness, one real wishlist-list interpretation and isolation probes using the installed unit restrictions passed on the pilot. Telegram wishlist ingress, expanded off-site backup/restore, capacity and owner conversation acceptance remain pending. The earlier local suite covers temporary databases and service doubles; these results have separate scopes. W4 remains open until the live checklist below passes.
+Status, 2026-11-08: isolated services and the existing Telegram ingress are running on the pilot with independent model enrollment. Installed-unit isolation, process kill/restart, measured capacity during backup and a three-component encrypted snapshot/isolated restore passed. Real-model synthetic conversations passed, but the owner's first conversation exposed shared-link follow-up, source-display and missing-removal defects. Their source fix has passed a separate real-model reproduction; production upgrade and owner retry remain pending. W3 collection, dashboard interpretation accounting and receipt retention remain open.
 
 == Installation boundary
 
@@ -69,7 +69,9 @@ All components are copied during the same pause. The manifest retains the existi
   --owners "$EXPLICIT_OWNER_MAPPING" --component wishlist
 ----
 
-Before selecting an older application version, run its database compatibility check against a private copy with the target's maximum supported schema. A version-2 binary cannot open the W5 version-3 database. Refuse that rollback; preserve current history and use a compatible forward fix or disable optional ingress. Restoring an old database over new purchases/messages is not an application rollback. Historical restoration stays isolated until external effects are reconciled.
+Before selecting an older application version, run its database compatibility check against a private copy with the target's maximum supported schema. A version-2 binary cannot open the W5 version-3 database, and a version-3 binary cannot open schema 4 with reversible removal. Refuse that rollback; preserve current history and use a compatible forward fix or disable optional ingress. Restoring an old database over new purchases/messages is not an application rollback. Historical restoration stays isolated until external effects are reconciled.
+
+For the schema-4 upgrade, accept a current schema-3 backup first, then install the backward-compatible backup helpers before any new domain writer opens the database. Stop wishlist services before using the preparation playbook; update the schema/modules in the coordinator as well. Restart only after installation and verify a fresh three-component backup/isolated restore. Migration appends a nullable column and preserves existing conversation and receipts; old messages keep their cached replies and are never reinterpreted as new removals.
 
 == Remaining live acceptance
 

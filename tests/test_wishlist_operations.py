@@ -66,7 +66,7 @@ class OperationsTests(unittest.TestCase):
             owners = {'uids': {str(os.getuid()): os.getuid()}, 'gids': {str(os.getgid()): os.getgid()}}
             restore.rebuild(payload, root / 'recovered', digest, owners, component='wishlist')
             db = root / 'recovered/state/wishlist.sqlite3'
-            self.assertEqual(operations.database_status(db)['schema_version'], 3)
+            self.assertEqual(operations.database_status(db)['schema_version'], 4)
             with closing(sqlite3.connect(db)) as connection:
                 self.assertEqual(connection.execute('SELECT COUNT(*) FROM language_sessions').fetchone()[0], 1)
             restore.rebuild(payload, root / 'model', digest, owners, component='language')
@@ -76,7 +76,7 @@ class OperationsTests(unittest.TestCase):
             journal.disarm.assert_called_once()
             with self.assertRaises(Exception):
                 restore.rebuild(payload, root / 'recovered', digest, owners, component='wishlist')
-            self.assertEqual(operations.database_status(db)['schema_version'], 3)
+            self.assertEqual(operations.database_status(db)['schema_version'], 4)
 
     def test_additional_corruption_and_missing_components_cannot_be_accepted(self):
         for change in ('database', 'auth', 'missing', 'unexpected'):
@@ -97,7 +97,7 @@ class OperationsTests(unittest.TestCase):
             path = payload / 'wishlist/state/wishlist.sqlite3'
             before = path.read_bytes()
             with self.assertRaisesRegex(ValueError, 'version'):
-                operations.database_status(path, maximum_version=2)
+                operations.database_status(path, maximum_version=3)
             self.assertEqual(before, path.read_bytes())
             self.assertFalse(operations.database_status(path)['writes'])
 

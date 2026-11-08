@@ -17,6 +17,7 @@ HELP = ("Wishlist: pošli samotný HTTPS odkaz nebo napiš wl přidat ODKAZ.\n"
         "wl seznam · wl detail #1 · wl koupeno #1 · wl obnovit #1\n"
         "wl pauza #1 RRRR-MM-DDTHH:MM:SS+01:00\n"
         'wl upravit #1 {"label":"Nový název"}\n'
+        "wl odstranit #1 · wl vrátit #1 · wl seznam odstraněné\n"
         "Doplnění údajů použije kód uvedený v otázce. Denní sběr cen zatím není zapnutý.")
 REPLIES = {
     "invalid_request": "Příkaz není platný. Nápověda: wl pomoc.",
@@ -48,10 +49,21 @@ def validate_event(event, *, bot_id, owner_id):
                           hashlib.sha256(text.encode()).hexdigest())
 
 
-def _summary(entry):
+def source_text(entry, limit=2800):
+    if len(entry["url"].encode("utf-16-le")) <= limit * 2:
+        return entry["url"]
+    return "Celý odkaz přesahuje limit zobrazení; uložený zůstává beze změny."
+
+
+def _summary(entry, *, include_url=True):
     label = entry["label"] or entry["shop_host"]
-    states = {"active": "aktivní", "paused": "pozastaveno", "purchased": "koupeno"}
-    return f"{entry['reference']} {label[:100]} — {states[entry['state']]}"
+    label = label.encode("utf-16-le")[:160].decode("utf-16-le", errors="ignore")
+    states = {"active": "aktivní", "paused": "pozastaveno", "purchased": "koupeno", "removed": "odstraněno"}
+    result = f"{entry['reference']} {label} — {states[entry['state']]}"
+    if include_url:
+        result += "\n" + (entry["url"] if len(entry["url"].encode("utf-16-le")) <= 420
+                           else f"Celý uložený odkaz: wl detail {entry['reference']}")
+    return result
 
 
 def _reply_text(result, operation, arguments):
@@ -63,22 +75,22 @@ def _reply_text(result, operation, arguments):
         lines = [_summary(entry) for entry in data["entries"]]
         reply = "\n".join(lines) if lines else "Wishlist je prázdný."
         if data.get("cursor"):
-            selection = {"all": " vše", "purchased": " koupené"}.get(arguments.get("state"), "")
+            selection = {"all": " vše", "purchased": " koupené", "removed": " odstraněné"}.get(arguments.get("state"), "")
             reply += "\nDalší položky: wl dále " + data["cursor"] + selection
         return reply
     entry = data["entry"]
     prefix = "Uloženo. " if result["committed"] else ""
-    reply = prefix + _summary(entry)
+    reply = prefix + _summary(entry, include_url=operation != "wishlist.get")
     if operation == "wishlist.get":
-        reply += "\n" + entry["url"][:800]
+        reply += "\n" + source_text(entry)
         reply += "\nÚčel: " + {"self": "pro mě", "gift": "dárek", None: "k doplnění"}[entry["purpose"]]
         reply += "\nNákup: " + {"once": "jednorázově", "recurring": "opakovaně",
                                   None: "k doplnění"}[entry["purchase_mode"]]
         if entry["recipient"]:
             reply += "\nPro: " + entry["recipient"]
         if entry["note"]:
-            reply += "\nPoznámka: " + entry["note"][:400]
-    if entry["paused_until"]:
+            reply += "\nPoznámka: " + entry["note"].encode("utf-16-le")[:800].decode("utf-16-le", errors="ignore")
+    if entry["paused_until"] and entry["state"] != "removed":
         reply += "\nPozastaveno do: " + entry["paused_until"]
     return reply
 
@@ -128,6 +140,8 @@ class TelegramApplication:
             return self.response(request_id, "unavailable")
 
     def _entry_ref(self, db, reference):
+        if reference.isdecimal():
+            reference = "#" + reference
         if not re.fullmatch(r"#[1-9][0-9]{0,15}", reference):
             raise ValueError("entry_reference")
         row = db.execute("SELECT entry_id, version FROM entries WHERE sequence = ? AND owner_id = ?",
@@ -145,15 +159,17 @@ class TelegramApplication:
         if verb in ("pomoc", "help") and not tail:
             return "help", {}, None
         if verb in ("seznam", "list"):
-            if tail not in ("", "vše", "vse", "koupené", "koupene", "koupeno"):
+            if tail not in ("", "vše", "vse", "koupené", "koupene", "koupeno", "odstraněné", "odstranene"):
                 raise ValueError("list_filter")
             return "wishlist.list", {"limit": 10, **({"state": "all"} if tail in ("vše", "vse") else
+                                                      {"state": "removed"} if tail in ("odstraněné", "odstranene") else
                                                       {"state": "purchased"} if tail else {})}, None
         if verb in ("dále", "dale"):
             continuation = tail.split()
             if not continuation or len(continuation) > 2:
                 raise ValueError("cursor_syntax")
-            filters = {"vše": "all", "vse": "all", "koupené": "purchased", "koupene": "purchased"}
+            filters = {"vše": "all", "vse": "all", "koupené": "purchased", "koupene": "purchased",
+                       "odstraněné": "removed", "odstranene": "removed"}
             args = {"limit": 10, "cursor": continuation[0]}
             if len(continuation) == 2:
                 if continuation[1] not in filters:
@@ -193,6 +209,10 @@ class TelegramApplication:
             return "wishlist.update", {**args, "patch": decode(detail.encode())}, None
         if verb in ("koupeno", "purchase") and not detail:
             return "wishlist.record_purchase", args, None
+        if verb in ("odstranit", "smazat", "remove") and not detail:
+            return "wishlist.remove", args, None
+        if verb in ("vrátit", "vratit", "restore") and not detail:
+            return "wishlist.restore", args, None
         if verb in ("obnovit", "resume") and not detail:
             return "wishlist.resume", args, None
         if verb in ("pauza", "pause"):

@@ -26,6 +26,10 @@ The model receives current text/time/time zone, opaque request/attempt IDs and a
 
 The system instruction includes the existing command schema. The answer must be exactly a command proposal or one enumerated clarification reason and up to five known item IDs. Extra fields, arbitrary reply text, identity claims, unknown IDs, stale snapshot versions and URLs absent from the current message are refused. Lists use ten items and an opaque continuation bound to the last filters. Owner/source identity is added only by trusted domain code.
 
+Shared shopping-app text with one current HTTPS link is saved before intake questions. A model clarification about purpose/purchase mode/recipient with no target can become only an add of that message's literal URL; previous messages do not grant URL authority. Short follow-ups update the stored pending entry. Help and read requests preserve that pending question. Lists and detail replies show the exact source when it fits; longer sources receive an explicit detail/length notice instead of silent truncation.
+
+Removal and restoration use versioned domain commands. Explicit references such as “Odstraň 1” take precedence over the latest conversational focus; unknown or multiple numbers require clarification. Removed entries are omitted from the recent-item snapshot but remain available through focus, an explicit removed list or its selection. Removal preserves purchase history and the original lifecycle.
+
 Independent conservative reference checks compare explicit item numbers, label/shop word stems, listed ordinals and focus. Multiple matching items produce a fixed choice question even when the model guesses an ID. This heuristic deliberately asks again when it cannot distinguish a target; it is not proof of semantic correctness. Live language quality still requires the owner/provider scenarios below.
 
 == Transactions, replay and limits
