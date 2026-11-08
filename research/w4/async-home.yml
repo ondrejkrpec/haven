@@ -1,0 +1,17 @@
+---
+- name: Verify explicit async state with a different HOME
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Check the async wrapper and poller use the same protected directory
+      ansible.builtin.command:
+        argv: [/usr/bin/true]
+      environment:
+        HOME: /opt/haven-wishlist/install-home
+        ANSIBLE_ASYNC_DIR: /root/.ansible_async
+      vars:
+        ansible_async_dir: /root/.ansible_async
+      async: 10
+      poll: 1
+      changed_when: false

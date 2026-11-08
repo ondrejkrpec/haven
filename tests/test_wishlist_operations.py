@@ -27,11 +27,16 @@ class OperationsTests(unittest.TestCase):
             for path in (home, domain, language):
                 path.mkdir(mode=0o700)
             (domain / 'state').mkdir(mode=0o700)
+            (domain / '.ansible').mkdir(mode=0o700)
+            (domain / '.ansible/transient.py').write_text('INSTALLATION_ONLY')
             (domain / 'config.json').write_text('{}')
             (home / 'config.yaml').write_text('synthetic: true')
             for name in ('config.yaml', 'auth.json'):
                 (language / name).write_text('{}')
                 (language / name).chmod(0o600)
+            for name in ('cron', 'hooks', 'memories', 'pairing', 'sessions', 'skills', 'backups'):
+                (language / name).mkdir(mode=0o700)
+            (language / 'SOUL.md').write_text('SYNTHETIC_BOOTSTRAP')
             database = domain / 'state/wishlist.sqlite3'
             store = Store(database, bot_id='123', owner_id='456', timezone='Europe/Prague')
             store.db.execute("INSERT INTO language_sessions VALUES ('456','456',1,'{}','2030-01-01')")
@@ -57,6 +62,7 @@ class OperationsTests(unittest.TestCase):
         with self.bundle() as (root, payload, digest, controller, journal):
             manifest = runtime.validate_payload(payload, digest)
             self.assertEqual(set(manifest['additional']), {'wishlist', 'language'})
+            self.assertIn('.ansible', manifest['additional']['wishlist']['capture']['excluded'])
             owners = {'uids': {str(os.getuid()): os.getuid()}, 'gids': {str(os.getgid()): os.getgid()}}
             restore.rebuild(payload, root / 'recovered', digest, owners, component='wishlist')
             db = root / 'recovered/state/wishlist.sqlite3'

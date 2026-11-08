@@ -73,17 +73,29 @@ def check_firewall(added, status, final):
         require("22/tcp (v6) on tailscale0" in status, "IPv6 private rule is missing")
 
 
+def check_ipc_groups(primary_gid):
+    """Only the explicitly designed W4 domain ingress group may be supplementary."""
+    names = []
+    for gid in set(os.getgrouplist("haven", primary_gid)) - {primary_gid}:
+        group = grp.getgrgid(gid)
+        require(group.gr_name == "haven-wishlist-ingress"
+                and set(group.gr_mem) <= {"haven", "haven-wishlist"},
+                "Unexpected supplementary service group")
+        names.append(group.gr_name)
+    return sorted(names)
+
+
 def check_account(final):
     try:
         user = pwd.getpwnam("haven")
     except KeyError:
         require(not final, "Service identity is missing")
-        return
+        return []
     require(0 < user.pw_uid < 1000 and user.pw_dir == "/var/lib/haven"
             and user.pw_shell == "/usr/sbin/nologin"
-            and user.pw_gid > 0 and grp.getgrgid(user.pw_gid).gr_name == "haven"
-            and set(os.getgrouplist("haven", user.pw_gid)) == {user.pw_gid},
+            and user.pw_gid > 0 and grp.getgrgid(user.pw_gid).gr_name == "haven",
             "Existing haven account needs manual review")
+    ipc_groups = check_ipc_groups(user.pw_gid)
     password = command("/usr/bin/passwd", "-S", "haven").split()
     require(len(password) > 1 and password[1] == "L", "Service password is not locked")
     result = subprocess.run(["/usr/sbin/runuser", "-u", "haven", "--",
@@ -96,6 +108,7 @@ def check_account(final):
         home = Path(user.pw_dir).stat()
         require(home.st_uid == user.pw_uid and home.st_gid == user.pw_gid
                 and stat.S_IMODE(home.st_mode) == 0o750, "Unexpected service home metadata")
+    return ipc_groups
 
 
 def inspect(mode, admin, connection):
@@ -120,13 +133,14 @@ def inspect(mode, admin, connection):
     require('IPV6=yes' in Path("/etc/default/ufw").read_text(), "UFW IPv6 must be enabled")
     final = mode == "verify"
     check_firewall(command("ufw", "show", "added"), command("ufw", "status", "verbose"), final)
-    check_account(final)
+    ipc_groups = check_account(final)
     for unit in ("ssh.socket", "tailscaled.service", "ufw.service"):
         command("systemctl", "is-active", unit)
         if final:
             require(command("systemctl", "is-enabled", unit) == "enabled",
                     "Access service is not enabled at boot")
     return {"result": "passed", "mode": mode, "private_ssh": True,
+            "service_ipc_groups": ipc_groups,
             "boot_id": Path("/proc/sys/kernel/random/boot_id").read_text().strip()}
 
 

@@ -2,11 +2,31 @@
 
 import copy
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
-from scripts.host_checks import PRIVATE_RULE, SSH_VALUES, check_firewall, check_ssh, check_tailnet
+from scripts.host_checks import PRIVATE_RULE, SSH_VALUES, check_firewall, check_ipc_groups, check_ssh, check_tailnet
 
 
 class HostChecksTests(unittest.TestCase):
+    def test_only_reviewed_wishlist_ipc_group_is_accepted(self):
+        with patch('scripts.host_checks.os.getgrouplist', return_value=[10]):
+            self.assertEqual(check_ipc_groups(10), [])
+        with patch('scripts.host_checks.os.getgrouplist', return_value=[10, 20]):
+            for name, members, allowed in (
+                ('haven-wishlist-ingress', ['haven', 'haven-wishlist'], True),
+                ('sudo', ['haven'], False), ('docker', ['haven'], False),
+                ('haven-wishlist-ingress', ['haven', 'unrelated'], False),
+            ):
+                with self.subTest(name=name, members=members), patch(
+                    'scripts.host_checks.grp.getgrgid', return_value=SimpleNamespace(gr_name=name, gr_mem=members)
+                ):
+                    if allowed:
+                        self.assertEqual(check_ipc_groups(10), ['haven-wishlist-ingress'])
+                    else:
+                        with self.assertRaises(ValueError):
+                            check_ipc_groups(10)
+
     def setUp(self):
         self.status = {"BackendState": "Running", "Self": {
             "TailscaleIPs": ["100.101.102.103", "fd7a:115c:a1e0::1234"], "Tags": ["tag:haven"]}}

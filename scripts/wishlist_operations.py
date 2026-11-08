@@ -17,10 +17,12 @@ LANGUAGE_HOME = Path("/var/lib/haven-language/.hermes")
 TOOLS = Path("/opt/haven-wishlist")
 SOCKET = "/run/haven-wishlist/ingress.sock"
 LANGUAGE_SOCKET = "/run/haven-wishlist-language/request.sock"
-DOMAIN_POLICY = {"schema_version": 1, "include": ["config.json", "state"], "exclude": [],
+DOMAIN_POLICY = {"schema_version": 1, "include": ["config.json", "state"], "exclude": [".ansible"],
                  "required": ["config.json", "state/wishlist.sqlite3"], "sqlite": ["state/wishlist.sqlite3"]}
-LANGUAGE_POLICY = {"schema_version": 1, "include": ["config.yaml", "auth.json"],
-                   "exclude": ["tools", "logs", "cache", ".cache"],
+LANGUAGE_POLICY = {"schema_version": 1,
+                   "include": ["config.yaml", "auth.json", "SOUL.md", "cron", "hooks", "memories",
+                               "pairing", "sessions", "skills", "backups"],
+                   "exclude": ["tools", "logs", "cache", ".cache", "audio_cache", "image_cache"],
                    "required": ["config.yaml", "auth.json"], "sqlite": []}
 UNITS = ("haven.service", "haven-wishlist.service", "haven-wishlist-language.service")
 

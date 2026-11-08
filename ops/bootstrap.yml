@@ -32,6 +32,7 @@
           ../scripts/host_checks.py preflight --admin {{ ansible_user | quote }}
           --connection {{ haven_connection.stdout | quote }}
         executable: /usr/bin/python3
+      register: haven_host_preflight
       changed_when: false
       check_mode: false
 
@@ -106,7 +107,7 @@
           ansible.builtin.user:
             name: haven
             group: haven
-            groups: ''
+            groups: "{{ (haven_host_preflight.stdout | from_json).service_ipc_groups | join(',') }}"
             append: false
             system: true
             home: /var/lib/haven
