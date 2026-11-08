@@ -120,6 +120,10 @@
     
   </li>
   <li>
+    <a href="wishlist-operations.html">Wishlist W4 service preparation and recovery</a>
+    
+  </li>
+  <li>
     <a href="family-conversations.html">Personal conversations and family sharing</a>
     
   </li>
@@ -235,7 +239,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-07: <a href="wishlist-domain.html" class="xref page">W1 domain state</a> and <a href="wishlist-service.html" class="xref page">W2 local service/Telegram ingress</a> are implemented and tested locally. <a href="wishlist-language.html" class="xref page">W5 bounded wishlist conversation</a> is also implemented locally, ahead of collection; W3/W4 and live language acceptance remain pending; no wishlist service, production database, scheduler or handler is deployed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
+<p>Status, 2026-11-07: <a href="wishlist-domain.html" class="xref page">W1 domain state</a> and <a href="wishlist-service.html" class="xref page">W2 local service/Telegram ingress</a> are implemented and tested locally. <a href="wishlist-language.html" class="xref page">W5 bounded wishlist conversation</a> is also implemented locally, ahead of collection; W3 and live language acceptance remain pending; <a href="wishlist-operations.html" class="xref page">the first W4 source slice</a> adds staged service installation and recovery support, with live operational acceptance still pending; no wishlist service, production database, scheduler or handler is deployed. <a href="wishlist-design.html" class="xref page">The staged design</a> remains the product scope. <a href="wishlist-feasibility.html" class="xref page">The feasibility result</a> separates local extraction from live collection support.</p>
 </div>
 </div>
 </div>
@@ -385,8 +389,8 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Safe redirects/DNS, exact variant/conditions, blocked source persistence, bounded retry, stale result rejection and continuation after restart without model calls.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">W4: operations and recovery</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Packaging, systemd limits, dashboard freshness, bounded logs and explicit backup capture</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">W4: operations and recovery (first source slice)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Staged packaging, separate identities, systemd limits and multi-component backup/restore; live acceptance and dashboard freshness remain pending</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Measured resource headroom with Hermes/backups, consistent database restore, version compatibility and rollback that preserves history.</p></td>
 </tr>
 <tr>

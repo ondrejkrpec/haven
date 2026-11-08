@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist W4: service preparation and recovery · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-api.html">Wishlist interface and implementation units</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-domain.html">Wishlist W1 domain state</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-service.html">Wishlist W2 local service and Telegram ingress</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-language.html">Wishlist W5 bounded natural conversation</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-operations.html">Wishlist W4 service preparation and recovery</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+  <li>
+    <a href="adr/0013-wishlist-local-admission.html">ADR 0013: Wishlist local admission</a>
+    
+  </li>
+  <li>
+    <a href="adr/0014-wishlist-language-before-collection.html">ADR 0014: Wishlist conversation before collection</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="wishlist-feasibility.html">Wishlist direct-fetch feasibility</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-browser-feasibility.html">Wishlist browser mode experiments</a>
+    
+  </li>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Wishlist W4: service preparation and recovery</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-11-08: the first W4 source slice adds staged installation, separate service identities, bounded units and backup/restore support. Local acceptance uses temporary databases and service doubles. It does not establish a deployed wishlist, independent model login, provider interpretation, OS isolation or VPS resource headroom. W4 remains open until the live checklist below passes.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_installation_boundary"><a class="anchor" href="#_installation_boundary"></a>Installation boundary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>ops/wishlist.yml</code> prepares two services on the existing pilot under the backup maintenance lock. It does not start them, enable ingress, enroll credentials or change the deployed coordinator profile. Repeating preparation while either wishlist service is running is refused. This first-install procedure is not an online upgrade procedure.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Identity</th>
+<th class="tableblock halign-left valign-top">Access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>haven</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Existing guarded Telegram coordinator; membership of <code>haven-wishlist-ingress</code> permits domain IPC. No wishlist database or interpreter credential access.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>haven-wishlist</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain database under <code>/var/lib/haven-wishlist/state</code>, domain ingress socket and interpreter client. Its unit has no IP networking.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>haven-language</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Own profile under <code>/var/lib/haven-language/.hermes</code>, interpreter socket and provider networking. Its unit hides coordinator, database, backup state and domain ingress.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>haven-wishlist-build</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unprivileged dependency preparation only; no runtime state, enrollment or IPC groups. Prepared code is subsequently root-owned.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The independently cloned native source and frozen core dependencies live under <code>/opt/haven-wishlist/native</code>. Public scripts/schema are installed explicitly under <code>/opt/haven-wishlist</code>. Build caches contain no service login. Neither service reads the coordinator&#8217;s home to import Python or native code. Source pins are rechecked without credentials. The worker trusts only the explicit root-owned native checkout for Git revision inspection.</p>
+</div>
+<div class="paragraph">
+<p>The domain has a 256 MiB memory limit; the interpreter has a 1 GiB cgroup limit and one CPU. Process limits and deadlines from <a href="wishlist-language.html" class="xref page">W5</a> still apply. These limits do not establish available capacity on the pilot. The interpreter has IP connectivity for the provider; destination-level egress filtering is not implemented in this source slice.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_explicit_preparation"><a class="anchor" href="#_explicit_preparation"></a>Explicit preparation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Render the separate no-tools model profile with <code>render_model --wishlist-interpreter</code> from the intended instance. This disables both transports in the generated interpretation profile. Do not pass the coordinator&#8217;s service profile. Use the existing <a href="h1.4-model-configuration.html" class="xref page">renderer and independent enrollment procedure</a>, targeting the new <code>haven-language</code> identity and its profile; never copy an existing auth cache.</p>
+</div>
+<div class="paragraph">
+<p>Wishlist requires JSON Schema dependencies absent from the native core/Telegram installation. Build the separate artifact using the existing hash-pinned Haven requirements subset. The builder uses uv with hashes, binary wheels and an exclusive target, then records an exact file manifest. Native virtual environments remain unchanged. Build with Linux Python 3.14 for the pinned native Python; verify again before deployment:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.wishlist_dependencies build --directory "$NEW_DEPENDENCY_DIRECTORY"
+.venv/bin/python -m scripts.wishlist_dependencies bundle --directory "$NEW_DEPENDENCY_DIRECTORY"
+.venv/bin/python -m scripts.wishlist_dependencies verify-bundle --directory "$NEW_DEPENDENCY_DIRECTORY"
+.venv/bin/python -m scripts.render_model "$PRIVATE_INSTANCE_CONFIG" \
+  --wishlist-interpreter --output "$NEW_INTERPRETER_PROFILE"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Both coordinator and interpreter explicitly include their root-owned <code>vendor</code> directory in <code>PYTHONPATH</code>. A different installed dependency manifest is refused rather than overwritten, preserving artifacts referenced by application rollback. Updating those dependency versions needs a separately designed versioned-artifact upgrade.</p>
+</div>
+<div class="paragraph">
+<p>Run the controller with the documented environment and an explicit private inventory. Set these variables in a protected private extra-vars file: <code>haven_wishlist_install_authorized: true</code>, <code>haven_wishlist_profile</code> (freshly rendered file), <code>haven_wishlist_dependencies</code> (verified artifact directory), <code>haven_wishlist_bot_id</code>, <code>haven_wishlist_owner_id</code>, and <code>haven_wishlist_timezone</code>. IDs are strings. Then run:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/ansible-playbook -i "$WISHLIST_INVENTORY" ops/wishlist.yml \
+  -e @"$WISHLIST_INPUTS"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Existing model profiles are preserved, including enrollment metadata. Preparation installs <code>/etc/haven-wishlist/ingress.json</code> for later use with the existing <code>render_model --service --capabilities --wishlist-settings</code> path. <code>ops/service.yml</code> packages the schema, modules and separately verified dependency archive needed by that optional ingress. Its expanded application snapshot includes those files, but never the domain database or model auth.</p>
+</div>
+<div class="paragraph">
+<p>After independent enrollment, <code>ops/wishlist-start.yml -e haven_wishlist_start_authorized=true</code> checks the new identity&#8217;s credentials locally and starts only the two wishlist services. Kernel-peer readiness checks send no model request. Services remain disabled at boot unless <code>haven_wishlist_enable=true</code> is explicitly selected after live acceptance. This step does not modify Telegram ingress. Start them for isolation/model/backup acceptance before switching the coordinator.</p>
+</div>
+<div class="paragraph">
+<p>Preparation alone must not be reported as a usable bot. Do not enable the integration before independent login, backup/restore, runtime isolation, capacity and live conversation checks pass.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_backup_and_isolated_restore"><a class="anchor" href="#_backup_and_isolated_restore"></a>Backup and isolated restore</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The optional boolean <code>wishlist_enabled: true</code> in explicit backup runtime inputs expands the existing controller to three fixed services and three captured roots. Existing H1 settings and snapshots remain supported. For an existing accepted H1 installation, <code>ops/wishlist-backup.yml</code> upgrades code, explicitly rendered non-secret settings and the health unit while preserving on-host credentials, capture policy and timer state. Use <code>haven_wishlist_backup_authorized: true</code> and an explicit <code>haven_backup_settings</code> file. New backup installations still use <code>ops/backup.yml</code>. The controller also needs the installed W4 helper modules; copying only <code>backup_runtime.py</code> is insufficient.</p>
+</div>
+<div class="paragraph">
+<p>Before stopping any writer, a durable journal records all services to resume. Stop order is coordinator, domain, interpreter; start order is reversed. Boot/ExecStopPost recovery reads the journal even when settings are missing or have since changed. A failed restart leaves the intent for recovery. Readiness verifies the existing coordinator heartbeat, both service states and peer-authenticated denial on both sockets without a model call.</p>
+</div>
+<div class="paragraph">
+<p>All components are copied during the same pause. The manifest retains the existing <code>home</code> capture and adds exactly <code>wishlist</code> and <code>language</code> components. Domain capture requires <code>config.json</code> and <code>state/wishlist.sqlite3</code>; language capture requires its own <code>config.yaml</code> and <code>auth.json</code>. Unreviewed files fail capture. SQLite normalization preserves committed WAL data; exact restore verifies each component&#8217;s file set, hashes, integrity and database version before acceptance. Application binaries and dependencies are recreated from pins, not captured from the native build tree.</p>
+</div>
+<div class="paragraph">
+<p><code>backup_restore --component home|wishlist|language</code> reconstructs one verified component into a new isolated directory with explicit UID/GID mappings. It never replaces an existing target or starts a poller. The default remains <code>home</code> for old snapshots. Mapping must include the captured root identity as well as child identities. Example for the domain component:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.backup_restore --payload "$RESTORED_PAYLOAD" \
+  --destination "$NEW_WISHLIST_DIRECTORY" --manifest-sha256 "$MANIFEST_SHA256" \
+  --owners "$EXPLICIT_OWNER_MAPPING" --component wishlist</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Before selecting an older application version, run its database compatibility check against a private copy with the target&#8217;s maximum supported schema. A version-2 binary cannot open the W5 version-3 database. Refuse that rollback; preserve current history and use a compatible forward fix or disable optional ingress. Restoring an old database over new purchases/messages is not an application rollback. Historical restoration stays isolated until external effects are reconciled.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_remaining_live_acceptance"><a class="anchor" href="#_remaining_live_acceptance"></a>Remaining live acceptance</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Prepare the independent runtime and repeat the playbook with no unintended changes. Confirm exact native pins and imports under each identity.</p>
+</li>
+<li>
+<p>Enroll the model identity separately. Verify profile/auth permissions and the no-tools route without adopting workstation/coordinator credentials.</p>
+</li>
+<li>
+<p>Test filesystem and socket denials inside the installed units, not only under service UIDs. Confirm the interpreter cannot read the domain database, bot token, coordinator home or backup material. Verify the domain cannot use IP networking.</p>
+</li>
+<li>
+<p>Measure memory, disk and CPU while Hermes, interpretation and backups run. Exercise actual process kill/restart and a stopped-writer backup; verify recovery after an interrupted pause.</p>
+</li>
+<li>
+<p>Accept a fresh encrypted off-site snapshot with all three components. Restore into new isolated paths and check conversation context, purchases, receipts, ownership and schema compatibility.</p>
+</li>
+<li>
+<p>Enable only the existing Telegram poller, exercise the <a href="wishlist-language.html" class="xref page">W5 live scenarios</a> with the owner and a real model, including provider failure, restart mid-question and duplicate messages. Confirm existing deterministic operations still work.</p>
+</li>
+<li>
+<p>Update private instructions and the operational dashboard with actual service/data freshness. Collector freshness and W3 recovery follow when daily collection exists.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verification_scope"><a class="anchor" href="#_verification_scope"></a>Verification scope</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>tests.test_wishlist_operations</code> exercises real SQLite capture/reconstruction, newer-schema refusal without writes, component corruption, interrupted multiunit recovery, legacy journals and unit parsing. Existing backup/capture/runtime and W5 worker suites cover their earlier boundaries. Service calls are doubles; no local result establishes host isolation or provider quality. Context7 did not expose documentation for installed ansible-core 2.21.5, so the implementation also used official Ansible 2.21 module docs and systemd execution documentation; installed parsers/lint verify syntax.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>
