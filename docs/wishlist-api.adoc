@@ -1,6 +1,8 @@
 = Wishlist v1: interface and implementation units
 
-Status, 2026-11-07: link:wishlist-domain.adoc[W1 domain state] and link:wishlist-service.adoc[W2 local service/Telegram ingress] are implemented and tested locally. link:wishlist-language.adoc[W5 bounded wishlist conversation] is also implemented locally, ahead of collection; W3 and live language acceptance remain pending; link:wishlist-operations.adoc[the first W4 source slice] adds staged service installation and recovery support, with live operational acceptance still pending; no wishlist service, production database, scheduler or handler is deployed. link:wishlist-design.adoc[The staged design] remains the product scope. link:wishlist-feasibility.adoc[The feasibility result] separates local extraction from live collection support.
+Historical local acceptance, 2026-11-07: link:wishlist-domain.adoc[W1 domain state] and link:wishlist-service.adoc[W2 local service/Telegram ingress] are implemented and tested locally. link:wishlist-language.adoc[W5 bounded wishlist conversation] is also implemented locally, ahead of collection; W3 and live language acceptance remain pending; link:wishlist-operations.adoc[the first W4 source slice] adds staged service installation and recovery support, with live operational acceptance still pending; no wishlist service, production database, scheduler or handler is deployed. link:wishlist-design.adoc[The staged design] remains the product scope. link:wishlist-feasibility.adoc[The feasibility result] separates local extraction from live collection support.
+
+Current pilot installation, schema-4 conversation repairs and remaining owner acceptance are tracked in link:wishlist-operations.adoc[W4 operations]. The local acceptance below retains its original scope.
 
 == Local boundary
 
