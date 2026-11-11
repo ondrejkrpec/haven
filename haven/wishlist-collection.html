@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist W3: daily price observations · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-api.html">Wishlist interface and implementation units</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-domain.html">Wishlist W1 domain state</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-service.html">Wishlist W2 local service and Telegram ingress</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-collection.html">Wishlist W3 daily collection</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-language.html">Wishlist W5 bounded natural conversation</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-operations.html">Wishlist W4 service preparation and recovery</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+  <li>
+    <a href="adr/0013-wishlist-local-admission.html">ADR 0013: Wishlist local admission</a>
+    
+  </li>
+  <li>
+    <a href="adr/0014-wishlist-language-before-collection.html">ADR 0014: Wishlist conversation before collection</a>
+    
+  </li>
+  <li>
+    <a href="adr/0015-reversible-wishlist-removal.html">ADR 0015: Reversible wishlist removal</a>
+    
+  </li>
+  <li>
+    <a href="adr/0016-durable-wishlist-collection.html">ADR 0016: Durable wishlist collection</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="wishlist-feasibility.html">Wishlist direct-fetch feasibility</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-browser-feasibility.html">Wishlist browser mode experiments</a>
+    
+  </li>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Wishlist W3: daily price observations</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-11-11: source implementation with local synthetic acceptance. It has not been deployed to the pilot. Repeated live collection, installed-unit isolation, resource headroom, expanded recovery and owner acceptance remain required before calling W3 operationally accepted. Historical <a href="wishlist-feasibility.html" class="xref page">direct-fetch probes</a> are not production adapter acceptance.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_components_and_identities"><a class="anchor" href="#_components_and_identities"></a>Components and identities</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The existing domain service remains the only SQLite writer. Its optional collection socket admits one exact collector UID through Linux peer credentials before reading a frame. The client checks the server UID before sending. A separate socket directory/group keeps collection admission distinct from Telegram and interpretation. Collection messages cannot invoke wishlist commands, select an owner or submit SQL.</p>
+</div>
+<div class="paragraph">
+<p><code>scripts/wishlist_collection.py</code> admits and completes jobs in short transactions. <code>scripts/wishlist_collector.py</code> is a sequential oneshot client. Each job runs <code>scripts/wishlist_fetch.py</code> in a separate process with a 40-second deadline; timeout/cancellation kills and reaps its process group. No transaction spans DNS/HTTP I/O. No scheduled operation invokes a model, starts another poller or uses account credentials.</p>
+</div>
+<div class="paragraph">
+<p>The staged non-login <code>haven-collector</code> identity has no wishlist database permission, ingress group or model credentials. The unit denies access to private data homes and backup configuration, mounts the system read-only and limits memory to 256 MiB. Only Unix/IPv4/IPv6 sockets are permitted. URL checks constrain the supplied worker; these units do not implement destination-level network isolation against arbitrary code as the collector. Root-owned code and separate identities remain essential.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_durable_scheduling_and_results"><a class="anchor" href="#_durable_scheduling_and_results"></a>Durable scheduling and results</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Migration 5 preserves entries, purchases, receipts and conversations. It adds offer deadlines/diagnostics, collection jobs, observations, shop retry deadlines and automatic pause-expiry events. Jobs bind a claim ID, random job/attempt IDs, offer, entry version, generation, URL SHA-256, adapter and a 120-second lease. Observations retain decimal price, currency, SKU, availability, observation time and condition uncertainty, with one observation per job.</p>
+</div>
+<div class="paragraph">
+<p>Active, nonremoved entries are initially due immediately, including incomplete classifications. Every completed attempt schedules the offer at least 24 hours later. Retry-After can postpone it further, with a bounded one-year representation. HTTP 429 or an explicit Retry-After also delays other offers at that exact shop host. There are no immediate HTTP retries. An expired running job is retained and retried no sooner than an hour after reconciliation.</p>
+</div>
+<div class="paragraph">
+<p>The staged persistent timer scans every fifteen minutes with up to thirty seconds of random delay. Each invocation handles at most twenty jobs sequentially, with at most one running lease across all callers. Catch-up produces one bounded scan, not invented observations for missed days. Actual collection depends on host availability, workload and shop cooldowns. Repeated successful claim IDs return the same running job; completed/expired IDs return idle. Lost replies reconcile by lease expiry.</p>
+</div>
+<div class="paragraph">
+<p>Expired calendar pauses become active on a scan, increment entry version/generation and retain a <code>pause_expired</code> event. Removed and purchased entries never auto-resume. Purchase/pause/remove/restore invalidate generation; editing changes the bound version. Completion rechecks all bindings, lease and lifecycle. Obsolete results cannot append a price or reactivate an entry. Identical completion replay is idempotent; altered replay conflicts.</p>
+</div>
+<div class="paragraph">
+<p>Observation, completion and diagnostics commit atomically. Storage failure rolls them all back. Restart and database restoration retain deadlines/leases/digests. Restored runtimes must remain isolated from production until activity is reconciled; expired work becomes a fresh later attempt. No transaction waits for network I/O.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_https_and_shop_validation"><a class="anchor" href="#_https_and_shop_validation"></a>HTTPS and shop validation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Only HTTPS port 443 without URL credentials, fragments, controls or backslashes is admitted. The worker does not inherit proxies, credentials, cookies or browser sessions. It sends an identifying user agent, requests uncompressed HTML and executes no scripts.</p>
+</div>
+<div class="paragraph">
+<p>For every hop, resolve once and reject the entire answer if any address is nonpublic or a disallowed mapped/tunnel/translation address. Connect the exact checked numeric sockaddr and verify its peer while retaining the original hostname for TLS SNI/certificate verification. DNS and slow streams are bounded by the whole-process deadline and ten-second socket timeouts.</p>
+</div>
+<div class="paragraph">
+<p>Allow at most three redirects, retaining original hostname and exact normalized product identity. Only existing UTM/trailing-slash normalization is tolerated. Revalidate syntax and newly resolved addresses before another GET. Cross-host aliases, HTTPS downgrades and product/variant changes fail closed. Responses are limited to 4 MiB; malformed/duplicate/oversized Content-Length, incomplete declared bodies, compressed responses and non-HTML content are refused. Non-200 bodies, including 401/403/429, are never parsed as prices.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 33.3333%;">
+<col style="width: 50.0001%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Host</th>
+<th class="tableblock halign-left valign-top">Adapter</th>
+<th class="tableblock halign-left valign-top">Required structured evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>www.momenti.cz</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>momenti-microdata-v1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Scoped Product/Offer microdata.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>www.fabini.cz</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabini-jsonld-v1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exact-offer JSON-LD, preserving variant queries.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Other hosts</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unsupported</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keep the entry and record unsupported without network access.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Both paths require a nonempty SKU, positive two-decimal CZK price, exact unambiguous variant and recognized availability. Conditional member/quantity offers, conflicting prices, aggregates and missing evidence are rejected. The domain pins SKU/currency after the first observation; later identity changes cannot replace history. Alza, Vilgain and other approved discovery shops still need adapters/live evidence. An entered link grants only that entry&#8217;s source scope.</p>
+</div>
+<div class="paragraph">
+<p>Every stored observation has <code>conditions_verification=not_verified</code>. Structured data is an observed offer candidate, not independent verification of visible coupons, membership, shipping or checkout conditions. W3 adds no deal calculations, buying recommendations or notification summaries. Logs contain fixed reasons and job IDs, never raw pages, source URLs, product details or exception text.</p>
+</div>
+<div class="paragraph">
+<p>Lists show the last price/date, uncertainty and collection status. Details add availability, full observation time, latest failure and next deadline; the structured get API returns ten recent observations. Failure retains the prior amount/time. A missed deadline by more than an hour displays stale. Telegram read receipts remain historical; send a fresh request for current state. Natural-language price questions retain W5 restrictions; deterministic list/detail show saved observations.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_explicit_staging_and_activation_prerequisites"><a class="anchor" href="#_explicit_staging_and_activation_prerequisites"></a>Explicit staging and activation prerequisites</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Normal domain configuration has no collection socket. Add this optional object to the private domain JSON only after preparing distinct identities/directories; the IDs are synthetic:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">"collector": {
+  "socket": "/run/haven-wishlist-collection/request.sock",
+  "socket_gid": 2404,
+  "client_uid": 2403
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The separate client configuration is <code>{"socket":"/run/haven-wishlist-collection/request.sock","service_uid":2401}</code>; 2401 is the domain UID. The domain owns both runtime directories and sets collection directory/socket group. Collector identity/directory must be separate from ingress/domain/interpreter.</p>
+</div>
+<div class="paragraph">
+<p>The <a href="wishlist-operations.html" class="xref page">W4 preparation playbook</a> stages modules, account, endpoint configuration and units without starting/enabling the timer. Explicit <code>haven_wishlist_collection_enabled: true</code> prepares domain collection admission. Preparation refuses active wishlist services or collector timers; it remains offline preparation, not an online upgrade playbook.</p>
+</div>
+<div class="paragraph">
+<p>Before later authorized activation:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Accept a fresh backup and update backup/recovery helpers to understand schema 5 before starting its writer. Stop the collector timer during maintenance.</p>
+</li>
+<li>
+<p>Verify code hashes, migration, separate UID/group access and restrictions. Run one bounded invocation under its installed identity; check exact source/variant, visible failures and zero model activity.</p>
+</li>
+<li>
+<p>Accept an encrypted schema-5 snapshot and reconstruct jobs, observations, deadlines and receipts independently. Older binaries must refuse schema 5. Never replace newer history with an older database as an application rollback.</p>
+</li>
+<li>
+<p>Observe a second due cycle, blocked-source handling, restart/backup recovery, measured resources and owner Telegram results before accepting production W3.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The collector writes no captured data root. <code>Requisite=</code> and <code>After=</code> prevent it from starting a domain service intentionally stopped for backup. Existing durable writer pause recovery remains unchanged; lost in-flight completion is reconciled later. Installed-unit backup/reboot behavior still needs live acceptance. W4 dashboard accounting, retention and independent collector alert delivery remain open.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_local_verification"><a class="anchor" href="#_local_verification"></a>Local verification</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m unittest tests.test_wishlist_collection tests.test_wishlist_fetch \
+  tests.test_wishlist_domain tests.test_wishlist_service tests.test_wishlist_language \
+  tests.test_wishlist_operations -v
+.venv/bin/python -m scripts.check</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/research/w3/acceptance.json" class="xref attachment">The local receipt</a> records the source baseline, maintained-file hashes, successful targeted commands and earlier fixture/sandbox failures. Tests use synthetic URLs/pages, real SQLite transactions, concurrent claims, Linux peer sockets, process timeout/cancellation, migration refusal and the local systemd verifier. They contact no shops, credentials, Telegram or model. Socket acceptance needs a local environment permitting Unix sockets; a sandbox denial is not a successful socket check. Local tests do not prove production OS isolation, sustained source support or live recovery.</p>
+</div>
+<div class="paragraph">
+<p>Context7 supplied Python 3.12.16 TLS/HTTP references but lacked the needed systemd man-page sections; installed manuals supplied those. Primary references: <a href="https://docs.python.org/3.12/library/ssl.html">TLS</a>, <a href="https://docs.python.org/3.12/library/http.client.html">HTTP client</a>, <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html">unit dependencies</a> and <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html">timers</a>.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

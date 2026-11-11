@@ -116,6 +116,10 @@
     
   </li>
   <li>
+    <a href="wishlist-collection.html">Wishlist W3 daily collection</a>
+    
+  </li>
+  <li>
     <a href="wishlist-language.html">Wishlist W5 bounded natural conversation</a>
     
   </li>
@@ -189,6 +193,10 @@
   </li>
   <li>
     <a href="adr/0015-reversible-wishlist-removal.html">ADR 0015: Reversible wishlist removal</a>
+    
+  </li>
+  <li>
+    <a href="adr/0016-durable-wishlist-collection.html">ADR 0016: Durable wishlist collection</a>
     
   </li>
 </ul>
@@ -395,6 +403,14 @@
 <p>Update private instructions and the operational dashboard with actual service/data freshness. Collector freshness and W3 recovery follow when daily collection exists.</p>
 </li>
 </ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_w3_source_extension_2026_11_11"><a class="anchor" href="#_w3_source_extension_2026_11_11"></a>W3 source extension, 2026-11-11</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="wishlist-collection.html" class="xref page">W3 collection</a> adds optional schema-5 domain admission, staged collector identity/modules/configuration and oneshot/timer units. The preparation playbook never enables the timer and refuses active collector units. Set explicit <code>haven_wishlist_collection_enabled: true</code> only for a prepared collection configuration. These source changes have not been deployed; the pilot evidence below remains schema 4. Compatible backup helpers and fresh migration/recovery acceptance are prerequisites of live activation.</p>
 </div>
 </div>
 </div>

@@ -116,6 +116,10 @@
     
   </li>
   <li>
+    <a href="wishlist-collection.html">Wishlist W3 daily collection</a>
+    
+  </li>
+  <li>
     <a href="wishlist-language.html">Wishlist W5 bounded natural conversation</a>
     
   </li>
@@ -189,6 +193,10 @@
   </li>
   <li>
     <a href="adr/0015-reversible-wishlist-removal.html">ADR 0015: Reversible wishlist removal</a>
+    
+  </li>
+  <li>
+    <a href="adr/0016-durable-wishlist-collection.html">ADR 0016: Durable wishlist collection</a>
     
   </li>
 </ul>
@@ -339,6 +347,14 @@
 </div>
 <div class="paragraph">
 <p>The database contains private wishlist data and complete response receipts. W1 provides no deployment, retention policy, filesystem permission setup, backup capture or production restore acceptance; those remain W4. Keep local databases outside Git and public documentation inputs. The accepted H1 backup does not automatically include them.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_w3_extension"><a class="anchor" href="#_w3_extension"></a>W3 extension</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="wishlist-collection.html" class="xref page">W3</a> extends the current source to schema 5 with collection jobs, observations, diagnostics and durable scheduling. It supersedes the historical W1 statements above about absent collection/result admission and pause expiry. Domain service remains the only writer; collection never changes entry lifecycle from a model or unvalidated callback. Older binaries refuse the newer schema.</p>
 </div>
 </div>
 </div>

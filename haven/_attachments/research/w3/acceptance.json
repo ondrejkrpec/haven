@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "milestone": "W3",
+  "scope": "source-local-synthetic",
+  "recorded_at_utc": "2026-11-11T09:03:15.452387+00:00",
+  "source_baseline": "0a6f67b38ecb75a6d96eaa4e8444245fb9674c53",
+  "python": "3.14.7",
+  "database_schema": 5,
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest tests.test_wishlist_collection tests.test_wishlist_fetch -q",
+      "result": "passed",
+      "tests": 29
+    }
+  ],
+  "required_delivery_check": ".venv/bin/python -m scripts.check via the committed-HEAD pre-push hook",
+  "earlier_checks": [
+    {
+      "command": ".venv/bin/python -m scripts.check",
+      "result": "passed",
+      "tests": 309,
+      "scope": "full public suite before final configuration and subprocess-race refinements"
+    },
+    {
+      "result": "failed",
+      "scope": "initial sandbox run denied Unix socket binding and systemd lookup sockets"
+    },
+    {
+      "result": "failed_then_fixed",
+      "scope": "historical migration fixtures needed explicit offer columns and old-schema read compatibility"
+    }
+  ],
+  "coverage": [
+    "public-address and mixed-DNS refusal",
+    "checked sockaddr pinning with original TLS hostname",
+    "redirect identity and DNS rebinding",
+    "body bounds, encoding and conditional-offer rejection",
+    "HTTP rate limits and shop cooldown",
+    "atomic observation/completion rollback",
+    "concurrent claims and global running lease",
+    "stale generation/version/attempt refusal",
+    "restored completion replay",
+    "schema-four migration and old-binary refusal",
+    "real peer sockets and UID denial",
+    "real worker subprocess timeout/cancellation",
+    "missed-deadline visibility"
+  ],
+  "production_changed": false,
+  "live_source_requests": 0,
+  "model_calls": 0,
+  "remaining": [
+    "pilot activation and repeated live source cycles",
+    "installed OS isolation and resource headroom",
+    "encrypted schema-five multi-component restore acceptance",
+    "owner Telegram acceptance",
+    "W4 dashboard accounting, retention and independent collector alert delivery"
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "b13c69f33247bf590f2b0cc56f4f00db65cd8db959339f6ea5d2605f9af5c894"
+    },
+    {
+      "path": "docs/adr/0016-durable-wishlist-collection.adoc",
+      "sha256": "fae6496ea5f0134a312f674def307e833b2c2cdb0ccbc9affeaadb5ec24a8605"
+    },
+    {
+      "path": "docs/nav.adoc",
+      "sha256": "7199e5627c1d769df6d60683c9ae35f2238abf09bf4fad489e067e479b41cec6"
+    },
+    {
+      "path": "docs/wishlist-api.adoc",
+      "sha256": "1ea2ecbc19678cabf1e06eb10cb61efa015a984c8de3788154a7ee3b90be2c38"
+    },
+    {
+      "path": "docs/wishlist-collection.adoc",
+      "sha256": "0deee328ca299f26c700947680a0b559fbe02977ff0aee47cb2581df1139b947"
+    },
+    {
+      "path": "docs/wishlist-domain.adoc",
+      "sha256": "a3412eda1b484728bef28a3793d0e0923a3ea4996ce0528e6ec5dcc04fa1771f"
+    },
+    {
+      "path": "docs/wishlist-operations.adoc",
+      "sha256": "c6826007ced4f2ab24d2d0cdd1285d89e96e86829614b3c245240c902003869a"
+    },
+    {
+      "path": "ops/tasks/wishlist-install.yml",
+      "sha256": "f37271891f721cd6e12a773f4923359a376b0bccac5f2cc304514510272d9a5b"
+    },
+    {
+      "path": "ops/templates/haven-wishlist-collector.service.j2",
+      "sha256": "001af7894f772be2b21c1ba020c64c5ee93236ff5f613292f118f3163ec43d4b"
+    },
+    {
+      "path": "ops/templates/haven-wishlist-collector.timer.j2",
+      "sha256": "ba758de481068dde6a7cf358d6c575539ed2de3b0cfa5029fae55af795813ac1"
+    },
+    {
+      "path": "ops/templates/haven-wishlist.service.j2",
+      "sha256": "4bb6bb72cf1c6b74f23458dc0f4d2fe378649a9e5c3cbf5611e82863fbff6b15"
+    },
+    {
+      "path": "ops/templates/wishlist-collector.json.j2",
+      "sha256": "49e8e946d95ff2b03c3fac63b96fe5dfebb0623408c02b90fa1e11393d4013bf"
+    },
+    {
+      "path": "ops/templates/wishlist-domain.json.j2",
+      "sha256": "fa7d1df8d18d27d5c6a8c7285a0d1b5e87338674c0422f207dfccbb01e462bac"
+    },
+    {
+      "path": "ops/wishlist.yml",
+      "sha256": "14f8eff788409200a13ac1b91353990b0f717f976dc701e3d69e54381cbfbb6e"
+    },
+    {
+      "path": "scripts/build_docs.py",
+      "sha256": "ccc40e877e7dd5a7a0820f6723bc4b32ff5d962edfd394a31e48948afe36c3a0"
+    },
+    {
+      "path": "scripts/wishlist_collection.py",
+      "sha256": "e86c002a08e3e47c1c39564d79bb166af74f4465fa09ee6ee837f4be06e5cf00"
+    },
+    {
+      "path": "scripts/wishlist_collector.py",
+      "sha256": "04cff60f9b4a15aa4754b3e6fc056d26fe4b18e21046082a333237029008513c"
+    },
+    {
+      "path": "scripts/wishlist_domain.py",
+      "sha256": "1059c0cc3a40d1c8f5083429f83a4bd8a0868922db60a599a8e67308c3f1a8a0"
+    },
+    {
+      "path": "scripts/wishlist_fetch.py",
+      "sha256": "0f1125630bb822466842dbfb9c32100b7c9958d586f47302de17ab57ffc98fec"
+    },
+    {
+      "path": "scripts/wishlist_operations.py",
+      "sha256": "c492c2ccabba2dcd6791d282ab94b3f11eb5f7ee787f54fa7e9f301d0b5d910f"
+    },
+    {
+      "path": "scripts/wishlist_service.py",
+      "sha256": "1fc70595aa4ad5b9764fe6209b3dd3bef2b3b50b0f734d5673e2fbca241de13b"
+    },
+    {
+      "path": "scripts/wishlist_store.py",
+      "sha256": "842a3d909db44112f2cd705d29aecaf1e1c5c1ade8c37b1d19a79676050f2883"
+    },
+    {
+      "path": "scripts/wishlist_telegram.py",
+      "sha256": "e94c918ed62f423b25aa26ea0a6576d9ee47a0b37a60fb25bbd808b62f4fc3f7"
+    },
+    {
+      "path": "tests/test_wishlist_collection.py",
+      "sha256": "36614dce55dbeeaf6436101320014c4fcec0756e99d91d3ee1e033976f1c0668"
+    },
+    {
+      "path": "tests/test_wishlist_domain.py",
+      "sha256": "40b3b3f4940da84ec30eda5b96543b51d9f012f5ae7d8eec22d2aa1897f00e5b"
+    },
+    {
+      "path": "tests/test_wishlist_fetch.py",
+      "sha256": "40781430514da1bec1b5e29acfdbb73e76c4d9c06705afb2dca64ce30905d2fe"
+    },
+    {
+      "path": "tests/test_wishlist_operations.py",
+      "sha256": "72d82f22fbfdce5f6e557e829eca05b7a2fbb55b01fe1327789e84d0d30ee180"
+    }
+  ]
+}

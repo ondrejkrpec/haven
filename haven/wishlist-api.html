@@ -116,6 +116,10 @@
     
   </li>
   <li>
+    <a href="wishlist-collection.html">Wishlist W3 daily collection</a>
+    
+  </li>
+  <li>
     <a href="wishlist-language.html">Wishlist W5 bounded natural conversation</a>
     
   </li>
@@ -189,6 +193,10 @@
   </li>
   <li>
     <a href="adr/0015-reversible-wishlist-removal.html">ADR 0015: Reversible wishlist removal</a>
+    
+  </li>
+  <li>
+    <a href="adr/0016-durable-wishlist-collection.html">ADR 0016: Durable wishlist collection</a>
     
   </li>
 </ul>
@@ -357,8 +365,11 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_collection_planned_w3_and_language_local_w5"><a class="anchor" href="#_collection_planned_w3_and_language_local_w5"></a>Collection (planned W3) and language (local W5)</h2>
+<h2 id="_collection_local_w3_and_language_local_w5"><a class="anchor" href="#_collection_local_w3_and_language_local_w5"></a>Collection (local W3) and language (local W5)</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>W3 is now implemented for local synthetic acceptance; <a href="wishlist-collection.html" class="xref page">the collection guide</a> defines its exact socket, scheduling, fetch/adapter boundaries and remaining live acceptance. The original implementation-unit table below retains the design scope.</p>
+</div>
 <div class="paragraph">
 <p>The scheduler asks the domain service to enqueue due work; it does not edit SQLite directly. Start with a systemd timer outside Hermes cron, an independent single-dispatch lease and a small SQLite job table. Exact service accounts, timer expression, queue limits and resource bounds belong to implementation configuration.</p>
 </div>
