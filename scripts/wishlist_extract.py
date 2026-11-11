@@ -156,8 +156,8 @@ def invalid_constant(value):
     raise ExtractionError("invalid_document")
 
 
-def extract(html, source_url, *, http_status=200):
-    """Return an observation candidate, not a verified deal or production receipt."""
+def extract(html, source_url, *, http_status=200, required_condition=None):
+    """Return a candidate; a shop can additionally require an explicit item condition."""
     output = {"schema_version": 1, "http_status": http_status, "model_calls": 0}
     if http_status in (401, 403, 429):
         return {**output, "status": "blocked", "reason": "source_http_" + str(http_status)}
@@ -192,6 +192,8 @@ def extract(html, source_url, *, http_status=200):
                 offer_url = one(offer, "url", required=False) or one(product, "url", required=False)
                 if offer_url is None or identity(offer_url) != requested:
                     continue
+                if required_condition is not None and type_name(one(offer, "itemCondition", required=False)) != required_condition:
+                    raise ExtractionError("offer_condition_unverified")
                 if (values(offer, "validForMemberTier") or values(offer, "eligibleQuantity")
                         or any(isinstance(p, dict) and (values(p, "validForMemberTier") or values(p, "eligibleQuantity"))
                                for p in values(offer, "priceSpecification"))):

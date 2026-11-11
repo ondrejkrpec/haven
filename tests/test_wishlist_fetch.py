@@ -19,6 +19,28 @@ URL = "https://www.fabini.cz/products/synthetic?variant=two"
 ADAPTER = "fabini-jsonld-v1"
 
 
+def shoptet_page(url):
+    return f'''<meta itemprop="price" content="1.00">
+    <main itemscope itemtype="https://schema.org/Product">
+      <meta itemprop="name" content="Synthetic shop item">
+      <link itemprop="url" href="{url}">
+      <meta itemprop="sku" content="SYNTHETIC-SHOP-1">
+      <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+        <link itemprop="url" href="{url}">
+        <meta itemprop="price" content="249.90">
+        <meta itemprop="priceCurrency" content="CZK">
+        <link itemprop="availability" href="https://schema.org/InStock">
+        <link itemprop="itemCondition" href="https://schema.org/NewCondition">
+        <div itemprop="shippingDetails" itemscope itemtype="https://schema.org/OfferShippingDetails">
+          <div itemprop="shippingRate" itemscope itemtype="https://schema.org/MonetaryAmount">
+            <meta itemprop="value" content="99.00">
+            <meta itemprop="currency" content="CZK">
+          </div>
+        </div>
+      </div>
+    </main>'''.encode()
+
+
 class FetchTests(unittest.TestCase):
     def test_special_private_and_tunnel_destinations_are_denied(self):
         for address in ("127.0.0.1", "10.0.0.1", "172.16.0.1", "192.168.0.1", "169.254.169.254",
@@ -139,6 +161,57 @@ class FetchTests(unittest.TestCase):
         with patch.object(fetch, "connection", side_effect=AssertionError("network forbidden")):
             self.assertEqual(fetch.fetch("https://shop.example/item", "unsupported")["status"], "unsupported")
             self.assertEqual(fetch.fetch("https://other.example/item", ADAPTER)["status"], "failed")
+
+    def test_ifantazie_uses_scoped_microdata_not_banner_or_shipping_prices(self):
+        url = "https://www.ifantazie.cz/synthetic-shop-item/"
+        with self.responses((200, {"Content-Type": "text/html"}, shoptet_page(url))):
+            result = fetch.fetch(url, "ifantazie-microdata-v1")
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["offer"]["price"], "249.90")
+        self.assertEqual(result["offer"]["sku"], "SYNTHETIC-SHOP-1")
+        self.assertEqual(result["offer"]["conditions_verification"], "not_verified")
+        with self.responses((200, {"Content-Type": "text/html"}, page(product(url=url)).encode())):
+            self.assertEqual(fetch.fetch(url, "ifantazie-microdata-v1")["reason"], "offer_unverified")
+
+    def test_alza_accepts_only_explicit_new_condition_and_exact_product(self):
+        url = "https://www.alza.cz/synthetic-product-d100000000.htm"
+        record = product(url=url, itemCondition="https://schema.org/NewCondition")
+        other = product(url="https://www.alza.cz/other-product-d100000001.htm", price="1.00")
+        with self.responses((200, {"Content-Type": "text/html"}, page([other, record]).encode())):
+            result = fetch.fetch(url, "alza-jsonld-v1")
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["offer"]["price"], "249.90")
+        for condition in (None, "https://schema.org/UsedCondition", "https://schema.org/RefurbishedCondition"):
+            offer = product(url=url, **({"itemCondition": condition} if condition else {}))
+            with self.subTest(condition=condition), self.responses((200, {"Content-Type": "text/html"}, page(offer).encode())):
+                self.assertEqual(fetch.fetch(url, "alza-jsonld-v1")["reason"], "offer_unverified")
+
+    def test_alza_refuses_member_prices_ambiguous_offers_and_wrong_query_identity(self):
+        url = "https://www.alza.cz/synthetic-product-d100000000.htm"
+        public = product(url=url, itemCondition="https://schema.org/NewCondition")
+        member = product(url=url, price="199.00", itemCondition="https://schema.org/NewCondition", validForMemberTier="club")
+        for records, requested in (([public, member], url), ([public, product(url=url, price="200.00", itemCondition="NewCondition")], url),
+                                   ([public], url + "?variant=other")):
+            with self.subTest(requested=requested), self.responses((200, {"Content-Type": "text/html"}, page(records).encode())):
+                self.assertEqual(fetch.fetch(requested, "alza-jsonld-v1")["reason"], "offer_unverified")
+        with self.responses((200, {"Content-Type": "text/html"}, shoptet_page(url))):
+            self.assertEqual(fetch.fetch(url, "alza-jsonld-v1")["reason"], "offer_unverified")
+
+    def test_new_adapters_keep_blocking_and_network_boundaries(self):
+        for host, adapter in (("www.ifantazie.cz", "ifantazie-microdata-v1"), ("www.alza.cz", "alza-jsonld-v1")):
+            url = "https://" + host + "/synthetic-product"
+            for code in (403, 429):
+                with self.subTest(host=host, code=code), self.responses((code, {"Retry-After": "86400"}, b"challenge")) as (clients, _):
+                    result = fetch.fetch(url, adapter)
+                    self.assertEqual(result["status"], "blocked")
+                    self.assertEqual(result["http_status"], code)
+                    self.assertNotIn("offer", result)
+                    clients[0].getresponse.return_value.read.assert_not_called()
+            with self.responses((302, {"Location": "https://127.0.0.1/"}, b"")) as (_, connect):
+                self.assertEqual(fetch.fetch(url, adapter)["status"], "failed")
+                self.assertEqual(connect.call_count, 1)
+            with patch.object(fetch, "connection", side_effect=AssertionError("wrong host")):
+                self.assertEqual(fetch.fetch("https://other.example/synthetic-product", adapter)["status"], "failed")
 
     def test_retry_after_accepts_http_dates_and_rejects_invalid_values(self):
         now = datetime(2026, 11, 11, 12, tzinfo=UTC)
