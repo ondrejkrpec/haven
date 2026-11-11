@@ -180,6 +180,9 @@ class OperationsTests(unittest.TestCase):
                 units.append(str(unit))
             result = subprocess.run(['systemd-analyze', 'verify', *units], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
+            # Unknown directives are warnings with exit code zero, so they must
+            # fail acceptance explicitly instead of silently losing a guard.
+            self.assertNotRegex(result.stderr, r"Unknown (?:key|lvalue)", result.stderr)
 
 
 if __name__ == '__main__':
