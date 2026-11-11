@@ -1,0 +1,312 @@
+---
+- name: Verify private access before browser preparation
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Prepare an independent virtual browser without changing the live domain
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  vars:
+    haven_browser_root: /opt/haven-wishlist-browser
+    haven_browser_pin: "{{ lookup('ansible.builtin.file', '../config/wishlist-browser-runtime.json') | from_json }}"
+    haven_browser_packages_required:
+      - python3-venv
+      - xvfb
+      - xauth
+      - unzip
+      - libnss3
+      - libnspr4
+      - libatk1.0-0t64
+      - libatk-bridge2.0-0t64
+      - libcups2t64
+      - libdrm2
+      - libxkbcommon0
+      - libxcomposite1
+      - libxdamage1
+      - libxfixes3
+      - libxrandr2
+      - libgbm1
+      - libpango-1.0-0
+      - libcairo2
+      - libasound2t64
+      - libatspi2.0-0t64
+      - fonts-liberation
+  pre_tasks:
+    - name: Require explicit browser preparation and an exact local archive
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_browser_install_authorized | default(false) | bool
+          - haven_browser_chromium_archive is defined
+        fail_msg: Explicit browser preparation and the pinned Chromium archive are required.
+
+    - name: Verify the supplied archive before copying it to the host
+      ansible.builtin.stat:
+        path: "{{ haven_browser_chromium_archive }}"
+        checksum_algorithm: sha256
+      register: haven_browser_archive
+      delegate_to: localhost
+      become: false
+
+    - name: Require the reviewed Chromium archive digest
+      ansible.builtin.assert:
+        that: haven_browser_archive.stat.checksum == haven_browser_pin.chromium_archive_sha256
+
+    - name: Refuse replacement while either browser service is running
+      ansible.builtin.command:
+        argv: [systemctl, show, haven-wishlist-browser.service, haven-wishlist-egress.service, '-p', ActiveState]
+      register: haven_browser_existing
+      changed_when: false
+      failed_when: "'ActiveState=active' in haven_browser_existing.stdout or 'ActiveState=activating' in haven_browser_existing.stdout or 'ActiveState=deactivating' in haven_browser_existing.stdout"
+      check_mode: false
+
+    - name: Inspect a previously prepared immutable browser runtime
+      ansible.builtin.stat:
+        path: /opt/haven-wishlist-browser/runtime-pin.json
+        checksum_algorithm: sha256
+      register: haven_browser_prepared
+
+    - name: Refuse an in-place browser version replacement
+      ansible.builtin.assert:
+        that: haven_browser_prepared.stat.checksum == lookup('ansible.builtin.file', '../config/wishlist-browser-runtime.json', rstrip=false) | hash('sha256')
+      when: haven_browser_prepared.stat.exists
+
+    - name: Check the exact prepared dependency locks before reuse
+      ansible.builtin.stat:
+        path: "{{ haven_browser_root }}/{{ item }}"
+        checksum_algorithm: sha256
+      loop: [requirements-browser.txt, requirements-wishlist.txt]
+      register: haven_browser_existing_locks
+      when: haven_browser_prepared.stat.exists
+
+    - name: Require unchanged prepared dependency versions
+      ansible.builtin.assert:
+        that: item.stat.checksum == lookup('ansible.builtin.file', '../' + item.item, rstrip=false) | hash('sha256')
+      loop: "{{ haven_browser_existing_locks.results }}"
+      when: haven_browser_prepared.stat.exists
+
+  tasks:
+    - name: Simulate prerequisite installation with the current package indexes
+      ansible.builtin.command:
+        argv: "{{ ['apt-get', '--simulate', '--no-upgrade', '--no-remove', '--no-install-recommends', 'install'] + haven_browser_packages_required }}"
+      environment:
+        LC_ALL: C
+      register: haven_browser_package_plan
+      changed_when: false
+      check_mode: false
+
+    - name: Reject planned upgrades or removals of existing OS packages
+      ansible.builtin.assert:
+        that:
+          - haven_browser_package_plan.stdout_lines | select('match', '^Remv ') | list | length == 0
+          - haven_browser_package_plan.stdout_lines | select('match', '^Inst \S+ \[') | list | length == 0
+
+    - name: Install only browser prerequisites while preserving deferred OS upgrades
+      # The apt module has no equivalent of apt-get --no-upgrade.
+      ansible.builtin.command: # noqa command-instead-of-module
+        argv: "{{ ['apt-get', '--no-upgrade', '--no-remove', '--no-install-recommends', '-y', 'install'] + haven_browser_packages_required }}"
+      environment:
+        LC_ALL: C
+      register: haven_browser_packages
+      changed_when: "'0 newly installed' not in haven_browser_packages.stdout"
+
+    - name: Create private browser IPC groups
+      ansible.builtin.group:
+        name: "{{ item }}"
+        system: true
+      loop: [haven-wishlist-browser, haven-wishlist-egress, haven-browser-build, haven-wishlist-collection]
+
+    - name: Create separate non-login browser and egress accounts
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        group: "{{ item.group }}"
+        groups: "{{ item.groups }}"
+        append: false
+        shell: /usr/sbin/nologin
+        home: /nonexistent
+        create_home: false
+        system: true
+      loop:
+        - {name: haven-browser, group: haven-wishlist-browser, groups: haven-wishlist-egress}
+        - {name: haven-egress, group: haven-wishlist-egress, groups: ''}
+        - {name: haven-browser-build, group: haven-browser-build, groups: ''}
+
+    - name: Prepare the non-login collector identity without changing its existing extra groups
+      ansible.builtin.user:
+        name: haven-collector
+        group: haven-wishlist-collection
+        shell: /usr/sbin/nologin
+        home: /nonexistent
+        create_home: false
+        system: true
+
+    - name: Permit only the collector to call the browser
+      ansible.builtin.user:
+        name: haven-collector
+        groups: haven-wishlist-browser
+        append: true
+
+    - name: Create an unprivileged new browser build directory
+      ansible.builtin.file:
+        path: "{{ haven_browser_root }}"
+        state: directory
+        owner: haven-browser-build
+        group: haven-browser-build
+        mode: '0755'
+      when: not haven_browser_prepared.stat.exists
+
+    - name: Prepare a separate virtual environment
+      ansible.builtin.command:
+        argv: [/usr/bin/python3, -m, venv, /opt/haven-wishlist-browser/venv]
+        creates: /opt/haven-wishlist-browser/venv/bin/python
+      become: true
+      become_user: haven-browser-build
+      when: not haven_browser_prepared.stat.exists
+
+    - name: Stage exact hash-pinned browser and validator requirements
+      ansible.builtin.copy:
+        src: "../{{ item }}"
+        dest: "{{ haven_browser_root }}/{{ item }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: [requirements-browser.txt, requirements-wishlist.txt]
+
+    - name: Install only the declared binary wheels under the build identity
+      ansible.builtin.command:
+        argv: [/opt/haven-wishlist-browser/venv/bin/python, -m, pip, install, '--only-binary=:all:',
+               --require-hashes, -r, /opt/haven-wishlist-browser/requirements-browser.txt,
+               -r, /opt/haven-wishlist-browser/requirements-wishlist.txt]
+      become: true
+      become_user: haven-browser-build
+      register: haven_browser_python_packages
+      changed_when: "'Successfully installed' in haven_browser_python_packages.stdout"
+      when: not haven_browser_prepared.stat.exists
+
+    - name: Create independent code and browser directories
+      ansible.builtin.file:
+        path: "{{ haven_browser_root }}/{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop: [app, app/scripts, app/schemas, chromium]
+
+    - name: Install only the isolated worker's public modules
+      ansible.builtin.copy:
+        src: "../scripts/{{ item }}.py"
+        dest: "{{ haven_browser_root }}/app/scripts/{{ item }}.py"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: [wishlist_browser, wishlist_egress, wishlist_alza, wishlist_fetch, wishlist_collection,
+             wishlist_domain, wishlist_store, wishlist_contract, wishlist_extract, wishlist_protocol, wishlist_socket, wishlist_process]
+
+    - name: Install the public request shape used by imported validators
+      ansible.builtin.copy:
+        src: ../schemas/wishlist-request-v1.schema.json
+        dest: /opt/haven-wishlist-browser/app/schemas/wishlist-request-v1.schema.json
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Unpack only the checksum-verified public Chromium archive
+      ansible.builtin.unarchive:
+        src: "{{ haven_browser_chromium_archive }}"
+        dest: /opt/haven-wishlist-browser/chromium
+        owner: root
+        group: root
+
+    - name: Freeze the independently built runtime as root-owned public files
+      ansible.builtin.file:
+        path: "{{ haven_browser_root }}"
+        recurse: true
+        owner: root
+        group: root
+        mode: 'u=rwX,go=rX'
+
+    - name: Verify the exact Chromium version without opening a page
+      ansible.builtin.command:
+        argv: [/opt/haven-wishlist-browser/chromium/chrome-linux64/chrome, --version]
+      register: haven_browser_version
+      changed_when: false
+      failed_when: haven_browser_pin.chromium_version not in haven_browser_version.stdout
+
+    - name: Create the private service configuration directory
+      ansible.builtin.file:
+        path: /etc/haven-wishlist-browser
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Resolve exact accounts and groups for peer authentication
+      ansible.builtin.getent:
+        database: "{{ item.database }}"
+        key: "{{ item.key }}"
+      loop:
+        - {database: passwd, key: haven-browser}
+        - {database: passwd, key: haven-egress}
+        - {database: passwd, key: haven-collector}
+        - {database: group, key: haven-wishlist-browser}
+        - {database: group, key: haven-wishlist-egress}
+      register: haven_browser_ids
+
+    - name: Bind service settings to the installed identities
+      ansible.builtin.set_fact:
+        haven_browser_uid: "{{ haven_browser_ids.results[0].ansible_facts.getent_passwd['haven-browser'][1] }}"
+        haven_browser_egress_uid: "{{ haven_browser_ids.results[1].ansible_facts.getent_passwd['haven-egress'][1] }}"
+        haven_browser_collector_uid: "{{ haven_browser_ids.results[2].ansible_facts.getent_passwd['haven-collector'][1] }}"
+        haven_browser_group: "{{ haven_browser_ids.results[3].ansible_facts.getent_group['haven-wishlist-browser'][1] }}"
+        haven_browser_egress_group: "{{ haven_browser_ids.results[4].ansible_facts.getent_group['haven-wishlist-egress'][1] }}"
+
+    - name: Install explicit service configurations
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: "{{ item.group }}"
+        mode: '0640'
+      loop:
+        - {src: wishlist-browser.json.j2, dest: /etc/haven-wishlist-browser/browser.json, group: haven-wishlist-browser}
+        - {src: wishlist-egress.json.j2, dest: /etc/haven-wishlist-browser/egress.json, group: haven-wishlist-egress}
+
+    - name: Stage an executable-scoped AppArmor user-namespace profile
+      ansible.builtin.template:
+        src: haven-wishlist-browser.apparmor.j2
+        dest: /etc/apparmor.d/haven-wishlist-browser
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Load only the new browser profile without changing global namespace policy
+      ansible.builtin.command:
+        argv: [apparmor_parser, -r, /etc/apparmor.d/haven-wishlist-browser]
+      changed_when: true
+
+    - name: Stage browser units without starting or enabling them
+      ansible.builtin.template:
+        src: "{{ item }}.j2"
+        dest: "/etc/systemd/system/{{ item }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: [haven-wishlist-browser.service, haven-wishlist-egress.service]
+
+    - name: Verify both staged units
+      ansible.builtin.command:
+        argv: [systemd-analyze, verify, /etc/systemd/system/haven-wishlist-browser.service,
+               /etc/systemd/system/haven-wishlist-egress.service]
+      changed_when: false
+
+    - name: Load the staged units without changing activation
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
+    - name: Record the exact prepared browser runtime contract
+      ansible.builtin.copy:
+        src: ../config/wishlist-browser-runtime.json
+        dest: /opt/haven-wishlist-browser/runtime-pin.json
+        owner: root
+        group: root
+        mode: '0644'

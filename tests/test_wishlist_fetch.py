@@ -41,6 +41,14 @@ def shoptet_page(url):
     </main>'''.encode()
 
 
+def alza_page(records, *, display="249,90", classes="ads-pb--basic", extra=""):
+    return (page(records) + f'''<div data-testid="price-primary">
+      <span data-slot="pb-wrapper" class="ads-pb {classes}">
+        {extra}<span data-slot="pb-price">{display}</span>
+        <span class="strike-price">999,-</span><span>bez DPH 206,-</span>
+      </span></div>''').encode()
+
+
 class FetchTests(unittest.TestCase):
     def test_special_private_and_tunnel_destinations_are_denied(self):
         for address in ("127.0.0.1", "10.0.0.1", "172.16.0.1", "192.168.0.1", "169.254.169.254",
@@ -177,14 +185,14 @@ class FetchTests(unittest.TestCase):
         url = "https://www.alza.cz/synthetic-product-d100000000.htm"
         record = product(url=url, itemCondition="https://schema.org/NewCondition")
         other = product(url="https://www.alza.cz/other-product-d100000001.htm", price="1.00")
-        with self.responses((200, {"Content-Type": "text/html"}, page([other, record]).encode())):
-            result = fetch.fetch(url, "alza-jsonld-v1")
+        with self.responses((200, {"Content-Type": "text/html"}, alza_page([other, record]))):
+            result = fetch.fetch(url, "alza-public-price-v1")
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["offer"]["price"], "249.90")
         for condition in (None, "https://schema.org/UsedCondition", "https://schema.org/RefurbishedCondition"):
             offer = product(url=url, **({"itemCondition": condition} if condition else {}))
-            with self.subTest(condition=condition), self.responses((200, {"Content-Type": "text/html"}, page(offer).encode())):
-                self.assertEqual(fetch.fetch(url, "alza-jsonld-v1")["reason"], "offer_unverified")
+            with self.subTest(condition=condition), self.responses((200, {"Content-Type": "text/html"}, alza_page(offer))):
+                self.assertEqual(fetch.fetch(url, "alza-public-price-v1")["reason"], "offer_unverified")
 
     def test_alza_refuses_member_prices_ambiguous_offers_and_wrong_query_identity(self):
         url = "https://www.alza.cz/synthetic-product-d100000000.htm"
@@ -192,13 +200,13 @@ class FetchTests(unittest.TestCase):
         member = product(url=url, price="199.00", itemCondition="https://schema.org/NewCondition", validForMemberTier="club")
         for records, requested in (([public, member], url), ([public, product(url=url, price="200.00", itemCondition="NewCondition")], url),
                                    ([public], url + "?variant=other")):
-            with self.subTest(requested=requested), self.responses((200, {"Content-Type": "text/html"}, page(records).encode())):
-                self.assertEqual(fetch.fetch(requested, "alza-jsonld-v1")["reason"], "offer_unverified")
+            with self.subTest(requested=requested), self.responses((200, {"Content-Type": "text/html"}, alza_page(records))):
+                self.assertEqual(fetch.fetch(requested, "alza-public-price-v1")["reason"], "offer_unverified")
         with self.responses((200, {"Content-Type": "text/html"}, shoptet_page(url))):
-            self.assertEqual(fetch.fetch(url, "alza-jsonld-v1")["reason"], "offer_unverified")
+            self.assertEqual(fetch.fetch(url, "alza-public-price-v1")["reason"], "offer_unverified")
 
     def test_new_adapters_keep_blocking_and_network_boundaries(self):
-        for host, adapter in (("www.ifantazie.cz", "ifantazie-microdata-v1"), ("www.alza.cz", "alza-jsonld-v1")):
+        for host, adapter in (("www.ifantazie.cz", "ifantazie-microdata-v1"), ("www.alza.cz", "alza-public-price-v1")):
             url = "https://" + host + "/synthetic-product"
             for code in (403, 429):
                 with self.subTest(host=host, code=code), self.responses((code, {"Retry-After": "86400"}, b"challenge")) as (clients, _):

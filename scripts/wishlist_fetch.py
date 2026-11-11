@@ -18,7 +18,7 @@ from scripts.wishlist_protocol import MAX_FRAME, decode
 
 TIMEOUT = 10
 REQUIRED_EVIDENCE = {"momenti-microdata-v1": "microdata", "fabini-jsonld-v1": "jsonld",
-                     "ifantazie-microdata-v1": "microdata", "alza-jsonld-v1": "jsonld"}
+                     "ifantazie-microdata-v1": "microdata", "alza-public-price-v1": "jsonld"}
 
 
 class FetchError(ValueError):
@@ -135,7 +135,11 @@ def fetch(url, adapter):
                     return failure("document_limit", http_status=status)
                 if sizes and len(html) != int(sizes[0]):
                     return failure("invalid_document", http_status=status)
-                candidate = extract(html, url, required_condition="NewCondition" if adapter == "alza-jsonld-v1" else None)
+                if adapter == "alza-public-price-v1":
+                    from scripts.wishlist_alza import public_offer
+                    candidate = {"status": "extracted", "evidence": ["jsonld"], "offer": public_offer(html, url)}
+                else:
+                    candidate = extract(html, url)
                 required = REQUIRED_EVIDENCE[adapter]
                 if candidate["status"] != "extracted" or required not in candidate.get("evidence", []):
                     return failure("offer_unverified", http_status=status)

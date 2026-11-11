@@ -166,7 +166,7 @@ class CollectionTests(unittest.TestCase):
         self.assertEqual(self.domain._entry(self.domain.store.db, entry["entry_id"])["collection_status"], "unsupported")
 
     def test_new_shop_admission_versions_the_adapter_and_preserves_failure_history(self):
-        for host, adapter in (("www.ifantazie.cz", "ifantazie-microdata-v1"), ("www.alza.cz", "alza-jsonld-v1")):
+        for host, adapter in (("www.ifantazie.cz", "ifantazie-microdata-v1"), ("www.alza.cz", "alza-public-price-v1")):
             with self.subTest(host=host):
                 entry = self.add(url="https://" + host + "/synthetic-product")
                 job = self.claim()

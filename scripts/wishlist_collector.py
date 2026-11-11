@@ -27,17 +27,25 @@ class CollectionServer(PeerServer):
 
 
 def validate_endpoint(config):
-    if (not isinstance(config, dict) or set(config) != {"socket", "service_uid"}
+    if (not isinstance(config, dict) or not {"socket", "service_uid"} <= set(config)
+            or set(config) - {"socket", "service_uid", "browser"}
             or type(config["service_uid"]) is not int or not 1 <= config["service_uid"] < 2**31):
         raise ValueError("collector_endpoint")
     socket_path(config["socket"])
+    if "browser" in config:
+        browser = config["browser"]
+        if not isinstance(browser, dict) or set(browser) != {"socket", "service_uid"}:
+            raise ValueError("collector_browser_endpoint")
+        validate_endpoint(browser)
+        if browser["socket"] == config["socket"] or browser["service_uid"] == config["service_uid"]:
+            raise ValueError("collector_browser_separation")
     return config
 
 
-async def request(endpoint, message):
+async def request(endpoint, message, *, timeout=5):
     writer = None
     try:
-        async with asyncio.timeout(5):
+        async with asyncio.timeout(timeout):
             reader, writer = await asyncio.open_unix_connection(endpoint["socket"], limit=MAX_FRAME)
             if peer_uid(writer.get_extra_info("socket")) != endpoint["service_uid"]:
                 raise PermissionError("collector_server_identity")
@@ -87,7 +95,12 @@ async def collect(endpoint, *, maximum=20, fetcher=run_fetch):
             break
         if admission.get("code") != "ok":
             raise ValueError("collector_claim_failed")
-        result = await fetcher(admission)
+        if "browser" in endpoint and admission["job"]["adapter"] == "alza-public-price-v1":
+            result = await request(endpoint["browser"], {"protocol_version": 1, "operation": "browser.fetch",
+                "url": admission["url"], "job": admission["job"]}, timeout=70)
+            validate_result(result)
+        else:
+            result = await fetcher(admission)
         response = await request(endpoint, {"protocol_version": 1, "operation": "collection.complete",
                                             "job": admission["job"], "result": result})
         # Network reads have no purchase side effects. Lost completions reconcile by lease expiry.

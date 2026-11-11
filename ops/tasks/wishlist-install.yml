@@ -10,6 +10,7 @@
     name: "{{ item.name }}"
     group: "{{ item.name }}"
     groups: "{{ item.groups }}"
+    append: false
     home: "{{ item.home }}"
     create_home: false
     shell: /usr/sbin/nologin
@@ -18,7 +19,9 @@
     - {name: haven-wishlist, groups: 'haven-wishlist-ingress,haven-wishlist-language,haven-wishlist-collection', home: /var/lib/haven-wishlist}
     - {name: haven-language, groups: haven-wishlist-language, home: /var/lib/haven-language}
     - {name: haven-wishlist-build, groups: '', home: /opt/haven-wishlist/install-home}
-    - {name: haven-collector, groups: haven-wishlist-collection, home: /nonexistent}
+    - name: haven-collector
+      groups: "{{ 'haven-wishlist-collection,haven-wishlist-browser' if haven_wishlist_browser_enabled | default(false) | bool else 'haven-wishlist-collection' }}"
+      home: /nonexistent
 
 - name: Permit only the trusted coordinator to reach domain ingress
   ansible.builtin.user:
@@ -80,6 +83,7 @@
     - wishlist_collector
     - wishlist_fetch
     - wishlist_extract
+    - wishlist_alza
     - model_contract
     - model_probe
     - capability_runtime
@@ -341,6 +345,13 @@
     haven_wishlist_collector_uid: "{{ haven_wishlist_identities.results[5].ansible_facts.getent_passwd['haven-collector'][1] }}"
     haven_wishlist_collection_gid: "{{ haven_wishlist_identities.results[6].ansible_facts.getent_group['haven-wishlist-collection'][1] }}"
   when: not ansible_check_mode
+
+- name: Resolve the explicitly selected preinstalled browser identity
+  ansible.builtin.getent:
+    database: passwd
+    key: haven-browser
+  register: haven_wishlist_browser_identity
+  when: haven_wishlist_browser_enabled | default(false) | bool
 
 - name: Install explicit private service configurations
   ansible.builtin.template:

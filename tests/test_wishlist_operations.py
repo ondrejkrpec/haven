@@ -171,10 +171,12 @@ class OperationsTests(unittest.TestCase):
             executable.write_text('#!/bin/sh\nexit 0\n')
             executable.chmod(0o755)
             units = []
-            for name in (*operations.UNITS[1:], 'haven-wishlist-collector.service', 'haven-wishlist-collector.timer'):
+            for name in (*operations.UNITS[1:], 'haven-wishlist-collector.service', 'haven-wishlist-collector.timer',
+                         'haven-wishlist-browser.service', 'haven-wishlist-egress.service'):
                 source = Path('ops/templates') / (name + '.j2')
                 unit = root / name
-                unit.write_text(source.read_text().replace('/opt/haven-wishlist/native/venv/bin/python', str(executable)))
+                unit.write_text(source.read_text().replace('/opt/haven-wishlist/native/venv/bin/python', str(executable))
+                                .replace('/opt/haven-wishlist-browser/venv/bin/python', str(executable)))
                 units.append(str(unit))
             result = subprocess.run(['systemd-analyze', 'verify', *units], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)

@@ -12,7 +12,7 @@ WorkingDirectory=/opt/haven-wishlist
 Environment=PYTHONPATH=/opt/haven-wishlist:/opt/haven-wishlist/vendor
 Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStart=/opt/haven-wishlist/native/venv/bin/python -B -m scripts.wishlist_collector --config /etc/haven-wishlist-collector/config.json
-TimeoutStartSec=1000
+TimeoutStartSec=1800
 TimeoutStopSec=10
 KillMode=control-group
 UMask=0077

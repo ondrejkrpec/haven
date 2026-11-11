@@ -36,13 +36,15 @@ Allow at most three redirects, retaining original hostname and exact normalized 
 |`www.momenti.cz` |`momenti-microdata-v1` |Scoped Product/Offer microdata.
 |`www.fabini.cz` |`fabini-jsonld-v1` |Exact-offer JSON-LD, preserving variant queries.
 |`www.ifantazie.cz` |`ifantazie-microdata-v1` |Scoped Shoptet Product/Offer microdata; shipping/banner prices are not product prices.
-|`www.alza.cz` |`alza-jsonld-v1` |Exact-offer JSON-LD with explicit `NewCondition`; direct access remains blocked in the live workstation probe.
+|`www.alza.cz` |`alza-public-price-v1` |Exact new-product JSON-LD plus matching primary visible gross price; optional isolated virtual browser.
 |Other hosts |Unsupported |Keep the entry and record unsupported without network access.
 |===
 
 All paths require a nonempty SKU, positive two-decimal CZK price, exact unambiguous variant and recognized availability. Conditional member/quantity offers, conflicting prices, aggregates and missing evidence are rejected. Alza additionally refuses missing/used/refurbished item condition; public/member ambiguity and metadata/display differences are never reconciled by picking a cheaper price or rounding it. The domain pins SKU/currency after the first observation; later identity changes cannot replace history. Vilgain and other approved discovery shops still need adapters/live evidence. An entered link grants only that entry's source scope.
 
 Adapter extension, 2026-11-11: one public product from each requested shop was inspected on the workstation, then the actual bounded fetch worker was exercised once per shop. iFantazie returned HTTP 200 and an accepted microdata candidate. Alza returned HTTP 403 and an explicit blocked result with no price. Alza parsing is verified only with synthetic structured pages; this extension does not prove live Alza extraction, source access from the VPS, repeated collection or price conditions. There is no browser/challenge fallback. link:../research/w3/shop-adapters.json[The adapter receipt] retains source hashes, probe metadata and verification scope; raw captures and real product details remain outside public sources. Historical link:wishlist-browser-feasibility.adoc[browser experiments] remain a separate research result.
+
+The subsequent link:wishlist-browser.adoc[isolated Chromium/Xvfb integration] supersedes the earlier Alza limitation above: the complete workstation domain/collector/browser/price/reply path passed with a real product. The optional browser endpoint must be selected explicitly; pilot installation and day-spaced live acceptance remain pending. Non-browser collection and the historical direct-403 receipt retain their original scope.
 
 Every stored observation has `conditions_verification=not_verified`. Structured data is an observed offer candidate, not independent verification of visible coupons, membership, shipping or checkout conditions. W3 adds no deal calculations, buying recommendations or notification summaries. Logs contain fixed reasons and job IDs, never raw pages, source URLs, product details or exception text.
 

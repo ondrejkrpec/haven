@@ -1,1 +1,4 @@
-{{ {'socket': '/run/haven-wishlist-collection/request.sock', 'service_uid': haven_wishlist_domain_uid | int} | to_json }}
+{{ {'socket': '/run/haven-wishlist-collection/request.sock', 'service_uid': haven_wishlist_domain_uid | int}
+    | combine({'browser': {'socket': '/run/haven-wishlist-browser/request.sock',
+        'service_uid': haven_wishlist_browser_identity.ansible_facts.getent_passwd['haven-browser'][1] | int}}
+        if haven_wishlist_browser_enabled | default(false) | bool else {}) | to_json }}

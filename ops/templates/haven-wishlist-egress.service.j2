@@ -1,0 +1,42 @@
+[Unit]
+Description=Haven peer-authenticated Alza HTTPS egress
+StartLimitIntervalSec=0
+
+[Service]
+Type=exec
+User=haven-egress
+Group=haven-wishlist-egress
+RuntimeDirectory=haven-wishlist-egress
+RuntimeDirectoryMode=0750
+WorkingDirectory=/opt/haven-wishlist-browser/app
+Environment=PYTHONPATH=/opt/haven-wishlist-browser/app
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/haven-wishlist-browser/venv/bin/python -B -m scripts.wishlist_egress --config /etc/haven-wishlist-browser/egress.json
+Restart=on-failure
+RestartSec=5
+RestartPreventExitStatus=78
+TimeoutStopSec=10
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectProc=invisible
+InaccessiblePaths=-/var/lib/haven -/var/lib/haven-wishlist -/var/lib/haven-language -/var/lib/haven-backup -/etc/haven-backup -/etc/haven-wishlist -/run/haven-wishlist -/run/haven-wishlist-collection -/run/haven-wishlist-browser
+MemoryMax=128M
+CPUQuota=25%
+TasksMax=48
+LimitNOFILE=128
+StandardOutput=journal
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target
