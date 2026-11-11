@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-11-11T09:22:17.757488+00:00",
+  "source_baseline": "5f2d33f5688fa3806e6f1205abbc7db8a5cd5bdd",
+  "python": "3.14.7",
+  "scope": "local adapter extension and bounded workstation probes",
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest tests.test_wishlist_collection tests.test_wishlist_fetch tests.test_wishlist_extract -q",
+      "result": "passed",
+      "tests": 47
+    }
+  ],
+  "required_delivery_check": ".venv/bin/python -m scripts.check through the committed-HEAD pre-push hook",
+  "probes": [
+    {
+      "host": "www.ifantazie.cz",
+      "adapter": "ifantazie-microdata-v1",
+      "inspection": {
+        "at_utc": "2026-11-11T09:17:36.243880+00:00",
+        "http_status": 200,
+        "bytes": 388685,
+        "body_sha256": "56df31d34fdc32feeab1de740d229bca3f6559ee0c3f333eeb92d210ea4334db"
+      },
+      "worker": {
+        "at_utc": "2026-11-11T09:20:44.530338+00:00",
+        "http_status": 200,
+        "status": "ok",
+        "reason": "structured_offer_candidate",
+        "offer_fields": [
+          "availability",
+          "conditions_verification",
+          "currency",
+          "name",
+          "price",
+          "sku"
+        ]
+      },
+      "requests": 2,
+      "raw_capture_published": false
+    },
+    {
+      "host": "www.alza.cz",
+      "adapter": "alza-jsonld-v1",
+      "inspection": {
+        "at_utc": "2026-11-11T09:17:36.494129+00:00",
+        "http_status": 403,
+        "bytes": 65640,
+        "body_sha256": "065aa9f48c17faebb3dfb8f40d8e1540a20e7680f7ef569b1490ff20c47fa778"
+      },
+      "worker": {
+        "at_utc": "2026-11-11T09:20:44.908970+00:00",
+        "http_status": 403,
+        "status": "blocked",
+        "reason": "source_http_403",
+        "offer_fields": []
+      },
+      "requests": 2,
+      "raw_capture_published": false
+    }
+  ],
+  "production_changed": false,
+  "model_calls": 0,
+  "limitations": [
+    "one public product per host and two workstation requests each; no account, cookie or proxy inheritance",
+    "iFantazie microdata extraction succeeded in the actual bounded worker; repeated or VPS collection is not established",
+    "Alza direct HTTP access returned 403 in both probes; Alza parsing is verified only on synthetic pages",
+    "Alza requires explicit NewCondition; used, refurbished, missing-condition and conditional member prices are refused",
+    "No browser fallback, CAPTCHA interaction, host-policy change or production activation",
+    "Offer, display and checkout conditions remain unverified"
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "f702685edadda9d6950dabd356e820fabd764eaf8f2c0310160df481749b74d1"
+    },
+    {
+      "path": "docs/wishlist-collection.adoc",
+      "sha256": "51b11c2c2c5b42ef0d393f7dd2200f3496778675afbbd371e43f87c2bc48356a"
+    },
+    {
+      "path": "scripts/build_docs.py",
+      "sha256": "6aa2090103b05a6730407d6f13b2c94f46593dd28632b39bf943c1adbafb2807"
+    },
+    {
+      "path": "scripts/wishlist_collection.py",
+      "sha256": "5fb86d6944ade482afe4e6c7654189b59f1a33dffe741073af0a830d27259e7e"
+    },
+    {
+      "path": "scripts/wishlist_extract.py",
+      "sha256": "29974e5c4b39328fc4198d4601344eeb4b13e499b49177a4febea0cbf191b324"
+    },
+    {
+      "path": "scripts/wishlist_fetch.py",
+      "sha256": "dc036815e991964d2b9579407ba6b1b6b73db55aa9762d7f277e2dd2419c3a40"
+    },
+    {
+      "path": "tests/test_wishlist_collection.py",
+      "sha256": "9b92404a74ab00d31f794117781c99aa8a6421a780d968f6aa7843c94dbd1f7d"
+    },
+    {
+      "path": "tests/test_wishlist_fetch.py",
+      "sha256": "d6e371cb7dcc601253eedac7718a7a07163f6efb8dac5f4d88a7fae971a019c1"
+    }
+  ]
+}
