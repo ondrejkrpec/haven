@@ -30,7 +30,7 @@ def load_service_config(path):
     with path.open("rb") as stream:
         config = decode(stream.read(MAX_FRAME + 1))
     keys = {"schema_version", "database", "socket", "socket_gid", "ingress_uid", "bot_id", "owner_id", "timezone"}
-    if not keys <= set(config) or set(config) - keys - {"language"} or type(config["schema_version"]) is not int or config["schema_version"] != 1:
+    if not keys <= set(config) or set(config) - keys - {"language", "collector"} or type(config["schema_version"]) is not int or config["schema_version"] != 1:
         raise ValueError("service_config")
     validate_settings({"socket": config["socket"], "service_uid": config["ingress_uid"], "bot_id": config["bot_id"]})
     if type(config["socket_gid"]) is not int or not 1 <= config["socket_gid"] <= 2**31 - 1:
@@ -43,6 +43,21 @@ def load_service_config(path):
         settings = validate_language_settings(config["language"])
         if settings["service_uid"] in (os.geteuid(), config["ingress_uid"]):
             raise ValueError("language_identity_must_be_separate")
+    if "collector" in config:
+        collector = config["collector"]
+        if (not isinstance(collector, dict) or set(collector) != {"socket", "socket_gid", "client_uid"}
+                or any(type(collector[key]) is not int or not 1 <= collector[key] < 2**31
+                       for key in ("socket_gid", "client_uid"))
+                or collector["client_uid"] in (os.geteuid(), config["ingress_uid"],
+                                               config.get("language", {}).get("service_uid"))
+                or collector["socket_gid"] == config["socket_gid"]
+                or collector["socket_gid"] == config.get("language", {}).get("socket_gid")):
+            raise ValueError("collector_identity_must_be_separate")
+        collector_path = socket_path(collector["socket"])
+        if collector_path.parent == socket_path(config["socket"]).parent:
+            raise ValueError("collector_directory_must_be_separate")
+        if "language" in config and collector_path.parent == socket_path(config["language"]["socket"]).parent:
+            raise ValueError("collector_directory_must_be_separate")
     return config
 
 
@@ -91,16 +106,28 @@ async def serve(config):
     domain = Wishlist(path, bot_id=config["bot_id"], owner_id=config["owner_id"], timezone=config["timezone"])
     server = Server(domain, config["socket"], ingress_uid=config["ingress_uid"], socket_gid=config["socket_gid"],
                     language=config.get("language"))
+    collection_server = None
     stopped = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(sig, stopped.set)
     try:
+        if "collector" in config:
+            from scripts.wishlist_collector import CollectionServer
+            settings = config["collector"]
+            directory = socket_path(settings["socket"]).parent
+            private_directory(directory, uid=os.geteuid(), socket_directory=True)
+            os.chown(directory, -1, settings["socket_gid"])
+            collection_server = CollectionServer(domain, settings["socket"], ingress_uid=settings["client_uid"],
+                                                 socket_gid=settings["socket_gid"])
+            await collection_server.start()
         await server.start()
         print('{"result":"ready","service":"wishlist"}', flush=True)
         await stopped.wait()
     finally:
         await server.close()
+        if collection_server is not None:
+            await collection_server.close()
         domain.close()
 
 

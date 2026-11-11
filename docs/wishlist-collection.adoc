@@ -1,0 +1,85 @@
+= Wishlist W3: daily price observations
+
+Status, 2026-11-11: source implementation with local synthetic acceptance. It has not been deployed to the pilot. Repeated live collection, installed-unit isolation, resource headroom, expanded recovery and owner acceptance remain required before calling W3 operationally accepted. Historical link:wishlist-feasibility.adoc[direct-fetch probes] are not production adapter acceptance.
+
+== Components and identities
+
+The existing domain service remains the only SQLite writer. Its optional collection socket admits one exact collector UID through Linux peer credentials before reading a frame. The client checks the server UID before sending. A separate socket directory/group keeps collection admission distinct from Telegram and interpretation. Collection messages cannot invoke wishlist commands, select an owner or submit SQL.
+
+`scripts/wishlist_collection.py` admits and completes jobs in short transactions. `scripts/wishlist_collector.py` is a sequential oneshot client. Each job runs `scripts/wishlist_fetch.py` in a separate process with a 40-second deadline; timeout/cancellation kills and reaps its process group. No transaction spans DNS/HTTP I/O. No scheduled operation invokes a model, starts another poller or uses account credentials.
+
+The staged non-login `haven-collector` identity has no wishlist database permission, ingress group or model credentials. The unit denies access to private data homes and backup configuration, mounts the system read-only and limits memory to 256 MiB. Only Unix/IPv4/IPv6 sockets are permitted. URL checks constrain the supplied worker; these units do not implement destination-level network isolation against arbitrary code as the collector. Root-owned code and separate identities remain essential.
+
+== Durable scheduling and results
+
+Migration 5 preserves entries, purchases, receipts and conversations. It adds offer deadlines/diagnostics, collection jobs, observations, shop retry deadlines and automatic pause-expiry events. Jobs bind a claim ID, random job/attempt IDs, offer, entry version, generation, URL SHA-256, adapter and a 120-second lease. Observations retain decimal price, currency, SKU, availability, observation time and condition uncertainty, with one observation per job.
+
+Active, nonremoved entries are initially due immediately, including incomplete classifications. Every completed attempt schedules the offer at least 24 hours later. Retry-After can postpone it further, with a bounded one-year representation. HTTP 429 or an explicit Retry-After also delays other offers at that exact shop host. There are no immediate HTTP retries. An expired running job is retained and retried no sooner than an hour after reconciliation.
+
+The staged persistent timer scans every fifteen minutes with up to thirty seconds of random delay. Each invocation handles at most twenty jobs sequentially, with at most one running lease across all callers. Catch-up produces one bounded scan, not invented observations for missed days. Actual collection depends on host availability, workload and shop cooldowns. Repeated successful claim IDs return the same running job; completed/expired IDs return idle. Lost replies reconcile by lease expiry.
+
+Expired calendar pauses become active on a scan, increment entry version/generation and retain a `pause_expired` event. Removed and purchased entries never auto-resume. Purchase/pause/remove/restore invalidate generation; editing changes the bound version. Completion rechecks all bindings, lease and lifecycle. Obsolete results cannot append a price or reactivate an entry. Identical completion replay is idempotent; altered replay conflicts.
+
+Observation, completion and diagnostics commit atomically. Storage failure rolls them all back. Restart and database restoration retain deadlines/leases/digests. Restored runtimes must remain isolated from production until activity is reconciled; expired work becomes a fresh later attempt. No transaction waits for network I/O.
+
+== HTTPS and shop validation
+
+Only HTTPS port 443 without URL credentials, fragments, controls or backslashes is admitted. The worker does not inherit proxies, credentials, cookies or browser sessions. It sends an identifying user agent, requests uncompressed HTML and executes no scripts.
+
+For every hop, resolve once and reject the entire answer if any address is nonpublic or a disallowed mapped/tunnel/translation address. Connect the exact checked numeric sockaddr and verify its peer while retaining the original hostname for TLS SNI/certificate verification. DNS and slow streams are bounded by the whole-process deadline and ten-second socket timeouts.
+
+Allow at most three redirects, retaining original hostname and exact normalized product identity. Only existing UTM/trailing-slash normalization is tolerated. Revalidate syntax and newly resolved addresses before another GET. Cross-host aliases, HTTPS downgrades and product/variant changes fail closed. Responses are limited to 4 MiB; malformed/duplicate/oversized Content-Length, incomplete declared bodies, compressed responses and non-HTML content are refused. Non-200 bodies, including 401/403/429, are never parsed as prices.
+
+[cols="1,2,3",options="header"]
+|===
+|Host |Adapter |Required structured evidence
+|`www.momenti.cz` |`momenti-microdata-v1` |Scoped Product/Offer microdata.
+|`www.fabini.cz` |`fabini-jsonld-v1` |Exact-offer JSON-LD, preserving variant queries.
+|Other hosts |Unsupported |Keep the entry and record unsupported without network access.
+|===
+
+Both paths require a nonempty SKU, positive two-decimal CZK price, exact unambiguous variant and recognized availability. Conditional member/quantity offers, conflicting prices, aggregates and missing evidence are rejected. The domain pins SKU/currency after the first observation; later identity changes cannot replace history. Alza, Vilgain and other approved discovery shops still need adapters/live evidence. An entered link grants only that entry's source scope.
+
+Every stored observation has `conditions_verification=not_verified`. Structured data is an observed offer candidate, not independent verification of visible coupons, membership, shipping or checkout conditions. W3 adds no deal calculations, buying recommendations or notification summaries. Logs contain fixed reasons and job IDs, never raw pages, source URLs, product details or exception text.
+
+Lists show the last price/date, uncertainty and collection status. Details add availability, full observation time, latest failure and next deadline; the structured get API returns ten recent observations. Failure retains the prior amount/time. A missed deadline by more than an hour displays stale. Telegram read receipts remain historical; send a fresh request for current state. Natural-language price questions retain W5 restrictions; deterministic list/detail show saved observations.
+
+== Explicit staging and activation prerequisites
+
+Normal domain configuration has no collection socket. Add this optional object to the private domain JSON only after preparing distinct identities/directories; the IDs are synthetic:
+
+[source,json]
+----
+"collector": {
+  "socket": "/run/haven-wishlist-collection/request.sock",
+  "socket_gid": 2404,
+  "client_uid": 2403
+}
+----
+
+The separate client configuration is `{"socket":"/run/haven-wishlist-collection/request.sock","service_uid":2401}`; 2401 is the domain UID. The domain owns both runtime directories and sets collection directory/socket group. Collector identity/directory must be separate from ingress/domain/interpreter.
+
+The link:wishlist-operations.adoc[W4 preparation playbook] stages modules, account, endpoint configuration and units without starting/enabling the timer. Explicit `haven_wishlist_collection_enabled: true` prepares domain collection admission. Preparation refuses active wishlist services or collector timers; it remains offline preparation, not an online upgrade playbook.
+
+Before later authorized activation:
+
+* Accept a fresh backup and update backup/recovery helpers to understand schema 5 before starting its writer. Stop the collector timer during maintenance.
+* Verify code hashes, migration, separate UID/group access and restrictions. Run one bounded invocation under its installed identity; check exact source/variant, visible failures and zero model activity.
+* Accept an encrypted schema-5 snapshot and reconstruct jobs, observations, deadlines and receipts independently. Older binaries must refuse schema 5. Never replace newer history with an older database as an application rollback.
+* Observe a second due cycle, blocked-source handling, restart/backup recovery, measured resources and owner Telegram results before accepting production W3.
+
+The collector writes no captured data root. `Requisite=` and `After=` prevent it from starting a domain service intentionally stopped for backup. Existing durable writer pause recovery remains unchanged; lost in-flight completion is reconciled later. Installed-unit backup/reboot behavior still needs live acceptance. W4 dashboard accounting, retention and independent collector alert delivery remain open.
+
+== Local verification
+
+[source,sh]
+----
+.venv/bin/python -m unittest tests.test_wishlist_collection tests.test_wishlist_fetch \
+  tests.test_wishlist_domain tests.test_wishlist_service tests.test_wishlist_language \
+  tests.test_wishlist_operations -v
+.venv/bin/python -m scripts.check
+----
+
+link:../research/w3/acceptance.json[The local receipt] records the source baseline, maintained-file hashes, successful targeted commands and earlier fixture/sandbox failures. Tests use synthetic URLs/pages, real SQLite transactions, concurrent claims, Linux peer sockets, process timeout/cancellation, migration refusal and the local systemd verifier. They contact no shops, credentials, Telegram or model. Socket acceptance needs a local environment permitting Unix sockets; a sandbox denial is not a successful socket check. Local tests do not prove production OS isolation, sustained source support or live recovery.
+
+Context7 supplied Python 3.12.16 TLS/HTTP references but lacked the needed systemd man-page sections; installed manuals supplied those. Primary references: https://docs.python.org/3.12/library/ssl.html[TLS], https://docs.python.org/3.12/library/http.client.html[HTTP client], https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html[unit dependencies] and https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html[timers].

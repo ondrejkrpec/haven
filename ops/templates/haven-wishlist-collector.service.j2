@@ -1,0 +1,34 @@
+[Unit]
+Description=Haven bounded daily wishlist collection
+Requisite=haven-wishlist.service
+After=haven-wishlist.service
+ConditionPathIsSocket=/run/haven-wishlist-collection/request.sock
+
+[Service]
+Type=oneshot
+User=haven-collector
+Group=haven-wishlist-collection
+WorkingDirectory=/opt/haven-wishlist
+Environment=PYTHONPATH=/opt/haven-wishlist:/opt/haven-wishlist/vendor
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/haven-wishlist/native/venv/bin/python -B -m scripts.wishlist_collector --config /etc/haven-wishlist-collector/config.json
+TimeoutStartSec=1000
+TimeoutStopSec=10
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+InaccessiblePaths=-/var/lib/haven -/var/lib/haven-wishlist -/var/lib/haven-language -/var/lib/haven-backup -/etc/haven-backup -/etc/haven-wishlist
+MemoryMax=256M
+TasksMax=16
+StandardOutput=journal
+StandardError=null

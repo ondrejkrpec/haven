@@ -47,6 +47,10 @@ Request and response JSON are bounded to 64 KiB in the domain API. Bounded raw f
 
 The database contains private wishlist data and complete response receipts. W1 provides no deployment, retention policy, filesystem permission setup, backup capture or production restore acceptance; those remain W4. Keep local databases outside Git and public documentation inputs. The accepted H1 backup does not automatically include them.
 
+== W3 extension
+
+link:wishlist-collection.adoc[W3] extends the current source to schema 5 with collection jobs, observations, diagnostics and durable scheduling. It supersedes the historical W1 statements above about absent collection/result admission and pause expiry. Domain service remains the only writer; collection never changes entry lifecycle from a model or unvalidated callback. Older binaries refuse the newer schema.
+
 == Local acceptance
 
 [source,sh]

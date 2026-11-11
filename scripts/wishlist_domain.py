@@ -8,7 +8,7 @@ import base64
 import calendar
 from dataclasses import asdict, dataclass
 from contextlib import nullcontext
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 import hashlib
 import hmac
 import ipaddress
@@ -172,14 +172,25 @@ class Wishlist:
             return self.response(request_id, "unavailable")
 
     def _entry(self, db, entry_id):
-        row = db.execute("""SELECT e.*, o.offer_id, o.url, o.shop_host, o.url_sha256,
-            o.collection_status, o.collection_generation, o.last_observed_at
+        row = db.execute("""SELECT e.*, o.*
             FROM entries e JOIN offers o ON o.entry_id = e.entry_id AND o.owner_id = e.owner_id
             WHERE e.entry_id = ? AND e.owner_id = ?""", (entry_id, self.owner_id)).fetchone()
         if row is None:
             return None
-        return {**{key: row[key] for key in row.keys() if key not in ("sequence", "owner_id")},
-                "state": "removed" if "removed_at" in row.keys() and row["removed_at"] else row["state"],
+        observation = None
+        if "next_collection_at" in row.keys():
+            observation = db.execute("""SELECT observed_at, price, currency, availability, conditions_verification
+                FROM observations WHERE offer_id=? ORDER BY sequence DESC LIMIT 1""", (row["offer_id"],)).fetchone()
+        record = {"next_collection_at": "", "last_attempt_at": None, "collection_reason": None,
+                  "last_http_status": None, "removed_at": None,
+                  **{key: row[key] for key in row.keys() if key not in ("sequence", "owner_id")}}
+        overdue = (record["state"] == "active" and record["removed_at"] is None and record["next_collection_at"]
+                   and instant(record["next_collection_at"]) + timedelta(hours=1) < self.clock())
+        return {**record,
+                "state": "removed" if record["removed_at"] else record["state"],
+                "collection_status": "stale" if overdue else record["collection_status"],
+                "collection_reason": "schedule_overdue" if overdue else record["collection_reason"],
+                "latest_observation": dict(observation) if observation else None,
                 "reference": f"#{row['sequence']}"}
 
     def _result(self, db, request_id, entry_id, *, committed):
@@ -216,7 +227,12 @@ class Wishlist:
         if entry is None:
             return reply("not_found")
         if operation == "wishlist.get":
-            return self._result(db, request_id, entry["entry_id"], committed=False)
+            result = self._result(db, request_id, entry["entry_id"], committed=False)
+            if db.execute("PRAGMA user_version").fetchone()[0] >= 5:
+                result["data"]["observations"] = [dict(row) for row in db.execute(
+                    """SELECT observed_at, price, currency, availability, conditions_verification FROM observations
+                    WHERE offer_id=? ORDER BY sequence DESC LIMIT 10""", (entry["offer_id"],))]
+            return result
         if entry["version"] != args["expected_version"]:
             return reply("conflict")
         if entry["state"] == "removed" and operation not in ("wishlist.remove", "wishlist.restore"):
@@ -276,10 +292,12 @@ class Wishlist:
                    + " WHERE entry_id = ? AND owner_id = ?",
                    (*updates.values(), entry["entry_id"], self.owner_id))
         if invalidate:
+            active = self._entry(db, entry["entry_id"])["state"] == "active"
             db.execute("""UPDATE offers SET collection_generation = collection_generation + 1,
-                collection_status = CASE WHEN ? = 'active' THEN 'pending' ELSE collection_status END
+                collection_status = CASE WHEN ? THEN 'pending' ELSE collection_status END,
+                next_collection_at = CASE WHEN ? THEN '' ELSE next_collection_at END
                 WHERE entry_id = ? AND owner_id = ?""",
-                       (self._entry(db, entry["entry_id"])["state"], entry["entry_id"], self.owner_id))
+                       (active, active, entry["entry_id"], self.owner_id))
         return self._result(db, request_id, entry["entry_id"], committed=True)
 
     @staticmethod

@@ -44,7 +44,9 @@ Atomically commit entry changes, domain events and the response receipt in one s
 
 Responses carry `protocol_version`, `request_id`, a fixed result code, whether a write committed, entry ID/version when applicable, and bounded data or clarification fields. Codes are `ok`, `needs_clarification`, `conflict`, `not_found`, `invalid_request`, `denied` and `unavailable`. An incomplete add may return `needs_clarification` with `committed=true`. Do not expose SQL errors, peer configuration, credentials or another owner's existence. Escape shop/user text for the selected Telegram formatting mode.
 
-== Collection (planned W3) and language (local W5)
+== Collection (local W3) and language (local W5)
+
+W3 is now implemented for local synthetic acceptance; link:wishlist-collection.adoc[the collection guide] defines its exact socket, scheduling, fetch/adapter boundaries and remaining live acceptance. The original implementation-unit table below retains the design scope.
 
 The scheduler asks the domain service to enqueue due work; it does not edit SQLite directly. Start with a systemd timer outside Hermes cron, an independent single-dispatch lease and a small SQLite job table. Exact service accounts, timer expression, queue limits and resource bounds belong to implementation configuration.
 
