@@ -14,7 +14,7 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 [H1.9 backup and recovery](docs/h1.9-backup-recovery.adoc) provides twice-daily encrypted Scaleway backups, exact snapshot restore verification, independent Healthchecks monitoring and separate operator retention. Production recovery was verified in a clean isolated runtime with no transport adapters or added model calls; the owner confirmed the missed-heartbeat email.
 
-**W3 source progress, 2026-11-11:** [Daily collection](docs/wishlist-collection.adoc) adds durable jobs, bounded HTTPS workers, initial Momenti/Fabini adapters and price history with failure diagnostics. Local synthetic acceptance is separate from pilot activation and sustained live collection. The existing pilot has not been changed by this source work.
+**W3 source progress, 2026-11-11:** [Daily collection](docs/wishlist-collection.adoc) adds durable jobs, bounded HTTPS workers, Momenti/Fabini/iFantazie adapters, an Alza parser and price history with failure diagnostics. iFantazie passed one workstation read; direct Alza access returned HTTP 403, so live Alza extraction remains unverified. Local acceptance is separate from pilot activation and sustained collection. The existing pilot has not been changed by this source work.
 
 ## Start locally
 

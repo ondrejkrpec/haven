@@ -165,6 +165,23 @@ class CollectionTests(unittest.TestCase):
         self.assertEqual(self.finish(job, failure("unsupported_shop", status="unsupported"))["code"], "ok")
         self.assertEqual(self.domain._entry(self.domain.store.db, entry["entry_id"])["collection_status"], "unsupported")
 
+    def test_new_shop_admission_versions_the_adapter_and_preserves_failure_history(self):
+        for host, adapter in (("www.ifantazie.cz", "ifantazie-microdata-v1"), ("www.alza.cz", "alza-jsonld-v1")):
+            with self.subTest(host=host):
+                entry = self.add(url="https://" + host + "/synthetic-product")
+                job = self.claim()
+                self.assertEqual(job["job"]["adapter"], adapter)
+                self.assertEqual(self.finish(job)["code"], "ok")
+                observation = self.domain.store.db.execute("SELECT adapter FROM observations WHERE offer_id=?", (entry["offer_id"],)).fetchone()
+                self.assertEqual(observation["adapter"], adapter)
+                self.now += timedelta(days=1)
+                self.assertEqual(self.finish(self.claim(), failure("source_http_403", status="blocked", http_status=403))["code"], "ok")
+                current = self.domain._entry(self.domain.store.db, entry["entry_id"])
+                self.assertEqual(current["collection_status"], "blocked")
+                self.assertEqual(current["latest_observation"]["price"], "249.90")
+                # Keep this completed entry out of the next iteration's due work.
+                self.change("wishlist.remove", entry)
+
     def test_observation_and_job_completion_rollback_together(self):
         self.supported()
         job = self.claim()

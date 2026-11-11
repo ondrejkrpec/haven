@@ -11,7 +11,8 @@ from scripts.wishlist_extract import AVAILABILITY, amount
 
 DAY = 86400
 LEASE = 120
-ADAPTERS = {"www.momenti.cz": "momenti-microdata-v1", "www.fabini.cz": "fabini-jsonld-v1"}
+ADAPTERS = {"www.momenti.cz": "momenti-microdata-v1", "www.fabini.cz": "fabini-jsonld-v1",
+            "www.ifantazie.cz": "ifantazie-microdata-v1", "www.alza.cz": "alza-jsonld-v1"}
 JOB_KEYS = {"job_id", "attempt_id", "offer_id", "generation", "entry_version", "url_sha256", "adapter"}
 REASONS = frozenset({
     "structured_offer_candidate", "unsupported_shop", "source_http_401", "source_http_403",

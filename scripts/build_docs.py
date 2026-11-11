@@ -24,6 +24,7 @@ ATTACHMENTS = (
     "research/wishlist/browser-requirements.txt",
     "research/w2/acceptance.json", "research/w5/acceptance.json",
     "research/w3/acceptance.json",
+    "research/w3/shop-adapters.json",
 )
 LOCAL_LINK = re.compile(r"link:([^\s\[]+)\[")
 ATTACHMENT_ALIASES = {
