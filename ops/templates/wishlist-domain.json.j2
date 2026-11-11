@@ -2,4 +2,7 @@
     'socket': '/run/haven-wishlist/ingress.sock', 'socket_gid': haven_wishlist_ingress_gid | int,
     'ingress_uid': haven_wishlist_coordinator_uid | int, 'bot_id': haven_wishlist_bot_id | string,
     'owner_id': haven_wishlist_owner_id | string, 'timezone': haven_wishlist_timezone,
-    'language': {'socket': '/run/haven-wishlist-language/request.sock', 'service_uid': haven_wishlist_language_uid | int}} | to_json }}
+    'language': {'socket': '/run/haven-wishlist-language/request.sock', 'service_uid': haven_wishlist_language_uid | int}}
+    | combine({'collector': {'socket': '/run/haven-wishlist-collection/request.sock',
+        'socket_gid': haven_wishlist_collection_gid | int, 'client_uid': haven_wishlist_collector_uid | int}}
+        if haven_wishlist_collection_enabled | default(false) | bool else {}) | to_json }}

@@ -85,6 +85,10 @@ The pilot used a reviewed offline batch of the six changed public files in both 
 * Enable only the existing Telegram poller, exercise the link:wishlist-language.adoc[W5 live scenarios] with the owner and a real model, including provider failure, restart mid-question and duplicate messages. Confirm existing deterministic operations still work.
 * Update private instructions and the operational dashboard with actual service/data freshness. Collector freshness and W3 recovery follow when daily collection exists.
 
+== W3 source extension, 2026-11-11
+
+link:wishlist-collection.adoc[W3 collection] adds optional schema-5 domain admission, staged collector identity/modules/configuration and oneshot/timer units. The preparation playbook never enables the timer and refuses active collector units. Set explicit `haven_wishlist_collection_enabled: true` only for a prepared collection configuration. These source changes have not been deployed; the pilot evidence below remains schema 4. Compatible backup helpers and fresh migration/recovery acceptance are prerequisites of live activation.
+
 == Pilot evidence, 2026-11-08
 
 The pilot separately enrolled the interpretation account and uses the existing admitted Telegram poller. Repeated preparation preserved existing state. Copies of the installed units with identical isolation directives passed filesystem/socket denial and permitted-own-state checks. Killing each new production process produced an automatic restart and retained database state.

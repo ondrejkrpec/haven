@@ -18,7 +18,7 @@ HELP = ("Wishlist: pošli samotný HTTPS odkaz nebo napiš wl přidat ODKAZ.\n"
         "wl pauza #1 RRRR-MM-DDTHH:MM:SS+01:00\n"
         'wl upravit #1 {"label":"Nový název"}\n'
         "wl odstranit #1 · wl vrátit #1 · wl seznam odstraněné\n"
-        "Doplnění údajů použije kód uvedený v otázce. Denní sběr cen zatím není zapnutý.")
+        "Doplnění údajů použije kód uvedený v otázce. Stav sběru a poslední cenu ukazuje detail položky.")
 REPLIES = {
     "invalid_request": "Příkaz není platný. Nápověda: wl pomoc.",
     "denied": "Tento požadavek není povolený.",
@@ -61,8 +61,15 @@ def _summary(entry, *, include_url=True):
     states = {"active": "aktivní", "paused": "pozastaveno", "purchased": "koupeno", "removed": "odstraněno"}
     result = f"{entry['reference']} {label} — {states[entry['state']]}"
     if include_url:
-        result += "\n" + (entry["url"] if len(entry["url"].encode("utf-16-le")) <= 420
+        source_limit = 200 if entry.get("latest_observation") or entry.get("last_attempt_at") else 420
+        result += "\n" + (entry["url"] if len(entry["url"].encode("utf-16-le")) <= source_limit
                            else f"Celý uložený odkaz: wl detail {entry['reference']}")
+    observation = entry.get("latest_observation")
+    if observation:
+        result += f"\n{observation['price']} {observation['currency']} · {observation['observed_at'][:10]} · podmínky neověřeny"
+    if entry.get("last_attempt_at"):
+        result += "\nSběr: " + {"pending": "čeká", "ok": "OK", "blocked": "blokovaný",
+                                "unsupported": "nepodporovaný", "failed": "selhal", "stale": "zastaralý"}[entry["collection_status"]]
     return result
 
 
@@ -82,7 +89,7 @@ def _reply_text(result, operation, arguments):
     prefix = "Uloženo. " if result["committed"] else ""
     reply = prefix + _summary(entry, include_url=operation != "wishlist.get")
     if operation == "wishlist.get":
-        reply += "\n" + source_text(entry)
+        reply += "\n" + source_text(entry, limit=2200)
         reply += "\nÚčel: " + {"self": "pro mě", "gift": "dárek", None: "k doplnění"}[entry["purpose"]]
         reply += "\nNákup: " + {"once": "jednorázově", "recurring": "opakovaně",
                                   None: "k doplnění"}[entry["purchase_mode"]]
@@ -90,6 +97,26 @@ def _reply_text(result, operation, arguments):
             reply += "\nPro: " + entry["recipient"]
         if entry["note"]:
             reply += "\nPoznámka: " + entry["note"].encode("utf-16-le")[:800].decode("utf-16-le", errors="ignore")
+        observation = entry.get("latest_observation")
+        if observation:
+            reply += "\nPozorováno: " + observation["observed_at"]
+            reply += "\nDostupnost: " + {"in_stock": "skladem", "out_of_stock": "vyprodáno",
+                "preorder": "předobjednávka", "backorder": "na objednávku", "limited": "omezená",
+                "discontinued": "ukončený prodej"}[observation["availability"]]
+        else:
+            reply += "\nCena zatím není zjištěná."
+        if entry.get("collection_reason"):
+            reasons = {"structured_offer_candidate": "Cena ze stránky; podmínky nabídky nejsou ověřené.",
+                       "unsupported_shop": "Tento obchod zatím nemá podporovaný sběrač.",
+                       "source_http_401": "Zdroj požaduje přihlášení.",
+                       "source_http_403": "Zdroj odmítl přístup.",
+                       "source_http_429": "Zdroj omezil počet požadavků; další kontrola je odložená.",
+                       "offer_unverified": "Nepodařilo se spolehlivě přiřadit cenu ke zvolené variantě.",
+                       "lease_expired": "Předchozí kontrola nebyla dokončená; čeká na nový pokus."}
+            reasons["schedule_overdue"] = "Plánovaná kontrola chybí; poslední cena je historická."
+            reply += "\n" + reasons.get(entry["collection_reason"], "Poslední kontrola ceny se nezdařila.")
+        if entry.get("next_collection_at"):
+            reply += "\nDalší kontrola nejdříve: " + entry["next_collection_at"]
     if entry["paused_until"] and entry["state"] != "removed":
         reply += "\nPozastaveno do: " + entry["paused_until"]
     return reply

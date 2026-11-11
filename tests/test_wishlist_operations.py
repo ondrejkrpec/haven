@@ -15,7 +15,7 @@ from scripts import backup_capture as capture
 from scripts import backup_restore as restore
 from scripts import backup_runtime as runtime
 from scripts import wishlist_operations as operations
-from scripts.wishlist_store import Store
+from scripts.wishlist_store import MIGRATIONS, Store
 
 
 class OperationsTests(unittest.TestCase):
@@ -66,7 +66,7 @@ class OperationsTests(unittest.TestCase):
             owners = {'uids': {str(os.getuid()): os.getuid()}, 'gids': {str(os.getgid()): os.getgid()}}
             restore.rebuild(payload, root / 'recovered', digest, owners, component='wishlist')
             db = root / 'recovered/state/wishlist.sqlite3'
-            self.assertEqual(operations.database_status(db)['schema_version'], 4)
+            self.assertEqual(operations.database_status(db)['schema_version'], len(MIGRATIONS))
             with closing(sqlite3.connect(db)) as connection:
                 self.assertEqual(connection.execute('SELECT COUNT(*) FROM language_sessions').fetchone()[0], 1)
             restore.rebuild(payload, root / 'model', digest, owners, component='language')
@@ -76,7 +76,7 @@ class OperationsTests(unittest.TestCase):
             journal.disarm.assert_called_once()
             with self.assertRaises(Exception):
                 restore.rebuild(payload, root / 'recovered', digest, owners, component='wishlist')
-            self.assertEqual(operations.database_status(db)['schema_version'], 4)
+            self.assertEqual(operations.database_status(db)['schema_version'], len(MIGRATIONS))
 
     def test_additional_corruption_and_missing_components_cannot_be_accepted(self):
         for change in ('database', 'auth', 'missing', 'unexpected'):
@@ -171,7 +171,7 @@ class OperationsTests(unittest.TestCase):
             executable.write_text('#!/bin/sh\nexit 0\n')
             executable.chmod(0o755)
             units = []
-            for name in operations.UNITS[1:]:
+            for name in (*operations.UNITS[1:], 'haven-wishlist-collector.service', 'haven-wishlist-collector.timer'):
                 source = Path('ops/templates') / (name + '.j2')
                 unit = root / name
                 unit.write_text(source.read_text().replace('/opt/haven-wishlist/native/venv/bin/python', str(executable)))

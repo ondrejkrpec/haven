@@ -26,7 +26,8 @@
 
     - name: Refuse to replace code while wishlist services are running
       ansible.builtin.command:
-        argv: [systemctl, show, haven-wishlist.service, haven-wishlist-language.service, '-p', ActiveState]
+        argv: [systemctl, show, haven-wishlist.service, haven-wishlist-language.service,
+               haven-wishlist-collector.service, haven-wishlist-collector.timer, '-p', ActiveState]
       register: haven_wishlist_existing
       changed_when: false
       failed_when: "'ActiveState=active' in haven_wishlist_existing.stdout or 'ActiveState=activating' in haven_wishlist_existing.stdout or 'ActiveState=deactivating' in haven_wishlist_existing.stdout"

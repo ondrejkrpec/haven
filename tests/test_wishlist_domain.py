@@ -184,6 +184,8 @@ class WishlistTests(unittest.TestCase):
                 SELECT ?, '100002', version, state, classification, purpose, purchase_mode,
                 created_at, updated_at FROM entries WHERE entry_id = ?""", (foreign, entry["entry_id"]))
             db.execute("""INSERT INTO offers
+                (offer_id, entry_id, owner_id, url, shop_host, url_sha256,
+                 collection_status, collection_generation, last_observed_at)
                 SELECT 'wo_foreign', ?, '100002', url, shop_host, url_sha256,
                 collection_status, collection_generation, last_observed_at FROM offers WHERE entry_id = ?""",
                        (foreign, entry["entry_id"]))

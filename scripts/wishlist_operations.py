@@ -27,7 +27,8 @@ LANGUAGE_POLICY = {"schema_version": 1,
 UNITS = ("haven.service", "haven-wishlist.service", "haven-wishlist-language.service")
 
 
-def configurations(*, bot_id, owner_id, timezone, ingress_uid, domain_uid, language_uid, ingress_gid, language_gid):
+def configurations(*, bot_id, owner_id, timezone, ingress_uid, domain_uid, language_uid, ingress_gid, language_gid,
+                   collector_uid=None, collection_gid=None):
     for value in (bot_id, owner_id):
         if not isinstance(value, str) or not re.fullmatch(r"[1-9][0-9]{0,15}", value):
             raise ValueError("wishlist_identity")
@@ -37,7 +38,7 @@ def configurations(*, bot_id, owner_id, timezone, ingress_uid, domain_uid, langu
         raise ValueError("wishlist_system_identity")
     if len({ingress_uid, domain_uid, language_uid}) != 3 or ingress_gid == language_gid:
         raise ValueError("wishlist_separate_identities_required")
-    return {
+    result = {
         "domain": {"schema_version": 1, "database": str(BASE / "state/wishlist.sqlite3"),
                    "socket": SOCKET, "socket_gid": ingress_gid, "ingress_uid": ingress_uid,
                    "bot_id": bot_id, "owner_id": owner_id, "timezone": timezone,
@@ -47,6 +48,15 @@ def configurations(*, bot_id, owner_id, timezone, ingress_uid, domain_uid, langu
                         "home": str(LANGUAGE_HOME), "python": str(TOOLS / "native/venv/bin/python")},
         "ingress": {"socket": SOCKET, "service_uid": domain_uid, "bot_id": bot_id, "natural_language": True},
     }
+    if collector_uid is not None or collection_gid is not None:
+        if (any(type(value) is not int or not 1 <= value < 2**31 for value in (collector_uid, collection_gid))
+                or collector_uid in (ingress_uid, domain_uid, language_uid)
+                or collection_gid in (ingress_gid, language_gid)):
+            raise ValueError("wishlist_separate_collector_required")
+        result["domain"]["collector"] = {"socket": "/run/haven-wishlist-collection/request.sock",
+                                         "socket_gid": collection_gid, "client_uid": collector_uid}
+        result["collector"] = {"socket": "/run/haven-wishlist-collection/request.sock", "service_uid": domain_uid}
+    return result
 
 
 def database_status(path, *, maximum_version=len(MIGRATIONS)):

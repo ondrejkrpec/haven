@@ -1,0 +1,11 @@
+[Unit]
+Description=Check durable wishlist collection deadlines
+
+[Timer]
+OnCalendar=*-*-* *:00/15:00
+Persistent=true
+RandomizedDelaySec=30
+Unit=haven-wishlist-collector.service
+
+[Install]
+WantedBy=timers.target

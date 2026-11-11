@@ -68,6 +68,33 @@ MIGRATIONS = ((
         FOREIGN KEY (request_id) REFERENCES language_runs (request_id))""",
 ), (
     "ALTER TABLE entries ADD COLUMN removed_at TEXT",
+), (
+    "ALTER TABLE offers ADD COLUMN next_collection_at TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE offers ADD COLUMN last_attempt_at TEXT",
+    "ALTER TABLE offers ADD COLUMN collection_reason TEXT",
+    "ALTER TABLE offers ADD COLUMN last_http_status INTEGER",
+    """CREATE TABLE collection_jobs (
+        job_id TEXT PRIMARY KEY, claim_id TEXT NOT NULL UNIQUE, attempt_id TEXT NOT NULL,
+        offer_id TEXT NOT NULL, generation INTEGER NOT NULL, entry_version INTEGER NOT NULL,
+        url_sha256 TEXT NOT NULL, adapter TEXT NOT NULL,
+        started_at TEXT NOT NULL, expires_at TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('running', 'completed', 'expired', 'discarded')),
+        completed_at TEXT, result_sha256 TEXT, result TEXT,
+        FOREIGN KEY (offer_id) REFERENCES offers (offer_id))""",
+    "CREATE UNIQUE INDEX collection_running ON collection_jobs (offer_id) WHERE status = 'running'",
+    "CREATE UNIQUE INDEX collection_singleton ON collection_jobs ((1)) WHERE status = 'running'",
+    """CREATE TABLE observations (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT, job_id TEXT NOT NULL UNIQUE,
+        offer_id TEXT NOT NULL, observed_at TEXT NOT NULL, adapter TEXT NOT NULL,
+        price TEXT NOT NULL, currency TEXT NOT NULL, availability TEXT NOT NULL,
+        name TEXT NOT NULL, sku TEXT NOT NULL, conditions_verification TEXT NOT NULL,
+        FOREIGN KEY (job_id) REFERENCES collection_jobs (job_id),
+        FOREIGN KEY (offer_id) REFERENCES offers (offer_id))""",
+    "CREATE INDEX observations_offer ON observations (offer_id, sequence)",
+    "CREATE TABLE collection_hosts (shop_host TEXT PRIMARY KEY, retry_at TEXT NOT NULL)",
+    """CREATE TABLE schedule_events (sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        entry_id TEXT NOT NULL, entry_version INTEGER NOT NULL, operation TEXT NOT NULL,
+        occurred_at TEXT NOT NULL, FOREIGN KEY (entry_id) REFERENCES entries (entry_id))""",
 ))
 
 

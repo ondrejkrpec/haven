@@ -1,0 +1,17 @@
+= ADR 0016: Durable model-free wishlist collection
+
+Date: 2026-11-11. Status: accepted for W3 source/local implementation; pilot activation remains separate operational work.
+
+== Context
+
+The wishlist domain owns private SQLite state and versioned lifecycle operations. Daily network reads must survive restarts without granting collectors database, interpreter or Telegram access. A page or stale callback must not mutate an obsolete entry or fabricate history.
+
+== Decision
+
+Keep one writer. Add an exact-UID collection socket with a separate directory/group; persist bounded jobs, attempt nonces, leases, deadlines and completion digests. Bind every result to offer, URL digest, adapter, generation and entry version. Commit observations/completion atomically and retain failure independently of prior prices.
+
+Use a sequential oneshot client with a killable no-model HTTPS child per job. Pin checked public DNS addresses through the connection while retaining TLS hostname verification. Validate redirects and exact product identity. Start explicit structured-data adapters with condition uncertainty. A persistent timer scans database deadlines rather than defining history or replaying missed days.
+
+== Consequences
+
+No new dependency, HTTP API, model tool or permanent browser is required. Outages, blocking and expired work remain visible without duplicate observations for a job. Schema 5 requires compatible backup helpers before activation; incompatible rollback cannot replace newer data. OS isolation, sustained source support, recovery and owner use remain live acceptance. Discovery, deal recommendations and retention remain later work.
