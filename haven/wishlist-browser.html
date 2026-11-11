@@ -259,10 +259,10 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-11: ordinary sandboxed Chromium on authenticated Xvfb successfully read a public Alza product on the workstation. The integrated path also passed: temporary wishlist intake → durable collection job → authenticated browser service → restricted HTTPS broker → accepted price observation → Telegram detail formatting. An immediate second scan produced no duplicate job/observation. No production profile, database, package or service was changed. Pilot installation and installed OS-isolation acceptance remain pending.</p>
+<p>Status, 2026-11-11: the workstation roundtrip passed, and the pinned browser is now installed separately on the Ubuntu pilot. Installed UID/file restrictions, private networking, sandboxed Chromium startup and normal descendant cleanup passed. Alza on the VPS still returns a Cloudflare verification page. The browser&#8217;s presence must not be reported as working production Alza collection; the execution environment decision remains open.</p>
 </div>
 <div class="paragraph">
-<p>This implements the path demonstrated by the historical <a href="wishlist-browser-feasibility.html" class="xref page">headed/Xvfb experiment</a>. A direct HTTP 403 is no longer the end of the implemented Alza collection path when the optional browser endpoint is selected. There is no CAPTCHA interaction, stealth plugin, modified browser identity, account login or reuse of the owner&#8217;s browser/session.</p>
+<p>This implements the path demonstrated by the historical <a href="wishlist-browser-feasibility.html" class="xref page">headed/Xvfb experiment</a>. The optional browser endpoint provides a second source path; it does not guarantee access from every network. There is no CAPTCHA interaction, stealth plugin, modified browser identity, account login or reuse of the owner&#8217;s browser/session.</p>
 </div>
 </div>
 </div>
@@ -321,10 +321,10 @@
 <p><code>ops/wishlist-browser.yml</code> requires an explicit private inventory, <code>haven_browser_install_authorized: true</code> and a local <code>haven_browser_chromium_archive</code> matching that digest. It creates independent non-login accounts, builds a separate hash-pinned environment under an unprivileged build account, freezes <code>/opt/haven-wishlist-browser</code> as root-owned files and installs only the declared public modules. It neither overwrites the active domain runtime nor starts/enables the browser units.</p>
 </div>
 <div class="paragraph">
-<p>Preparation refuses running browser services and incompatible in-place runtime/dependency replacements. An apt simulation refuses planned existing-package upgrades/removals; the install uses the current package indexes, <code>--no-upgrade</code> and <code>--no-remove</code>. It does not refresh repositories or authorize general OS maintenance. Package availability and this install path still require Ubuntu/pilot verification.</p>
+<p>Preparation refuses running browser services and incompatible in-place runtime/dependency replacements. An apt simulation refuses planned existing-package upgrades/removals; the install uses the current package indexes, <code>--no-upgrade</code> and <code>--no-remove</code>. It does not refresh repositories or authorize general OS maintenance. The declared packages and repeat preparation passed on the Ubuntu pilot without existing-package upgrades or removals.</p>
 </div>
 <div class="paragraph">
-<p>Ubuntu&#8217;s user-namespace restriction remains enabled. The staged AppArmor profile grants user-namespace admission only to the new root-owned Chromium executable so Chromium can create its renderer sandbox; it does not disable global AppArmor/namespace policy or change existing profiles. This scoped profile still needs live parser/sandbox acceptance on the target host.</p>
+<p>Ubuntu&#8217;s user-namespace restriction remains enabled. The staged AppArmor profile grants user-namespace admission only to the new root-owned Chromium executable so Chromium can create its renderer sandbox; it does not disable global AppArmor/namespace policy or change existing profiles. The scoped profile parsed and sandboxed Chromium started on the target while the global user-namespace restriction remained enabled.</p>
 </div>
 <div class="paragraph">
 <p>After preparation and authorized activation, configure the collector endpoint explicitly:</p>
@@ -376,6 +376,23 @@
 </div>
 <div class="paragraph">
 <p>Context7 had no ansible-core 2.21.5 version; preparation also uses the official <a href="https://docs.ansible.com/projects/ansible-core/2.21/collections/ansible/builtin/user_module.html">2.21 user</a>, <a href="https://docs.ansible.com/projects/ansible-core/2.21/collections/ansible/builtin/unarchive_module.html">archive</a> and <a href="https://docs.ansible.com/projects/ansible-core/2.21/collections/ansible/builtin/command_module.html">argv</a> references, including explicit group append semantics. Local syntax/lint acceptance does not establish target package or AppArmor availability.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_installed_browser_result_2026_11_11"><a class="anchor" href="#_installed_browser_result_2026_11_11"></a>Installed browser result, 2026-11-11</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Preparation passed with the exact archive/dependency pins and left the existing domain runtime independent. Actual browser/egress processes had distinct non-login UIDs, no effective capabilities and <code>NoNewPrivileges</code>. Checks inside their installed mount/network namespaces denied coordinator, wishlist, interpreter and backup private files. The browser&#8217;s namespace had no direct Internet route; the broker retained networking. A bounded request from the collector UID reached Alza through those units. After normal completion the browser cgroup returned to its single daemon task, with no remaining Chromium/Xvfb descendants. The observed browser cgroup peak was approximately 745 MiB; this sample does not establish worst-case simultaneous capacity or forced-timeout acceptance.</p>
+</div>
+<div class="paragraph">
+<p>The installed source request returned HTTP 403. Disposable diagnostics identified blocked Cloudflare resources in the intentionally small allowlist. A separate test broker allowed the exact challenge origin and narrowly scoped verification POSTs, and the page then displayed a visitor-verification widget. A separately launched ordinary Chromium attached through CDP, including one click on the visually reviewed verification checkbox, still produced no product price. These diagnostics were not adopted as the production adapter; they prove neither automatic challenge completion nor functional Alza. No account or personal browser profile was used.</p>
+</div>
+<div class="paragraph">
+<p>The existing adapter continues to fail visibly rather than inventing a price. A working source path from a suitable execution environment is still required before accepting Alza. Installing browser packages or passing workstation extraction is insufficient evidence for the VPS. Diagnostic units and temporary data are removed after inspection; no general OS update, firewall or Tailscale change is part of this work.</p>
+</div>
+<div class="paragraph">
+<p>Context7 resolved Playwright 1.64.1 but did not provide the requested CDP details; the diagnostic used the official <a href="https://playwright.dev/python/docs/api/class-browsertype#browser-type-connect-over-cdp">CDP API</a>. Cloudflare documents <a href="https://developers.cloudflare.com/cloudflare-challenges/troubleshooting/challenge-solve-issues/">network/challenge failures</a> and <a href="https://developers.cloudflare.com/cloudflare-challenges/reference/supported-browsers/">unsupported automated challenge environments</a>. These references explain limitations, not a guarantee that another network will be admitted.</p>
 </div>
 </div>
 </div>

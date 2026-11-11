@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "aa6af5d4bccd6e817037631f7d9e968e5f1badbb",
-  "checked_at_utc": "2026-11-11T10:25:29.369051+00:00",
+  "source_revision": "45eb0086961bcb330b80266dfbf1d00affa75094",
+  "checked_at_utc": "2026-11-11T12:30:54.172827+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -21,7 +21,7 @@
     },
     {
       "path": "haven/_attachments/README.md",
-      "sha256": "ef564ae37e5502824297bc69dc2a4182a561a03e975c77c108cd02063d5ae6e7"
+      "sha256": "cc92464136c019240aab0f0deb320f19516b9c15c21bb69f78763c05ff3ec103"
     },
     {
       "path": "haven/_attachments/config/defaults.yaml",
@@ -317,11 +317,11 @@
     },
     {
       "path": "haven/wishlist-browser.html",
-      "sha256": "c739b2a1f1f638983dbbb96478669903072c1255b3e39c460ce56e28042b2c15"
+      "sha256": "0b9af9fcef80b6b59035ffcecd87ba857bc54dd276400099224095e6250d9044"
     },
     {
       "path": "haven/wishlist-collection.html",
-      "sha256": "2362b0814e31d20c01902d4c914fb447afcb883dffb408f5cc1eaed2ed8936fa"
+      "sha256": "b748e69d6bb6d162b79759ca9aa3c804a1915ab7b383c2b5de3c01bc6db4ade1"
     },
     {
       "path": "haven/wishlist-design.html",
@@ -341,7 +341,7 @@
     },
     {
       "path": "haven/wishlist-operations.html",
-      "sha256": "ecdee1a16a2249d2bcf399e3506dbd2d665977a07110e8609a1e6d80ca634ab3"
+      "sha256": "3dd9e34fa0fca83622871920cb7bdfc0f8ec57d53a8621deb09cc460843c005a"
     },
     {
       "path": "haven/wishlist-service.html",
