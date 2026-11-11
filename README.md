@@ -14,9 +14,9 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 [H1.9 backup and recovery](docs/h1.9-backup-recovery.adoc) provides twice-daily encrypted Scaleway backups, exact snapshot restore verification, independent Healthchecks monitoring and separate operator retention. Production recovery was verified in a clean isolated runtime with no transport adapters or added model calls; the owner confirmed the missed-heartbeat email.
 
-**W3 source progress, 2026-11-11:** [Daily collection](docs/wishlist-collection.adoc) adds durable jobs, bounded HTTPS workers, Momenti/Fabini/iFantazie adapters, an Alza parser and price history with failure diagnostics. iFantazie passed one workstation read; direct Alza access returned HTTP 403, so live Alza extraction remains unverified. Local acceptance is separate from pilot activation and sustained collection. The existing pilot has not been changed by this source work.
+**W3 pilot progress, 2026-11-11:** [Daily collection](docs/wishlist-collection.adoc) is installed with schema 5, durable jobs, bounded HTTPS workers and price history. A real iFantazie read passed the installed-unit fixture through observation storage and Telegram detail formatting; current production entries correctly yielded no work because they were purchased/removed. Another daily cycle and owner-visible prices remain unaccepted.
 
-**Alza browser progress, 2026-11-11:** the [isolated Chromium/Xvfb path](docs/wishlist-browser.adoc) passed a complete workstation collection roundtrip with an accepted visible public price and Telegram detail formatting. Direct 403 handling is superseded when the optional browser service is selected. Pilot preparation/activation and OS-isolation acceptance remain pending.
+**Alza remains open:** the [isolated Chromium/Xvfb path](docs/wishlist-browser.adoc) passed the workstation roundtrip and is installed on the pilot with verified file/network restrictions and normal cleanup. The VPS still receives Cloudflare verification instead of the product. Neither installing a browser nor selecting its endpoint establishes functional Alza collection.
 
 ## Start locally
 

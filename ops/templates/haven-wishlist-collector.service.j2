@@ -2,7 +2,7 @@
 Description=Haven bounded daily wishlist collection
 Requisite=haven-wishlist.service
 After=haven-wishlist.service
-ConditionPathIsSocket=/run/haven-wishlist-collection/request.sock
+ConditionPathExists=/run/haven-wishlist-collection/request.sock
 
 [Service]
 Type=oneshot
