@@ -1,0 +1,8 @@
+abi <abi/4.0>,
+include <tunables/global>
+
+# Only the root-owned Chromium executable may create its renderer sandbox.
+# Host AppArmor user-namespace restrictions remain enabled for other programs.
+profile haven-wishlist-chromium /opt/haven-wishlist-browser/chromium/chrome-linux64/chrome flags=(unconfined) {
+  userns,
+}

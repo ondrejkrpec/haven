@@ -1,0 +1,80 @@
+= Alza: isolated Chromium on a virtual display
+
+Status, 2026-11-11: ordinary sandboxed Chromium on authenticated Xvfb successfully read a public Alza product on the workstation. The integrated path also passed: temporary wishlist intake → durable collection job → authenticated browser service → restricted HTTPS broker → accepted price observation → Telegram detail formatting. An immediate second scan produced no duplicate job/observation. No production profile, database, package or service was changed. Pilot installation and installed OS-isolation acceptance remain pending.
+
+This implements the path demonstrated by the historical link:wishlist-browser-feasibility.adoc[headed/Xvfb experiment]. A direct HTTP 403 is no longer the end of the implemented Alza collection path when the optional browser endpoint is selected. There is no CAPTCHA interaction, stealth plugin, modified browser identity, account login or reuse of the owner's browser/session.
+
+== Data flow and trust
+
+`haven-collector` still obtains jobs from the sole domain writer. For adapter `alza-public-price-v1`, its explicit optional `browser` endpoint selects `haven-wishlist-browser.service`; other shops retain the bounded direct fetch worker. The browser authenticates the collector UID before reading the strict JSON frame; the collector verifies the browser service UID before sending. Every browser request binds the exact Alza URL and job digest. Domain completion still rechecks job/attempt, generation, entry version, lease and owner-scoped offer.
+
+The separate `haven-browser` identity has no wishlist/Telegram/model/backup data access or domain socket group. The systemd unit uses `PrivateNetwork=yes`: its only IP listener is its own loopback proxy, and it has no direct Internet route. That proxy authenticates `haven-egress` over a separately permissioned Unix socket. The egress service accepts only the browser UID and HTTPS CONNECT to a fixed set of Alza hosts. It resolves all answers, rejects nonpublic/special destinations, connects the checked numeric sockaddr and relays browser TLS unchanged. Chromium retains its original-host SNI and certificate verification.
+
+The browser allows only GET/HEAD requests to `www.alza.cz`, `cdn.alza.cz`, `image.alza.cz`, `webapi.alza.cz` and `c.alza.cz`; main-frame navigation must retain the requested exact product identity. Service workers, WebSockets and downloads are disabled. The broker independently checks destination and port, so route hooks are not the network boundary. The network namespace and separate UID/cgroup are deployment requirements; the same-UID workstation integration establishes wiring, not production OS isolation.
+
+== Lifetime and resource bounds
+
+One browser job runs at a time. Each job creates a new nonpersistent Chromium context, a temporary home/cache and an Xvfb display with a private MIT-MAGIC-COOKIE-1 file. Xvfb has no TCP listener. Browsers, display authorization and temporary data are closed/removed after the job; nothing is added to application backups or reused as login state.
+
+The renderer has a 60-second internal budget, a 65-second external process budget, a 70-second collector IPC deadline and the existing 120-second domain lease. The daemon admits at most two IPC connections. The egress broker admits at most eight concurrent tunnels, limits a tunnel to 16 MiB and 75 seconds, and limits each 75-second window to 64 connections/64 MiB. HTML extraction retains the 4 MiB bound. The systemd browser limit is 1536 MiB/256 tasks/one CPU; the broker limit is 128 MiB/48 tasks/one-quarter CPU. These configured bounds are not measurements of pilot headroom.
+
+Chromium may detach child process groups. Cleanup therefore tracks descendants by PID/start time and, in production, sweeps only the exact `haven-wishlist-browser.service` cgroup after a worker ends. It never sweeps a shared developer/user cgroup or another service. Production daemon startup requires that exact managed cgroup; normal execution retains `chromium_sandbox=True` and never adds `--no-sandbox`. Service shutdown additionally kills the complete cgroup.
+
+The private-network browser unit and public-network broker run independently of the existing wishlist writer and interpreter. A lost browser reply cannot write SQLite: only the collector's still-current domain completion can do that. Failure remains bounded and the expired lease is reconciled by the existing scheduler. The collector's service budget allows up to twenty sequential browser jobs; timers do not start parallel copies of the same oneshot unit.
+
+== Public price validation
+
+`alza-public-price-v1` requires an exact JSON-LD Product/Offer, SKU, CZK, recognized availability and explicit `NewCondition`. Member/quantity offers, conflicting offers and unknown query/variant changes are refused. The primary DOM price box must be unique and explicitly use the observed public `ads-pb--basic` layout; member/code/login/instalment labels are refused.
+
+The accepted amount is the public gross price shown in that primary box, excluding strike-through and VAT-exclusive prices. Decimal displays must match metadata exactly. A whole-crown display must equal half-up rounding of the structured amount. This handles the observed fractional-metadata/whole-crown-display difference without silently using a cheaper metadata figure. Unrecognized or inconsistent layouts remain failures. Checkout, coupon, shipping and future-layout guarantees are still absent; observations retain `conditions_verification=not_verified`.
+
+Direct Alza HTML, if accessible, uses the same public-price validator. When no browser endpoint is selected, direct access can still return 403. The earlier JSON-LD-only adapter is superseded; old completed receipts/history remain intact, while an outstanding old-version job cannot admit a new-version result.
+
+== Explicit preparation
+
+link:../config/wishlist-browser-runtime.json[The runtime pin] fixes Playwright 1.64.1 and Linux x86_64 Chromium 156.0.8078.4/revision 1248 with a SHA-256 for the complete official archive. The downloaded archive was compared against all 301 cached browser files used by the successful experiment. Other architectures need a separate reviewed pin. link:../requirements-browser.txt[The optional dependency lock] is separate from coordinator/public-check dependencies.
+
+`ops/wishlist-browser.yml` requires an explicit private inventory, `haven_browser_install_authorized: true` and a local `haven_browser_chromium_archive` matching that digest. It creates independent non-login accounts, builds a separate hash-pinned environment under an unprivileged build account, freezes `/opt/haven-wishlist-browser` as root-owned files and installs only the declared public modules. It neither overwrites the active domain runtime nor starts/enables the browser units.
+
+Preparation refuses running browser services and incompatible in-place runtime/dependency replacements. An apt simulation refuses planned existing-package upgrades/removals; the install uses the current package indexes, `--no-upgrade` and `--no-remove`. It does not refresh repositories or authorize general OS maintenance. Package availability and this install path still require Ubuntu/pilot verification.
+
+Ubuntu's user-namespace restriction remains enabled. The staged AppArmor profile grants user-namespace admission only to the new root-owned Chromium executable so Chromium can create its renderer sandbox; it does not disable global AppArmor/namespace policy or change existing profiles. This scoped profile still needs live parser/sandbox acceptance on the target host.
+
+After preparation and authorized activation, configure the collector endpoint explicitly:
+
+[source,json]
+----
+{
+  "socket": "/run/haven-wishlist-collection/request.sock",
+  "service_uid": 2401,
+  "browser": {
+    "socket": "/run/haven-wishlist-browser/request.sock",
+    "service_uid": 2405
+  }
+}
+----
+
+IDs are synthetic. The domain UID and browser UID must be distinct. The W4 preparation renderer supports `haven_wishlist_browser_enabled: true` after the browser identity/group exists; otherwise it emits no browser endpoint. W3 activation still requires its schema-5-compatible backup/migration acceptance. Browser preparation alone does not activate daily collection or change Nora's independent native guard.
+
+Before pilot acceptance, verify actual UID/group denial, private network namespace, denied private destinations, scoped AppArmor sandbox startup, timeout/descendant cleanup and memory alongside the current services/backups. Start only the two browser-related units, perform one bounded read under the collector identity, then verify the complete current domain/Telegram path and repeated collection. Preserve the distinction between a successful source read and day-spaced operational stability.
+
+== Verification and evidence
+
+The synthetic suite is `.venv/bin/python -m unittest tests.test_wishlist_browser tests.test_wishlist_fetch tests.test_wishlist_collection tests.test_wishlist_operations -v`. It exercises public-price disagreement, member/used/variant rejection, peer credentials before DNS, pinned proxy forwarding to a temporary test server, transfer limits, worker cancellation, PID reuse/cgroup exclusion and systemd unit parsing. It never installs Playwright, opens a shop, uses credentials or contacts a model.
+
+link:../research/w3/browser-acceptance.json[The local integration receipt] records exact source hashes, browser/archive identity, direct and integrated outcomes, historical fixture errors and limits. Raw DOM, screenshots, actual product details and temporary SQLite files stay outside public Git/build inputs. No successful local run establishes installed production identities or network namespaces.
+
+The retained link:../research/w3/browser_roundtrip.py[opt-in roundtrip runner] takes an explicit local executable configuration, one reviewed Alza target JSON and a new short private work directory outside the repository. It deliberately uses same-UID temporary services, never production accounts. Under the separately pinned browser Python, run:
+
+[source,sh]
+----
+timeout 90 "$WISHLIST_BROWSER_PYTHON" research/w3/browser_roundtrip.py \
+  --config "$WISHLIST_BROWSER_CONFIG" --target "$WISHLIST_BROWSER_TARGET" \
+  --work "$WISHLIST_BROWSER_WORK"
+----
+
+The target is exactly `{"url":"REVIEWED_HTTPS_PRODUCT_URL"}`. The runner retains private result/SQLite files only in that fresh work directory and reports accepted-observation and immediate-repeat counts. Public checks never invoke it against a shop. It is not a way to bypass the production daemon's cgroup/identity requirements.
+
+Context7 resolved Playwright 1.64.1 but did not return the needed API sections; the implementation used the exact installed API and official https://playwright.dev/python/docs/api/class-browsertype[launch reference], https://playwright.dev/python/docs/network[network interception] and https://playwright.dev/python/docs/docker[non-root sandbox guidance]. Browser contexts separate cookies; OS identities, network namespaces and process groups provide the other boundaries.
+
+Context7 had no ansible-core 2.21.5 version; preparation also uses the official https://docs.ansible.com/projects/ansible-core/2.21/collections/ansible/builtin/user_module.html[2.21 user], https://docs.ansible.com/projects/ansible-core/2.21/collections/ansible/builtin/unarchive_module.html[archive] and https://docs.ansible.com/projects/ansible-core/2.21/collections/ansible/builtin/command_module.html[argv] references, including explicit group append semantics. Local syntax/lint acceptance does not establish target package or AppArmor availability.

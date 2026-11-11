@@ -1,0 +1,17 @@
+= ADR 0017: Network-isolated Alza virtual browser
+
+Date: 2026-11-11. Status: accepted for source/local integration; installed pilot acceptance remains pending.
+
+== Context
+
+Direct Alza requests return 403. Fresh ordinary Chromium on Xvfb can read the product, but merely running a browser inside the ordinary collector would expose a larger network/process surface and would not establish safe price semantics.
+
+== Decision
+
+Use a separate UID and systemd browser service with a private network namespace. A UID-authenticated Unix broker provides bounded CONNECT only to checked public Alza destinations, preserving native browser TLS. Keep fresh profiles, the Chromium sandbox, authenticated Xvfb and fixed resource/process limits. Domain completion remains the only admission of collected state.
+
+Validate exact new-product JSON-LD against the unique visible public gross-price box. Store its visible amount only when decimal or whole-crown rounding agrees; reject membership, used goods, mismatches and unknown layouts. Keep condition uncertainty explicit.
+
+== Consequences
+
+Two optional services and a separate pinned browser environment are required. The coordinator, interpreter and existing writer credentials/permissions remain separate. A scoped AppArmor profile admits the new executable's renderer namespaces without disabling host policy. Detached Chromium children need PID/start-time and service-cgroup cleanup. Workstation integration is accepted separately from target-host namespace, resource, recovery and repeated-collection acceptance.

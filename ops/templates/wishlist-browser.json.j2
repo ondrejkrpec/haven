@@ -1,0 +1,4 @@
+{{ {'socket': '/run/haven-wishlist-browser/request.sock', 'socket_gid': haven_browser_group | int,
+    'client_uid': haven_browser_collector_uid | int, 'egress_socket': '/run/haven-wishlist-egress/request.sock',
+    'egress_uid': haven_browser_egress_uid | int, 'python': '/opt/haven-wishlist-browser/venv/bin/python',
+    'chromium': '/opt/haven-wishlist-browser/chromium/chrome-linux64/chrome', 'xvfb': '/usr/bin/Xvfb', 'xauth': '/usr/bin/xauth'} | to_json }}
