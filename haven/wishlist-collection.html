@@ -120,6 +120,10 @@
     
   </li>
   <li>
+    <a href="wishlist-browser.html">Alza isolated virtual browser</a>
+    
+  </li>
+  <li>
     <a href="wishlist-language.html">Wishlist W5 bounded natural conversation</a>
     
   </li>
@@ -197,6 +201,10 @@
   </li>
   <li>
     <a href="adr/0016-durable-wishlist-collection.html">ADR 0016: Durable wishlist collection</a>
+    
+  </li>
+  <li>
+    <a href="adr/0017-isolated-alza-browser.html">ADR 0017: Isolated Alza browser</a>
     
   </li>
 </ul>
@@ -332,8 +340,8 @@
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>www.alza.cz</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>alza-jsonld-v1</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Exact-offer JSON-LD with explicit <code>NewCondition</code>; direct access remains blocked in the live workstation probe.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>alza-public-price-v1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exact new-product JSON-LD plus matching primary visible gross price; optional isolated virtual browser.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Other hosts</p></td>
@@ -347,6 +355,9 @@
 </div>
 <div class="paragraph">
 <p>Adapter extension, 2026-11-11: one public product from each requested shop was inspected on the workstation, then the actual bounded fetch worker was exercised once per shop. iFantazie returned HTTP 200 and an accepted microdata candidate. Alza returned HTTP 403 and an explicit blocked result with no price. Alza parsing is verified only with synthetic structured pages; this extension does not prove live Alza extraction, source access from the VPS, repeated collection or price conditions. There is no browser/challenge fallback. <a href="_attachments/research/w3/shop-adapters.json" class="xref attachment">The adapter receipt</a> retains source hashes, probe metadata and verification scope; raw captures and real product details remain outside public sources. Historical <a href="wishlist-browser-feasibility.html" class="xref page">browser experiments</a> remain a separate research result.</p>
+</div>
+<div class="paragraph">
+<p>The subsequent <a href="wishlist-browser.html" class="xref page">isolated Chromium/Xvfb integration</a> supersedes the earlier Alza limitation above: the complete workstation domain/collector/browser/price/reply path passed with a real product. The optional browser endpoint must be selected explicitly; pilot installation and day-spaced live acceptance remain pending. Non-browser collection and the historical direct-403 receipt retain their original scope.</p>
 </div>
 <div class="paragraph">
 <p>Every stored observation has <code>conditions_verification=not_verified</code>. Structured data is an observed offer candidate, not independent verification of visible coupons, membership, shipping or checkout conditions. W3 adds no deal calculations, buying recommendations or notification summaries. Logs contain fixed reasons and job IDs, never raw pages, source URLs, product details or exception text.</p>

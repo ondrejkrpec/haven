@@ -16,6 +16,8 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 **W3 source progress, 2026-11-11:** [Daily collection](docs/wishlist-collection.adoc) adds durable jobs, bounded HTTPS workers, Momenti/Fabini/iFantazie adapters, an Alza parser and price history with failure diagnostics. iFantazie passed one workstation read; direct Alza access returned HTTP 403, so live Alza extraction remains unverified. Local acceptance is separate from pilot activation and sustained collection. The existing pilot has not been changed by this source work.
 
+**Alza browser progress, 2026-11-11:** the [isolated Chromium/Xvfb path](docs/wishlist-browser.adoc) passed a complete workstation collection roundtrip with an accepted visible public price and Telegram detail formatting. Direct 403 handling is superseded when the optional browser service is selected. Pilot preparation/activation and OS-isolation acceptance remain pending.
+
 ## Start locally
 
 Prerequisites: a POSIX shell, Git 2.28 or newer, and `sha256sum`. Configuration validation needs Python 3.12+; the complete public checks also need Node.js/npm and Linux check tools. Podman is used only by optional H0.1 probes. Use an existing checkout, or clone the public repository:

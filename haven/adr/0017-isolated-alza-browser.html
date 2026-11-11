@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ADR 0017: Network-isolated Alza virtual browser · Haven</title>
+  <link rel="stylesheet" href="../../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="../index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="../index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="../local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="../configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="../h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="../h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="../h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="../h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="../h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="../h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="../h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="../h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="../h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="../documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="../architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="../wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="../wishlist-api.html">Wishlist interface and implementation units</a>
+    
+  </li>
+  <li>
+    <a href="../wishlist-domain.html">Wishlist W1 domain state</a>
+    
+  </li>
+  <li>
+    <a href="../wishlist-service.html">Wishlist W2 local service and Telegram ingress</a>
+    
+  </li>
+  <li>
+    <a href="../wishlist-collection.html">Wishlist W3 daily collection</a>
+    
+  </li>
+  <li>
+    <a href="../wishlist-browser.html">Alza isolated virtual browser</a>
+    
+  </li>
+  <li>
+    <a href="../wishlist-language.html">Wishlist W5 bounded natural conversation</a>
+    
+  </li>
+  <li>
+    <a href="../wishlist-operations.html">Wishlist W4 service preparation and recovery</a>
+    
+  </li>
+  <li>
+    <a href="../family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="../h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+  <li>
+    <a href="0013-wishlist-local-admission.html">ADR 0013: Wishlist local admission</a>
+    
+  </li>
+  <li>
+    <a href="0014-wishlist-language-before-collection.html">ADR 0014: Wishlist conversation before collection</a>
+    
+  </li>
+  <li>
+    <a href="0015-reversible-wishlist-removal.html">ADR 0015: Reversible wishlist removal</a>
+    
+  </li>
+  <li>
+    <a href="0016-durable-wishlist-collection.html">ADR 0016: Durable wishlist collection</a>
+    
+  </li>
+  <li>
+    <a href="0017-isolated-alza-browser.html">ADR 0017: Isolated Alza browser</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="../wishlist-feasibility.html">Wishlist direct-fetch feasibility</a>
+    
+  </li>
+  <li>
+    <a href="../wishlist-browser-feasibility.html">Wishlist browser mode experiments</a>
+    
+  </li>
+  <li>
+    <a href="../research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="../h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="../h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="../h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="../h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="../h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>ADR 0017: Network-isolated Alza virtual browser</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Date: 2026-11-11. Status: accepted for source/local integration; installed pilot acceptance remains pending.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_context"><a class="anchor" href="#_context"></a>Context</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Direct Alza requests return 403. Fresh ordinary Chromium on Xvfb can read the product, but merely running a browser inside the ordinary collector would expose a larger network/process surface and would not establish safe price semantics.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_decision"><a class="anchor" href="#_decision"></a>Decision</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use a separate UID and systemd browser service with a private network namespace. A UID-authenticated Unix broker provides bounded CONNECT only to checked public Alza destinations, preserving native browser TLS. Keep fresh profiles, the Chromium sandbox, authenticated Xvfb and fixed resource/process limits. Domain completion remains the only admission of collected state.</p>
+</div>
+<div class="paragraph">
+<p>Validate exact new-product JSON-LD against the unique visible public gross-price box. Store its visible amount only when decimal or whole-crown rounding agrees; reject membership, used goods, mismatches and unknown layouts. Keep condition uncertainty explicit.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_consequences"><a class="anchor" href="#_consequences"></a>Consequences</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Two optional services and a separate pinned browser environment are required. The coordinator, interpreter and existing writer credentials/permissions remain separate. A scoped AppArmor profile admits the new executable&#8217;s renderer namespaces without disabling host policy. Detached Chromium children need PID/start-time and service-cgroup cleanup. Workstation integration is accepted separately from target-host namespace, resource, recovery and repeated-collection acceptance.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>

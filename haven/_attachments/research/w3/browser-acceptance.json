@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-11-11T10:21:47.825453+00:00",
+  "source_baseline": "dac698a528827849733ca2ba30c7a8d5e179f8e5",
+  "scope": "source and same-UID workstation integration; no pilot deployment",
+  "python": "3.14.7",
+  "browser": {
+    "playwright": "1.64.1",
+    "chromium": "156.0.8078.4",
+    "revision": "1248",
+    "mode": "headed on authenticated temporary Xvfb",
+    "chromium_sandbox_requested": true,
+    "fresh_context": true,
+    "archive_sha256": "43fd31766c7533a02dda2ded5ad50c2f861cd5400be7509c0abad71129f79d79",
+    "cached_files_compared_with_archive": 301
+  },
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest tests.test_wishlist_browser tests.test_wishlist_fetch tests.test_wishlist_collection tests.test_wishlist_operations -q",
+      "result": "passed",
+      "tests": 56
+    }
+  ],
+  "live_workstation": {
+    "direct_browser_http": 200,
+    "initial_dom_sha256": "c27b1050c90d30ab1e22cd913657bc236c25de68d2d3cb010c2a6af0691ce72d",
+    "versioned_runner": "research/w3/browser_roundtrip.py",
+    "command": "timeout 90 $WISHLIST_BROWSER_PYTHON research/w3/browser_roundtrip.py --config $WISHLIST_BROWSER_CONFIG --target $WISHLIST_BROWSER_TARGET --work $WISHLIST_BROWSER_WORK",
+    "final_result": "passed",
+    "accepted_observations": 1,
+    "immediate_repeat_jobs": 0,
+    "price_matches_checked_visible_gross_price": true,
+    "telegram_detail_contains_accepted_price": true,
+    "model_calls": 0,
+    "raw_pages_and_product_details_published": false,
+    "same_uid_fixture": true
+  },
+  "earlier_failures": [
+    "Prototype normal/async temporary-directory context composition was corrected before successful integration",
+    "A public-check run found the not-yet-created documentation receipt; the declared input is now present",
+    "The initial playbook lint rejected an unquoted YAML argument; quoting was corrected"
+  ],
+  "required_delivery_check": ".venv/bin/python -m scripts.check via committed-HEAD pre-push and main publication hooks",
+  "production_changed": false,
+  "remaining": [
+    "pilot SSH access and actual installation",
+    "installed distinct-UID and private-network/cgroup enforcement",
+    "target AppArmor sandbox and package availability without OS upgrades",
+    "measured resource headroom alongside backup and interpreter",
+    "schema-five collection activation/recovery and day-spaced stability"
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "ef564ae37e5502824297bc69dc2a4182a561a03e975c77c108cd02063d5ae6e7"
+    },
+    {
+      "path": "config/wishlist-browser-runtime.json",
+      "sha256": "c3066399915eacf6c6481b4d8e5a2202c903747cd4305751ccf1f0c78cc9354f"
+    },
+    {
+      "path": "docs/adr/0017-isolated-alza-browser.adoc",
+      "sha256": "0a336eb9eb524bc0d40b4f9122f49850a735da50e0151f3d0f5181a74ce99ad6"
+    },
+    {
+      "path": "docs/nav.adoc",
+      "sha256": "b92c7415522efa21d4c1be8e884d3d94033a83a13128b05fc873cfdeb1233803"
+    },
+    {
+      "path": "docs/wishlist-browser.adoc",
+      "sha256": "f64f59d560dec5463343657be3dd6b351e8fac740badf99dea126ee7fe867e72"
+    },
+    {
+      "path": "docs/wishlist-collection.adoc",
+      "sha256": "a7a2cc4502e13313e815d15f5f626c41dfc05c9173c3a92929158ebbcf291730"
+    },
+    {
+      "path": "ops/tasks/wishlist-install.yml",
+      "sha256": "b8819f4cfd3d39b6928caddd91ce7e4a5d0acaf2e9c3619a8f352572376d85d3"
+    },
+    {
+      "path": "ops/templates/haven-wishlist-browser.apparmor.j2",
+      "sha256": "8a2a880cc6db4bddb7f45791f5f9ac61cad0cb1de458c82064fb96fb6a325ab7"
+    },
+    {
+      "path": "ops/templates/haven-wishlist-browser.service.j2",
+      "sha256": "5e16f4e3ab2a84283ea2407751a13724221e93e7cce96fd5f89f30ec2210809c"
+    },
+    {
+      "path": "ops/templates/haven-wishlist-collector.service.j2",
+      "sha256": "825be6db6841d4d5f9e4386df5ae16812109e8d2ed90d201b97d8563aaf9569d"
+    },
+    {
+      "path": "ops/templates/haven-wishlist-egress.service.j2",
+      "sha256": "ada29c03e802cdbcf3fba9a40489a50722fa631a346d757a5b294e7fbe29fa21"
+    },
+    {
+      "path": "ops/templates/wishlist-browser.json.j2",
+      "sha256": "871e19b231aebffccccbed1ff211beb7664c5d3773fea41d206fb042c4156112"
+    },
+    {
+      "path": "ops/templates/wishlist-collector.json.j2",
+      "sha256": "f725675762bcd07a51fc76db68fd2034814b65d75a725b27e8a7d10b9063d463"
+    },
+    {
+      "path": "ops/templates/wishlist-egress.json.j2",
+      "sha256": "a9e4fa0ce91a65b9599fe1f8e45a86d23a0b8216294c157aff291c28cb5a72a2"
+    },
+    {
+      "path": "ops/wishlist-browser.yml",
+      "sha256": "2185f05a2ac07d23ab5ed273eeade890b5adb36b8ba938e3b968b0f98e772c21"
+    },
+    {
+      "path": "requirements-browser.txt",
+      "sha256": "67ded0e93e777f4159131ab8843b78cc115cbb3a815c025777fad07af6fadce8"
+    },
+    {
+      "path": "research/w3/browser_roundtrip.py",
+      "sha256": "12fb904d736df1d78160d680c0906a3e56be020821f8d7bf369463f9a3d0b598"
+    },
+    {
+      "path": "scripts/build_docs.py",
+      "sha256": "bf50d93b0dc220fc138e3efecfb802cfe590866487481b33492a80a262e8fa2e"
+    },
+    {
+      "path": "scripts/check.py",
+      "sha256": "379b6385ca23d02d11152024c655c9760e1e47b4ca0e0759607d90aaf2b7b807"
+    },
+    {
+      "path": "scripts/wishlist_alza.py",
+      "sha256": "fa301b026c237bb16e42eb95b526905a05db0cead864d8343636b53587c52a8f"
+    },
+    {
+      "path": "scripts/wishlist_browser.py",
+      "sha256": "3bb40876860a97b5f10cc2e35628b51d60155582b4ad81e391c60ad6af8520b5"
+    },
+    {
+      "path": "scripts/wishlist_collection.py",
+      "sha256": "f58b060632c471576cff039133bbe5d2980a7b4ef8f8d87aaecf45005de43f7c"
+    },
+    {
+      "path": "scripts/wishlist_collector.py",
+      "sha256": "4c8a24d53aa801de7bc3fe24f1c289f7ae3aaa3216e3536cc5004d751b36f732"
+    },
+    {
+      "path": "scripts/wishlist_egress.py",
+      "sha256": "07b9d937c12f1d7860505772be667afde8c47aaf9c2c721334c16295c397b8ca"
+    },
+    {
+      "path": "scripts/wishlist_fetch.py",
+      "sha256": "47da2acd46d35ab12cd3b2e3c296e380cc24ae59b83dd91c9a3867d5c6e544ec"
+    },
+    {
+      "path": "scripts/wishlist_process.py",
+      "sha256": "90194a0f8c6ae66be5a0f4ae60167e255fd344b182f9ca52c2cf0824365b10c1"
+    },
+    {
+      "path": "tests/test_wishlist_browser.py",
+      "sha256": "52457dbd9ea85bb8bf98ee500979a0f27d3852e65470779d1fd205858bce5357"
+    },
+    {
+      "path": "tests/test_wishlist_collection.py",
+      "sha256": "0713e7a201491a87cbf0aa5d14cc9a787acacf396f19d5194a921a5d6601ff6e"
+    },
+    {
+      "path": "tests/test_wishlist_fetch.py",
+      "sha256": "bc7bd358a21cf6aec9895186424d5cd0b8a3fe2620cc922f344754745960575a"
+    },
+    {
+      "path": "tests/test_wishlist_operations.py",
+      "sha256": "a31856352828e5af4ed93e60b4beaeccb060bdbd802bb7e4b7c92e3aa09b4cbf"
+    }
+  ]
+}
