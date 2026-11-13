@@ -1,6 +1,6 @@
 = Alza: isolated Chromium on a virtual display
 
-Status, 2026-11-11: the workstation roundtrip passed, and the pinned browser is now installed separately on the Ubuntu pilot. Installed UID/file restrictions, private networking, sandboxed Chromium startup and normal descendant cleanup passed. Alza on the VPS still returns a Cloudflare verification page. The browser's presence must not be reported as working production Alza collection; the execution environment decision remains open.
+Status, 2026-11-13: the pinned browser is installed separately on the Ubuntu pilot. Installed UID/file restrictions, private networking, sandboxed Chromium startup and normal descendant cleanup passed. Its normal VPS egress still returns Cloudflare verification. Two fresh-context reads using the exact installed renderer on that VPS succeeded through a temporary restricted workstation egress relay. Permanent egress and production collection acceptance remain open; the relay was removed after the experiment.
 
 This implements the path demonstrated by the historical link:wishlist-browser-feasibility.adoc[headed/Xvfb experiment]. The optional browser endpoint provides a second source path; it does not guarantee access from every network. There is no CAPTCHA interaction, stealth plugin, modified browser identity, account login or reuse of the owner's browser/session.
 
@@ -88,3 +88,19 @@ The installed source request returned HTTP 403. Disposable diagnostics identifie
 The existing adapter continues to fail visibly rather than inventing a price. A working source path from a suitable execution environment is still required before accepting Alza. Installing browser packages or passing workstation extraction is insufficient evidence for the VPS. Diagnostic units and temporary data are removed after inspection; no general OS update, firewall or Tailscale change is part of this work.
 
 Context7 resolved Playwright 1.64.1 but did not provide the requested CDP details; the diagnostic used the official https://playwright.dev/python/docs/api/class-browsertype#browser-type-connect-over-cdp[CDP API]. Cloudflare documents https://developers.cloudflare.com/cloudflare-challenges/troubleshooting/challenge-solve-issues/[network/challenge failures] and https://developers.cloudflare.com/cloudflare-challenges/reference/supported-browsers/[unsupported automated challenge environments]. These references explain limitations, not a guarantee that another network will be admitted.
+
+== Egress comparison, 2026-11-13
+
+Source baseline: `45eb0086961bcb330b80266dfbf1d00affa75094`. SHA-256 comparison matched the installed browser, egress and price-validation modules to that revision. The existing browser service returned HTTP 403 for the reviewed product. DNS returned only IPv4 addresses; the host's available IPv6 route therefore provided no alternative source path.
+
+Two separate disposable diagnostics allowed the observed Cloudflare origins and verification POSTs, then added the observed `hagen.challenges.cloudflare.com` dependency. Required verification resources loaded, but the product remained behind the visitor-verification page with no price box. Neither temporary allowlist was adopted in production.
+
+A further comparison kept sandboxed Chromium/Xvfb on the VPS and moved only its bounded HTTPS egress to the workstation through an SSH Unix-socket reverse forward. The workstation broker admitted only the local SSH UID and the declared public destinations. TLS remained end to end between Chromium and Alza. The disposable browser unit retained its private network, dedicated browser UID, private-data exclusions and resource limits. No workstation browser profile, site login or saved cookies were used.
+
+The diagnostic renderer returned HTTP 200 and a validated public offer. Two subsequent reads invoked the exact installed `scripts.wishlist_browser.render` with the original request policy and the original five-host broker allowlist. Both fresh profiles independently returned HTTP 200 and the same accepted public offer. The comparison demonstrates a working source-read path from the VPS through that network; it does not identify Cloudflare's decision rule or establish the future reliability of the workstation connection.
+
+The sanitized link:../research/w3/network-egress-acceptance.json[comparison receipt] records scope, module hashes and outcomes. Private drivers and detailed results remain in the instance repository. Temporary systemd units, Unix sockets and the SSH tunnel were stopped and removed. Production configuration and wishlist data remained unchanged, with no model calls or Telegram sends.
+
+Before activation, select an available permanent egress host and separately provision its restricted identity, authenticated transport and service lifecycle. The diagnostic used the existing administrator connection only for a bounded experiment; it is not an unattended deployment recipe. The complete domain/collector/Telegram path, relay loss/reconnect, restart, measured capacity and another daily cycle remain unaccepted. A workstation relay would defer collection whenever that machine sleeps, disconnects or stops running.
+
+Context7 resolved the pinned Playwright version but returned no matching routing documentation. This investigation used the official https://playwright.dev/python/docs/api/class-browsercontext#browser-context-route[routing reference] and https://playwright.dev/python/docs/api/class-page#page-goto[navigation reference], alongside the Cloudflare references above.
