@@ -88,5 +88,52 @@
     "measured resource headroom and forced-timeout cleanup",
     "another due daily cycle and owner-visible price acceptance"
   ],
-  "private_evidence": "explicit instance repository; no product details, personal host addresses, tokens or raw captures in public inputs"
+  "private_evidence": "explicit instance repository; no product details, personal host addresses, tokens or raw captures in public inputs",
+  "updated_at_utc": "2026-11-13T10:30:08.922233+00:00",
+  "vps_only_followup": {
+    "public_mobile_and_api_origin_statuses": [
+      403,
+      403,
+      403
+    ],
+    "anonymous_product_api_statuses": [
+      403,
+      403
+    ],
+    "mobile_header_api_statuses": [
+      403,
+      403
+    ],
+    "curl_cffi": {
+      "version": "0.16.1",
+      "profile": "chrome150",
+      "product_http_status": 403,
+      "router_http_status": 403,
+      "temporary_vendor_removed": true
+    },
+    "stable_chrome": {
+      "version": "157.0.8103.78",
+      "official_deb_sha256": "4d740636b5c96f687798602c5aad6a5a270f44dd02e48db0638ae77aa4867b1b",
+      "package_installed": false,
+      "native_launch_then_cdp": true,
+      "without_interaction_http_status": 403,
+      "after_reviewed_checkbox_http_status": 403,
+      "price_boxes": 0,
+      "temporary_executable_profile_and_package_removed": true
+    },
+    "explicit_cdn_ipv6": {
+      "original_hostname_tls_verified": true,
+      "normal_product_dns_unchanged": true,
+      "original_renderer_http_status": 403,
+      "native_browser_control_http_status": 403,
+      "application_route_hooks_disabled_in_control": true,
+      "after_reviewed_checkbox_price_boxes": 0
+    },
+    "earlier_fixture_failures": [
+      "PrivateTmp hid the initial HTTP-client fixture working directory; no request was made in that attempt.",
+      "The extracted stable-browser parent directories initially prevented executable validation under the dedicated UID; no source-read success is claimed for those attempts."
+    ],
+    "external_service_enrolled": false,
+    "working_vps_only_path_accepted": false
+  }
 }
