@@ -16,7 +16,7 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 **W3 pilot progress, 2026-11-11:** [Daily collection](docs/wishlist-collection.adoc) is installed with schema 5, durable jobs, bounded HTTPS workers and price history. A real iFantazie read passed the installed-unit fixture through observation storage and Telegram detail formatting; current production entries correctly yielded no work because they were purchased/removed. Another daily cycle and owner-visible prices remain unaccepted.
 
-**Alza remains open:** the [isolated Chromium/Xvfb path](docs/wishlist-browser.adoc) passed the workstation roundtrip and is installed on the pilot with verified file/network restrictions and normal cleanup. The VPS still receives Cloudflare verification instead of the product. Neither installing a browser nor selecting its endpoint establishes functional Alza collection.
+**Alza progress, 2026-11-13:** the [isolated Chromium/Xvfb path](docs/wishlist-browser.adoc) still receives Cloudflare verification through the VPS network. The exact installed renderer passed two fresh-context reads from the VPS through a temporary, restricted workstation egress relay. That relay was removed after the experiment; permanent egress, the domain/Telegram roundtrip and daily acceptance remain open.
 
 ## Start locally
 

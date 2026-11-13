@@ -259,7 +259,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-11: the workstation roundtrip passed, and the pinned browser is now installed separately on the Ubuntu pilot. Installed UID/file restrictions, private networking, sandboxed Chromium startup and normal descendant cleanup passed. Alza on the VPS still returns a Cloudflare verification page. The browser&#8217;s presence must not be reported as working production Alza collection; the execution environment decision remains open.</p>
+<p>Status, 2026-11-13: the pinned browser is installed separately on the Ubuntu pilot. Installed UID/file restrictions, private networking, sandboxed Chromium startup and normal descendant cleanup passed. Its normal VPS egress still returns Cloudflare verification. Two fresh-context reads using the exact installed renderer on that VPS succeeded through a temporary restricted workstation egress relay. Permanent egress and production collection acceptance remain open; the relay was removed after the experiment.</p>
 </div>
 <div class="paragraph">
 <p>This implements the path demonstrated by the historical <a href="wishlist-browser-feasibility.html" class="xref page">headed/Xvfb experiment</a>. The optional browser endpoint provides a second source path; it does not guarantee access from every network. There is no CAPTCHA interaction, stealth plugin, modified browser identity, account login or reuse of the owner&#8217;s browser/session.</p>
@@ -393,6 +393,50 @@
 </div>
 <div class="paragraph">
 <p>Context7 resolved Playwright 1.64.1 but did not provide the requested CDP details; the diagnostic used the official <a href="https://playwright.dev/python/docs/api/class-browsertype#browser-type-connect-over-cdp">CDP API</a>. Cloudflare documents <a href="https://developers.cloudflare.com/cloudflare-challenges/troubleshooting/challenge-solve-issues/">network/challenge failures</a> and <a href="https://developers.cloudflare.com/cloudflare-challenges/reference/supported-browsers/">unsupported automated challenge environments</a>. These references explain limitations, not a guarantee that another network will be admitted.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_egress_comparison_2026_11_13"><a class="anchor" href="#_egress_comparison_2026_11_13"></a>Egress comparison, 2026-11-13</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Source baseline: <code>45eb0086961bcb330b80266dfbf1d00affa75094</code>. SHA-256 comparison matched the installed browser, egress and price-validation modules to that revision. The existing browser service returned HTTP 403 for the reviewed product. DNS returned only IPv4 addresses; the host&#8217;s available IPv6 route therefore provided no alternative source path.</p>
+</div>
+<div class="paragraph">
+<p>Two separate disposable diagnostics allowed the observed Cloudflare origins and verification POSTs, then added the observed <code>hagen.challenges.cloudflare.com</code> dependency. Required verification resources loaded, but the product remained behind the visitor-verification page with no price box. Neither temporary allowlist was adopted in production.</p>
+</div>
+<div class="paragraph">
+<p>A further comparison kept sandboxed Chromium/Xvfb on the VPS and moved only its bounded HTTPS egress to the workstation through an SSH Unix-socket reverse forward. The workstation broker admitted only the local SSH UID and the declared public destinations. TLS remained end to end between Chromium and Alza. The disposable browser unit retained its private network, dedicated browser UID, private-data exclusions and resource limits. No workstation browser profile, site login or saved cookies were used.</p>
+</div>
+<div class="paragraph">
+<p>The diagnostic renderer returned HTTP 200 and a validated public offer. Two subsequent reads invoked the exact installed <code>scripts.wishlist_browser.render</code> with the original request policy and the original five-host broker allowlist. Both fresh profiles independently returned HTTP 200 and the same accepted public offer. The comparison demonstrates a working source-read path from the VPS through that network; it does not identify Cloudflare&#8217;s decision rule or establish the future reliability of the workstation connection.</p>
+</div>
+<div class="paragraph">
+<p>The sanitized <a href="_attachments/research/w3/network-egress-acceptance.json" class="xref attachment">comparison receipt</a> records scope, module hashes and outcomes. Private drivers and detailed results remain in the instance repository. Temporary systemd units, Unix sockets and the SSH tunnel were stopped and removed. Production configuration and wishlist data remained unchanged, with no model calls or Telegram sends.</p>
+</div>
+<div class="paragraph">
+<p>This comparison is not an activation plan. The diagnostic used the existing administrator connection only for a bounded experiment; it is not an unattended deployment recipe. A deployment requiring VPS-only operation still needs a working source path through that VPS network. An installation choosing an external relay would instead need an available egress host, a separately restricted identity, authenticated transport and service lifecycle; a workstation relay would defer collection whenever that machine sleeps, disconnects or stops running. The complete domain/collector/Telegram path, failure/reconnect, restart, measured capacity and another daily cycle remain unaccepted.</p>
+</div>
+<div class="paragraph">
+<p>Context7 resolved the pinned Playwright version but returned no matching routing documentation. This investigation used the official <a href="https://playwright.dev/python/docs/api/class-browsercontext#browser-context-route">routing reference</a> and <a href="https://playwright.dev/python/docs/api/class-page#page-goto">navigation reference</a>, alongside the Cloudflare references above.</p>
+</div>
+<div class="sect2">
+<h3 id="_vps_only_follow_up"><a class="anchor" href="#_vps_only_follow_up"></a>VPS-only follow-up</h3>
+<div class="paragraph">
+<p>The comparison was followed by bounded attempts without workstation egress. Normal anonymous requests to the public, mobile and API origins returned HTTP 403. Two observed read-only product API routes also returned 403; the router route remained blocked on both public/API origins with the mobile client&#8217;s expected non-secret headers. No account token or login was used.</p>
+</div>
+<div class="paragraph">
+<p>A separate hash-locked <code>curl_cffi==0.16.1</code> experiment used its <code>chrome150</code> profile, verified TLS, checked public destination addresses, manually validated redirects and a 4 MiB response limit. The product and router API returned 403. That research dependency was removed from the VPS and was not added to application requirements.</p>
+</div>
+<div class="paragraph">
+<p>An official stable Chrome 157.0.8103.78 Debian package was verified against Google&#8217;s package-index SHA-256 and extracted into a separate temporary root. No package installation or existing-browser replacement occurred. A temporary executable-specific AppArmor user-namespace admission preserved the global restriction. Ordinary sandboxed Chrome attached through CDP remained on HTTP 403, both without interaction and after one visually reviewed verification-checkbox click. Earlier fixture failures stopped before navigation because the extracted parent directories were not traversable by the dedicated browser UID; they are recorded separately from these completed source checks. The profile, extracted browser and disposable units were removed.</p>
+</div>
+<div class="paragraph">
+<p>Finally, an explicit public CDN IPv6 connection completed TLS for the original Alza hostname despite the missing Alza AAAA record. Both the unchanged renderer and a separate ordinary-browser control through that IPv6 path remained blocked. The latter removed application request-routing hooks while retaining the peer-authenticated, destination-bounded broker, and still obtained no product after the reviewed checkbox click. This was a diagnostic address override, not a production resolver change. Cloudflare&#8217;s <a href="https://developers.cloudflare.com/network/ipv6-compatibility/">IPv6 documentation</a> describes DNS advertisement separately from transport; it does not establish support or reliability for this override.</p>
+</div>
+<div class="paragraph">
+<p>These negative results narrow the remaining work to a usable source-access path. They do not establish that all possible VPS-only clients fail, nor that a different proxy or address would succeed. The production Alza adapter remains unaccepted, and no external service was enrolled during these experiments.</p>
+</div>
 </div>
 </div>
 </div>
