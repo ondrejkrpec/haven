@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist W4: accounting, retention and collection monitoring · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-api.html">Wishlist interface and implementation units</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-domain.html">Wishlist W1 domain state</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-service.html">Wishlist W2 local service and Telegram ingress</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-collection.html">Wishlist W3 daily collection</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-browser.html">Alza isolated virtual browser</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-language.html">Wishlist W5 bounded natural conversation</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-operations.html">Wishlist W4 service preparation and recovery</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-observability.html">Wishlist W4 accounting, retention and monitoring</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+  <li>
+    <a href="adr/0013-wishlist-local-admission.html">ADR 0013: Wishlist local admission</a>
+    
+  </li>
+  <li>
+    <a href="adr/0014-wishlist-language-before-collection.html">ADR 0014: Wishlist conversation before collection</a>
+    
+  </li>
+  <li>
+    <a href="adr/0015-reversible-wishlist-removal.html">ADR 0015: Reversible wishlist removal</a>
+    
+  </li>
+  <li>
+    <a href="adr/0016-durable-wishlist-collection.html">ADR 0016: Durable wishlist collection</a>
+    
+  </li>
+  <li>
+    <a href="adr/0017-wishlist-observability-retention.html">ADR 0017: Wishlist aggregates and replay retention</a>
+    
+  </li>
+  <li>
+    <a href="adr/0017-isolated-alza-browser.html">ADR 0017: Isolated Alza browser</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="wishlist-feasibility.html">Wishlist direct-fetch feasibility</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-browser-feasibility.html">Wishlist browser mode experiments</a>
+    
+  </li>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Wishlist W4: accounting, retention and collection monitoring</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Status, 2026-11-15: source implementation and synthetic acceptance. Pilot activation, installed-unit restrictions and external alert delivery must be recorded separately. The owner has accepted the saved Fabini and Intimissimi prices in Telegram; the second real daily observations remain W3 work.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_independent_aggregate_projection"><a class="anchor" href="#_independent_aggregate_projection"></a>Independent aggregate projection</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>scripts.wishlist_observability</code> opens only the existing schema-5 domain database using SQLite URI <code>mode=ro</code>, query-only mode, a one-second lock timeout and a five-second query budget. It never migrates or creates a database. It exports only counts, fixed source names and validated UTC timestamps. Product names, prices, URLs, owner/chat/request IDs, prompts, responses, fingerprints and model credentials do not cross this boundary.</p>
+</div>
+<div class="paragraph">
+<p><code>haven-wishlist-observability.service</code> runs as the existing domain identity with a read-only filesystem except <code>/var/lib/haven-wishlist-observability</code>. It has no IP network and hides coordinator/model/backup roots. Its primary group permits the existing dashboard identity to read the atomic mode-0640 aggregate file. The existing dashboard still cannot access domain files or interpreter credentials; it consumes the separately whitelisted projection. An unavailable measurement is not a zero. Snapshots refresh every minute and expire after two minutes.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_interpretation_accounting"><a class="anchor" href="#_interpretation_accounting"></a>Interpretation accounting</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Count attempts separately from confirmed provider calls. Each prepared attempt is recorded before model I/O; it may fail before reaching the provider. Input/output tokens are summed only when both are known nonnegative integers. The dashboard shows measured and unmeasured attempts separately, including failed attempts. Valid correlated usage is recorded before decision/lease admission, so a rejected proposal does not lose its available usage. Provider errors/timeouts may still lack usage; no token estimate is invented. No DB transaction spans model I/O.</p>
+</div>
+<div class="paragraph">
+<p>These are retained local lifetime counters, not a provider invoice, available subscription quota or complete cost measurement. The interpreter&#8217;s measured tokens and coordinator&#8217;s Hermes session counters remain separate. Costs and remaining quota are unknown. Deterministic wishlist commands and collection do not call the model.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_retention_policy"><a class="anchor" href="#_retention_policy"></a>Retention policy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The domain writer runs one short atomic batch at startup and hourly. <code>scripts.wishlist_retention</code> compacts at most 100 records per category per pass. Complete domain/Telegram replies and prepared prompts older than 30 days are replaced with small replay tombstones or empty payloads. Expired conversations lose their text; their generation survives. Expired clarification tokens and old completed collection payloads are removed in bounded batches.</p>
+</div>
+<div class="paragraph">
+<p>Request IDs, owner binding, fingerprints, attempt identity, usage measurements and collection result hashes survive. Events, purchases, entries, offers, price observations, schedules and job identity/history are retained. Old identical deliveries receive an explicit unavailable-history response and never reapply the original mutation or invoke the model. Changed payloads still conflict. Failed/abandoned language requests receive a Telegram tombstone before prompt compaction. Running/recent work is not compacted. This is logical payload retention, not physical secure erasure or a constant-size database guarantee; deduplication metadata and price history still grow. Backups retain their independently configured history. No VACUUM, history deletion or database replacement occurs.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_collection_health_and_alerting"><a class="anchor" href="#_collection_health_and_alerting"></a>Collection health and alerting</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Every authenticated valid collection claim records a durable scan time, including an idle scan. A freshly rendered dashboard is not evidence that collection ran. Health fails when the aggregate is missing/future/older than 120 seconds, the scan is missing/future/older than 30 minutes, retention is missing/future/older than two hours, a lease has expired, or an active offer is more than an hour overdue. Host-wide server retry deadlines are respected when calculating overdue work. A current blocked/failed/unsupported active source also fails health; previous good prices remain intact.</p>
+</div>
+<div class="paragraph">
+<p>An explicit <code>haven_wishlist_deferred_hosts</code> list can exclude known deferred sources from source-failure/overdue alarms. They remain visible in the dashboard. Nothing is excluded by default. The pilot&#8217;s owner-deferred Alza can be listed as <code>www.alza.cz</code>; this is not acceptance of that source. A stuck expired job still fails the overall execution check.</p>
+</div>
+<div class="paragraph">
+<p>The existing independent root monitor enables these checks only when backup settings explicitly contain <code>wishlist_collection_enabled: true</code>, together with <code>wishlist_enabled: true</code>. It reads the protected aggregate and refuses its existing service-success Healthchecks ping on collection failure; its existing error path sends <code>/fail</code>. A stopped monitor or prolonged maintenance expires externally. Nora, model availability and Telegram are not required to detect or report failure. This reuses the existing service check; it does not create a second external account/check or a new messaging integration. External alert delivery and owner receipt need live acceptance, independently of a unit test or successful ping.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_activate_an_existing_installation"><a class="anchor" href="#_activate_an_existing_installation"></a>Activate an existing installation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>First deploy the checked domain modules under the existing maintenance/pause recovery procedure with a fresh accepted backup. Preserve all writer/timer states, including any isolated W3 acceptance fixture. No schedule/backoff reset is required. This slice stays on schema 5 and rollback must not replace the database.</p>
+</div>
+<div class="paragraph">
+<p>After that code deployment, install the read-only exporter and dashboard consumer with the explicit private inventory:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">ANSIBLE_CONFIG=ops/ansible.cfg ANSIBLE_HOME=build/ansible \
+  .venv/bin/ansible-playbook -i "$WISHLIST_INVENTORY" ops/wishlist-observability.yml \
+  -e haven_wishlist_observability_authorized=true \
+  -e '{"haven_wishlist_deferred_hosts":["www.alza.cz"]}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The playbook refuses older deployed domain modules before activation. It does not update the domain writer, restart Nora, change backup credentials or enable collection monitoring in backup settings. Install the reviewed backup controller/helper and explicitly enable its setting only after the aggregate and scan/retention evidence pass. Retain the unchanged settings for code/config rollback. Existing offline <code>ops/wishlist.yml</code> remains preparation, not an online upgrade path.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>tests.test_wishlist_observability</code> uses real disposable SQLite databases for idle/missing scans, unknown/malformed usage, rejected proposals, deferred/failed sources, retry gates, overdue leases, bounded compaction, replay/conflict and preserved history. The dashboard suite rejects malformed/private projections. Existing W2/W3/W5 socket/restart tests remain required. Public checks contact no shops, provider, Telegram, credentials or production host.</p>
+</div>
+<div class="paragraph">
+<p>Context7 supplied Python 3.13 and systemd 259 references but not the exact installed Python 3.14/Ansible 2.21 versions. Implementation also used the official <a href="https://docs.python.org/3.14/library/sqlite3.html">Python 3.14 SQLite reference</a>, <a href="https://docs.ansible.com/projects/ansible-core/2.21/collections/ansible/builtin/systemd_service_module.html">Ansible 2.21 service module</a> and <a href="https://www.freedesktop.org/software/systemd/man/259/systemd.exec.html">systemd 259 execution restrictions</a>. Installed parsers and bounded live evidence remain distinct from documentation.</p>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>
