@@ -14,6 +14,20 @@
           - haven_wishlist_backup_authorized | default(false) | bool
           - haven_backup_settings is defined
 
+    - name: Validate the exact proposed settings before changing the installed controller
+      ansible.builtin.command:
+        argv:
+          - "{{ ansible_playbook_python }}"
+          - -B
+          - -c
+          - "import json, sys; from pathlib import Path; from scripts.backup_runtime import validate_settings; validate_settings(json.loads(Path(sys.argv[1]).read_text()))"
+          - "{{ haven_backup_settings }}"
+        chdir: "{{ playbook_dir }}/.."
+      delegate_to: localhost
+      become: false
+      changed_when: false
+      check_mode: false
+
     - name: Select an exclusive backup upgrade lease
       ansible.builtin.set_fact:
         haven_wishlist_backup_lease: "haven-maintenance-{{ lookup('ansible.builtin.password', '/dev/null', length=24, chars=['ascii_lowercase', 'digits']) }}"
