@@ -54,6 +54,7 @@ Allow at most three redirects, retaining original hostname and exact normalized 
 |`www.fabini.cz` |`fabini-jsonld-v1` |Exact-offer JSON-LD, preserving variant queries.
 |`www.ifantazie.cz` |`ifantazie-microdata-v1` |Scoped Shoptet Product/Offer microdata; shipping/banner prices are not product prices.
 |`www.alza.cz` |`alza-public-price-v1` |Exact new-product JSON-LD plus matching primary visible gross price; optional isolated virtual browser.
+|`www.intimissimi.com` |`intimissimi-public-price-v1` |CZ full model/colour/size PID, matching selected variant, public JSON-LD/visible CZK price and exact-size inventory.
 |Other hosts |Unsupported |Keep the entry and record unsupported without network access.
 |===
 
@@ -66,6 +67,16 @@ The subsequent link:wishlist-browser.adoc[isolated Chromium/Xvfb integration] su
 Every stored observation has `conditions_verification=not_verified`. Structured data is an observed offer candidate, not independent verification of visible coupons, membership, shipping or checkout conditions. W3 adds no deal calculations, buying recommendations or notification summaries. Logs contain fixed reasons and job IDs, never raw pages, source URLs, product details or exception text.
 
 Lists show the last price/date, uncertainty and collection status. Details add availability, full observation time, latest failure and next deadline; the structured get API returns ten recent observations. Failure retains the prior amount/time. A missed deadline by more than an hour displays stale. Telegram read receipts remain historical; send a fresh request for current state. Natural-language price questions retain W5 restrictions; deterministic list/detail show saved observations.
+
+== Intimissimi source adapter, 2026-11-15
+
+The adapter is prepared in source and the staged module installation list. It accepts Czech product URLs containing a full model/colour/size PID, with literal `+++` or percent-encoded spaces as the separator. UTM tracking remains ignored; base-model links, other locales and identity-bearing query parameters are refused rather than selecting a default variant.
+
+Intimissimi's canonical link identifies the base model, while its JSON-LD offer URL can identify an internal Demandware storefront. The adapter checks the canonical model, full requested PID, primary product DOM PID, JSON-LD SKU, selected colour and explicitly checked size. An internal offer URL is only metadata: its HTTPS host must be the known storefront or public host and its product path must match. The worker never connects to that internal host or follows metadata/AJAX links. Normal destination, redirect, TLS and response bounds remain unchanged for the original public URL.
+
+The primary public price must agree across JSON-LD, the visible price and its price metadata, in CZK. Recommendations, crossed-out prices and hidden/member price boxes cannot supply the value. Conditional/aggregate offers, duplicate or conflicting structured products and duplicate JSON keys are refused. Availability comes only from the selected size's explicit inventory allocation, recognized selectable size control and low-stock marker, not another size's inventory or a generic add-to-cart button. An out-of-stock result requires both zero allocation and a disabled control. Missing inventory, contradictory stock or coming-soon state is unverified. Offer/checkout conditions retain `conditions_verification=not_verified`.
+
+link:../research/w3/intimissimi-acceptance.json[The source acceptance record] separates synthetic verification, the bounded anonymous VPS candidate read and unchanged production state. This is not a persistent installation or owner Telegram/day-spaced acceptance of the new adapter. Existing unsupported entries keep their current deadlines/history; activation must update the compatible installed modules under the existing maintenance procedure and then verify the real collection path.
 
 == Explicit staging and activation prerequisites
 

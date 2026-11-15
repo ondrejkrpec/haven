@@ -84,6 +84,7 @@
     - wishlist_fetch
     - wishlist_extract
     - wishlist_alza
+    - wishlist_intimissimi
     - model_contract
     - model_probe
     - capability_runtime

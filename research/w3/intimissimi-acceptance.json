@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "source_baseline": "257897fe0e711404b0cddf77673e06355c1bdbaf",
+  "scope": "source adapter and bounded anonymous candidate probe; not pilot activation",
+  "adapter": "intimissimi-public-price-v1",
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest tests.test_wishlist_intimissimi tests.test_wishlist_collection tests.test_wishlist_fetch tests.test_wishlist_extract -q",
+      "result": "passed",
+      "tests": 58
+    },
+    {
+      "command": ".venv/bin/python -m ruff check scripts tests",
+      "result": "passed"
+    }
+  ],
+  "required_delivery_check": ".venv/bin/python -m scripts.check via the committed-HEAD pre-push hook",
+  "probe": {
+    "recorded_at_utc": "2026-11-15T12:28:26.937200+00:00",
+    "scope": "one-anonymous-VPS-read-of-candidate-source-not-deployment",
+    "host": "www.intimissimi.com",
+    "http_status": 200,
+    "status": "ok",
+    "reason": "structured_offer_candidate",
+    "offer_fields": [
+      "availability",
+      "conditions_verification",
+      "currency",
+      "name",
+      "price",
+      "sku"
+    ],
+    "currency": "CZK",
+    "availability": "limited",
+    "requested_full_pid_matches": true,
+    "source_sha256": {
+      "wishlist_intimissimi": "7e5e949e7af58a63ccf4666ff7f6c8ec73c3884789617f52541442070f26b023",
+      "wishlist_collection": "39099f16ce6b287f20f8b93df77c18c71f954633a01857d7279318bc2af857bb",
+      "wishlist_fetch": "a735a1443273dd09c9ef95749fc8f135f12cf38c3def085dd8658d31be0e519a"
+    },
+    "model_calls": 0,
+    "telegram_sends": 0,
+    "production_code_changed": false,
+    "production_data_changed": false,
+    "bounded_fetch_invocations": 1
+  },
+  "remaining": [
+    "persistent compatible module installation under maintenance exclusion",
+    "production collection and owner Telegram acceptance",
+    "second real daily cycle"
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "5f742f208b33609310f878f1df323baf1979af4efa942b0f7adc6c8d4bf24409"
+    },
+    {
+      "path": "docs/wishlist-collection.adoc",
+      "sha256": "efc1c54a3bbeafff50395d859b67395fe272c2b0c4b5871e45c5612e2e9f7a30"
+    },
+    {
+      "path": "ops/tasks/wishlist-install.yml",
+      "sha256": "d1309c291a721b8adbd21a4f4c26be8e54f3b3fcb8afbcffbc6d5d33ade5ae44"
+    },
+    {
+      "path": "scripts/build_docs.py",
+      "sha256": "bed0eab5bb2046ddf5e3e2772087d73c0032a993f5a4230475db8c8aa9acc62d"
+    },
+    {
+      "path": "scripts/wishlist_collection.py",
+      "sha256": "39099f16ce6b287f20f8b93df77c18c71f954633a01857d7279318bc2af857bb"
+    },
+    {
+      "path": "scripts/wishlist_fetch.py",
+      "sha256": "a735a1443273dd09c9ef95749fc8f135f12cf38c3def085dd8658d31be0e519a"
+    },
+    {
+      "path": "scripts/wishlist_intimissimi.py",
+      "sha256": "7e5e949e7af58a63ccf4666ff7f6c8ec73c3884789617f52541442070f26b023"
+    },
+    {
+      "path": "tests/test_wishlist_collection.py",
+      "sha256": "58d5c1d7adb32a2ca0123aa3f4025c5d327a2a191dcd9679c26c1c7feaea7b52"
+    },
+    {
+      "path": "tests/test_wishlist_intimissimi.py",
+      "sha256": "ac769c10c33fb4102963094138633c31b45614506031de72cb74455e69df9c38"
+    }
+  ]
+}
