@@ -2,6 +2,8 @@
 
 Status, 2026-11-11: schema 5 and the collector are installed on the Ubuntu pilot. An isolated database using the installed domain/collector identities passed one real iFantazie fetch, stored observation, Telegram detail formatting and a no-work immediate repeat. Current production entries were purchased or removed, so the real domain correctly admitted no job. Alza remains blocked by Cloudflare on the VPS, including disposable headed-browser diagnostics. This is partial deployment acceptance; functional Alza, another daily cycle and owner-visible current prices remain open.
 
+Owner acceptance update, 2026-11-15: the owner confirmed the saved Fabini and Intimissimi prices in Telegram, following the earlier Momenti/iFantazie acceptance. This closes owner-visible prices for these four sources, not their second real daily cycle. W4 source work now lives in link:wishlist-observability.adoc[accounting, retention and independent collection monitoring]; the dated implementation/probe sections below retain their original scope.
+
 == Completion scope, 2026-11-15
 
 The owner moved Alza to the final item of the overall W work. Complete and assess the non-Alza W3 scenarios first; this changes delivery order, not the evidence that any source works. Keep Alza visibly deferred until its separate acceptance. W4 dashboard accounting, receipt retention and independent collector alert delivery remain separate operational work.

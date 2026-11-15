@@ -1,0 +1,33 @@
+[Unit]
+Description=Wishlist read-only aggregate export
+After=haven-wishlist.service
+
+[Service]
+Type=oneshot
+User=haven-wishlist
+Group=haven
+WorkingDirectory=/opt/haven-wishlist
+Environment=PYTHONPATH=/opt/haven-wishlist
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -B -m scripts.wishlist_observability{% for host in haven_wishlist_deferred_hosts | default([]) %} --deferred-host {{ host }}{% endfor %}
+
+UMask=0027
+TimeoutStartSec=10
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictSUIDSGID=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ReadWritePaths=/var/lib/haven-wishlist-observability
+InaccessiblePaths=-/var/lib/haven -/var/lib/haven-language -/var/lib/haven-backup -/etc/haven-backup
+MemoryMax=128M
+TasksMax=16
+StandardOutput=journal
+StandardError=null

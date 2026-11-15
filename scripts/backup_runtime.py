@@ -239,10 +239,14 @@ def settings_from(config):
 
 
 def validate_settings(settings):
-    require(set(settings) - {"wishlist_enabled"} == {"schema_version", "repository", "repository_id", "restic_sha256", "source_home",
+    require(set(settings) - {"wishlist_enabled", "wishlist_collection_enabled"} == {"schema_version", "repository", "repository_id", "restic_sha256", "source_home",
                               "runtime_source", "runtime_python", "public_revision", "private_revision", "hostname"}
             and settings["schema_version"] == 1, "invalid_backup_settings")
     require("wishlist_enabled" not in settings or type(settings["wishlist_enabled"]) is bool, "invalid_backup_settings")
+    require("wishlist_collection_enabled" not in settings or type(settings["wishlist_collection_enabled"]) is bool,
+            "invalid_backup_settings")
+    require(not settings.get("wishlist_collection_enabled", False) or settings.get("wishlist_enabled", False),
+            "wishlist_monitor_requires_wishlist")
     require(re.fullmatch(r"s3:https://s3\.fr-par\.scw\.cloud/[a-z0-9][a-z0-9-]{1,61}[a-z0-9]/[a-z][a-z0-9-]{0,31}",
                          settings["repository"]), "invalid_repository")
     for field in ("repository_id", "restic_sha256"):
@@ -482,6 +486,10 @@ def monitor(settings, state, config):
     snapshot = json.loads(Path("/var/lib/haven/web/dashboard/snapshot.json").read_text())
     require(0 <= time.time() - datetime.fromisoformat(snapshot["generated_at_utc"]).timestamp() < 120,
             "dashboard_stale")
+    if settings.get("wishlist_collection_enabled", False):
+        from scripts.wishlist_observability import health, read_snapshot
+        problems = health(read_snapshot())
+        require(not problems, "wishlist_collection_unhealthy")
     ping(config, "service")
 
 

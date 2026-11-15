@@ -195,6 +195,15 @@ class LanguageFlow:
                         or answer["request_id"] != prepared["request_id"] or answer["attempt_id"] != prepared["attempt_id"]
                         or answer["code"] != "ok"):
                     raise ValueError("language_answer")
+                # Record measured usage before semantic validation or lease
+                # admission: rejected output may still have consumed tokens.
+                usage = answer["usage"]
+                if (not isinstance(usage, dict) or set(usage) != {"input_tokens", "output_tokens"}
+                        or any(type(x) is not int or not 0 <= x <= 2**53 for x in usage.values())):
+                    usage = None
+                with self.domain.store.transaction() as db:
+                    db.execute("UPDATE language_attempts SET usage=? WHERE attempt_id=? AND request_id=?",
+                               (canonical(usage), prepared["attempt_id"], prepared["request_id"]))
                 decision = resolve_target(validate_decision(answer["decision"], prepared), prepared)
                 # An intake clarification with one supplied link must not discard that link.
                 # Only this message's literal URL can become a command; history grants no URL authority.
@@ -238,12 +247,8 @@ class LanguageFlow:
                                                          committed=result["committed"], reply=reply)
                 db.execute("UPDATE language_runs SET status='complete' WHERE request_id=? AND attempt_id=?",
                            (current.request_id, prepared["attempt_id"]))
-                usage = answer["usage"]
-                if (not isinstance(usage, dict) or set(usage) != {"input_tokens", "output_tokens"}
-                        or any(type(x) is not int or x < 0 for x in usage.values())):
-                    usage = None
-                db.execute("UPDATE language_attempts SET result=?, usage=? WHERE attempt_id=?",
-                           (response["code"], canonical(usage), prepared["attempt_id"]))
+                db.execute("UPDATE language_attempts SET result=? WHERE attempt_id=?",
+                           (response["code"], prepared["attempt_id"]))
                 return response
 
             return self.application.handle(event, executor=finish)

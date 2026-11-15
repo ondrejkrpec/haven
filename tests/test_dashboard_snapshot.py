@@ -8,9 +8,24 @@ import unittest
 from unittest.mock import patch
 
 from scripts.dashboard_snapshot import collect, render, write_snapshot
+from scripts import wishlist_observability as metrics
 
 
 class DashboardTests(unittest.TestCase):
+    def test_wishlist_snapshot_is_whitelisted_and_never_grants_database_access(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'aggregates.json'
+            source.write_text('{"schema_version":1,"status":"ok","PRIVATE_PROMPT":"secret"}')
+            with patch('scripts.dashboard_snapshot.subprocess.run') as command:
+                command.return_value.returncode = 1
+                snapshot = collect(root, wishlist_snapshot=source)
+            self.assertEqual(snapshot['wishlist'], {'status': 'unavailable'})
+            self.assertNotIn('PRIVATE_PROMPT', str(snapshot))
+            source.unlink()
+            source.symlink_to(root / 'missing')
+            self.assertEqual(metrics.read_snapshot(source), {'status': 'unavailable'})
+
     def test_missing_board_is_unavailable_and_is_not_created(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

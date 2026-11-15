@@ -80,7 +80,7 @@
             group: root
             mode: '0600'
           loop: [backup_runtime.py, backup_capture.py, backup_restore.py, private_enrollment.py,
-                 wishlist_operations.py, wishlist_store.py, wishlist_health.py]
+                 wishlist_operations.py, wishlist_store.py, wishlist_health.py, wishlist_observability.py]
 
         - name: Install the hash-pinned backup executable
           ansible.builtin.copy:

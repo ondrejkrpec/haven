@@ -1,0 +1,51 @@
+= Wishlist W4: accounting, retention and collection monitoring
+
+Status, 2026-11-15: source implementation and synthetic acceptance. Pilot activation, installed-unit restrictions and external alert delivery must be recorded separately. The owner has accepted the saved Fabini and Intimissimi prices in Telegram; the second real daily observations remain W3 work.
+
+== Independent aggregate projection
+
+`scripts.wishlist_observability` opens only the existing schema-5 domain database using SQLite URI `mode=ro`, query-only mode, a one-second lock timeout and a five-second query budget. It never migrates or creates a database. It exports only counts, fixed source names and validated UTC timestamps. Product names, prices, URLs, owner/chat/request IDs, prompts, responses, fingerprints and model credentials do not cross this boundary.
+
+`haven-wishlist-observability.service` runs as the existing domain identity with a read-only filesystem except `/var/lib/haven-wishlist-observability`. It has no IP network and hides coordinator/model/backup roots. Its primary group permits the existing dashboard identity to read the atomic mode-0640 aggregate file. The existing dashboard still cannot access domain files or interpreter credentials; it consumes the separately whitelisted projection. An unavailable measurement is not a zero. Snapshots refresh every minute and expire after two minutes.
+
+== Interpretation accounting
+
+Count attempts separately from confirmed provider calls. Each prepared attempt is recorded before model I/O; it may fail before reaching the provider. Input/output tokens are summed only when both are known nonnegative integers. The dashboard shows measured and unmeasured attempts separately, including failed attempts. Valid correlated usage is recorded before decision/lease admission, so a rejected proposal does not lose its available usage. Provider errors/timeouts may still lack usage; no token estimate is invented. No DB transaction spans model I/O.
+
+These are retained local lifetime counters, not a provider invoice, available subscription quota or complete cost measurement. The interpreter's measured tokens and coordinator's Hermes session counters remain separate. Costs and remaining quota are unknown. Deterministic wishlist commands and collection do not call the model.
+
+== Retention policy
+
+The domain writer runs one short atomic batch at startup and hourly. `scripts.wishlist_retention` compacts at most 100 records per category per pass. Complete domain/Telegram replies and prepared prompts older than 30 days are replaced with small replay tombstones or empty payloads. Expired conversations lose their text; their generation survives. Expired clarification tokens and old completed collection payloads are removed in bounded batches.
+
+Request IDs, owner binding, fingerprints, attempt identity, usage measurements and collection result hashes survive. Events, purchases, entries, offers, price observations, schedules and job identity/history are retained. Old identical deliveries receive an explicit unavailable-history response and never reapply the original mutation or invoke the model. Changed payloads still conflict. Failed/abandoned language requests receive a Telegram tombstone before prompt compaction. Running/recent work is not compacted. This is logical payload retention, not physical secure erasure or a constant-size database guarantee; deduplication metadata and price history still grow. Backups retain their independently configured history. No VACUUM, history deletion or database replacement occurs.
+
+== Collection health and alerting
+
+Every authenticated valid collection claim records a durable scan time, including an idle scan. A freshly rendered dashboard is not evidence that collection ran. Health fails when the aggregate is missing/future/older than 120 seconds, the scan is missing/future/older than 30 minutes, retention is missing/future/older than two hours, a lease has expired, or an active offer is more than an hour overdue. Host-wide server retry deadlines are respected when calculating overdue work. A current blocked/failed/unsupported active source also fails health; previous good prices remain intact.
+
+An explicit `haven_wishlist_deferred_hosts` list can exclude known deferred sources from source-failure/overdue alarms. They remain visible in the dashboard. Nothing is excluded by default. The pilot's owner-deferred Alza can be listed as `www.alza.cz`; this is not acceptance of that source. A stuck expired job still fails the overall execution check.
+
+The existing independent root monitor enables these checks only when backup settings explicitly contain `wishlist_collection_enabled: true`, together with `wishlist_enabled: true`. It reads the protected aggregate and refuses its existing service-success Healthchecks ping on collection failure; its existing error path sends `/fail`. A stopped monitor or prolonged maintenance expires externally. Nora, model availability and Telegram are not required to detect or report failure. This reuses the existing service check; it does not create a second external account/check or a new messaging integration. External alert delivery and owner receipt need live acceptance, independently of a unit test or successful ping.
+
+== Activate an existing installation
+
+First deploy the checked domain modules under the existing maintenance/pause recovery procedure with a fresh accepted backup. Preserve all writer/timer states, including any isolated W3 acceptance fixture. No schedule/backoff reset is required. This slice stays on schema 5 and rollback must not replace the database.
+
+After that code deployment, install the read-only exporter and dashboard consumer with the explicit private inventory:
+
+[source,sh]
+----
+ANSIBLE_CONFIG=ops/ansible.cfg ANSIBLE_HOME=build/ansible \
+  .venv/bin/ansible-playbook -i "$WISHLIST_INVENTORY" ops/wishlist-observability.yml \
+  -e haven_wishlist_observability_authorized=true \
+  -e '{"haven_wishlist_deferred_hosts":["www.alza.cz"]}'
+----
+
+The playbook refuses older deployed domain modules before activation. It does not update the domain writer, restart Nora, change backup credentials or enable collection monitoring in backup settings. Install the reviewed backup controller/helper and explicitly enable its setting only after the aggregate and scan/retention evidence pass. Retain the unchanged settings for code/config rollback. Existing offline `ops/wishlist.yml` remains preparation, not an online upgrade path.
+
+== Verification
+
+`tests.test_wishlist_observability` uses real disposable SQLite databases for idle/missing scans, unknown/malformed usage, rejected proposals, deferred/failed sources, retry gates, overdue leases, bounded compaction, replay/conflict and preserved history. The dashboard suite rejects malformed/private projections. Existing W2/W3/W5 socket/restart tests remain required. Public checks contact no shops, provider, Telegram, credentials or production host.
+
+Context7 supplied Python 3.13 and systemd 259 references but not the exact installed Python 3.14/Ansible 2.21 versions. Implementation also used the official https://docs.python.org/3.14/library/sqlite3.html[Python 3.14 SQLite reference], https://docs.ansible.com/projects/ansible-core/2.21/collections/ansible/builtin/systemd_service_module.html[Ansible 2.21 service module] and https://www.freedesktop.org/software/systemd/man/259/systemd.exec.html[systemd 259 execution restrictions]. Installed parsers and bounded live evidence remain distinct from documentation.

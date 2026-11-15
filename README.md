@@ -18,9 +18,11 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 **Alza progress, 2026-11-13:** the [isolated Chromium/Xvfb path](docs/wishlist-browser.adoc) still receives Cloudflare verification through the VPS network. The exact installed renderer passed two fresh-context reads from the VPS through a temporary, restricted workstation egress relay. That relay was removed after the experiment; permanent egress, the domain/Telegram roundtrip and daily acceptance remain open.
 
-**Intimissimi adapter, 2026-11-15:** [W3 source support](docs/wishlist-collection.adoc) is installed on the pilot and the production collector stored its first exact-variant observation. Installed Telegram list/detail formatting includes the saved CZK price and original link. Owner-visible Telegram acceptance and repeated daily cycles remain separate steps.
+**Intimissimi adapter, 2026-11-15:** [W3 source support](docs/wishlist-collection.adoc) is installed on the pilot and the production collector stored its first exact-variant observation. Installed Telegram list/detail formatting includes the saved CZK price and original link. The owner accepted this saved price in Telegram on 15 November; repeated daily cycles remain separate acceptance.
 
-**Fabini repair, 2026-11-15:** the installed [Fabini HTTP/2 transport](docs/wishlist-collection.adoc) resolved the observed Python-client HTTP 429 responses on the same VPS. The production collector stored an exact-variant CZK observation, verified through installed list/detail formatting. Genuine rate limits still postpone collection; owner-visible acceptance and a second day-spaced observation remain open.
+**Fabini repair, 2026-11-15:** the installed [Fabini HTTP/2 transport](docs/wishlist-collection.adoc) resolved the observed Python-client HTTP 429 responses on the same VPS. The production collector stored an exact-variant CZK observation, verified through installed list/detail formatting. Genuine rate limits still postpone collection. The owner accepted the saved price in Telegram on 15 November; a second day-spaced observation remains open.
+
+**W4 follow-up, 2026-11-15:** [Separate interpretation accounting, bounded reply retention and independent collection monitoring](docs/wishlist-observability.adoc) extend the existing dashboard/Healthchecks path. Source and live acceptance are recorded separately; daily W3 acceptance and the owner-deferred Alza remain distinct.
 
 ## Start locally
 

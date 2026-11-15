@@ -1,0 +1,91 @@
+---
+- name: Verify private access before installing wishlist observability
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Install read-only wishlist aggregates without changing domain data or credentials
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - name: Require explicit scope and enumerated deferred sources
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_wishlist_observability_authorized | default(false) | bool
+          - haven_wishlist_deferred_hosts | default([]) is sequence
+          - haven_wishlist_deferred_hosts | default([]) is not string
+          - haven_wishlist_deferred_hosts | default([]) | difference(['www.momenti.cz', 'www.fabini.cz', 'www.ifantazie.cz', 'www.intimissimi.com', 'www.alza.cz']) | length == 0
+
+    - name: Inspect the separately deployed W4 domain code
+      ansible.builtin.stat:
+        path: "/opt/haven-wishlist/scripts/{{ item }}.py"
+        checksum_algorithm: sha256
+      loop: [wishlist_service, wishlist_collection, wishlist_language, wishlist_retention]
+      register: haven_w4_code
+
+    - name: Refuse activation against an older domain writer
+      ansible.builtin.assert:
+        that: item.stat.checksum | default('missing') == lookup('ansible.builtin.file', playbook_dir + '/../scripts/' + item.item + '.py', rstrip=false) | hash('sha256')
+        quiet: true
+      loop: "{{ haven_w4_code.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+  tasks:
+    - name: Create a separate aggregate directory readable by the dashboard
+      ansible.builtin.file:
+        path: /var/lib/haven-wishlist-observability
+        state: directory
+        owner: haven-wishlist
+        group: haven
+        mode: '0750'
+
+    - name: Install the standalone aggregate exporter
+      ansible.builtin.copy:
+        src: ../scripts/wishlist_observability.py
+        dest: /opt/haven-wishlist/scripts/wishlist_observability.py
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install the dashboard consumers
+      ansible.builtin.copy:
+        src: "../scripts/{{ item }}"
+        dest: "/var/lib/haven/web-tools/{{ item }}"
+        owner: root
+        group: haven
+        mode: '0640'
+      loop: [dashboard_snapshot.py, wishlist_observability.py]
+
+    - name: Install read-only exporter units
+      ansible.builtin.template:
+        src: "{{ item }}.j2"
+        dest: "/etc/systemd/system/{{ item }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: [haven-wishlist-observability.service, haven-wishlist-observability.timer]
+
+    - name: Verify exporter restrictions before activation
+      ansible.builtin.command:
+        argv: [systemd-analyze, verify, /etc/systemd/system/haven-wishlist-observability.service,
+               /etc/systemd/system/haven-wishlist-observability.timer]
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: Refresh the aggregate snapshot
+      ansible.builtin.systemd_service:
+        name: haven-wishlist-observability.service
+        state: started
+        daemon_reload: true
+
+    - name: Refresh the existing dashboard
+      ansible.builtin.systemd_service:
+        name: haven-dashboard-snapshot.service
+        state: started
+
+    - name: Enable periodic aggregate export
+      ansible.builtin.systemd_service:
+        name: haven-wishlist-observability.timer
+        state: started
+        enabled: true

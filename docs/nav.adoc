@@ -27,6 +27,7 @@
 ** xref:wishlist-browser.adoc[Alza isolated virtual browser]
 ** xref:wishlist-language.adoc[Wishlist W5 bounded natural conversation]
 ** xref:wishlist-operations.adoc[Wishlist W4 service preparation and recovery]
+** xref:wishlist-observability.adoc[Wishlist W4 accounting, retention and monitoring]
 ** xref:family-conversations.adoc[Personal conversations and family sharing]
 ** xref:h1-prerequisites.adoc[H1 prerequisites]
 ** xref:adr/0001-configuration-validation.adoc[ADR 0001: Configuration validation]
@@ -45,6 +46,7 @@
 ** xref:adr/0014-wishlist-language-before-collection.adoc[ADR 0014: Wishlist conversation before collection]
 ** xref:adr/0015-reversible-wishlist-removal.adoc[ADR 0015: Reversible wishlist removal]
 ** xref:adr/0016-durable-wishlist-collection.adoc[ADR 0016: Durable wishlist collection]
+** xref:adr/0017-wishlist-observability-retention.adoc[ADR 0017: Wishlist aggregates and replay retention]
 ** xref:adr/0017-isolated-alza-browser.adoc[ADR 0017: Isolated Alza browser]
 * Verification
 ** xref:wishlist-feasibility.adoc[Wishlist direct-fetch feasibility]

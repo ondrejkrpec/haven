@@ -55,11 +55,12 @@
 
     - name: Install the bounded snapshot exporter
       ansible.builtin.copy:
-        src: ../scripts/dashboard_snapshot.py
-        dest: /var/lib/haven/web-tools/dashboard_snapshot.py
+        src: "../scripts/{{ item }}"
+        dest: "/var/lib/haven/web-tools/{{ item }}"
         owner: root
         group: haven
         mode: '0640'
+      loop: [dashboard_snapshot.py, wishlist_observability.py]
 
     - name: Install local dashboard styling
       ansible.builtin.copy:
