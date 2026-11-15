@@ -2,7 +2,7 @@
   "schema_version": 1,
   "date": "2026-11-15",
   "source_baseline": "5f4571ef4d741a1b0e558eefd013270de1262c4f",
-  "scope": "Fabini transport repair and anonymous candidate read; installation acceptance recorded separately",
+  "scope": "Fabini transport repair, candidate reads and first pilot production observation",
   "adapter": "fabini-jsonld-v1",
   "runtime": {
     "curl": "8.18.0",
@@ -53,10 +53,16 @@
     {
       "command": ".venv/bin/python -m ruff check scripts tests",
       "result": "passed"
+    },
+    {
+      "command": "committed-HEAD pre-push public pipeline",
+      "result": "passed",
+      "tests": 348,
+      "checked_revision": "f115de9a7bb6497097d4c36128f66f8400424932",
+      "target_revision": "5f4571ef4d741a1b0e558eefd013270de1262c4f"
     }
   ],
   "remaining": [
-    "persistent installation and stored production observation",
     "owner-visible Telegram acceptance",
     "second real daily cycle"
   ],
@@ -69,5 +75,22 @@
   "limitations": [
     "Client-sensitive access is established; the exact upstream bot/rate-limit rule is not observable.",
     "Real HTTP 429 responses and host-wide Retry-After scheduling remain enforced."
-  ]
+  ],
+  "pilot_activation": {
+    "public_revision": "852062ef9cfa427ed8e18bb27d81161f656b2ea2",
+    "completed_at_utc": "2026-11-15T16:57:29.085579+00:00",
+    "observed_at_utc": "2026-11-15T16:57:45.227252Z",
+    "status": "ok",
+    "http_status": 200,
+    "currency": "CZK",
+    "database_schema": 5,
+    "changed_installed_files": 2,
+    "active_429_blocked_offers_requeued": 1,
+    "other_shops_deadlines_and_backoffs_preserved": true,
+    "entry_lifecycle_and_versions_preserved": true,
+    "stored_observation_and_installed_telegram_formatting_verified": true,
+    "database_restored": false,
+    "model_calls": 0,
+    "telegram_sends": 0
+  }
 }

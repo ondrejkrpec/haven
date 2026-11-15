@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "852062ef9cfa427ed8e18bb27d81161f656b2ea2",
-  "checked_at_utc": "2026-11-15T16:56:56.101740+00:00",
+  "source_revision": "121d5e90e30da6e63504877ca0d440e81d750892",
+  "checked_at_utc": "2026-11-15T17:03:05.065750+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -21,7 +21,7 @@
     },
     {
       "path": "haven/_attachments/README.md",
-      "sha256": "64284a7bf2f3e80207e786800eb31762ffe389eca56b50c5d4a02be4d4d1ad27"
+      "sha256": "2d7b3a830810a53f53a61c6f7380838a379fc5151236a0a2db006d43675c604c"
     },
     {
       "path": "haven/_attachments/config/defaults.yaml",
@@ -101,7 +101,7 @@
     },
     {
       "path": "haven/_attachments/research/w3/fabini-acceptance.json",
-      "sha256": "6f12da278c09db15e02c0b928cb092bc963ff3df514515b9fef1a033e5ddf9f5"
+      "sha256": "9f746cd402fae1372385f3c79e773abe74647cb62acf4869490190b8ad0ca685"
     },
     {
       "path": "haven/_attachments/research/w3/intimissimi-acceptance.json",
@@ -333,7 +333,7 @@
     },
     {
       "path": "haven/wishlist-collection.html",
-      "sha256": "09fa0f756215a3c7a3f1651299a48cea15664fa2af43c82612126f225c9a8f22"
+      "sha256": "0bb6e992ad820d9c0224633bc181d20fe4429c603436ada1effc603380d13a73"
     },
     {
       "path": "haven/wishlist-design.html",
