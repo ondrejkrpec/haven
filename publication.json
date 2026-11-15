@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "257897fe0e711404b0cddf77673e06355c1bdbaf",
-  "checked_at_utc": "2026-11-15T11:27:55.906044+00:00",
+  "source_revision": "5f4571ef4d741a1b0e558eefd013270de1262c4f",
+  "checked_at_utc": "2026-11-15T12:33:53.128643+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -21,7 +21,7 @@
     },
     {
       "path": "haven/_attachments/README.md",
-      "sha256": "c7e51678b4938d6a548e7e9860e62c52e493a316f6e8b46735d76d2ee45c5349"
+      "sha256": "5f742f208b33609310f878f1df323baf1979af4efa942b0f7adc6c8d4bf24409"
     },
     {
       "path": "haven/_attachments/config/defaults.yaml",
@@ -98,6 +98,10 @@
     {
       "path": "haven/_attachments/research/w3/browser_roundtrip.py",
       "sha256": "12fb904d736df1d78160d680c0906a3e56be020821f8d7bf369463f9a3d0b598"
+    },
+    {
+      "path": "haven/_attachments/research/w3/intimissimi-acceptance.json",
+      "sha256": "058fbe4dca8d8759846b15e6fb036ab8d4e3720c51488aec1984caf09834d460"
     },
     {
       "path": "haven/_attachments/research/w3/network-egress-acceptance.json",
@@ -325,7 +329,7 @@
     },
     {
       "path": "haven/wishlist-collection.html",
-      "sha256": "bc33fee2afa5abbcedd0a061e0f4b3e3b29251c3e11b4a669d5ac274e9e55dc6"
+      "sha256": "ea6b156594402a9ef9cc943cfb02fb01470976d901b0f298c983d10ce409c0d7"
     },
     {
       "path": "haven/wishlist-design.html",

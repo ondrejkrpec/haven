@@ -401,6 +401,11 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Exact new-product JSON-LD plus matching primary visible gross price; optional isolated virtual browser.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>www.intimissimi.com</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intimissimi-public-price-v1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CZ full model/colour/size PID, matching selected variant, public JSON-LD/visible CZK price and exact-size inventory.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Other hosts</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Unsupported</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Keep the entry and record unsupported without network access.</p></td>
@@ -421,6 +426,23 @@
 </div>
 <div class="paragraph">
 <p>Lists show the last price/date, uncertainty and collection status. Details add availability, full observation time, latest failure and next deadline; the structured get API returns ten recent observations. Failure retains the prior amount/time. A missed deadline by more than an hour displays stale. Telegram read receipts remain historical; send a fresh request for current state. Natural-language price questions retain W5 restrictions; deterministic list/detail show saved observations.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_intimissimi_source_adapter_2026_11_15"><a class="anchor" href="#_intimissimi_source_adapter_2026_11_15"></a>Intimissimi source adapter, 2026-11-15</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The adapter is prepared in source and the staged module installation list. It accepts Czech product URLs containing a full model/colour/size PID, with literal <code>+</code> or percent-encoded spaces as the separator. UTM tracking remains ignored; base-model links, other locales and identity-bearing query parameters are refused rather than selecting a default variant.</p>
+</div>
+<div class="paragraph">
+<p>Intimissimi&#8217;s canonical link identifies the base model, while its JSON-LD offer URL can identify an internal Demandware storefront. The adapter checks the canonical model, full requested PID, primary product DOM PID, JSON-LD SKU, selected colour and explicitly checked size. An internal offer URL is only metadata: its HTTPS host must be the known storefront or public host and its product path must match. The worker never connects to that internal host or follows metadata/AJAX links. Normal destination, redirect, TLS and response bounds remain unchanged for the original public URL.</p>
+</div>
+<div class="paragraph">
+<p>The primary public price must agree across JSON-LD, the visible price and its price metadata, in CZK. Recommendations, crossed-out prices and hidden/member price boxes cannot supply the value. Conditional/aggregate offers, duplicate or conflicting structured products and duplicate JSON keys are refused. Availability comes only from the selected size&#8217;s explicit inventory allocation, recognized selectable size control and low-stock marker, not another size&#8217;s inventory or a generic add-to-cart button. An out-of-stock result requires both zero allocation and a disabled control. Missing inventory, contradictory stock or coming-soon state is unverified. Offer/checkout conditions retain <code>conditions_verification=not_verified</code>.</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/research/w3/intimissimi-acceptance.json" class="xref attachment">The source acceptance record</a> separates synthetic verification, the bounded anonymous VPS candidate read and unchanged production state. This is not a persistent installation or owner Telegram/day-spaced acceptance of the new adapter. Existing unsupported entries keep their current deadlines/history; activation must update the compatible installed modules under the existing maintenance procedure and then verify the real collection path.</p>
 </div>
 </div>
 </div>
