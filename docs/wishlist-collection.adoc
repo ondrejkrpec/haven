@@ -2,6 +2,23 @@
 
 Status, 2026-11-11: schema 5 and the collector are installed on the Ubuntu pilot. An isolated database using the installed domain/collector identities passed one real iFantazie fetch, stored observation, Telegram detail formatting and a no-work immediate repeat. Current production entries were purchased or removed, so the real domain correctly admitted no job. Alza remains blocked by Cloudflare on the VPS, including disposable headed-browser diagnostics. This is partial deployment acceptance; functional Alza, another daily cycle and owner-visible current prices remain open.
 
+== Completion scope, 2026-11-15
+
+The owner moved Alza to the final item of the overall W work. Complete and assess the non-Alza W3 scenarios first; this changes delivery order, not the evidence that any source works. Keep Alza visibly deferred until its separate acceptance. W4 dashboard accounting, receipt retention and independent collector alert delivery remain separate operational work.
+
+[cols="1,2,2",options="header"]
+|===
+|Scenario |Existing evidence |Required to finish this W3 slice
+|Installed shop adapters |One installed-unit iFantazie read on an isolated database; earlier direct Momenti/Fabini extraction probes. |Verify the installed collector against the exact Momenti, Fabini and iFantazie products, preserving variant identity and recording failures explicitly.
+|Daily history |Synthetic clock tests and one live fixture observation. |For each accepted source, two successful observations of the same offer at least 24 real hours apart, with the second admitted by the durable schedule. An immediate repeat must add neither a job nor an observation. Do not edit deadlines or advance the host clock to claim this result.
+|Owner Telegram results |Installed fixture reply formatting; no Telegram send. |A fresh owner list/detail must show the stored price, observation time and collection state through the existing poller. Retain owner-visible acceptance separately from fixture formatting.
+|Failure and restart |Synthetic lease/replay, blocked-source and restore tests; earlier installed service recovery. |Verify the installed collector's interrupted-work reconciliation, blocked-source behavior and continuation around a stopped-writer backup/restart. Preserve the last good price and avoid duplicate observations or model calls.
+|Nonempty history recovery |Schema-5 encrypted snapshot and exact isolated reconstruction, with empty production observation/job tables. |Capture nonempty history and verify its exact isolated reconstruction, including jobs and deadlines. Do not start a restored poller or overwrite newer production history.
+|Alza |VPS reads remain blocked; temporary alternative-egress experiments are historical evidence. |Deferred to the final W item; not a prerequisite for running the non-Alza checks and not accepted by their success.
+|===
+
+Use a read-only audit of existing state before creating work. Purchased, paused and removed entries are not acceptance inputs to reactivate silently. If no eligible entries exist, retain an explicitly isolated installed-unit fixture across the real daily interval; its result still does not establish owner production prices. Keep source revisions, actual timestamps, commands, outcomes and limits in the acceptance record. A configured timer or a successful local test is not a completed daily cycle.
+
 == Components and identities
 
 The existing domain service remains the only SQLite writer. Its optional collection socket admits one exact collector UID through Linux peer credentials before reading a frame. The client checks the server UID before sending. A separate socket directory/group keeps collection admission distinct from Telegram and interpretation. Collection messages cannot invoke wishlist commands, select an owner or submit SQL.
