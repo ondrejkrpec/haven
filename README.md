@@ -18,6 +18,8 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 **Alza progress, 2026-11-13:** the [isolated Chromium/Xvfb path](docs/wishlist-browser.adoc) still receives Cloudflare verification through the VPS network. The exact installed renderer passed two fresh-context reads from the VPS through a temporary, restricted workstation egress relay. That relay was removed after the experiment; permanent egress, the domain/Telegram roundtrip and daily acceptance remain open.
 
+**Intimissimi adapter, 2026-11-15:** [W3 source support](docs/wishlist-collection.adoc) binds fully specified Czech model/colour/size links to matching structured and visible CZK prices and exact-size inventory. Synthetic tests and a bounded anonymous candidate read on the VPS verify extraction. Persistent installation, owner Telegram prices and repeated daily cycles for this adapter remain separate acceptance steps.
+
 ## Start locally
 
 Prerequisites: a POSIX shell, Git 2.28 or newer, and `sha256sum`. Configuration validation needs Python 3.12+; the complete public checks also need Node.js/npm and Linux check tools. Podman is used only by optional H0.1 probes. Use an existing checkout, or clone the public repository:
