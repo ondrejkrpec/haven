@@ -24,6 +24,22 @@
           - haven_wishlist_timezone is defined
         fail_msg: Explicit wishlist preparation and a separately rendered model profile are required.
 
+    - name: Inspect the system HTTP2 curl required by Fabini collection
+      ansible.builtin.command:
+        argv: [/usr/bin/curl, --disable, --version]
+      register: haven_wishlist_curl
+      changed_when: false
+      check_mode: false
+      when: haven_wishlist_collection_enabled | default(false) | bool
+
+    - name: Require curl with streaming size limits and HTTP2 support
+      ansible.builtin.assert:
+        that:
+          - haven_wishlist_curl.stdout_lines[0].split()[1] is version('8.4.0', '>=')
+          - haven_wishlist_curl.stdout is search('(?m)^Features:.*\bHTTP2\b')
+        fail_msg: Collection requires system curl 8.4.0 or newer with HTTP2 support; no OS packages are changed automatically.
+      when: haven_wishlist_collection_enabled | default(false) | bool
+
     - name: Refuse to replace code while wishlist services are running
       ansible.builtin.command:
         argv: [systemctl, show, haven-wishlist.service, haven-wishlist-language.service,

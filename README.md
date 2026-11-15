@@ -18,7 +18,7 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 **Alza progress, 2026-11-13:** the [isolated Chromium/Xvfb path](docs/wishlist-browser.adoc) still receives Cloudflare verification through the VPS network. The exact installed renderer passed two fresh-context reads from the VPS through a temporary, restricted workstation egress relay. That relay was removed after the experiment; permanent egress, the domain/Telegram roundtrip and daily acceptance remain open.
 
-**Intimissimi adapter, 2026-11-15:** [W3 source support](docs/wishlist-collection.adoc) binds fully specified Czech model/colour/size links to matching structured and visible CZK prices and exact-size inventory. Synthetic tests and a bounded anonymous candidate read on the VPS verify extraction. Persistent installation, owner Telegram prices and repeated daily cycles for this adapter remain separate acceptance steps.
+**Intimissimi adapter, 2026-11-15:** [W3 source support](docs/wishlist-collection.adoc) is installed on the pilot and the production collector stored its first exact-variant observation. Installed Telegram list/detail formatting includes the saved CZK price and original link. Owner-visible Telegram acceptance and repeated daily cycles remain separate steps.
 
 ## Start locally
 

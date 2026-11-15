@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-15",
+  "source_baseline": "5f4571ef4d741a1b0e558eefd013270de1262c4f",
+  "scope": "Fabini transport repair and anonymous candidate read; installation acceptance recorded separately",
+  "adapter": "fabini-jsonld-v1",
+  "runtime": {
+    "curl": "8.18.0",
+    "ubuntu_package": "8.18.0-1ubuntu2.8",
+    "http2": true,
+    "minimum_supported_curl": "8.4.0"
+  },
+  "comparisons": {
+    "python_default": {
+      "http_status": 429,
+      "retry_after": 60
+    },
+    "compatible_headers": {
+      "http_status": 429,
+      "retry_after": 60
+    },
+    "public_ajax_endpoint": {
+      "http_status": 429,
+      "retry_after": 60
+    },
+    "python_http11_alpn": {
+      "http_status": 429,
+      "retry_after": 60
+    },
+    "system_curl_http2_same_identifying_user_agent": {
+      "http_status": 200
+    }
+  },
+  "candidate": {
+    "recorded_at_utc": "2026-11-15T16:52:05.454511+00:00",
+    "http_status": 200,
+    "status": "ok",
+    "currency": "CZK",
+    "exact_source_offer_matching": true,
+    "conditions_verification": "not_verified",
+    "production_code_changed": false,
+    "production_data_changed": false,
+    "model_calls": 0,
+    "telegram_sends": 0,
+    "source_sha256": "53a6d6159d1af1da04927257450bd69d9f9cd81c40ce9df536eec7d34b5ff7fd"
+  },
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest tests.test_wishlist_curl tests.test_wishlist_fetch tests.test_wishlist_intimissimi -q",
+      "result": "passed",
+      "tests": 33
+    },
+    {
+      "command": ".venv/bin/python -m ruff check scripts tests",
+      "result": "passed"
+    }
+  ],
+  "remaining": [
+    "persistent installation and stored production observation",
+    "owner-visible Telegram acceptance",
+    "second real daily cycle"
+  ],
+  "source_sha256": {
+    "scripts/wishlist_fetch.py": "53a6d6159d1af1da04927257450bd69d9f9cd81c40ce9df536eec7d34b5ff7fd",
+    "tests/test_wishlist_curl.py": "e62ac698775f2241a9d9d1d9d8e0b1efa8cd8f7dac8fe6cf7ca3c2f2b94c5846",
+    "tests/test_wishlist_fetch.py": "d7ca92eb40ca0038439db71fbcadaf00e4c9295889468d70e44f73b471a735a9",
+    "ops/wishlist.yml": "fc9b8b68345f07dc7c994996882fbf68180f42fd5249bcf4ae146516b92fa83c"
+  },
+  "limitations": [
+    "Client-sensitive access is established; the exact upstream bot/rate-limit rule is not observable.",
+    "Real HTTP 429 responses and host-wide Retry-After scheduling remain enforced."
+  ]
+}
