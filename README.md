@@ -20,6 +20,8 @@ H1.6 provides [one owner's private Telegram text conversation](docs/h1.6-telegra
 
 **Intimissimi adapter, 2026-11-15:** [W3 source support](docs/wishlist-collection.adoc) is installed on the pilot and the production collector stored its first exact-variant observation. Installed Telegram list/detail formatting includes the saved CZK price and original link. Owner-visible Telegram acceptance and repeated daily cycles remain separate steps.
 
+**Fabini repair, 2026-11-15:** the installed [Fabini HTTP/2 transport](docs/wishlist-collection.adoc) resolved the observed Python-client HTTP 429 responses on the same VPS. The production collector stored an exact-variant CZK observation, verified through installed list/detail formatting. Genuine rate limits still postpone collection; owner-visible acceptance and a second day-spaced observation remain open.
+
 ## Start locally
 
 Prerequisites: a POSIX shell, Git 2.28 or newer, and `sha256sum`. Configuration validation needs Python 3.12+; the complete public checks also need Node.js/npm and Linux check tools. Podman is used only by optional H0.1 probes. Use an existing checkout, or clone the public repository:
