@@ -107,6 +107,7 @@ async def serve(config):
     server = Server(domain, config["socket"], ingress_uid=config["ingress_uid"], socket_gid=config["socket_gid"],
                     language=config.get("language"))
     collection_server = None
+    maintenance = None
     stopped = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):
@@ -122,13 +123,32 @@ async def serve(config):
                                                  socket_gid=settings["socket_gid"])
             await collection_server.start()
         await server.start()
+        maintenance = asyncio.create_task(retain(domain, stopped))
         print('{"result":"ready","service":"wishlist"}', flush=True)
         await stopped.wait()
     finally:
+        stopped.set()
+        if maintenance is not None:
+            await maintenance
         await server.close()
         if collection_server is not None:
             await collection_server.close()
         domain.close()
+
+
+async def retain(domain, stopped):
+    from scripts.wishlist_retention import compact
+    while not stopped.is_set():
+        try:
+            compact(domain)
+        except Exception:
+            # Failure remains visible as stale retention evidence; no payloads
+            # or SQLite exceptions enter the service journal.
+            print('{"service":"wishlist","code":"retention_failed"}', flush=True)
+        try:
+            await asyncio.wait_for(stopped.wait(), timeout=3600)
+        except TimeoutError:
+            pass
 
 
 def main(argv=None):

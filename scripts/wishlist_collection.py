@@ -89,6 +89,8 @@ class Collection:
     def claim(self, db, claim_id):
         now = self.domain.clock()
         current = stamp(now)
+        # The authenticated scan is recorded even when there is no due offer.
+        db.execute("INSERT OR REPLACE INTO metadata VALUES ('collection_last_scan', ?)", (current,))
         # Expired work cannot overwrite a later run. Retry a crashed process after an hour.
         expired = db.execute("SELECT * FROM collection_jobs WHERE status='running' AND expires_at<=?",
                              (current,)).fetchall()

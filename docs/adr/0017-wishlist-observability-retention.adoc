@@ -1,0 +1,17 @@
+= ADR 0017: Separate wishlist aggregates and retain replay identities
+
+Date: 2026-11-15. Status: accepted for implementation.
+
+== Context
+
+The existing dashboard counts only coordinator sessions. Wishlist interpretation uses a separate identity and credentials. Reading its profile or exposing the domain database to the coordinator would broaden access. Deleting old request receipts would permit stale deliveries to repeat domain mutations. A healthy process/timer does not prove that the collection scan ran.
+
+== Decision
+
+Export a separate read-only, bounded aggregate with fixed source names, counts and UTC timestamps; the dashboard and independent root monitor consume this projection. Record idle scan evidence in the same domain transaction as collection admission. Display missing usage as unknown and preserve available correlated usage even when a proposal is rejected. Keep explicit source deferrals visible and reuse the existing independent Healthchecks service alarm.
+
+Compact text payloads after 30 days inside the domain writer, in bounded atomic batches. Keep receipt identities/fingerprints and minimal replay tombstones indefinitely, along with usage and domain/price history. Do not change schema 5, physically erase files or replace the database during code rollback.
+
+== Consequences
+
+The dashboard gains no domain/credential access, deterministic operation still does not require a model, and old messages cannot recreate past changes. Historical full replies become unavailable after compaction. Deduplication metadata and price history still grow; this policy bounds retained payload age under normal batch throughput, not total storage size. External alert receipt and installed-unit isolation require separate live acceptance. See link:../wishlist-observability.adoc[the operational contract].

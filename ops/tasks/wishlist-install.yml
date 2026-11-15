@@ -79,6 +79,8 @@
     - wishlist_model
     - wishlist_operations
     - wishlist_health
+    - wishlist_retention
+    - wishlist_observability
     - wishlist_collection
     - wishlist_collector
     - wishlist_fetch

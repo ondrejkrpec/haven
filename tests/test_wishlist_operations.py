@@ -11,6 +11,8 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
+from jinja2 import Environment, FileSystemLoader
+
 from scripts import backup_capture as capture
 from scripts import backup_restore as restore
 from scripts import backup_runtime as runtime
@@ -172,10 +174,15 @@ class OperationsTests(unittest.TestCase):
             executable.chmod(0o755)
             units = []
             for name in (*operations.UNITS[1:], 'haven-wishlist-collector.service', 'haven-wishlist-collector.timer',
-                         'haven-wishlist-browser.service', 'haven-wishlist-egress.service'):
+                         'haven-wishlist-browser.service', 'haven-wishlist-egress.service',
+                         'haven-wishlist-observability.service', 'haven-wishlist-observability.timer'):
                 source = Path('ops/templates') / (name + '.j2')
                 unit = root / name
-                unit.write_text(source.read_text().replace('/opt/haven-wishlist/native/venv/bin/python', str(executable))
+                text = source.read_text()
+                if name.startswith('haven-wishlist-observability.'):
+                    text = Environment(loader=FileSystemLoader('ops/templates'), trim_blocks=True).get_template(source.name).render(
+                        haven_wishlist_deferred_hosts=['www.alza.cz'])
+                unit.write_text(text.replace('/opt/haven-wishlist/native/venv/bin/python', str(executable))
                                 .replace('/opt/haven-wishlist-browser/venv/bin/python', str(executable)))
                 units.append(str(unit))
             result = subprocess.run(['systemd-analyze', 'verify', *units], capture_output=True, text=True)

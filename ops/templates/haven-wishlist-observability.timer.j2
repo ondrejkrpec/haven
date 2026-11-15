@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh wishlist operational aggregates every minute
+
+[Timer]
+OnBootSec=30
+OnUnitActiveSec=60
+AccuracySec=1
+Unit=haven-wishlist-observability.service
+
+[Install]
+WantedBy=timers.target

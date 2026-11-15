@@ -1,5 +1,7 @@
 = Wishlist W4: service preparation and recovery
 
+Current follow-up, 2026-11-15: the owner accepted the repaired basic conversation on 8 November and the saved Fabini/Intimissimi prices on 15 November. Remaining W4 implementation is described in link:wishlist-observability.adoc[accounting, retention and collection monitoring]; live activation/alert acceptance remain distinct from source tests. The dated record below retains the original preparation scope.
+
 Status, 2026-11-08: isolated services and the existing Telegram ingress are running on the pilot with independent model enrollment. Isolation under the installed-unit restrictions, process kill/restart, measured capacity during backup and a three-component encrypted snapshot/isolated restore passed. Real-model synthetic conversations passed, but the owner's first conversation exposed shared-link follow-up, source-display and missing-removal defects. Their fix passed a separate real-model reproduction and is deployed with schema 4; the fresh schema-4 encrypted snapshot and isolated reconstruction passed. Owner retry remains pending. W3 collection, dashboard interpretation accounting and receipt retention remain open.
 
 == Installation boundary
