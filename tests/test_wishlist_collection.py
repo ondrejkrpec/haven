@@ -292,6 +292,73 @@ class MigrationTests(unittest.TestCase):
 
 
 class SocketTests(unittest.IsolatedAsyncioTestCase):
+    async def test_restarted_socket_collection_and_restore_keep_daily_history_and_failures(self):
+        from scripts.wishlist_telegram import TelegramApplication
+
+        with tempfile.TemporaryDirectory(prefix="hw3-recovery-") as temporary:
+            root = Path(temporary)
+            path = root / "wishlist.sqlite3"
+            start = datetime(2026, 11, 15, 12, tzinfo=UTC)
+            now = start
+            endpoint = {"socket": str(root / "collector.sock"), "service_uid": os.getuid()}
+            event = {"bot_id": "123", "user_id": "456", "chat_id": "456", "message_id": "1",
+                     "text": "https://www.fabini.cz/products/synthetic", "chat_type": "private",
+                     "is_bot": False, "edited": False}
+            observations = []
+            # Every scan reopens both the domain and its real peer socket. The clock and
+            # shop responses are synthetic; this does not establish day-spaced live acceptance.
+            for elapsed, expected_jobs, blocked in ((0, 1, False), (DAY - 1, 0, False),
+                                                     (DAY, 1, False), (2 * DAY, 1, True)):
+                now = start + timedelta(seconds=elapsed)
+                domain = Wishlist(path, bot_id="123", owner_id="456", clock=lambda: now)
+                server = CollectionServer(domain, endpoint["socket"], ingress_uid=os.getuid())
+                try:
+                    application = TelegramApplication(domain)
+                    if elapsed == 0:
+                        self.assertTrue(application.handle(event)["committed"])
+
+                    async def fetcher(admission):
+                        if blocked:
+                            return failure("source_http_403", status="blocked", http_status=403)
+                        result = deepcopy(SUCCESS)
+                        result["offer"]["price"] = "249.90" if elapsed == 0 else "239.90"
+                        return result
+
+                    await server.start()
+                    self.assertEqual(await collect(endpoint, fetcher=fetcher), expected_jobs)
+                    self.assertEqual(await collect(endpoint, fetcher=fetcher), 0)
+                    observations = [tuple(row) for row in domain.store.db.execute(
+                        "SELECT observed_at, price FROM observations ORDER BY sequence")]
+                    self.assertEqual(len(observations), 1 if elapsed < DAY else 2)
+                    reply = application.handle({**event, "message_id": str(elapsed + 2),
+                                                "text": "wl detail #1"})["reply"]
+                    self.assertIn(observations[-1][1] + " CZK", reply)
+                    if blocked:
+                        self.assertEqual(observations[-1][0], stamp(start + timedelta(days=1)))
+                        self.assertEqual(domain.store.db.execute(
+                            "SELECT collection_status FROM offers").fetchone()[0], "blocked")
+                        restored_path = root / "restored.sqlite3"
+                        with closing(sqlite3.connect(restored_path)) as target:
+                            domain.store.db.backup(target)
+                        expected = {table: [tuple(row) for row in domain.store.db.execute("SELECT * FROM " + table)]
+                                    for table in ("offers", "collection_jobs", "observations", "telegram_receipts")}
+                finally:
+                    await server.close()
+                    domain.close()
+
+            restored = Wishlist(restored_path, bot_id="123", owner_id="456", clock=lambda: now)
+            server = CollectionServer(restored, endpoint["socket"], ingress_uid=os.getuid())
+            try:
+                for table, rows in expected.items():
+                    self.assertEqual([tuple(row) for row in restored.store.db.execute("SELECT * FROM " + table)], rows)
+                await server.start()
+                self.assertEqual(await collect(endpoint, fetcher=fetcher), 0)
+                self.assertEqual(len(observations), 2)
+                self.assertEqual(restored.store.db.execute("SELECT COUNT(*) FROM collection_jobs").fetchone()[0], 3)
+            finally:
+                await server.close()
+                restored.close()
+
     async def test_real_peer_socket_drives_collection_and_denies_domain_operations(self):
         with tempfile.TemporaryDirectory(prefix="hw3-") as temporary:
             root = Path(temporary)
