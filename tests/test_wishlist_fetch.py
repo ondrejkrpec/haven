@@ -128,19 +128,20 @@ class FetchTests(unittest.TestCase):
             self.assertEqual(connect.call_count, 2)
 
     def test_rebinding_between_redirects_is_rejected_before_connect(self):
+        url = URL.replace("www.fabini.cz", "www.momenti.cz")
         public = (socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("8.8.8.8", 443))
         private = (socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("127.0.0.1", 443))
         client = Mock()
         response = client.getresponse.return_value
         response.status = 301
-        response.getheader.side_effect = lambda key, default=None: {"Location": URL + "&utm_source=x"}.get(key, default)
+        response.getheader.side_effect = lambda key, default=None: {"Location": url + "&utm_source=x"}.get(key, default)
         raw = Mock()
         raw.getpeername.return_value = public[-1]
         with patch.object(socket, "getaddrinfo", side_effect=[[public], [private]]) as resolver, \
                 patch.object(socket, "socket", return_value=raw), \
                 patch.object(fetch.ssl, "create_default_context"), \
                 patch.object(fetch.http.client, "HTTPSConnection", return_value=client):
-            self.assertEqual(fetch.fetch(URL, ADAPTER)["reason"], "destination_denied")
+            self.assertEqual(fetch.fetch(url, "momenti-microdata-v1")["reason"], "destination_denied")
             self.assertEqual(resolver.call_count, 2)
             raw.connect.assert_called_once_with(public[-1])
 

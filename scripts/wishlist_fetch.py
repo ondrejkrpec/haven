@@ -5,10 +5,15 @@ from email.utils import parsedate_to_datetime
 import hashlib
 import http.client
 import ipaddress
+import io
 import json
+from pathlib import Path
+import re
 import socket
 import ssl
+import subprocess
 import sys
+import tempfile
 from urllib.parse import urljoin, urlsplit
 
 from scripts.wishlist_collection import ADAPTERS, validate_result
@@ -57,6 +62,8 @@ def resolve(host):
 
 def connection(host):
     family, kind, protocol, _, endpoint = resolve(host)
+    if host == "www.fabini.cz":
+        return CurlConnection(host, endpoint)
     raw = socket.socket(family, kind, protocol)
     raw.settimeout(TIMEOUT)
     try:
@@ -72,6 +79,103 @@ def connection(host):
     except BaseException:
         raw.close()
         raise
+
+
+class CurlConnection:
+    """Fabini's HTTP/2 path; the caller has validated the entire DNS answer."""
+
+    def __init__(self, host, endpoint):
+        if host != "www.fabini.cz" or endpoint[1] != 443 or not public_address(endpoint[0]):
+            raise FetchError("destination_denied")
+        self.host, self.address = host, endpoint[0]
+        self.response = None
+
+    def request(self, method, path, *, headers):
+        if (method != "GET" or not path.startswith("/") or "\\" in path or "#" in path
+                or any(ord(c) <= 32 or ord(c) == 127 for c in path)):
+            raise FetchError("destination_denied")
+        environment = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"}
+        try:
+            version = subprocess.run(["/usr/bin/curl", "--disable", "--version"],
+                                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                     env=environment, timeout=3, check=False)
+            match = re.match(rb"curl (\d+)\.(\d+)\.(\d+) ", version.stdout)
+            if (version.returncode or not match or tuple(map(int, match.groups())) < (8, 4, 0)
+                    or not re.search(rb"^Features:.*\bHTTP2\b", version.stdout, re.MULTILINE)):
+                raise FetchError("network_failed")
+            address = "[" + self.address + "]" if ":" in self.address else self.address
+            with tempfile.TemporaryDirectory(prefix="haven-fabini-") as temporary:
+                header_path = Path(temporary) / "headers"
+                argv = ["/usr/bin/curl", "--disable", "--silent", "--fail", "--http2", "--globoff",
+                        "--path-as-is", "--no-netrc", "--disallow-username-in-url",
+                        "--proxy", "", "--noproxy", "*", "--proto", "=https",
+                        "--max-redirs", "0", "--retry", "0", "--connect-timeout", "10",
+                        "--max-time", "30", "--speed-limit", "1", "--speed-time", "10",
+                        "--max-filesize", str(MAX_BYTES), "--resolve", self.host + ":443:" + address,
+                        "--dump-header", str(header_path)]
+                for key, value in headers.items():
+                    if any(c in key + value for c in "\r\n\x00"):
+                        raise FetchError("destination_denied")
+                    argv.extend(["--header", key + ": " + value])
+                # Source URLs stay out of argv/diagnostics; disable config, netrc,
+                # proxies, globbing, retries and automatic redirects explicitly.
+                url = ("https://" + self.host + path).replace('"', '\\"')
+                argv.extend(["--config", "-"])
+                completed = subprocess.run(argv, input=('url = "' + url + '"\n').encode(),
+                                           stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                           env=environment, timeout=32, check=False)
+                if completed.returncode == 63 or len(completed.stdout) > MAX_BYTES:
+                    raise FetchError("document_limit")
+                if completed.returncode not in (0, 22):
+                    raise FetchError("fetch_timeout" if completed.returncode == 28 else "network_failed")
+                with header_path.open("rb") as stream:
+                    raw = stream.read(65537)
+                if len(raw) > 65536:
+                    raise FetchError("document_limit")
+                blocks = raw.split(b"\r\n\r\n")
+                if blocks[-1] or not 2 <= len(blocks) <= 7:
+                    raise FetchError("invalid_document")
+                status = None
+                for index, block in enumerate(blocks[:-1]):
+                    line, _, fields = block.partition(b"\r\n")
+                    match = re.fullmatch(rb"HTTP/(?:1\.[01]|2) ([1-5][0-9]{2})(?: [^\r\n]*)?", line)
+                    if not match:
+                        raise FetchError("invalid_document")
+                    status = int(match[1])
+                    if index < len(blocks) - 2 and not 100 <= status < 200:
+                        raise FetchError("invalid_document")
+                    message = http.client.parse_headers(io.BytesIO(fields + b"\r\n\r\n"))
+                    if message.defects:
+                        raise FetchError("invalid_document")
+                if (status < 200 or (completed.returncode == 22) != (status >= 400)):
+                    raise FetchError("invalid_document")
+                self.response = CurlResponse(status, message, completed.stdout)
+        except subprocess.TimeoutExpired:
+            raise FetchError("fetch_timeout") from None
+
+    def getresponse(self):
+        if self.response is None:
+            raise FetchError("invalid_document")
+        return self.response
+
+    def close(self):
+        if self.response is not None:
+            self.response.body.close()
+
+
+class CurlResponse:
+    def __init__(self, status, headers, body):
+        self.status, self.headers, self.body = status, headers, io.BytesIO(body)
+
+    def getheader(self, name, default=None):
+        values = self.headers.get_all(name)
+        return default if values is None else ", ".join(values)
+
+    def getheaders(self):
+        return list(self.headers.items())
+
+    def read(self, size):
+        return self.body.read(size)
 
 
 def retry_delay(value, now=None):

@@ -26,6 +26,7 @@ ATTACHMENTS = (
     "research/w3/acceptance.json",
     "research/w3/shop-adapters.json",
     "research/w3/intimissimi-acceptance.json",
+    "research/w3/fabini-acceptance.json",
     "research/w3/browser-acceptance.json", "research/w3/network-egress-acceptance.json",
     "config/wishlist-browser-runtime.json", "requirements-browser.txt",
     "research/w3/browser_roundtrip.py",
