@@ -364,6 +364,12 @@
 <p>For every hop, resolve once and reject the entire answer if any address is nonpublic or a disallowed mapped/tunnel/translation address. Connect the exact checked numeric sockaddr and verify its peer while retaining the original hostname for TLS SNI/certificate verification. DNS and slow streams are bounded by the whole-process deadline and ten-second socket timeouts.</p>
 </div>
 <div class="paragraph">
+<p>Fabini uses the system <code>/usr/bin/curl</code> HTTPS/HTTP2 transport, while the other direct shop adapters retain the Python transport. The full DNS answer is checked by the same validator and curl receives only the selected numeric address through <code>--resolve</code>, retaining the original host for TLS verification. It requires curl 8.4.0 or newer with HTTP2 support; preparation checks that prerequisite without installing or upgrading OS packages. Runtime validation fails closed if that executable is missing or unsuitable. This system component follows the host&#8217;s package maintenance policy, separately from the hash-pinned Python dependencies.</p>
+</div>
+<div class="paragraph">
+<p>The curl subprocess has a clean environment, disabled user configuration/netrc/proxies, an unchanged identifying User-Agent and a single URL supplied through stdin. Globbing, automatic redirects and retries are disabled. Each hop gets a fresh bounded process: ten-second connection/low-speed limits, thirty-second transfer limit, the outer forty-second worker deadline, a 4 MiB streaming body limit and a 64 KiB accepted-header limit. Error bodies cannot supply a price. Header/status, encoding, content length, redirects, exact variant and structured-data validation still run in the existing worker. Real HTTP 429/Retry-After responses retain the existing host-wide scheduling delay; there is no immediate fallback request. See the <a href="https://github.com/curl/curl/blob/curl-8_18_0/docs/cmdline-opts/resolve.md">curl resolve contract</a> and <a href="https://github.com/curl/curl/blob/curl-8_18_0/docs/cmdline-opts/max-filesize.md">streaming-size-limit version boundary</a>.</p>
+</div>
+<div class="paragraph">
 <p>Allow at most three redirects, retaining original hostname and exact normalized product identity. Only existing UTM/trailing-slash normalization is tolerated. Revalidate syntax and newly resolved addresses before another GET. Cross-host aliases, HTTPS downgrades and product/variant changes fail closed. Responses are limited to 4 MiB; malformed/duplicate/oversized Content-Length, incomplete declared bodies, compressed responses and non-HTML content are refused. Non-200 bodies, including 401/403/429, are never parsed as prices.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
@@ -430,10 +436,21 @@
 </div>
 </div>
 <div class="sect1">
+<h2 id="_fabini_transport_repair_2026_11_15"><a class="anchor" href="#_fabini_transport_repair_2026_11_15"></a>Fabini transport repair, 2026-11-15</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Bounded anonymous reads from the same VPS returned HTTP 429 with <code>Retry-After: 60</code> through the existing Python client, compatible headers, the public Shopify product Ajax endpoint and an explicit HTTP/1.1 ALPN variant. Requests observed the server&#8217;s waiting interval. System curl with HTTP/2 and the same identifying User-Agent returned HTTP 200; the candidate worker then extracted the exact linked offer in CZK. This establishes client-sensitive access, not the exact upstream bot/rate-limit rule. No browser, account, cookies, proxy, workstation relay or immediate retry was added.</p>
+</div>
+<div class="paragraph">
+<p><a href="_attachments/research/w3/fabini-acceptance.json" class="xref attachment">The sanitized source receipt</a> separates synthetic transport-boundary tests and the live candidate read from persistent installation, owner Telegram acceptance and another real daily cycle. Exact source hashes and private product evidence remain in the instance repository.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_intimissimi_source_adapter_2026_11_15"><a class="anchor" href="#_intimissimi_source_adapter_2026_11_15"></a>Intimissimi source adapter, 2026-11-15</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The adapter is prepared in source and the staged module installation list. It accepts Czech product URLs containing a full model/colour/size PID, with literal <code>+</code> or percent-encoded spaces as the separator. UTM tracking remains ignored; base-model links, other locales and identity-bearing query parameters are refused rather than selecting a default variant.</p>
+<p>The adapter is installed on the pilot in both the domain and coordinator code roots. It accepts Czech product URLs containing a full model/colour/size PID, with literal <code>+</code> or percent-encoded spaces as the separator. UTM tracking remains ignored; base-model links, other locales and identity-bearing query parameters are refused rather than selecting a default variant.</p>
 </div>
 <div class="paragraph">
 <p>Intimissimi&#8217;s canonical link identifies the base model, while its JSON-LD offer URL can identify an internal Demandware storefront. The adapter checks the canonical model, full requested PID, primary product DOM PID, JSON-LD SKU, selected colour and explicitly checked size. An internal offer URL is only metadata: its HTTPS host must be the known storefront or public host and its product path must match. The worker never connects to that internal host or follows metadata/AJAX links. Normal destination, redirect, TLS and response bounds remain unchanged for the original public URL.</p>
@@ -442,7 +459,10 @@
 <p>The primary public price must agree across JSON-LD, the visible price and its price metadata, in CZK. Recommendations, crossed-out prices and hidden/member price boxes cannot supply the value. Conditional/aggregate offers, duplicate or conflicting structured products and duplicate JSON keys are refused. Availability comes only from the selected size&#8217;s explicit inventory allocation, recognized selectable size control and low-stock marker, not another size&#8217;s inventory or a generic add-to-cart button. An out-of-stock result requires both zero allocation and a disabled control. Missing inventory, contradictory stock or coming-soon state is unverified. Offer/checkout conditions retain <code>conditions_verification=not_verified</code>.</p>
 </div>
 <div class="paragraph">
-<p><a href="_attachments/research/w3/intimissimi-acceptance.json" class="xref attachment">The source acceptance record</a> separates synthetic verification, the bounded anonymous VPS candidate read and unchanged production state. This is not a persistent installation or owner Telegram/day-spaced acceptance of the new adapter. Existing unsupported entries keep their current deadlines/history; activation must update the compatible installed modules under the existing maintenance procedure and then verify the real collection path.</p>
+<p><a href="_attachments/research/w3/intimissimi-acceptance.json" class="xref attachment">The source acceptance record</a> retains the earlier synthetic verification and bounded anonymous VPS candidate read, before activation. On 2026-11-15, a fresh accepted encrypted snapshot preceded a hash-checked three-module update under maintenance exclusion. Both code roots were updated, the production and isolated acceptance writers/timers resumed, and only the newly supported active Intimissimi offer was requeued. Other shops' deadlines and entry lifecycle/version state were preserved. The database schema stayed at version 5; no historical database was restored.</p>
+</div>
+<div class="paragraph">
+<p>The installed collector then stored one real exact-variant observation. Read-only verification using the installed domain projection and Telegram list/detail formatter matched the saved price and original source URL. This did not send a Telegram message and is separate from owner-visible acceptance and the second real daily cycle. The earlier deployment attempt failed at a setuid helper under <code>NoNewPrivileges</code> and was rolled back before domain maintenance; the successful driver drops to the domain UID/GID directly, including its explicit supplementary groups, without changing the service protections. Exact private manifests, recovery receipts and production observations remain in the instance repository.</p>
 </div>
 </div>
 </div>
