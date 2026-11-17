@@ -1,6 +1,6 @@
 = Wishlist W3: daily price observations
 
-Status, 2026-11-11: schema 5 and the collector are installed on the Ubuntu pilot. An isolated database using the installed domain/collector identities passed one real iFantazie fetch, stored observation, Telegram detail formatting and a no-work immediate repeat. Current production entries were purchased or removed, so the real domain correctly admitted no job. Alza remains blocked by Cloudflare on the VPS, including disposable headed-browser diagnostics. This is partial deployment acceptance; functional Alza, another daily cycle and owner-visible current prices remain open.
+Status, 2026-11-17: schema 5 and the collector are installed on the Ubuntu pilot. Read-only production verification establishes two naturally scheduled observations more than 24 hours apart for Momenti, Fabini and iFantazie. Intimissimi has one accepted observation; its next daily attempt failed verification, and a subsequent bounded diagnostic found the exact size unavailable with no valid primary price. Its second successful daily observation remains open. Alza remains deferred to the final W item. This is not acceptance of daily history for all four non-Alza sources.
 
 Owner acceptance update, 2026-11-15: the owner confirmed the saved Fabini and Intimissimi prices in Telegram, following the earlier Momenti/iFantazie acceptance. This closes owner-visible prices for these four sources, not their second real daily cycle. W4 source work now lives in link:wishlist-observability.adoc[accounting, retention and independent collection monitoring]; the dated implementation/probe sections below retain their original scope.
 
@@ -20,6 +20,23 @@ The owner moved Alza to the final item of the overall W work. Complete and asses
 |===
 
 Use a read-only audit of existing state before creating work. Purchased, paused and removed entries are not acceptance inputs to reactivate silently. If no eligible entries exist, retain an explicitly isolated installed-unit fixture across the real daily interval; its result still does not establish owner production prices. Keep source revisions, actual timestamps, commands, outcomes and limits in the acceptance record. A configured timer or a successful local test is not a completed daily cycle.
+
+== Live daily verification, 2026-11-17
+
+The read-only audit joined production observations to their completed durable jobs and verified stored result digests, unchanged entry versions/generations and the second claim occurring more than 24 hours after the previous successful completion. No deadline, clock, lifecycle or production row was changed for this verification. The following times are UTC, rounded down to seconds:
+
+[cols="1,2,2,1",options="header"]
+|===
+|Source |First observation |Second observation |Result
+|Momenti |2026-11-15 11:36:39 |2026-11-16 11:45:13 |Daily condition passed
+|Fabini |2026-11-15 16:57:45 |2026-11-16 17:00:12 |Daily condition passed
+|iFantazie |2026-11-15 11:36:42 |2026-11-16 11:45:15 |Daily condition passed
+|Intimissimi |2026-11-15 16:38:13 |No second observation |Open
+|===
+
+Intimissimi's scheduled attempt on 16 November completed with `offer_unverified`, preserving its previous price and next daily deadline. A single bounded diagnostic on 17 November used the installed worker and collector identity without a collection claim or database write. The product identity matched, but the selected size had zero allocation and `size-button--unavailable`; its matching structured offer contained literal `null` price/currency and its primary price field was empty. Prices elsewhere on the page do not establish this exact offer's price. An offline parser experiment that recognized the unavailable-size class still failed price/currency verification and was not installed. No production code change is justified by that experiment alone.
+
+The owner's Telegram acceptance for all four first prices, immediate-repeat evidence, interrupted-lease recovery and exact isolated restoration of nonempty production history remain separately recorded on 15 November. Those results do not turn the failed Intimissimi attempt into a successful daily price. The explicit instance audit drivers and detailed receipts stay in the private instance repository; no product URL, conversation or credential is a public build input. Restoring stock or an explicitly authorized alternative exact offer needs its own live acceptance; do not change a variant or schedule to make this check pass.
 
 == Components and identities
 
