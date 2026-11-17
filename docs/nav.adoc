@@ -48,6 +48,7 @@
 ** xref:adr/0016-durable-wishlist-collection.adoc[ADR 0016: Durable wishlist collection]
 ** xref:adr/0017-wishlist-observability-retention.adoc[ADR 0017: Wishlist aggregates and replay retention]
 ** xref:adr/0017-isolated-alza-browser.adoc[ADR 0017: Isolated Alza browser]
+** xref:adr/0018-availability-without-price.adoc[ADR 0018: Availability without price]
 * Verification
 ** xref:wishlist-feasibility.adoc[Wishlist direct-fetch feasibility]
 ** xref:wishlist-browser-feasibility.adoc[Wishlist browser mode experiments]

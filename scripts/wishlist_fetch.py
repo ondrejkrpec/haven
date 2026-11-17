@@ -251,7 +251,8 @@ def fetch(url, adapter):
                 required = REQUIRED_EVIDENCE[adapter]
                 if candidate["status"] != "extracted" or required not in candidate.get("evidence", []):
                     return failure("offer_unverified", http_status=status)
-                result = {"status": "ok", "reason": "structured_offer_candidate", "http_status": 200,
+                reason = "source_out_of_stock" if candidate["offer"]["price"] is None else "structured_offer_candidate"
+                result = {"status": "ok", "reason": reason, "http_status": 200,
                           "retry_after": retry, "offer": candidate["offer"]}
                 validate_result(result)
                 return result

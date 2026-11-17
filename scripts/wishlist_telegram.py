@@ -65,8 +65,12 @@ def _summary(entry, *, include_url=True):
         result += "\n" + (entry["url"] if len(entry["url"].encode("utf-16-le")) <= source_limit
                            else f"Celý uložený odkaz: wl detail {entry['reference']}")
     observation = entry.get("latest_observation")
+    unavailable = entry.get("collection_reason") == "source_out_of_stock"
     if observation:
-        result += f"\n{observation['price']} {observation['currency']} · {observation['observed_at'][:10]} · podmínky neověřeny"
+        label = "Poslední ověřená cena: " if unavailable else ""
+        result += f"\n{label}{observation['price']} {observation['currency']} · {observation['observed_at'][:10]} · podmínky neověřeny"
+    if unavailable:
+        result += "\nVyprodáno; aktuální cenu obchod neuvádí."
     if entry.get("last_attempt_at"):
         result += "\nSběr: " + {"pending": "čeká", "ok": "OK", "blocked": "blokovaný",
                                 "unsupported": "nepodporovaný", "failed": "selhal", "stale": "zastaralý"}[entry["collection_status"]]
@@ -100,13 +104,17 @@ def _reply_text(result, operation, arguments):
         observation = entry.get("latest_observation")
         if observation:
             reply += "\nPozorováno: " + observation["observed_at"]
+            availability = (entry.get("latest_availability") or {}).get("availability", observation["availability"])
             reply += "\nDostupnost: " + {"in_stock": "skladem", "out_of_stock": "vyprodáno",
                 "preorder": "předobjednávka", "backorder": "na objednávku", "limited": "omezená",
-                "discontinued": "ukončený prodej"}[observation["availability"]]
+                "discontinued": "ukončený prodej"}[availability]
+            checked_at = (entry.get("latest_availability") or {}).get("checked_at", observation["observed_at"])
+            reply += " (ověřeno " + checked_at + ")"
         else:
             reply += "\nCena zatím není zjištěná."
         if entry.get("collection_reason"):
             reasons = {"structured_offer_candidate": "Cena ze stránky; podmínky nabídky nejsou ověřené.",
+                       "source_out_of_stock": "Dostupnost a cenu znovu ověřím při další plánované kontrole.",
                        "unsupported_shop": "Tento obchod zatím nemá podporovaný sběrač.",
                        "source_http_401": "Zdroj požaduje přihlášení.",
                        "source_http_403": "Zdroj odmítl přístup.",

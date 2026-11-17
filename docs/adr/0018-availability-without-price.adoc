@@ -1,0 +1,19 @@
+= ADR 0018: retain verified stock independently of price
+
+Date: 2026-11-17. Status: accepted for implementation.
+
+== Context
+
+The owner requested continued checks when an exact Intimissimi variant is unavailable and its primary/structured price is absent. Treating this as a parser failure loses useful stock evidence; writing zero or repeating the old amount would invent a current price.
+
+== Decision
+
+The bounded worker may return `ok/source_out_of_stock` only with exact variant/SKU evidence, verified zero stock and absent primary/structured price. It returns null price/currency. HTTP errors, identity conflicts and contradictory prices retain their existing failure paths.
+
+The domain validates the distinct result shape, preserves existing price observations and atomically retains the last verified SKU, stock and domain timestamp in schema-5 `metadata`, under `collection_availability:<offer_id>`. This reserved per-offer state survives worker-payload retention, restart and backup without a schema migration. A previous price or stock check pins SKU. A newer price observation takes precedence over older availability metadata, including observations from a legacy writer.
+
+The same durable daily deadline schedules future checks. A later valid price updates price history and stock normally. Known unavailability is successful source verification; transport, parsing, lease and scheduling failures remain visible to independent monitoring. Telegram distinguishes a historical price from the latest checked stock state and displays its timestamp.
+
+== Consequences
+
+Availability-only checks add no priced observation. The metadata has one bounded record per retained offer; removal remains reversible. There is no live promise of future shop availability. Restock behavior is verified with a deterministic lifecycle test; real unavailable and available products are separate live acceptance evidence. Lower-trust source data still cannot supply identity, arbitrary commands or a fallback price.

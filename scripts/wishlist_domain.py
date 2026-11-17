@@ -186,11 +186,21 @@ class Wishlist:
                   **{key: row[key] for key in row.keys() if key not in ("sequence", "owner_id")}}
         overdue = (record["state"] == "active" and record["removed_at"] is None and record["next_collection_at"]
                    and instant(record["next_collection_at"]) + timedelta(hours=1) < self.clock())
+        availability_row = db.execute("SELECT value FROM metadata WHERE key=?",
+                                      ("collection_availability:" + row["offer_id"],)).fetchone()
+        availability = None
+        if availability_row:
+            saved = json.loads(availability_row[0])
+            availability = {key: saved[key] for key in ("availability", "checked_at")}
+        # A legacy writer may add a price without updating the new metadata.
+        if observation and (availability is None or instant(observation["observed_at"]) > instant(availability["checked_at"])):
+            availability = {"availability": observation["availability"], "checked_at": observation["observed_at"]}
         return {**record,
                 "state": "removed" if record["removed_at"] else record["state"],
                 "collection_status": "stale" if overdue else record["collection_status"],
                 "collection_reason": "schedule_overdue" if overdue else record["collection_reason"],
                 "latest_observation": dict(observation) if observation else None,
+                "latest_availability": availability,
                 "reference": f"#{row['sequence']}"}
 
     def _result(self, db, request_id, entry_id, *, committed):
