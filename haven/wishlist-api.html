@@ -366,6 +366,9 @@
 <p>Store entry lifecycle (<code>active</code>, <code>paused</code>, <code>purchased</code>), classification completeness and collection status separately. Collection status includes <code>pending</code>, <code>ok</code>, <code>blocked</code>, <code>unsupported</code>, <code>failed</code> and <code>stale</code>. A saved entry can therefore report successful intake and a failed source independently. Diagnostic state changes do not overwrite a successful historical observation.</p>
 </div>
 <div class="paragraph">
+<p>List/detail projections include <code>latest_availability</code> with <code>availability</code> and <code>checked_at</code>, independently of the latest priced observation. A verified unavailable exact variant without a price can complete as <code>ok/source_out_of_stock</code>; it preserves old price history and schedules another daily check. Its stock state survives later failed fetches and payload retention. <code>latest_observation</code> continues to mean an actual price observation, and a timestamped stock state does not promise present or future inventory. See <a href="wishlist-collection.html" class="xref page">W3 stock and price recovery</a>.</p>
+</div>
+<div class="paragraph">
 <p>The service generates opaque entry IDs. User-facing field/state mutations increment the entry version; price arrivals do not. Stale expected versions produce <code>conflict</code> without modifying the entry. Resolve vague references such as "the pan" against the owner&#8217;s entries and ask if several match. Pending clarification belongs to a durable owner/chat record tied to the entry/version; unrelated messages must not answer it accidentally.</p>
 </div>
 </div>
