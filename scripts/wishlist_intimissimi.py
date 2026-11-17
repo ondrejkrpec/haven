@@ -103,16 +103,18 @@ def public_offer(html, url):
                        and "js-intProductDetail-size-item" in classes(node) and node.attrs.get("for") == size])
     require("button" in classes(size_label) and not classes(size_label) - {
         "js-intProductDetail-size-item", "cc-intProductDetail-size-item", "size-list-item", "boolean-field", "button",
-        "size-button--low-in-stock", "cc-intProductDetail-size-item_low", "disabled"})
+        "size-button--low-in-stock", "cc-intProductDetail-size-item_low", "size-button--unavailable", "disabled"})
     stock = only([node for node in walk(size_label) if node.tag == "input"
                   and node.attrs.get("type") == "radio" and node.attrs.get("data-size-id") == size])
     allocation = stock.attrs.get("data-allocation", "")
     require(isinstance(allocation, str) and re.fullmatch(r"[0-9]{1,9}(?:\.[0-9]{1,3})?", allocation) is not None
             and stock.attrs.get("data-iscomingsoon") == "false")
     available = Decimal(allocation) > 0
-    disabled = "disabled" in stock.attrs or "disabled" in classes(size_label)
+    unavailable = "size-button--unavailable" in classes(size_label)
+    disabled = "disabled" in stock.attrs or "disabled" in classes(size_label) or unavailable
     require(available != disabled)
     low = bool({"size-button--low-in-stock", "cc-intProductDetail-size-item_low"} & classes(size_label))
+    require(not unavailable or not low)
     availability = ("limited" if low else "in_stock") if available else "out_of_stock"
 
     records = []
@@ -126,7 +128,6 @@ def public_offer(html, url):
         offer = only(offer)
     require(isinstance(offer, dict) and types(offer) == {"Offer"}
             and not set(offer) - {"@type", "price", "priceCurrency", "url", "itemCondition", "availability"}
-            and offer.get("priceCurrency") == "CZK"
             and offer.get("itemCondition") in ("NewCondition", "https://schema.org/NewCondition"))
     offer_url = offer.get("url")
     offer_host, _, _ = identity(offer_url)
@@ -138,7 +139,6 @@ def public_offer(html, url):
     if "availability" in offer:
         expected = {"in_stock": "InStock", "limited": "LimitedAvailability", "out_of_stock": "OutOfStock"}[availability]
         require(offer["availability"] in (expected, "https://schema.org/" + expected))
-    price = amount(str(offer.get("price", "")))
     title = text(only([node for node in nodes if node.tag == "h1" and node.attrs.get("itemprop") == "name"]))
     require(isinstance(product.get("name"), str) and title == " ".join(unescape(product["name"]).split()))
 
@@ -149,6 +149,17 @@ def public_offer(html, url):
     visible_price = only(prices)
     require(visible(visible_price))
     currency = only([node for node in walk(public) if node.attrs.get("itemprop") == "priceCurrency"])
+    # Absence is meaningful only after exact variant, SKU and zero stock are
+    # verified. A present/conflicting price never falls back to availability.
+    missing = (None, "", "null")
+    if (not available and offer.get("price") in missing
+            and visible_price.attrs.get("content") in missing and not text(visible_price)):
+        require(offer.get("priceCurrency") in (*missing, "CZK")
+                and currency.attrs.get("content") in (*missing, "CZK"))
+        return {"name": title, "sku": pid, "price": None, "currency": None,
+                "availability": "out_of_stock", "conditions_verification": "not_verified"}
+    require(offer.get("priceCurrency") == "CZK")
+    price = amount(str(offer.get("price", "")))
     require(currency.attrs.get("content") == "CZK" and amount(visible_price.attrs.get("content", "")) == price)
     display = re.fullmatch(r"([0-9]{1,9}|[0-9]{1,3}(?: [0-9]{3})+),([0-9]{2}) Kč", text(visible_price))
     require(display is not None and amount(display[1].replace(" ", "") + "." + display[2]) == price)

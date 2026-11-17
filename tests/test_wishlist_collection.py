@@ -51,6 +51,96 @@ class CollectionTests(unittest.TestCase):
     def supported(self, path="synthetic"):
         return self.add(url="https://www.fabini.cz/products/" + path)
 
+    def test_price_unavailable_then_restock_preserves_history_and_recovers_after_restart(self):
+        from scripts.wishlist_telegram import _reply_text
+        entry = self.supported()
+        self.finish(self.claim())
+        first = self.domain._entry(self.domain.store.db, entry['entry_id'])['latest_observation']
+        self.now += timedelta(days=1)
+        stock = deepcopy(SUCCESS)
+        stock['reason'] = 'source_out_of_stock'
+        stock['offer'].update(price=None, currency=None, availability='out_of_stock')
+        job = self.claim()
+        self.assertEqual(self.finish(job, stock)['code'], 'ok')
+        self.assertEqual(self.finish(job, stock)['code'], 'ok')
+        current = self.domain._entry(self.domain.store.db, entry['entry_id'])
+        self.assertEqual(current['latest_observation'], first)
+        self.assertEqual(current['latest_availability'], {'availability': 'out_of_stock', 'checked_at': stamp(self.now)})
+        reply = _reply_text({'code': 'ok', 'committed': False, 'data': {'entry': current}}, 'wishlist.get', {})
+        self.assertIn('Poslední ověřená cena: 249.90 CZK', reply)
+        self.assertIn('Dostupnost: vyprodáno', reply)
+        self.assertNotIn('Dostupnost: skladem', reply)
+        self.assertIn('další plánované kontrole', reply)
+        self.assertEqual(self.claim()['code'], 'idle')
+        self.now += timedelta(days=1)
+        self.assertEqual(self.finish(self.claim(), failure('network_failed'))['code'], 'ok')
+        failed = self.domain._entry(self.domain.store.db, entry['entry_id'])
+        self.assertEqual(failed['latest_availability'], current['latest_availability'])
+        self.domain.close()
+        self.domain = Wishlist(self.path, bot_id=self.domain.bot_id, owner_id=self.domain.owner_id, clock=lambda: self.now)
+        self.collection = Collection(self.domain)
+        self.assertEqual(self.claim()['code'], 'idle')
+        self.now += timedelta(days=1)
+        returned = deepcopy(SUCCESS)
+        returned['offer']['price'] = '299.00'
+        self.assertEqual(self.finish(self.claim(), returned)['code'], 'ok')
+        current = self.domain._entry(self.domain.store.db, entry['entry_id'])
+        self.assertEqual(current['latest_observation']['price'], '299.00')
+        self.assertEqual(current['latest_availability']['availability'], 'in_stock')
+        self.assertEqual(self.domain.store.db.execute('SELECT COUNT(*) FROM observations').fetchone()[0], 2)
+
+    def test_availability_before_any_price_and_invalid_stock_results(self):
+        from scripts.wishlist_observability import collect as metrics, health
+        from scripts.wishlist_retention import compact
+        entry = self.supported()
+        stock = deepcopy(SUCCESS)
+        stock['reason'] = 'source_out_of_stock'
+        stock['offer'].update(price=None, currency=None, availability='out_of_stock')
+        job = self.claim()
+        for field, value in (('price', '1.00'), ('currency', 'CZK'), ('availability', 'in_stock'), ('sku', '')):
+            invalid = deepcopy(stock)
+            invalid['offer'][field] = value
+            self.assertEqual(self.finish(job, invalid)['code'], 'invalid_request')
+        self.assertEqual(self.finish(job, stock)['code'], 'ok')
+        current = self.domain._entry(self.domain.store.db, entry['entry_id'])
+        self.assertIsNone(current['latest_observation'])
+        self.assertEqual(current['latest_availability']['availability'], 'out_of_stock')
+        compact(self.domain)
+        self.assertEqual(health(metrics(self.path, now=self.now), self.now), [])
+        self.now += timedelta(days=1)
+        self.assertEqual(self.finish(self.claim())['code'], 'ok')
+        self.now += timedelta(days=1)
+        wrong = deepcopy(stock)
+        wrong['offer']['sku'] = 'OTHER'
+        self.assertEqual(self.finish(self.claim(), wrong)['code'], 'ok')
+        current = self.domain._entry(self.domain.store.db, entry['entry_id'])
+        self.assertEqual(current['collection_status'], 'failed')
+        self.assertEqual(current['latest_observation']['price'], '249.90')
+
+    def test_stock_identity_and_timestamp_survive_payload_retention_without_a_price(self):
+        from scripts.wishlist_retention import compact
+        entry = self.supported()
+        stock = deepcopy(SUCCESS)
+        stock['reason'] = 'source_out_of_stock'
+        stock['offer'].update(price=None, currency=None, availability='out_of_stock')
+        self.finish(self.claim(), stock)
+        checked_at = stamp(self.now)
+        self.now += timedelta(days=31)
+        compact(self.domain)
+        self.assertIsNone(self.domain.store.db.execute('SELECT result FROM collection_jobs').fetchone()[0])
+        self.domain.close()
+        self.domain = Wishlist(self.path, bot_id=self.domain.bot_id, owner_id=self.domain.owner_id, clock=lambda: self.now)
+        self.collection = Collection(self.domain)
+        current = self.domain._entry(self.domain.store.db, entry['entry_id'])
+        self.assertEqual(current['latest_availability'], {'availability': 'out_of_stock', 'checked_at': checked_at})
+        wrong = deepcopy(SUCCESS)
+        wrong['offer']['sku'] = 'OTHER'
+        self.assertEqual(self.finish(self.claim(), wrong)['code'], 'ok')
+        self.assertIsNone(self.domain._entry(self.domain.store.db, entry['entry_id'])['latest_observation'])
+        self.now += timedelta(days=1)
+        self.assertEqual(self.finish(self.claim())['code'], 'ok')
+        self.assertEqual(self.domain._entry(self.domain.store.db, entry['entry_id'])['latest_observation']['price'], '249.90')
+
     def test_daily_history_is_atomic_idempotent_and_visible_to_owner(self):
         entry = self.supported()
         job = self.claim()
@@ -191,6 +281,8 @@ class CollectionTests(unittest.TestCase):
         self.assertEqual(self.finish(job)["code"], "unavailable")
         self.assertEqual(self.domain.store.db.execute("SELECT COUNT(*) FROM observations").fetchone()[0], 0)
         self.assertEqual(self.domain.store.db.execute("SELECT status FROM collection_jobs").fetchone()[0], "running")
+        self.assertEqual(self.domain.store.db.execute(
+            "SELECT COUNT(*) FROM metadata WHERE key LIKE 'collection_availability:%'").fetchone()[0], 0)
         self.domain.store.db.execute("DROP TRIGGER fail_completion")
         self.assertEqual(self.finish(job)["code"], "ok")
 

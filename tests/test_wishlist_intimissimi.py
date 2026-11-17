@@ -46,8 +46,49 @@ def page(product=None, *, stock="2.0", low=True):
     </div>'''
 
 
+def unavailable_page():
+    product = record()
+    product['offers'].update(price='null', priceCurrency='null')
+    return (page(product, stock='0', low=False).replace(' disabled', '')
+            .replace('js-intProductDetail-size-item button ',
+                     'js-intProductDetail-size-item button size-button--unavailable ')
+            .replace('content="249.90"', 'content="null"').replace('249,90 Kč', '')
+            .replace('content="CZK"', 'content="null"'))
+
+
 class IntimissimiTests(unittest.TestCase):
     responses = fetch_tests.FetchTests.responses
+
+    def test_exact_unavailable_variant_can_report_stock_without_inventing_a_price(self):
+        result = public_offer(unavailable_page(), URL)
+        self.assertEqual(result['availability'], 'out_of_stock')
+        self.assertIsNone(result['price'])
+        self.assertIsNone(result['currency'])
+        self.assertEqual(result['sku'], PID)
+        with self.responses((200, {'Content-Type': 'text/html'}, unavailable_page().encode())):
+            result = wishlist_fetch.fetch(URL, ADAPTER)
+            self.assertEqual((result['status'], result['reason']), ('ok', 'source_out_of_stock'))
+            self.assertIsNone(result['offer']['price'])
+
+    def test_unavailable_without_price_still_requires_exact_identity_zero_stock_and_absence(self):
+        html = unavailable_page()
+        for invalid in (html.replace('data-allocation="0"', 'data-allocation="2"'),
+                        html.replace('size-button--unavailable', 'size-button--unavailable size-button--low-in-stock'),
+                        html.replace('"sku": "' + PID, '"sku": "OTHER'),
+                        html.replace('data-iscomingsoon="false"', 'data-iscomingsoon="true"'),
+                        html.replace('"priceCurrency": "null"', '"priceCurrency": "EUR"'),
+                        html.replace('itemprop="price" content="null">', 'itemprop="price" content="null">249,90 Kč'),
+                        html.replace('itemprop="price" content="null"', 'itemprop="price" content="1.00"'),
+                        html.replace('data-size-id="M" checked', 'data-size-id="L" checked'),
+                        html.replace('size-button--unavailable', 'unknown-stock-class')):
+            with self.subTest(html=invalid[:100]), self.assertRaises(ExtractionError):
+                public_offer(invalid, URL)
+
+    def test_unavailable_with_a_verified_price_remains_a_normal_price_observation(self):
+        html = (page(stock='0', low=False).replace(' disabled', '')
+                .replace('js-intProductDetail-size-item button ',
+                         'js-intProductDetail-size-item button size-button--unavailable '))
+        self.assertEqual(public_offer(html, URL)['price'], '249.90')
 
     def test_full_pid_binds_selected_colour_size_visible_price_and_limited_stock(self):
         result = public_offer(page().encode(), URL)

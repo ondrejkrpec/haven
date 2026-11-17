@@ -48,6 +48,16 @@ The staged non-login `haven-collector` identity has no wishlist database permiss
 
 == Durable scheduling and results
 
+=== Verified unavailability without a price
+
+The Intimissimi adapter can return `ok/source_out_of_stock` after verifying the exact requested model/colour/size, matching structured SKU, zero allocation and the absence of a primary and structured price. Price and currency are null in this distinct worker result. Present conflicting prices, wrong identities, ambiguous stock and HTTP errors cannot use this path. A verified price on an unavailable product remains an ordinary priced observation.
+
+The domain pins SKU from an existing price or stock check. In the same short completion transaction it stores the last verified SKU, availability and timestamp in schema-5 metadata at `collection_availability:<offer_id>`. Stock-only checks add no price observation and leave the last known price and its timestamp intact. The independent stock record survives subsequent network errors, restart, payload retention and backup. A newer priced observation takes precedence over older metadata from a legacy writer. Entry list/detail includes `latest_availability`; Telegram labels an old price explicitly and displays the checked stock state/time.
+
+Every stock-only completion receives the normal next daily deadline. A later available product with a valid price appends a new price observation and replaces the stock state. Removed, paused or purchased items retain their existing scheduling exclusions. Known unavailability is a verified source result; network, parser and overdue-scan failures still fail independent health checks. This behavior does not promise that a shop will restock. link:adr/0018-availability-without-price.adoc[ADR 0018] records the storage and trust boundary.
+
+=== Daily admission
+
 Migration 5 preserves entries, purchases, receipts and conversations. It adds offer deadlines/diagnostics, collection jobs, observations, shop retry deadlines and automatic pause-expiry events. Jobs bind a claim ID, random job/attempt IDs, offer, entry version, generation, URL SHA-256, adapter and a 120-second lease. Observations retain decimal price, currency, SKU, availability, observation time and condition uncertainty, with one observation per job.
 
 Active, nonremoved entries are initially due immediately, including incomplete classifications. Every completed attempt schedules the offer at least 24 hours later. Retry-After can postpone it further, with a bounded one-year representation. HTTP 429 or an explicit Retry-After also delays other offers at that exact shop host. There are no immediate HTTP retries. An expired running job is retained and retried no sooner than an hour after reconciliation.

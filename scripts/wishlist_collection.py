@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import hashlib
+import json
 import re
 import sqlite3
 from uuid import uuid4
@@ -19,7 +20,7 @@ REASONS = frozenset({
     "structured_offer_candidate", "unsupported_shop", "source_http_401", "source_http_403",
     "source_http_429", "source_http_error", "destination_denied", "redirect_denied",
     "network_failed", "fetch_timeout", "document_limit", "invalid_document", "unsupported_encoding",
-    "unsupported_content_type", "offer_unverified", "lease_expired", "entry_changed",
+    "unsupported_content_type", "offer_unverified", "lease_expired", "entry_changed", "source_out_of_stock",
 })
 
 
@@ -33,20 +34,25 @@ def validate_result(result):
             or type(result["retry_after"]) is not int or not 0 <= result["retry_after"] <= 31536000):
         raise ValueError("collection_result")
     if result["status"] != "ok":
-        if "offer" in result or result["reason"] == "structured_offer_candidate":
+        if "offer" in result or result["reason"] in {"structured_offer_candidate", "source_out_of_stock"}:
             raise ValueError("collection_failed_offer")
         return
     offer = result.get("offer")
-    if (result["http_status"] != 200 or result["reason"] != "structured_offer_candidate"
+    if (result["http_status"] != 200 or result["reason"] not in {"structured_offer_candidate", "source_out_of_stock"}
             or not isinstance(offer, dict)
             or set(offer) != {"name", "sku", "price", "currency", "availability", "conditions_verification"}
             or any(not isinstance(offer[key], str) or not 1 <= len(offer[key]) <= maximum
                    or any(ord(c) < 32 for c in offer[key])
-                   for key, maximum in (("name", 200), ("sku", 100), ("price", 12)))
-            or amount(offer["price"]) != offer["price"] or offer["currency"] != "CZK"
+                   for key, maximum in (("name", 200), ("sku", 100)))
             or offer["availability"] not in AVAILABILITY.values()
             or offer["conditions_verification"] != "not_verified"):
         raise ValueError("collection_offer")
+    if result["reason"] == "source_out_of_stock":
+        if offer["price"] is not None or offer["currency"] is not None or offer["availability"] != "out_of_stock":
+            raise ValueError("collection_availability")
+    elif (not isinstance(offer["price"], str) or not 1 <= len(offer["price"]) <= 12
+          or amount(offer["price"]) != offer["price"] or offer["currency"] != "CZK"):
+        raise ValueError("collection_price")
 
 
 class Collection:
@@ -171,16 +177,25 @@ class Collection:
             # Pin product SKU and currency after the first observation; changed variants need review.
             previous = db.execute("SELECT sku, currency FROM observations WHERE offer_id=? ORDER BY sequence DESC LIMIT 1",
                                   (row["offer_id"],)).fetchone()
-            if previous and (candidate["sku"], candidate["currency"]) != (previous["sku"], previous["currency"]):
+            key = "collection_availability:" + row["offer_id"]
+            availability = db.execute("SELECT value FROM metadata WHERE key=?", (key,)).fetchone()
+            pinned_sku = previous["sku"] if previous else json.loads(availability[0])["sku"] if availability else None
+            if ((pinned_sku is not None and candidate["sku"] != pinned_sku) or (
+                    previous and candidate["price"] is not None and candidate["currency"] != previous["currency"])):
                 result = {"status": "failed", "reason": "offer_unverified", "http_status": 200, "retry_after": 0}
             else:
-                db.execute("""INSERT INTO observations
+                # Retain the last verified stock state independently of price
+                # history and compactable worker payloads, in this transaction.
+                db.execute("INSERT OR REPLACE INTO metadata VALUES (?, ?)", (key, canonical({
+                    "sku": candidate["sku"], "availability": candidate["availability"], "checked_at": current})))
+                if candidate["price"] is not None:
+                    db.execute("""INSERT INTO observations
                     (job_id, offer_id, observed_at, adapter, price, currency, availability, name, sku, conditions_verification)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                            (row["job_id"], row["offer_id"], current, row["adapter"], candidate["price"],
                             candidate["currency"], candidate["availability"], candidate["name"], candidate["sku"],
                             candidate["conditions_verification"]))
-                db.execute("UPDATE offers SET last_observed_at=? WHERE offer_id=?", (current, row["offer_id"]))
+                    db.execute("UPDATE offers SET last_observed_at=? WHERE offer_id=?", (current, row["offer_id"]))
         # Keep the submitted digest even if domain validation downgraded the observation.
         db.execute("""UPDATE collection_jobs SET status='completed', completed_at=?, result_sha256=?, result=?
             WHERE job_id=?""", (current, fingerprint, canonical(result), row["job_id"]))
