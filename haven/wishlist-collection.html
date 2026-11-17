@@ -215,6 +215,10 @@
     <a href="adr/0017-isolated-alza-browser.html">ADR 0017: Isolated Alza browser</a>
     
   </li>
+  <li>
+    <a href="adr/0018-availability-without-price.html">ADR 0018: Availability without price</a>
+    
+  </li>
 </ul>
 
   </li>
@@ -404,6 +408,20 @@
 <div class="sect1">
 <h2 id="_durable_scheduling_and_results"><a class="anchor" href="#_durable_scheduling_and_results"></a>Durable scheduling and results</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_verified_unavailability_without_a_price"><a class="anchor" href="#_verified_unavailability_without_a_price"></a>Verified unavailability without a price</h3>
+<div class="paragraph">
+<p>The Intimissimi adapter can return <code>ok/source_out_of_stock</code> after verifying the exact requested model/colour/size, matching structured SKU, zero allocation and the absence of a primary and structured price. Price and currency are null in this distinct worker result. Present conflicting prices, wrong identities, ambiguous stock and HTTP errors cannot use this path. A verified price on an unavailable product remains an ordinary priced observation.</p>
+</div>
+<div class="paragraph">
+<p>The domain pins SKU from an existing price or stock check. In the same short completion transaction it stores the last verified SKU, availability and timestamp in schema-5 metadata at <code>collection_availability:&lt;offer_id&gt;</code>. Stock-only checks add no price observation and leave the last known price and its timestamp intact. The independent stock record survives subsequent network errors, restart, payload retention and backup. A newer priced observation takes precedence over older metadata from a legacy writer. Entry list/detail includes <code>latest_availability</code>; Telegram labels an old price explicitly and displays the checked stock state/time.</p>
+</div>
+<div class="paragraph">
+<p>Every stock-only completion receives the normal next daily deadline. A later available product with a valid price appends a new price observation and replaces the stock state. Removed, paused or purchased items retain their existing scheduling exclusions. Known unavailability is a verified source result; network, parser and overdue-scan failures still fail independent health checks. This behavior does not promise that a shop will restock. <a href="adr/0018-availability-without-price.html" class="xref page">ADR 0018</a> records the storage and trust boundary.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_daily_admission"><a class="anchor" href="#_daily_admission"></a>Daily admission</h3>
 <div class="paragraph">
 <p>Migration 5 preserves entries, purchases, receipts and conversations. It adds offer deadlines/diagnostics, collection jobs, observations, shop retry deadlines and automatic pause-expiry events. Jobs bind a claim ID, random job/attempt IDs, offer, entry version, generation, URL SHA-256, adapter and a 120-second lease. Observations retain decimal price, currency, SKU, availability, observation time and condition uncertainty, with one observation per job.</p>
 </div>
@@ -418,6 +436,7 @@
 </div>
 <div class="paragraph">
 <p>Observation, completion and diagnostics commit atomically. Storage failure rolls them all back. Restart and database restoration retain deadlines/leases/digests. Restored runtimes must remain isolated from production until activity is reconciled; expired work becomes a fresh later attempt. No transaction waits for network I/O.</p>
+</div>
 </div>
 </div>
 </div>
