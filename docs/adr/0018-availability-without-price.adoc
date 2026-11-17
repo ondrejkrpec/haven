@@ -1,6 +1,6 @@
 = ADR 0018: retain verified stock independently of price
 
-Date: 2026-11-17. Status: accepted for implementation.
+Date: 2026-11-17. Status: accepted and installed on the pilot.
 
 == Context
 
