@@ -34,6 +34,8 @@ W1/W2 implement these domain operations and deterministic Telegram commands. Act
 
 Store entry lifecycle (`active`, `paused`, `purchased`), classification completeness and collection status separately. Collection status includes `pending`, `ok`, `blocked`, `unsupported`, `failed` and `stale`. A saved entry can therefore report successful intake and a failed source independently. Diagnostic state changes do not overwrite a successful historical observation.
 
+List/detail projections include `latest_availability` with `availability` and `checked_at`, independently of the latest priced observation. A verified unavailable exact variant without a price can complete as `ok/source_out_of_stock`; it preserves old price history and schedules another daily check. Its stock state survives later failed fetches and payload retention. `latest_observation` continues to mean an actual price observation, and a timestamped stock state does not promise present or future inventory. See link:wishlist-collection.adoc[W3 stock and price recovery].
+
 The service generates opaque entry IDs. User-facing field/state mutations increment the entry version; price arrivals do not. Stale expected versions produce `conflict` without modifying the entry. Resolve vague references such as "the pan" against the owner's entries and ask if several match. Pending clarification belongs to a durable owner/chat record tied to the entry/version; unrelated messages must not answer it accidentally.
 
 == Receipts and responses
