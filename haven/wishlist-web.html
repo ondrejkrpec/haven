@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishlist web: first interaction preview · Haven</title>
+  <link rel="stylesheet" href="../_/css/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header><a href="index.html">Haven</a><span>Project documentation</span></header>
+  <div class="layout">
+    <nav aria-label="Documentation"><ul>
+  <li>
+    <span></span>
+    <ul>
+  <li>
+    <a href="index.html">Overview</a>
+    
+  </li>
+  <li>
+    <span>Getting started</span>
+    <ul>
+  <li>
+    <a href="local-development.html">Local development</a>
+    
+  </li>
+  <li>
+    <a href="configuration.html">Configuration v1</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-first-access.html">VPS access and security</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-private-access.html">Tailscale private administration</a>
+    
+  </li>
+  <li>
+    <a href="h1.3-bootstrap.html">Repeatable bootstrap and restart</a>
+    
+  </li>
+  <li>
+    <a href="h1.4-model-configuration.html">Configuration and first model request</a>
+    
+  </li>
+  <li>
+    <a href="h1.5-service-recovery.html">Supervised service and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-telegram.html">Telegram private text</a>
+    
+  </li>
+  <li>
+    <a href="h1.6.1-capabilities.html">Deterministic capability guardrails</a>
+    
+  </li>
+  <li>
+    <a href="h1.7-czech-voice.html">Czech voice (deferred)</a>
+    
+  </li>
+  <li>
+    <a href="h1.8-web-access.html">Read-only dashboard and documentation hosting</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-backup-recovery.html">Backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-provider-options.html">Backup storage and monitoring options</a>
+    
+  </li>
+  <li>
+    <a href="h1.9-scaleway-healthchecks.html">Scaleway and Healthchecks.io setup</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-whatsapp.html">WhatsApp text and access rules</a>
+    
+  </li>
+  <li>
+    <a href="h1.6-agent-platform-assessment.html">Agent Platform compatibility assessment</a>
+    
+  </li>
+  <li>
+    <a href="documentation.html">Documentation and checks</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Architecture</span>
+    <ul>
+  <li>
+    <a href="architecture.html">System boundaries</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-design.html">Wishlist staged design</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-api.html">Wishlist interface and implementation units</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-domain.html">Wishlist W1 domain state</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-service.html">Wishlist W2 local service and Telegram ingress</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-collection.html">Wishlist W3 daily collection</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-browser.html">Alza isolated virtual browser</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-language.html">Wishlist W5 bounded natural conversation</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-operations.html">Wishlist W4 service preparation and recovery</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-observability.html">Wishlist W4 accounting, retention and monitoring</a>
+    
+  </li>
+  <li>
+    <a href="family-conversations.html">Personal conversations and family sharing</a>
+    
+  </li>
+  <li>
+    <a href="h1-prerequisites.html">H1 prerequisites</a>
+    
+  </li>
+  <li>
+    <a href="adr/0001-configuration-validation.html">ADR 0001: Configuration validation</a>
+    
+  </li>
+  <li>
+    <a href="adr/0002-documentation-and-checks.html">ADR 0002: Documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="adr/0003-bounded-host-bootstrap.html">ADR 0003: Bounded host bootstrap</a>
+    
+  </li>
+  <li>
+    <a href="adr/0004-supervised-coordinator.html">ADR 0004: Supervised coordinator</a>
+    
+  </li>
+  <li>
+    <a href="adr/0005-private-whatsapp-text.html">ADR 0005: Private WhatsApp text</a>
+    
+  </li>
+  <li>
+    <a href="adr/0006-personal-and-family-data.html">ADR 0006: Personal and family data</a>
+    
+  </li>
+  <li>
+    <a href="adr/0007-telegram-first.html">ADR 0007: Telegram first</a>
+    
+  </li>
+  <li>
+    <a href="adr/0008-deterministic-capabilities.html">ADR 0008: Deterministic capabilities</a>
+    
+  </li>
+  <li>
+    <a href="adr/0009-read-only-web-access.html">ADR 0009: Read-only private web access</a>
+    
+  </li>
+  <li>
+    <a href="adr/0010-offsite-backup-providers.html">ADR 0010: Off-site backup providers</a>
+    
+  </li>
+  <li>
+    <a href="adr/0011-trusted-backup-controller.html">ADR 0011: Trusted backup and recovery</a>
+    
+  </li>
+  <li>
+    <a href="adr/0012-modular-domain-services.html">ADR 0012: Modular Python domain services</a>
+    
+  </li>
+  <li>
+    <a href="adr/0013-wishlist-local-admission.html">ADR 0013: Wishlist local admission</a>
+    
+  </li>
+  <li>
+    <a href="adr/0014-wishlist-language-before-collection.html">ADR 0014: Wishlist conversation before collection</a>
+    
+  </li>
+  <li>
+    <a href="adr/0015-reversible-wishlist-removal.html">ADR 0015: Reversible wishlist removal</a>
+    
+  </li>
+  <li>
+    <a href="adr/0016-durable-wishlist-collection.html">ADR 0016: Durable wishlist collection</a>
+    
+  </li>
+  <li>
+    <a href="adr/0017-wishlist-observability-retention.html">ADR 0017: Wishlist aggregates and replay retention</a>
+    
+  </li>
+  <li>
+    <a href="adr/0017-isolated-alza-browser.html">ADR 0017: Isolated Alza browser</a>
+    
+  </li>
+  <li>
+    <a href="adr/0018-availability-without-price.html">ADR 0018: Availability without price</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <span>Verification</span>
+    <ul>
+  <li>
+    <a href="wishlist-feasibility.html">Wishlist direct-fetch feasibility</a>
+    
+  </li>
+  <li>
+    <a href="wishlist-browser-feasibility.html">Wishlist browser mode experiments</a>
+    
+  </li>
+  <li>
+    <a href="research/h0.1/README.html">H0.1 feasibility</a>
+    
+  </li>
+  <li>
+    <a href="h0.2-acceptance.html">H0.2 foundation</a>
+    
+  </li>
+  <li>
+    <a href="h0.4-acceptance.html">H0.4 documentation and checks</a>
+    
+  </li>
+  <li>
+    <a href="h0.5-acceptance.html">H0.5 clean checkout and handoff</a>
+    
+  </li>
+  <li>
+    <a href="h1.1-publication.html">H1.1 GitHub publication</a>
+    
+  </li>
+  <li>
+    <a href="h1.10-acceptance.html">H1.10 pilot acceptance</a>
+    
+  </li>
+</ul>
+
+  </li>
+  <li>
+    <a href="wishlist-web.html">Wishlist web</a>
+    
+  </li>
+</ul>
+
+  </li>
+</ul>
+</nav>
+    <main id="main" tabindex="-1">
+      <article>
+        <h1>Wishlist web: first interaction preview</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Historical first delivery, 2026-11-18: a local, responsive interaction preview implemented the confirmed owner flows using synthetic data. That standalone preview is not connected to the pilot, its database, Telegram, shop fetchers or model credentials. The production implementation follows below; deployment and live acceptance must be recorded separately. Spending/savings dashboard requirements are deliberately unfinished; the UI labels that area as pending rather than displaying invented totals.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_run_and_review"><a class="anchor" href="#_run_and_review"></a>Run and review</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use the existing local Python environment and Node.js versions documented in <a href="local-development.html" class="xref page">local development</a>. No new dependencies or build step are required:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.wishlist_web_preview --port 8765</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Open <code><a href="http://127.0.0.1:8765/" class="bare">http://127.0.0.1:8765/</a></code>. The preview serves only six explicitly allowed UI files from <code>web/wishlist</code>, binds IPv4 loopback, checks the Host header, refuses symlinks and sends a restrictive Content Security Policy. It does not serve a checkout, directory listing, neighboring private files or a general HTTP API. This development server must not be exposed as a production service.</p>
+</div>
+<div class="paragraph">
+<p>Data stays in the current browser&#8217;s local storage under a versioned preview key. All seeded names, shops and prices are synthetic; shop links use reserved example domains. Added URLs are saved locally without fetching them. No telemetry, remote fonts, image downloads or external scripts run. The preview reset is reversible within the current session. Storage failures are visible; the browser is not a production backup or authority boundary.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_implemented_interactions"><a class="anchor" href="#_implemented_interactions"></a>Implemented interactions</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Category groups, descending percentage/absolute price advantage within groups, name search and shop/category/availability/purchase-mode/lifecycle filters.</p>
+</li>
+<li>
+<p>Default active view includes unavailable items and recurring items with muted notifications. Purchased one-time and removed entries have explicit filter views.</p>
+</li>
+<li>
+<p>Desktop table and compact mobile rows; a modal side panel becomes full-screen on mobile. Keyboard focus, modal escape/close, field labels and live announcements support normal keyboard use.</p>
+</li>
+<li>
+<p>Detail with immutable shop link, availability, successful-check/addition dates, editable name/category/mode/note, and month/90-day/year/all-history chart. The chart defaults to 90 days and offers an underlying daily-price table. Missing dates are gaps, not fabricated prices. Optional product images are not included in this version.</p>
+</li>
+<li>
+<p>Purchase form uses a per-unit price, integer quantity and editable purchase date, showing the total before confirmation. Item detail lists purchases with correction and cancellation. Stale lifecycle cancellation is refused rather than overwriting a newer state.</p>
+</li>
+<li>
+<p>One-time purchase leaves the active view. A recurring purchase mutes notifications for approximately 30 days, keeps its entry active and preserves price history. The remaining-days icon can restore notifications immediately. No actual notifications or collector run in this preview.</p>
+</li>
+<li>
+<p>Removal is immediate and reversible through an undo notice or removed-items filter. Restoring a purchased entry does not reopen it.</p>
+</li>
+<li>
+<p>Collection failure retains an explicitly dated last known price and labels its comparison. Verified unavailability without price hides the current price/comparison but preserves historical data.</p>
+</li>
+<li>
+<p>The manual price-check control explicitly reports that live collection is not connected. It never invents a price or reports a successful fetch.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_price_and_purchase_calculations"><a class="anchor" href="#_price_and_purchase_calculations"></a>Price and purchase calculations</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Money uses integer halere. For the inclusive 90-day Prague calendar window, average all valid prices within each measured day, then equally weight those daily means. Missing days contribute no value; the first real price immediately establishes both average and minimum. Minimum uses the lowest individual price observed in the window. Displayed reference means round to a haler.</p>
+</div>
+<div class="paragraph">
+<p>Capture the reference mean available at the purchase date. Historical purchases exclude later calendar days, including across Prague DST changes. Savings per purchase are <code>(reference mean - paid unit price) * quantity</code>; overpayment is negative. Later observations cannot rewrite the saved reference. Amount/quantity corrections preserve that reference; changing the date recomputes it from that date&#8217;s available history. Purchases without any known reference remain explicitly unknown, not zero savings.</p>
+</div>
+<div class="paragraph">
+<p>The standalone preview model does not change <a href="wishlist-domain.html" class="xref page">existing domain behavior</a>: the pilot still uses its original classification and pause/collection semantics. Unifying those behaviors requires a separately tested domain change before production integration. Local lifecycle revision checks are interaction guards, not server authorization or distributed concurrency control. Concurrent browser tabs receive a change warning; they are not a synchronized database.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_validation_and_remaining_scope"><a class="anchor" href="#_validation_and_remaining_scope"></a>Validation and remaining scope</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">node tests/wishlist_web.test.mjs
+.venv/bin/python -m unittest tests.test_wishlist_web -v</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The model tests cover first-price averages, daily weighting and gaps, money precision, stock/failure distinctions, purchase references and backdating, DST boundaries, notification-only muting, correction/cancellation and reversible removal. HTTP tests cover the asset allowlist, response headers, Host denial and symlink refusal. Browser acceptance should exercise desktop/mobile flows and storage reloads; synthetic checks do not establish production authentication or live shop behavior.</p>
+</div>
+<div class="paragraph">
+<p>Before production work, finish dashboard statistics (filter scope, historical purchase categories and past-period controls), review the first UI, settle access/write authentication and the URL under the existing private Haven origin, and define service boundaries, migrations, retry/idempotency and acceptance. Keep the existing domain as the sole production writer. Do not expose its ingress socket or reuse Telegram identity claims from a browser. Wishlist integration and Nora wording must share the resulting domain contract. Alza remains the final separate wishlist item; the final Haven security/architecture audit still follows the completed wishlist.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_production_integration_2026_11_18"><a class="anchor" href="#_production_integration_2026_11_18"></a>Production integration, 2026-11-18</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The production adapter adds <code>scripts/wishlist_web_domain.py</code>, a dedicated peer-authenticated endpoint in the existing domain process, and <code>scripts/wishlist_web_gateway.py</code>, a network-isolated HTTP adapter. <a href="adr/0019-private-wishlist-web.html" class="xref page">ADR 0019</a> records authentication and isolation. These implementation and synthetic results are distinct from live pilot acceptance.</p>
+</div>
+<div class="paragraph">
+<p>The production page uses same-origin requests at <code>/wishlist/api/command</code>; it never reads demonstration local storage, falls back to sample products, or writes a second database. Reads are bounded and paginated. Mutation request IDs survive uncertain responses and re-bootstrap; the domain commits changes, events and receipts atomically, with version conflicts and signed owner-bound cursors. Tests include discarding the HTTP response after a committed recurring purchase, then retrying the same request ID without creating a second purchase.</p>
+</div>
+<div class="paragraph">
+<p>Price means use equally weighted Prague calendar days, including the first observation. Persisted purchase references remain fixed when later prices arrive. Original purchase rows without a paid amount stay unknown; cancellation cannot guess an undocumented prior lifecycle. Legacy purpose/recipient fields remain as history but no longer block new intake. Recurring purchases mute notifications for approximately 30 days while daily collection continues. A manual refresh respects host backoff and a ten-minute per-offer minimum; the dedicated path unit wakes the existing bounded collector, with the timer as fallback. No offer notifications or cross-shop recommendations are added by this integration.</p>
+</div>
+<div class="sect2">
+<h3 id="_prepare_and_install"><a class="anchor" href="#_prepare_and_install"></a>Prepare and install</h3>
+<div class="paragraph">
+<p>Build an independent dependency artifact; do not replace the JSON Schema or native Hermes environments:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python -m scripts.wishlist_dependencies build \
+  --directory /absolute/path/to/http-artifact --requirements requirements-web.txt
+.venv/bin/python -m scripts.wishlist_dependencies bundle \
+  --directory /absolute/path/to/http-artifact --requirements requirements-web.txt</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Take and verify a fresh backup with the existing controller. Then use the explicit private inventory and private owner configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">ANSIBLE_CONFIG=ops/ansible.cfg ANSIBLE_HOME=build/ansible \
+  .venv/bin/ansible-playbook -i /absolute/path/to/private/ops/inventory.yml \
+  ops/wishlist-web.yml -e haven_wishlist_web_authorized=true \
+  -e @/absolute/path/to/private/ops/wishlist-web.yml \
+  -e haven_wishlist_web_dependencies=/absolute/path/to/http-artifact</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The private variables name <code>haven_wishlist_web_origin</code> (the existing HTTPS origin) and <code>haven_wishlist_web_owner_login</code> (the exact owner Tailscale login). The playbook installs and resumes services under shared maintenance exclusion, checks that the last backup is accepted and under two hours old, snapshots only declared code/configuration files, installs compatible backup helpers first and arms durable resume journal version 3 for the collector timer and three existing writers. Recovery runs while the same lease is held, then releases the lease even on failure. Failed resume intent remains durable; do not continue activation after a recovery error. The HTTP socket is root-owned 0600; the gateway runs as <code>haven-wishlist-web</code> with AF_UNIX only and no private database or model/Telegram credentials.</p>
+</div>
+<div class="paragraph">
+<p>The initial rollout does not alter Serve automatically. Inspect the existing configuration and verify the local HTTP socket and owner denials before adding exactly this route (Tailscale 1.104.5 was inspected on the pilot; 1.104.4 source documents Unix proxying):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo tailscale serve status --json
+sudo tailscale serve --bg --https=443 --set-path=/wishlist unix:/run/haven-wishlist-http.sock
+sudo tailscale serve status --json</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Preserve the dashboard <code>/</code>, private docs listener, SSH and tailnet policy. Refuse a conflicting pre-existing <code>/wishlist</code> handler. Keep Funnel absent. Verify real HTTPS access from an authorized device and the gateway/collector account&#8217;s denial at the HTTP socket. Before handoff, take and exactly reconstruct a new encrypted backup containing schema 6, refresh observability, verify healthy resume state and compare deployed hashes against the checked source. Test failures and owner acceptance remain explicit; a successful service start is insufficient.</p>
+</div>
+<div class="paragraph">
+<p>To withdraw only this new route, remove <code>/wishlist</code> with <code>tailscale serve --https=443 --set-path=/wishlist off</code> and stop its HTTP socket/service. Keep the database and compatible domain/recovery code. File snapshots are not a database rollback and must not be used to install old code over schema 6.</p>
+</div>
+<div class="paragraph">
+<p>The identity-header and Unix-socket contracts were checked against the <a href="https://tailscale.com/docs/features/tailscale-serve">Tailscale Serve guide</a>, installed CLI help and <a href="https://github.com/tailscale/tailscale/blob/v1.104.4/ipn/ipnlocal/serve.go">pinned Serve source</a>. Waitress socket activation and bounded server settings follow its <a href="https://docs.pylonsproject.org/projects/waitress/en/stable/socket-activation.html">official activation guide</a> and <a href="https://docs.pylonsproject.org/projects/waitress/en/stable/arguments.html">server arguments</a>.</p>
+</div>
+</div>
+</div>
+</div>
+      </article>
+      <footer>Haven documentation · Check each guide for its verification scope.</footer>
+    </main>
+  </div>
+</body>
+</html>
