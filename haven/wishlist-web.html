@@ -424,6 +424,9 @@ sudo tailscale serve status --json</code></pre>
 <div class="paragraph">
 <p>The identity-header and Unix-socket contracts were checked against the <a href="https://tailscale.com/docs/features/tailscale-serve">Tailscale Serve guide</a>, installed CLI help and <a href="https://github.com/tailscale/tailscale/blob/v1.104.4/ipn/ipnlocal/serve.go">pinned Serve source</a>. Waitress socket activation and bounded server settings follow its <a href="https://docs.pylonsproject.org/projects/waitress/en/stable/socket-activation.html">official activation guide</a> and <a href="https://docs.pylonsproject.org/projects/waitress/en/stable/arguments.html">server arguments</a>.</p>
 </div>
+<div class="paragraph">
+<p>Unix proxy compatibility: Serve 1.104.5 rewrites the backend Host to <code>localhost</code> and replaces <code>X-Forwarded-Host</code>/<code>X-Forwarded-Proto</code> with the outer request. Waitress trusts those two headers from its Unix <code>localhost</code> peer because the inherited HTTP socket admits root exclusively; the application then checks the resulting exact owner authority and Origin. The proxy setting must never be reused with an unprotected listener. Production asset and API URLs use the absolute <code>/wishlist/</code> mount so opening <code>/wishlist</code> without a trailing slash still works.</p>
+</div>
 </div>
 </div>
 </div>
