@@ -91,6 +91,9 @@ class Application:
                 body = body.replace(b'<meta name="viewport"', b'<meta name="haven-mode" content="production">\n  <meta name="viewport"')
                 body = body.replace('Interaktivní návrh · ukázková data'.encode(), 'Soukromý wishlist'.encode())
                 body = body.replace(b'<div class="preview-note">', b'<div class="preview-note" hidden>')
+                body = body.replace(b'href="./styles.css"', b'href="/wishlist/styles.css"')
+                body = body.replace(b'src="./app.mjs"', b'src="/wishlist/app.mjs"')
+                body = body.replace(b'href="./"', b'href="/wishlist/"')
             self.assets[route] = (body, mime)
 
     def signature(self, payload):
@@ -195,10 +198,13 @@ def main(argv=None):
         from waitress import serve
         config = load_config(args.config)
         listener = inherited_socket(config)
+        # Serve's root-only Unix connection rewrites Host to localhost and
+        # replaces the two trusted headers with the original HTTPS authority.
         serve(Application(config), sockets=[listener], threads=4, connection_limit=32, channel_timeout=10,
               cleanup_interval=5, max_request_header_size=8192, max_request_body_size=16384,
               outbuf_high_watermark=131072, expose_tracebacks=False, clear_untrusted_proxy_headers=True,
-              url_scheme="https", ident="")
+              url_scheme="https", ident="", trusted_proxy="localhost", trusted_proxy_count=1,
+              trusted_proxy_headers={"x-forwarded-host", "x-forwarded-proto"})
     except Exception:
         print('{"service":"wishlist-web","code":"startup_failed"}', flush=True)
         return 78
