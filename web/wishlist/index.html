@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f3">
+  <meta name="description" content="Soukromý wishlist Havenu. První interaktivní návrh s ukázkovými daty.">
+  <title>Wishlist · Haven</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%232b4d3b'/%3E%3Cpath d='M12 12v16m16-16v16M12 20h16' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Přeskočit na wishlist</a>
+  <aside class="sidebar" aria-label="Haven">
+    <a href="./" class="brand"><span class="brand-mark">h<span>·</span></span> haven</a>
+    <div class="workspace-label">TVŮJ OSOBNÍ PROSTOR</div>
+    <nav aria-label="Hlavní navigace"><a class="nav-link selected" href="#main" aria-current="page"><span data-icon="heart"></span> Wishlist <span class="nav-count" id="nav-count">7</span></a></nav>
+    <div class="sidebar-note"><span data-icon="leaf"></span><p>Dobré věci.<br>Ve správnou chvíli.</p><small>Místo pro věci, na kterých ti záleží.</small></div>
+    <div class="owner"><span class="avatar">J</span><div>Jen pro tebe<small>Soukromý wishlist</small></div><span data-icon="lock"></span></div>
+  </aside>
+  <div class="shell">
+    <header class="topbar"><div class="breadcrumbs">Haven <span>/</span> <strong>Wishlist</strong></div><div class="preview-badge"><span></span> Interaktivní návrh · ukázková data</div></header>
+    <main id="main" tabindex="-1">
+      <section class="page-heading"><div><div class="eyebrow">MALÉ RADOSTI, DOBRÁ ROZHODNUTÍ</div><h1>Tvůj wishlist<span>.</span></h1><p>Všechno, co máš v hledáčku. Ceny pohlídáme.</p></div><button class="button primary" id="add-button"><span data-icon="plus"></span> Přidat položku</button></section>
+      <section class="summary" aria-label="Přehled wishlistu">
+        <div class="summary-card"><div class="summary-top"><span>V hledáčku</span><span data-icon="heart"></span></div><div class="summary-value" id="active-count">—</div><small>položek na tvém wishlistu</small></div>
+        <div class="summary-card accent"><div class="summary-top"><span>Pod obvyklou cenou</span><span data-icon="trend"></span></div><div class="summary-value" id="discount-count">—</div><small>proti průměru za 90 dní</small></div>
+        <div class="summary-card pending"><div class="summary-top"><span>Útrata a úspora</span><span class="tiny-label">K DOŘEŠENÍ</span></div><div class="pending-title">Doladíme spolu</div><small>Statistiky jsou dalším bodem zadání.</small></div>
+      </section>
+      <section class="wishlist" aria-label="Položky wishlistu">
+        <div class="list-heading"><div><h2>V hledáčku <span id="visible-count"></span></h2><p id="list-description">Seskupeno podle kategorií, výhodnější ceny nahoře.</p></div><button class="text-button" id="reset-filters" hidden>Zrušit filtry</button></div>
+        <div class="filters"><label class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="Najít položku…" aria-label="Hledat podle názvu"></label><div class="filter-controls">
+          <label><span class="sr-only">Kategorie</span><select id="filter-category"><option value="">Všechny kategorie</option></select></label>
+          <label><span class="sr-only">Obchod</span><select id="filter-shop"><option value="">Všechny obchody</option></select></label>
+          <label><span class="sr-only">Dostupnost</span><select id="filter-stock"><option value="">Dostupnost</option><option value="in_stock">Skladem</option><option value="out_of_stock">Nedostupné</option><option value="unknown">Neověřená</option></select></label>
+          <label><span class="sr-only">Způsob nákupu</span><select id="filter-mode"><option value="">Způsob nákupu</option><option value="once">Jednorázově</option><option value="recurring">Opakovaně</option></select></label>
+          <label><span class="sr-only">Stav položek</span><select id="filter-state"><option value="default">Aktuální položky</option><option value="purchased">Koupené</option><option value="removed">Odstraněné</option><option value="all">Všechny neodstraněné</option></select></label>
+        </div></div>
+        <div class="table-scroll"><table><caption class="sr-only">Wishlist podle kategorií</caption><thead><tr><th scope="col">Položka</th><th scope="col">Dostupnost</th><th scope="col">Aktuální cena</th><th scope="col">Průměr · 90 dní <button class="info-button" id="history-info" aria-label="Jak počítáme cenovou historii">?</button></th><th scope="col">Minimum · 90 dní</th><th scope="col">Proti průměru</th><th scope="col"><span class="sr-only">Akce</span></th></tr></thead><tbody id="rows"></tbody></table></div>
+        <div class="empty" id="empty" hidden><span data-icon="search"></span><h3>Tady je zatím prázdno</h3><p id="empty-message">Zkus změnit hledání nebo filtry.</p><button class="button secondary" id="empty-action">Zrušit filtry</button></div>
+        <footer class="list-footer"><span><span class="status-dot"></span> Ceny se běžně kontrolují každý den</span><span>Historii počítáme už od první ceny.</span></footer>
+      </section>
+      <div class="preview-note"><span data-icon="info"></span><p>Toto je první návrh. Změny se ukládají pouze v tomto prohlížeči; živé ceny ani produkční wishlist se sem zatím nepřipojují.</p><button class="text-button" id="reset-demo">Obnovit ukázku</button></div>
+      <p class="storage-error" id="storage-error" role="alert" hidden></p>
+    </main>
+    <footer class="page-footer"><span>haven<span class="brand-dot">·</span></span><span>Trochu méně hlídání. Trochu více radosti.</span></footer>
+  </div>
+  <dialog id="detail" class="detail-dialog" aria-labelledby="detail-title"><div id="detail-content"></div></dialog>
+  <dialog id="editor" class="form-dialog" aria-labelledby="editor-title"><form id="editor-form"><div class="dialog-heading"><div><div class="eyebrow" id="editor-eyebrow">TVŮJ WISHLIST</div><h2 id="editor-title">Přidat položku</h2></div><button type="button" class="icon-button" data-close="editor" aria-label="Zavřít"><span data-icon="close"></span></button></div><div id="editor-fields"></div><p class="form-error" id="form-error" role="alert" hidden></p><div class="form-actions"><button type="button" class="button secondary" data-close="editor">Zrušit</button><button class="button primary" type="submit" id="editor-submit">Přidat na wishlist</button></div></form></dialog>
+  <dialog id="info-dialog" class="form-dialog" aria-labelledby="info-title"><div class="dialog-heading"><h2 id="info-title">Jak číst cenovou historii</h2><button class="icon-button" data-close="info-dialog" aria-label="Zavřít"><span data-icon="close"></span></button></div><p>Průměr počítáme z platných cen za posledních 90 dní. Každý den má stejnou váhu; více kontrol během dne nejprve zprůměrujeme.</p><p>Začínáme hned první cenou. Dny bez ceny vynecháme. Skutečný rozsah dat najdeš v detailu položky.</p><p>Minimum je nejnižší zjištěná cena v tomto období. Srovnání neobsahuje dopravu, kupony ani členské výhody.</p></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toast-message"></span><button id="toast-undo" hidden>Vrátit zpět</button><button class="icon-button" id="toast-close" aria-label="Zavřít oznámení"><span data-icon="close"></span></button></div>
+  <noscript><p>Pro interaktivní návrh wishlistu zapni JavaScript.</p></noscript>
+</body>
+</html>

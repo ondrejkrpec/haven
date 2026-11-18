@@ -1,0 +1,48 @@
+= Wishlist web: first interaction preview
+
+Status, 2026-11-18: a local, responsive interaction preview implements the confirmed owner flows using synthetic data. It is not connected to the pilot, its database, Telegram, shop fetchers or model credentials. Production web authentication, service integration, deployment and live acceptance remain open. Spending/savings dashboard requirements are deliberately unfinished; the UI labels that area as pending rather than displaying invented totals.
+
+== Run and review
+
+Use the existing local Python environment and Node.js versions documented in link:local-development.adoc[local development]. No new dependencies or build step are required:
+
+[source,sh]
+----
+.venv/bin/python -m scripts.wishlist_web_preview --port 8765
+----
+
+Open `http://127.0.0.1:8765/`. The preview serves only six explicitly allowed UI files from `web/wishlist`, binds IPv4 loopback, checks the Host header, refuses symlinks and sends a restrictive Content Security Policy. It does not serve a checkout, directory listing, neighboring private files or a general HTTP API. This development server must not be exposed as a production service.
+
+Data stays in the current browser's local storage under a versioned preview key. All seeded names, shops and prices are synthetic; shop links use reserved example domains. Added URLs are saved locally without fetching them. No telemetry, remote fonts, image downloads or external scripts run. The preview reset is reversible within the current session. Storage failures are visible; the browser is not a production backup or authority boundary.
+
+== Implemented interactions
+
+* Category groups, descending percentage/absolute price advantage within groups, name search and shop/category/availability/purchase-mode/lifecycle filters.
+* Default active view includes unavailable items and recurring items with muted notifications. Purchased one-time and removed entries have explicit filter views.
+* Desktop table and compact mobile rows; a modal side panel becomes full-screen on mobile. Keyboard focus, modal escape/close, field labels and live announcements support normal keyboard use.
+* Detail with immutable shop link, availability, successful-check/addition dates, editable name/category/mode/note, and month/90-day/year/all-history chart. The chart defaults to 90 days and offers an underlying daily-price table. Missing dates are gaps, not fabricated prices. Optional product images are not included in this version.
+* Purchase form uses a per-unit price, integer quantity and editable purchase date, showing the total before confirmation. Item detail lists purchases with correction and cancellation. Stale lifecycle cancellation is refused rather than overwriting a newer state.
+* One-time purchase leaves the active view. A recurring purchase mutes notifications for approximately 30 days, keeps its entry active and preserves price history. The remaining-days icon can restore notifications immediately. No actual notifications or collector run in this preview.
+* Removal is immediate and reversible through an undo notice or removed-items filter. Restoring a purchased entry does not reopen it.
+* Collection failure retains an explicitly dated last known price and labels its comparison. Verified unavailability without price hides the current price/comparison but preserves historical data.
+* The manual price-check control explicitly reports that live collection is not connected. It never invents a price or reports a successful fetch.
+
+== Price and purchase calculations
+
+Money uses integer halere. For the inclusive 90-day Prague calendar window, average all valid prices within each measured day, then equally weight those daily means. Missing days contribute no value; the first real price immediately establishes both average and minimum. Minimum uses the lowest individual price observed in the window. Displayed reference means round to a haler.
+
+Capture the reference mean available at the purchase date. Historical purchases exclude later calendar days, including across Prague DST changes. Savings per purchase are `(reference mean - paid unit price) * quantity`; overpayment is negative. Later observations cannot rewrite the saved reference. Amount/quantity corrections preserve that reference; changing the date recomputes it from that date's available history. Purchases without any known reference remain explicitly unknown, not zero savings.
+
+The standalone preview model does not change link:wishlist-domain.adoc[existing domain behavior]: the pilot still uses its original classification and pause/collection semantics. Unifying those behaviors requires a separately tested domain change before production integration. Local lifecycle revision checks are interaction guards, not server authorization or distributed concurrency control. Concurrent browser tabs receive a change warning; they are not a synchronized database.
+
+== Validation and remaining scope
+
+[source,sh]
+----
+node tests/wishlist_web.test.mjs
+.venv/bin/python -m unittest tests.test_wishlist_web -v
+----
+
+The model tests cover first-price averages, daily weighting and gaps, money precision, stock/failure distinctions, purchase references and backdating, DST boundaries, notification-only muting, correction/cancellation and reversible removal. HTTP tests cover the asset allowlist, response headers, Host denial and symlink refusal. Browser acceptance should exercise desktop/mobile flows and storage reloads; synthetic checks do not establish production authentication or live shop behavior.
+
+Before production work, finish dashboard statistics (filter scope, historical purchase categories and past-period controls), review the first UI, settle access/write authentication and the URL under the existing private Haven origin, and define service boundaries, migrations, retry/idempotency and acceptance. Keep the existing domain as the sole production writer. Do not expose its ingress socket or reuse Telegram identity claims from a browser. Wishlist integration and Nora wording must share the resulting domain contract. Alza remains the final separate wishlist item; the final Haven security/architecture audit still follows the completed wishlist.

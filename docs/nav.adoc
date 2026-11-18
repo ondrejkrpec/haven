@@ -58,3 +58,4 @@
 ** xref:h0.5-acceptance.adoc[H0.5 clean checkout and handoff]
 ** xref:h1.1-publication.adoc[H1.1 GitHub publication]
 ** xref:h1.10-acceptance.adoc[H1.10 pilot acceptance]
+* xref:wishlist-web.adoc[Wishlist web preview]

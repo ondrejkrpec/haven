@@ -52,6 +52,7 @@ def main():
     run(python, "scripts/validate_config.py", "examples/instance.yaml")
     run(python, "scripts/validate_config.py", "templates/private/config/instance.yaml.example")
     run(python, "-m", "unittest", "discover", "-s", "tests", "-v")
+    run("node", "tests/wishlist_web.test.mjs")
     run("sha256sum", "-c", "SHA256SUMS", cwd=ROOT / "research/h0.1")
     # Include tracked and untracked public candidates, without ignored local data.
     with tempfile.TemporaryDirectory(prefix="haven-secret-scan-") as temporary:
