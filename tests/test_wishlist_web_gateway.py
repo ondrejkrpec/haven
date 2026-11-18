@@ -5,6 +5,7 @@ import json
 import unittest
 
 from scripts.wishlist_web_gateway import Application, COOKIE
+from waitress.proxy_headers import proxy_headers_middleware
 
 
 class GatewayTests(unittest.TestCase):
@@ -23,7 +24,8 @@ class GatewayTests(unittest.TestCase):
     def call(self, path, *, method="GET", payload=None, headers=None, raw=None):
         body = raw if raw is not None else json.dumps(payload or {}).encode()
         env = {**self.headers, "REQUEST_METHOD": method, "PATH_INFO": path,
-               "CONTENT_TYPE": "application/json", "CONTENT_LENGTH": str(len(body)), "wsgi.input": io.BytesIO(body)}
+               "CONTENT_TYPE": "application/json", "CONTENT_LENGTH": str(len(body)), "wsgi.input": io.BytesIO(body),
+               "REMOTE_ADDR": "localhost", "SERVER_NAME": "localhost", "SERVER_PORT": "80", "wsgi.url_scheme": "http"}
         if self.cookie:
             env["HTTP_COOKIE"] = self.cookie
         if headers:
@@ -96,3 +98,20 @@ class GatewayTests(unittest.TestCase):
         result = self.post()
         self.assertEqual(result["status"], "503 Service Unavailable")
         self.assertNotIn(b"confidential", result["body"])
+
+
+    def test_root_unix_proxy_rewrites_host_and_only_exact_original_authority_is_admitted(self):
+        self.app = proxy_headers_middleware(self.app, trusted_proxy="localhost", trusted_proxy_count=1,
+            trusted_proxy_headers={"x-forwarded-host", "x-forwarded-proto"}, clear_untrusted=True)
+        self.headers.update(HTTP_HOST="localhost", HTTP_X_FORWARDED_HOST="haven.example.ts.net", HTTP_X_FORWARDED_PROTO="https")
+        self.assertEqual(self.call('/')["status"], "200 OK")
+        self.bootstrap()
+        self.assertEqual(self.post()["status"], "200 OK")
+        self.assertEqual(self.call('/', headers={"HTTP_X_FORWARDED_HOST":"attacker.example.com"})["status"], "403 Forbidden")
+        self.assertEqual(self.call('/', headers={"HTTP_X_FORWARDED_HOST":""})["status"], "403 Forbidden")
+        self.assertEqual(self.call('/', headers={"HTTP_TAILSCALE_USER_LOGIN":""})["status"], "403 Forbidden")
+
+    def test_production_assets_have_absolute_mount_paths_for_both_entry_urls(self):
+        body=self.call('/')["body"]
+        self.assertIn(b'href="/wishlist/styles.css"',body)
+        self.assertIn(b'src="/wishlist/app.mjs"',body)

@@ -13,7 +13,7 @@ const messages = {
 async function http(path, options = {}) {
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 12000);
   try {
-    const response = await fetch(new URL('./api/' + path, location.href), {...options, credentials:'same-origin', cache:'no-store', signal:controller.signal});
+    const response = await fetch(new URL('/wishlist/api/' + path, location.origin), {...options, credentials:'same-origin', cache:'no-store', signal:controller.signal});
     const result = await response.json();
     if (response.status >= 500) throw Object.assign(new Error(messages.unavailable), {code:'unavailable',uncertain:true});
     return result;
