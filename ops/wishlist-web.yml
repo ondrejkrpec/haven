@@ -1,0 +1,298 @@
+---
+- name: Verify the private host before adding wishlist web access
+  ansible.builtin.import_playbook: verify.yml
+
+- name: Connect the owner web to the existing single wishlist writer
+  hosts: haven_hosts
+  gather_facts: false
+  become: true
+  vars:
+    haven_web_modules: [wishlist_store, wishlist_domain, wishlist_contract, wishlist_protocol, wishlist_socket, wishlist_service,
+                        wishlist_web_domain, wishlist_web_gateway, wishlist_dependencies, wishlist_operations,
+                        wishlist_observability, wishlist_language, wishlist_language_contract, wishlist_model, wishlist_telegram]
+  pre_tasks:
+    - name: Require the explicit deployment and private owner configuration
+      ansible.builtin.assert:
+        that:
+          - ansible_play_hosts_all | length == 1
+          - haven_wishlist_web_authorized | default(false) | bool
+          - not ansible_check_mode
+          - haven_wishlist_web_origin is defined
+          - haven_wishlist_web_owner_login is defined
+          - haven_wishlist_web_dependencies is defined
+        fail_msg: This is an explicit online upgrade; review source and take an accepted backup first.
+
+    - name: Verify the separate hash-pinned HTTP dependency archive locally
+      ansible.builtin.command:
+        argv: ["{{ ansible_playbook_python }}", -m, scripts.wishlist_dependencies, verify-bundle,
+               --directory, "{{ haven_wishlist_web_dependencies }}", --requirements, "{{ playbook_dir }}/../requirements-web.txt"]
+        chdir: "{{ playbook_dir }}/.."
+      delegate_to: localhost
+      become: false
+      changed_when: false
+
+    - name: Select the maintenance lease
+      ansible.builtin.set_fact:
+        haven_web_lease: "haven-maintenance-{{ lookup('ansible.builtin.password', '/dev/null', length=24, chars=['ascii_lowercase', 'digits']) }}"
+
+    - name: Hold the existing shared backup maintenance exclusion
+      ansible.builtin.command:
+        argv: [systemd-run, "--unit={{ haven_web_lease }}", --collect, --property=Type=notify, --property=TimeoutStartSec=10,
+               --property=UMask=0077, --setenv=PYTHONPATH=/usr/local/lib/haven-backup, --setenv=PYTHONDONTWRITEBYTECODE=1,
+               /usr/bin/python3, -m, scripts.backup_runtime, maintenance]
+      changed_when: true
+
+  tasks:
+    - name: Upgrade under durable writer pause and shared maintenance exclusion
+      block:
+        - name: Require a fresh verified backup and no unfinished resume intent
+          ansible.builtin.command:
+            argv:
+              - /usr/bin/python3
+              - -c
+              - >-
+                import json, pathlib, datetime;
+                p=pathlib.Path('/var/lib/haven-backup');
+                accepted=json.loads((p/'accepted.json').read_text());
+                run=json.loads((p/'run.json').read_text());
+                assert accepted['restored_and_verified'] and run['stage']=='accepted';
+                assert not (p/'resume.json').exists();
+                at=datetime.datetime.fromisoformat(run['finished_at_utc']);
+                assert 0<=(datetime.datetime.now(datetime.UTC)-at).total_seconds()<7200
+          changed_when: false
+
+        - name: Preserve the bounded installed code and configuration before replacement
+          ansible.builtin.script:
+            cmd: ../scripts/wishlist_web_snapshot.py
+            executable: /usr/bin/python3
+          register: haven_web_snapshot
+          changed_when: false
+
+        - name: Install schema-compatible recovery helpers before any database upgrade
+          ansible.builtin.copy:
+            src: "../scripts/{{ item }}.py"
+            dest: "/usr/local/lib/haven-backup/scripts/{{ item }}.py"
+            owner: root
+            group: root
+            mode: '0600'
+          loop: [backup_runtime, wishlist_store, wishlist_operations, wishlist_observability]
+
+        - name: Arm the durable resume intent then stop the timer and all three writers
+          ansible.builtin.command:
+            argv:
+              - /usr/bin/python3
+              - -c
+              - >-
+                from scripts.backup_runtime import SystemController, PauseJournal, settings_from, STATE, CONFIG;
+                from scripts.wishlist_operations import WEB_UPGRADE_UNITS, UNITS;
+                c=SystemController(settings_from(CONFIG)); c.units=WEB_UPGRADE_UNITS;
+                j=PauseJournal(STATE,c.units); assert not j.pending(); j.arm(); c.stop(); c.units=UNITS; assert c.stopped()
+          environment:
+            PYTHONPATH: /usr/local/lib/haven-backup
+            PYTHONDONTWRITEBYTECODE: '1'
+          changed_when: true
+
+        - name: Stop any already admitted bounded collection process
+          ansible.builtin.systemd_service:
+            name: haven-wishlist-collector.service
+            state: stopped
+
+        - name: Create the separate web IPC group
+          ansible.builtin.group:
+            name: haven-wishlist-web
+            system: true
+
+        - name: Create the unprivileged web identity
+          ansible.builtin.user:
+            name: haven-wishlist-web
+            group: haven-wishlist-web
+            system: true
+            create_home: false
+            home: /nonexistent
+            shell: /usr/sbin/nologin
+
+        - name: Allow the domain to create its dedicated web socket
+          ansible.builtin.user:
+            name: haven-wishlist
+            groups: haven-wishlist-web
+            append: true
+
+        - name: Resolve domain and web UIDs and IPC group
+          ansible.builtin.getent:
+            database: "{{ item.database }}"
+            key: "{{ item.key }}"
+          loop:
+            - {database: passwd, key: haven-wishlist}
+            - {database: passwd, key: haven-wishlist-web}
+            - {database: group, key: haven-wishlist-web}
+          register: haven_web_identities
+
+        - name: Select exact peer identities
+          ansible.builtin.set_fact:
+            haven_web_domain_uid: "{{ haven_web_identities.results[0].ansible_facts.getent_passwd['haven-wishlist'][1] }}"
+            haven_web_client_uid: "{{ haven_web_identities.results[1].ansible_facts.getent_passwd['haven-wishlist-web'][1] }}"
+            haven_web_socket_gid: "{{ haven_web_identities.results[2].ansible_facts.getent_group['haven-wishlist-web'][1] }}"
+
+        - name: Create root-owned HTTP code and asset directories
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+          loop: [/opt/haven-wishlist/web, /opt/haven-wishlist/web/wishlist, /opt/haven-wishlist-web, /opt/haven-wishlist-web/vendor-3.0.2]
+
+        - name: Copy the HTTP lock and hash-pinned archive
+          ansible.builtin.copy:
+            src: ../requirements-web.txt
+            dest: /opt/haven-wishlist/requirements-web.txt
+            owner: root
+            group: root
+            mode: '0644'
+
+        - name: Install the separate pure-Python HTTP dependency without changing native environments
+          ansible.builtin.unarchive:
+            src: "{{ haven_wishlist_web_dependencies }}.tar.gz"
+            dest: /opt/haven-wishlist-web/vendor-3.0.2
+            owner: root
+            group: root
+            mode: 'u=rwX,go=rX'
+
+        - name: Install the reviewed domain and HTTP modules
+          ansible.builtin.copy:
+            src: "../scripts/{{ item }}.py"
+            dest: "/opt/haven-wishlist/scripts/{{ item }}.py"
+            owner: root
+            group: root
+            mode: '0644'
+          loop: "{{ haven_web_modules }}"
+
+        - name: Keep the coordinator's shared domain contracts compatible
+          ansible.builtin.copy:
+            src: "../scripts/{{ item }}.py"
+            dest: "/var/lib/haven/haven-tools/scripts/{{ item }}.py"
+            owner: root
+            group: haven
+            mode: '0640'
+          loop: "{{ haven_web_modules }}"
+
+        - name: Install schemas in both public code roots
+          ansible.builtin.copy:
+            src: ../schemas/wishlist-request-v1.schema.json
+            dest: "{{ item }}/schemas/wishlist-request-v1.schema.json"
+            owner: root
+            group: root
+            mode: '0644'
+          loop: [/opt/haven-wishlist, /var/lib/haven/haven-tools]
+
+        - name: Install only the declared production web assets
+          ansible.builtin.copy:
+            src: "../web/wishlist/{{ item }}"
+            dest: "/opt/haven-wishlist/web/wishlist/{{ item }}"
+            owner: root
+            group: root
+            mode: '0644'
+          loop: [index.html, styles.css, app.mjs, model.mjs, api.mjs]
+
+        - name: Load the existing domain settings without exposing identities
+          ansible.builtin.slurp:
+            src: /var/lib/haven-wishlist/config.json
+          register: haven_web_domain_config
+          no_log: true
+
+        - name: Add only the dedicated web endpoint to the existing domain settings
+          ansible.builtin.copy:
+            content: >-
+              {{ (haven_web_domain_config.content | b64decode | from_json)
+                 | combine({'web': {'socket': '/run/haven-wishlist-web-domain/request.sock',
+                   'socket_gid': haven_web_socket_gid | int, 'client_uid': haven_web_client_uid | int}}) | to_json }}
+            dest: /var/lib/haven-wishlist/config.json
+            owner: root
+            group: haven-wishlist
+            mode: '0640'
+          no_log: true
+
+        - name: Install the explicit private origin and Tailscale owner binding
+          ansible.builtin.template:
+            src: wishlist-web.json.j2
+            dest: /etc/haven-wishlist-web.json
+            owner: root
+            group: haven-wishlist-web
+            mode: '0640'
+          no_log: true
+
+        - name: Verify the HTTP dependency artifact under its final lock
+          ansible.builtin.command:
+            argv: [/usr/bin/python3, -B, -m, scripts.wishlist_dependencies, verify,
+                   --directory, /opt/haven-wishlist-web/vendor-3.0.2, --requirements, /opt/haven-wishlist/requirements-web.txt]
+            chdir: /opt/haven-wishlist
+          environment:
+            PYTHONPATH: /opt/haven-wishlist
+          changed_when: false
+
+        - name: Validate the rendered owner and origin binding under the web identity
+          ansible.builtin.command:
+            argv: [/usr/bin/python3, -B, -c,
+                   "from pathlib import Path; from scripts.wishlist_web_gateway import load_config; load_config(Path('/etc/haven-wishlist-web.json'))"]
+            chdir: /opt/haven-wishlist
+          environment:
+            PYTHONPATH: /opt/haven-wishlist:/opt/haven-wishlist/vendor
+          become: true
+          become_user: haven-wishlist-web
+          changed_when: false
+
+        - name: Install guarded domain, HTTP and collection wake units
+          ansible.builtin.template:
+            src: "{{ item }}.j2"
+            dest: "/etc/systemd/system/{{ item }}"
+            owner: root
+            group: root
+            mode: '0644'
+          loop: [haven-wishlist.service, haven-wishlist-web.socket, haven-wishlist-web.service, haven-wishlist-collector.path]
+
+        - name: Verify installed units before loading them
+          ansible.builtin.command:
+            argv: [systemd-analyze, verify, /etc/systemd/system/haven-wishlist.service,
+                   /etc/systemd/system/haven-wishlist-web.socket, /etc/systemd/system/haven-wishlist-web.service,
+                   /etc/systemd/system/haven-wishlist-collector.path]
+          changed_when: false
+
+        - name: Reload unit definitions
+          ansible.builtin.systemd_service:
+            daemon_reload: true
+
+      always:
+        - name: Resume every journalled writer and timer even after an installation error
+          ansible.builtin.command:
+            argv:
+              - /usr/bin/python3
+              - -B
+              - -c
+              - from scripts.backup_runtime import recover, settings_from, STATE, CONFIG; recover(settings_from(CONFIG), STATE)
+          environment:
+            PYTHONPATH: /usr/local/lib/haven-backup
+          changed_when: true
+          failed_when: false
+          register: haven_web_resume
+
+        - name: Release the shared maintenance lease
+          ansible.builtin.systemd_service:
+            name: "{{ haven_web_lease }}.service"
+            state: stopped
+
+    - name: Require verified recovery before exposing the web socket
+      ansible.builtin.assert:
+        that: haven_web_resume.rc == 0
+
+    - name: Enable the root-only HTTP socket and bounded collection wakeup
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop: [haven-wishlist-web.socket, haven-wishlist-collector.path]
+
+    - name: Start the isolated HTTP gateway
+      ansible.builtin.systemd_service:
+        name: haven-wishlist-web.service
+        state: restarted
+        enabled: true

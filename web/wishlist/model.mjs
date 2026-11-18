@@ -45,7 +45,8 @@ export function priceStats(entry, at = new Date().toISOString(), days = 90) {
   const current = unavailable ? null : latest?.cents ?? null;
   const saving = current != null && average != null ? average - current : null;
   return {daily, average, minimum, latest, current, saving,
-    percentage: saving != null && average > 0 ? saving / average * 100 : null};
+    percentage: saving != null && average > 0 ? saving / average * 100 : null,
+    ...(days === 90 && entry.stats90 ? entry.stats90 : {})};
 }
 export function comparison(stats) {
   if (stats.percentage == null) return 'Bez srovnání';

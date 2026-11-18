@@ -48,19 +48,19 @@ def verify(root, *, requirements=ROOT / "requirements-wishlist.txt"):
     return manifest
 
 
-def bundle(root):
-    manifest = verify(root)
+def bundle(root, *, requirements=ROOT / "requirements-wishlist.txt"):
+    manifest = verify(root, requirements=requirements)
     target = Path(str(root) + ".tar.gz")
     expected = {**manifest["files"], MANIFEST: hashlib.sha256((root / MANIFEST).read_bytes()).hexdigest()}
     with target.open("xb") as stream:
         with tarfile.open(fileobj=stream, mode="w:gz") as archive:
             for name in sorted(expected):
                 archive.add(root / name, arcname=name, recursive=False)
-    verify_bundle(root)
+    verify_bundle(root, requirements=requirements)
 
 
-def verify_bundle(root):
-    manifest = verify(root)
+def verify_bundle(root, *, requirements=ROOT / "requirements-wishlist.txt"):
+    manifest = verify(root, requirements=requirements)
     expected = {**manifest["files"], MANIFEST: hashlib.sha256((root / MANIFEST).read_bytes()).hexdigest()}
     target = Path(str(root) + ".tar.gz")
     if target.is_symlink() or target.stat().st_size > 20 * 1024**2:
@@ -78,20 +78,20 @@ def verify_bundle(root):
     return manifest
 
 
-def build(destination):
+def build(destination, *, requirements=ROOT / "requirements-wishlist.txt"):
     if sys.version_info[:2] != (3, 14) or sys.platform != "linux":
         raise ValueError("wishlist_build_requires_linux_python314")
     destination.mkdir(mode=0o755)  # Exclusive: do not install into an older artifact.
     try:
         subprocess.run(["uv", "pip", "install", "--no-cache", "--no-config", "--python", sys.executable,
                         "--target", str(destination), "--require-hashes", "--only-binary=:all:", "--no-deps",
-                        "-r", str(ROOT / "requirements-wishlist.txt")], check=True)
+                        "-r", str(requirements)], check=True)
         (destination / ".lock").unlink(missing_ok=True)  # uv's completed install lease is not runtime code.
         manifest = {"schema_version": 1,
-                    "requirements_sha256": hashlib.sha256((ROOT / "requirements-wishlist.txt").read_bytes()).hexdigest(),
+                    "requirements_sha256": hashlib.sha256(requirements.read_bytes()).hexdigest(),
                     "python": "3.14", "files": files(destination)}
         (destination / MANIFEST).write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
-        verify(destination)
+        verify(destination, requirements=requirements)
     except BaseException:
         shutil.rmtree(destination)
         raise
@@ -101,17 +101,18 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("build", "verify", "bundle", "verify-bundle"))
     parser.add_argument("--directory", type=Path, required=True)
+    parser.add_argument("--requirements", type=Path, default=ROOT / "requirements-wishlist.txt")
     args = parser.parse_args(argv)
     os.umask(0o022)
     try:
         if args.mode == "build":
-            build(args.directory)
+            build(args.directory, requirements=args.requirements)
         elif args.mode == "bundle":
-            bundle(args.directory)
+            bundle(args.directory, requirements=args.requirements)
         elif args.mode == "verify-bundle":
-            verify_bundle(args.directory)
+            verify_bundle(args.directory, requirements=args.requirements)
         else:
-            verify(args.directory)
+            verify(args.directory, requirements=args.requirements)
     except Exception:
         print('{"result":"failed","code":"wishlist_dependencies_failed"}')
         return 1

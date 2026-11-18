@@ -1,6 +1,6 @@
 = Wishlist web: first interaction preview
 
-Status, 2026-11-18: a local, responsive interaction preview implements the confirmed owner flows using synthetic data. It is not connected to the pilot, its database, Telegram, shop fetchers or model credentials. Production web authentication, service integration, deployment and live acceptance remain open. Spending/savings dashboard requirements are deliberately unfinished; the UI labels that area as pending rather than displaying invented totals.
+Historical first delivery, 2026-11-18: a local, responsive interaction preview implemented the confirmed owner flows using synthetic data. That standalone preview is not connected to the pilot, its database, Telegram, shop fetchers or model credentials. The production implementation follows below; deployment and live acceptance must be recorded separately. Spending/savings dashboard requirements are deliberately unfinished; the UI labels that area as pending rather than displaying invented totals.
 
 == Run and review
 
@@ -46,3 +46,51 @@ node tests/wishlist_web.test.mjs
 The model tests cover first-price averages, daily weighting and gaps, money precision, stock/failure distinctions, purchase references and backdating, DST boundaries, notification-only muting, correction/cancellation and reversible removal. HTTP tests cover the asset allowlist, response headers, Host denial and symlink refusal. Browser acceptance should exercise desktop/mobile flows and storage reloads; synthetic checks do not establish production authentication or live shop behavior.
 
 Before production work, finish dashboard statistics (filter scope, historical purchase categories and past-period controls), review the first UI, settle access/write authentication and the URL under the existing private Haven origin, and define service boundaries, migrations, retry/idempotency and acceptance. Keep the existing domain as the sole production writer. Do not expose its ingress socket or reuse Telegram identity claims from a browser. Wishlist integration and Nora wording must share the resulting domain contract. Alza remains the final separate wishlist item; the final Haven security/architecture audit still follows the completed wishlist.
+
+== Production integration, 2026-11-18
+
+The production adapter adds `scripts/wishlist_web_domain.py`, a dedicated peer-authenticated endpoint in the existing domain process, and `scripts/wishlist_web_gateway.py`, a network-isolated HTTP adapter. link:adr/0019-private-wishlist-web.adoc[ADR 0019] records authentication and isolation. These implementation and synthetic results are distinct from live pilot acceptance.
+
+The production page uses same-origin requests at `/wishlist/api/command`; it never reads demonstration local storage, falls back to sample products, or writes a second database. Reads are bounded and paginated. Mutation request IDs survive uncertain responses and re-bootstrap; the domain commits changes, events and receipts atomically, with version conflicts and signed owner-bound cursors. Tests include discarding the HTTP response after a committed recurring purchase, then retrying the same request ID without creating a second purchase.
+
+Price means use equally weighted Prague calendar days, including the first observation. Persisted purchase references remain fixed when later prices arrive. Original purchase rows without a paid amount stay unknown; cancellation cannot guess an undocumented prior lifecycle. Legacy purpose/recipient fields remain as history but no longer block new intake. Recurring purchases mute notifications for approximately 30 days while daily collection continues. A manual refresh respects host backoff and a ten-minute per-offer minimum; the dedicated path unit wakes the existing bounded collector, with the timer as fallback. No offer notifications or cross-shop recommendations are added by this integration.
+
+=== Prepare and install
+
+Build an independent dependency artifact; do not replace the JSON Schema or native Hermes environments:
+
+[source,sh]
+----
+.venv/bin/python -m scripts.wishlist_dependencies build \
+  --directory /absolute/path/to/http-artifact --requirements requirements-web.txt
+.venv/bin/python -m scripts.wishlist_dependencies bundle \
+  --directory /absolute/path/to/http-artifact --requirements requirements-web.txt
+----
+
+Take and verify a fresh backup with the existing controller. Then use the explicit private inventory and private owner configuration:
+
+[source,sh]
+----
+ANSIBLE_CONFIG=ops/ansible.cfg ANSIBLE_HOME=build/ansible \
+  .venv/bin/ansible-playbook -i /absolute/path/to/private/ops/inventory.yml \
+  ops/wishlist-web.yml -e haven_wishlist_web_authorized=true \
+  -e @/absolute/path/to/private/ops/wishlist-web.yml \
+  -e haven_wishlist_web_dependencies=/absolute/path/to/http-artifact
+----
+
+The private variables name `haven_wishlist_web_origin` (the existing HTTPS origin) and `haven_wishlist_web_owner_login` (the exact owner Tailscale login). The playbook installs and resumes services under shared maintenance exclusion, checks that the last backup is accepted and under two hours old, snapshots only declared code/configuration files, installs compatible backup helpers first and arms durable resume journal version 3 for the collector timer and three existing writers. Recovery runs while the same lease is held, then releases the lease even on failure. Failed resume intent remains durable; do not continue activation after a recovery error. The HTTP socket is root-owned 0600; the gateway runs as `haven-wishlist-web` with AF_UNIX only and no private database or model/Telegram credentials.
+
+The initial rollout does not alter Serve automatically. Inspect the existing configuration and verify the local HTTP socket and owner denials before adding exactly this route (Tailscale 1.104.5 was inspected on the pilot; 1.104.4 source documents Unix proxying):
+
+[source,sh]
+----
+sudo tailscale serve status --json
+sudo tailscale serve --bg --https=443 --set-path=/wishlist unix:/run/haven-wishlist-http.sock
+sudo tailscale serve status --json
+----
+
+Preserve the dashboard `/`, private docs listener, SSH and tailnet policy. Refuse a conflicting pre-existing `/wishlist` handler. Keep Funnel absent. Verify real HTTPS access from an authorized device and the gateway/collector account's denial at the HTTP socket. Before handoff, take and exactly reconstruct a new encrypted backup containing schema 6, refresh observability, verify healthy resume state and compare deployed hashes against the checked source. Test failures and owner acceptance remain explicit; a successful service start is insufficient.
+
+To withdraw only this new route, remove `/wishlist` with `tailscale serve --https=443 --set-path=/wishlist off` and stop its HTTP socket/service. Keep the database and compatible domain/recovery code. File snapshots are not a database rollback and must not be used to install old code over schema 6.
+
+The identity-header and Unix-socket contracts were checked against the https://tailscale.com/docs/features/tailscale-serve[Tailscale Serve guide], installed CLI help and https://github.com/tailscale/tailscale/blob/v1.104.4/ipn/ipnlocal/serve.go[pinned Serve source]. Waitress socket activation and bounded server settings follow its https://docs.pylonsproject.org/projects/waitress/en/stable/socket-activation.html[official activation guide] and https://docs.pylonsproject.org/projects/waitress/en/stable/arguments.html[server arguments].

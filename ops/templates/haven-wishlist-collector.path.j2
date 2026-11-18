@@ -1,0 +1,10 @@
+[Unit]
+Description=Wake the bounded collector after an explicit wishlist change
+After=haven-wishlist.service
+
+[Path]
+PathChanged=/run/haven-wishlist-collection/refresh
+Unit=haven-wishlist-collector.service
+
+[Install]
+WantedBy=multi-user.target

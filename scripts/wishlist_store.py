@@ -95,6 +95,20 @@ MIGRATIONS = ((
     """CREATE TABLE schedule_events (sequence INTEGER PRIMARY KEY AUTOINCREMENT,
         entry_id TEXT NOT NULL, entry_version INTEGER NOT NULL, operation TEXT NOT NULL,
         occurred_at TEXT NOT NULL, FOREIGN KEY (entry_id) REFERENCES entries (entry_id))""",
+), (
+    "ALTER TABLE entries ADD COLUMN category TEXT NOT NULL DEFAULT 'uncategorized' CHECK (category IN ('uncategorized','home','personal_care','gifts'))",
+    "ALTER TABLE entries ADD COLUMN notifications_muted_until TEXT",
+    "ALTER TABLE entries ADD COLUMN lifecycle_revision INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE purchases ADD COLUMN unit_price INTEGER CHECK (unit_price IS NULL OR unit_price BETWEEN 0 AND 9999999999)",
+    "ALTER TABLE purchases ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity BETWEEN 1 AND 9999)",
+    "ALTER TABLE purchases ADD COLUMN purchase_date TEXT",
+    "ALTER TABLE purchases ADD COLUMN reference_price INTEGER",
+    "ALTER TABLE purchases ADD COLUMN previous_state TEXT",
+    "ALTER TABLE purchases ADD COLUMN previous_muted_until TEXT",
+    "ALTER TABLE purchases ADD COLUMN lifecycle_revision INTEGER",
+    "ALTER TABLE purchases ADD COLUMN voided_at TEXT",
+    "ALTER TABLE purchases ADD COLUMN corrected_at TEXT",
+    "CREATE INDEX observations_offer_date ON observations (offer_id, observed_at)",
 ))
 
 

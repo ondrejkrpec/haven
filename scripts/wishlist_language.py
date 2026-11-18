@@ -17,6 +17,10 @@ CONFLICT = "Mezitím se wishlist nebo rozhovor změnil. Napiš prosím znovu, kt
 class LanguageFlow:
     def __init__(self, domain, application, client):
         self.domain, self.application = domain, application
+        self.questions = {**QUESTIONS}
+        if domain.web_enabled:
+            self.questions.update(help="Spravuji tvůj wishlist: odkazy, kategorie, nákupy, položky a upozornění. Poslední zjištěné ceny jsou v detailu.",
+                                  prices_unavailable="Poslední zjištěné ceny najdeš v detailu položky; neověřenou cenu nevymýšlím.")
         if isinstance(client, dict):
             from scripts.wishlist_interpreter import LanguageClient
             client = LanguageClient(client)
@@ -67,7 +71,7 @@ class LanguageFlow:
                                 "versions": {entry["entry_id"]: entry["version"]}, "intent": text[:1000]}
             prefixes = {"wishlist.add": "Odkaz jsem uložila. ", "wishlist.update": "Údaje jsem doplnila. ",
                         "wishlist.restore": "Položku jsem vrátila. "}
-            reply = (prefixes.get(operation, "") if result["committed"] else "") + QUESTIONS[reason]
+            reply = (prefixes.get(operation, "") if result["committed"] else "") + self.questions[reason]
             reply += "\n" + source_text(entry)
         else:
             reply = _reply_text(result, operation, arguments)
@@ -76,12 +80,14 @@ class LanguageFlow:
                 verbs = {"wishlist.add": f"Přidala jsem do wishlistu: {label}.",
                          "wishlist.update": f"Upravila jsem položku: {label}.",
                          "wishlist.record_purchase": f"Zaznamenala jsem nákup: {label}.",
-                         "wishlist.pause": f"Pozastavila jsem sledování: {label}.",
-                         "wishlist.resume": f"Obnovila jsem sledování: {label}.",
+                         "wishlist.pause": f"Pozastavila jsem upozornění: {label}." if self.domain.web_enabled else f"Pozastavila jsem sledování: {label}.",
+                         "wishlist.resume": f"Obnovila jsem upozornění: {label}." if self.domain.web_enabled else f"Obnovila jsem sledování: {label}.",
                          "wishlist.remove": f"Odstranila jsem položku z wishlistu: {label}. Vrátit ji lze pomocí „wl vrátit {entry['reference']}“.",
                          "wishlist.restore": f"Vrátila jsem položku do wishlistu: {label}."}
                 reply = verbs.get(operation, reply)
                 reply += "\n" + source_text(entry)
+                if entry.get("notifications_muted_until") and entry["state"] != "removed":
+                    reply += " Upozornění jsou pozastavená, ceny se dál sbírají."
                 if entry["paused_until"] and entry["state"] != "removed":
                     reply += " Pozastaveno do " + entry["paused_until"] + "."
             if "Další položky:" in reply:
@@ -155,6 +161,8 @@ class LanguageFlow:
                 return None, response
             while len(canonical({"entries": entries, "context": state}).encode()) > 24000 and entries:
                 entries.pop()
+            if self.domain.web_enabled:
+                state["web_mode"] = True
             attempt = uuid4().hex
             prepared = {"request_id": context.request_id, "attempt_id": attempt, "text": event["text"],
                         "now": stamp(now), "timezone": str(self.domain.zone), "entries": entries, "context": state}

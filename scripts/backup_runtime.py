@@ -129,14 +129,17 @@ class PauseJournal:
         if value == {"resume": "haven.service", "schema_version": 1}:
             self.units = ("haven.service",)
         else:
-            from scripts.wishlist_operations import UNITS
-            require(value == {"resume": list(UNITS), "schema_version": 2}, "invalid_pause_journal")
-            self.units = UNITS
+            from scripts.wishlist_operations import UNITS, WEB_UPGRADE_UNITS
+            if value == {"resume": list(WEB_UPGRADE_UNITS), "schema_version": 3}:
+                self.units = WEB_UPGRADE_UNITS
+            else:
+                require(value == {"resume": list(UNITS), "schema_version": 2}, "invalid_pause_journal")
+                self.units = UNITS
         return True
 
     def arm(self):
         save(self.path, {"schema_version": 1, "resume": "haven.service"} if self.units == ("haven.service",)
-             else {"schema_version": 2, "resume": list(self.units)})
+             else {"schema_version": 3 if "haven-wishlist-collector.timer" in self.units else 2, "resume": list(self.units)})
 
     def disarm(self):
         self.path.unlink()

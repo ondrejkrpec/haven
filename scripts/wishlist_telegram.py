@@ -94,10 +94,11 @@ def _reply_text(result, operation, arguments):
     reply = prefix + _summary(entry, include_url=operation != "wishlist.get")
     if operation == "wishlist.get":
         reply += "\n" + source_text(entry, limit=2200)
-        reply += "\nÚčel: " + {"self": "pro mě", "gift": "dárek", None: "k doplnění"}[entry["purpose"]]
+        if not entry.get("web_mode"):
+            reply += "\nÚčel: " + {"self": "pro mě", "gift": "dárek", None: "k doplnění"}[entry["purpose"]]
         reply += "\nNákup: " + {"once": "jednorázově", "recurring": "opakovaně",
                                   None: "k doplnění"}[entry["purchase_mode"]]
-        if entry["recipient"]:
+        if entry["recipient"] and not entry.get("web_mode"):
             reply += "\nPro: " + entry["recipient"]
         if entry["note"]:
             reply += "\nPoznámka: " + entry["note"].encode("utf-16-le")[:800].decode("utf-16-le", errors="ignore")
@@ -125,6 +126,8 @@ def _reply_text(result, operation, arguments):
             reply += "\n" + reasons.get(entry["collection_reason"], "Poslední kontrola ceny se nezdařila.")
         if entry.get("next_collection_at"):
             reply += "\nDalší kontrola nejdříve: " + entry["next_collection_at"]
+    if entry.get("notifications_muted_until") and entry["state"] != "removed":
+        reply += "\nUpozornění pozastavena do: " + entry["notifications_muted_until"] + ". Ceny se dál sbírají."
     if entry["paused_until"] and entry["state"] != "removed":
         reply += "\nPozastaveno do: " + entry["paused_until"]
     return reply

@@ -47,6 +47,7 @@
         "label": {"type": "string", "minLength": 1, "maxLength": 200},
         "purpose": {"enum": ["self", "gift"]},
         "purchase_mode": {"enum": ["once", "recurring"]},
+        "category": {"enum": ["uncategorized", "home", "personal_care", "gifts"]},
         "recipient": {"type": ["string", "null"], "minLength": 1, "maxLength": 100},
         "note": {"type": ["string", "null"], "maxLength": 2000}
       }
@@ -110,7 +111,7 @@
             "arguments": {
               "allOf": [
                 {"$ref": "#/$defs/entryVersion"},
-                {"type": "object", "properties": {"purchased_at": {"type": "string", "format": "date-time"}}}
+                {"type": "object", "properties": {"purchased_at": {"type": "string", "format": "date-time"}, "unit_price": {"type": "string", "pattern": "^[0-9]{1,8}(?:[.,][0-9]{1,2})?$"}, "quantity": {"type": "integer", "minimum": 1, "maximum": 9999}, "purchase_date": {"type": "string", "format": "date"}}}
               ],
               "unevaluatedProperties": false
             }
