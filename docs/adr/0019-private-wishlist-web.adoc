@@ -1,0 +1,23 @@
+= ADR 0019: authenticated web access through a root-only Unix proxy
+
+Date: 2026-11-18. Status: accepted for implementation; live acceptance is recorded separately.
+
+== Context
+
+The owner wants the wishlist web to manage the same records as Nora. The existing dashboard is static and owner access already uses Tailscale Serve. Other processes on the VPS must not obtain browser write authority by forging HTTP identity headers. The wishlist database must retain one writer.
+
+== Decision
+
+Keep the existing HTTPS origin and mount the web at `/wishlist/`. Tailscale Serve forwards HTTP over a root-owned mode-0600 Unix socket created by systemd. An unprivileged, network-isolated Waitress 3.0.2 gateway inherits the listening descriptor and requires the explicitly configured owner's `Tailscale-User-Login` on every request. It cannot start with an ordinary HTTP listener. The root-owned socket prevents other unprivileged services from supplying those headers locally; root remains trusted administration.
+
+The gateway has no database, coordinator credentials or model profile. Its dedicated domain socket authenticates the gateway UID and verifies the database service UID. It forwards only enumerated owner operations. HTTPS, exact Host/Origin checks, a signed Secure/HttpOnly/SameSite=Strict cookie and a CSRF header protect browser writes. No CORS or public Funnel is enabled. A restart invalidates the in-memory signing key; clients bootstrap again while keeping the same mutation request ID.
+
+The existing domain writer owns categories, saved purchase amounts/quantities/reference prices and all transactions. Schema 6 adds nullable purchase fields without guessing missing historical prices. Enabling the feature converts legacy pauses to notification-only muting, keeps recurring entries collectible and changes default intake to one-time with no required purpose/recipient. The feature remains recorded if the HTTP endpoint is later disabled. Receipts, optimistic versions and lifecycle revisions prevent duplicate writes or cancellation of a newer lifecycle change.
+
+A fixed systemd path unit wakes the existing bounded collector after a committed change; the daily timer remains the fallback and source backoff still applies. Web code cannot start arbitrary services or fetch a shop itself.
+
+== Consequences
+
+No additional login password, listening network port, framework, model call or separate personal database is introduced. Waitress is separately pinned and packaged. Browser production mode never loads demo data or persists personal state in local storage. Dashboard statistics remain pending requirements.
+
+Upgrade uses a fresh verified encrypted backup, the shared maintenance lock, a bounded file snapshot and durable resume intent including the collector timer. Recovery helpers learn schema 6 before the writer can migrate. Old schema-5 code cannot be restored over the upgraded database; after migration, repair forward or use a separately authorized data-recovery procedure that preserves later history. Root socket permissions and the Tailscale route must be rechecked after deployment. The full Haven security and architecture audit remains the final wishlist milestone.

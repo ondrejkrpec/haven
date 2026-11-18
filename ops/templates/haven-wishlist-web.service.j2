@@ -1,0 +1,42 @@
+[Unit]
+Description=Haven authenticated wishlist web gateway
+Requires=haven-wishlist-web.socket
+After=haven-wishlist.service haven-wishlist-web.socket
+StartLimitIntervalSec=0
+
+[Service]
+Type=exec
+User=haven-wishlist-web
+Group=haven-wishlist-web
+Sockets=haven-wishlist-web.socket
+WorkingDirectory=/opt/haven-wishlist
+Environment=PYTHONPATH=/opt/haven-wishlist:/opt/haven-wishlist/vendor:/opt/haven-wishlist-web/vendor-3.0.2
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -B -m scripts.wishlist_web_gateway --config /etc/haven-wishlist-web.json
+Restart=on-failure
+RestartSec=5
+RestartPreventExitStatus=78
+TimeoutStopSec=10
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictSUIDSGID=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectProc=invisible
+InaccessiblePaths=-/var/lib/haven -/var/lib/haven-wishlist -/var/lib/haven-language -/var/lib/haven-backup -/etc/haven-backup -/etc/haven-wishlist
+ReadOnlyPaths=/opt/haven-wishlist /opt/haven-wishlist-web /etc/haven-wishlist-web.json
+MemoryMax=128M
+TasksMax=16
+StandardOutput=journal
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target

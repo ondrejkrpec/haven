@@ -50,7 +50,11 @@ def native_request(prepared, *, source, home):
                                                        max_retries=0, timeout=10), model)
     try:
         response = client.chat.completions.create(model=model,
-            messages=[{"role": "system", "content": SYSTEM_PROMPT + "\nSchéma příkazu: " + canonical(COMMAND_VALIDATOR.schema)},
+            messages=[{"role": "system", "content": SYSTEM_PROMPT + (
+                "\nAktuální webový režim: neptej se na účel self/gift ani příjemce. Výchozí nákup je once. "
+                "Dárky jsou kategorie gifts. Kategorie: uncategorized/home/personal_care/gifts; details a patch smějí obsahovat category. "
+                "Pause/resume pozastavuje pouze upozornění, ceny se dál sbírají. Ceny se už sbírají, poslední uloženou cenu ukaž přes get."
+                if prepared["context"].get("web_mode") else "") + "\nSchéma příkazu: " + canonical(COMMAND_VALIDATOR.schema)},
                       {"role": "user", "content": canonical(prepared)}],
             tools=[], timeout=10, no_progress_timeout=8)
         if (len(response.choices) != 1 or response.choices[0].message.tool_calls

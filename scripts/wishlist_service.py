@@ -30,7 +30,7 @@ def load_service_config(path):
     with path.open("rb") as stream:
         config = decode(stream.read(MAX_FRAME + 1))
     keys = {"schema_version", "database", "socket", "socket_gid", "ingress_uid", "bot_id", "owner_id", "timezone"}
-    if not keys <= set(config) or set(config) - keys - {"language", "collector"} or type(config["schema_version"]) is not int or config["schema_version"] != 1:
+    if not keys <= set(config) or set(config) - keys - {"language", "collector", "web"} or type(config["schema_version"]) is not int or config["schema_version"] != 1:
         raise ValueError("service_config")
     validate_settings({"socket": config["socket"], "service_uid": config["ingress_uid"], "bot_id": config["bot_id"]})
     if type(config["socket_gid"]) is not int or not 1 <= config["socket_gid"] <= 2**31 - 1:
@@ -58,6 +58,16 @@ def load_service_config(path):
             raise ValueError("collector_directory_must_be_separate")
         if "language" in config and collector_path.parent == socket_path(config["language"]["socket"]).parent:
             raise ValueError("collector_directory_must_be_separate")
+    if "web" in config:
+        web = config["web"]
+        if (not isinstance(web, dict) or set(web) != {"socket", "socket_gid", "client_uid"}
+                or any(type(web[key]) is not int or not 1 <= web[key] < 2**31 for key in ("socket_gid", "client_uid"))
+                or web["client_uid"] in (os.geteuid(), config["ingress_uid"], config.get("language", {}).get("service_uid"), config.get("collector", {}).get("client_uid"))
+                or web["socket_gid"] in (config["socket_gid"], config.get("collector", {}).get("socket_gid"))):
+            raise ValueError("web_identity_must_be_separate")
+        parent = socket_path(web["socket"]).parent
+        if parent in [socket_path(c["socket"]).parent for c in [config, config.get("collector", config), config.get("language", config)]]:
+            raise ValueError("web_directory_must_be_separate")
     return config
 
 
@@ -85,6 +95,12 @@ class Server(PeerServer):
         super().__init__(path, ingress_uid=ingress_uid, **kwargs)
 
     async def respond(self, request):
+        result = await self._respond(request)
+        if result.get("committed") and self.domain.collection_wakeup:
+            self.domain.collection_wakeup()
+        return result
+
+    async def _respond(self, request):
         if set(request) == {"protocol_version", "operation", "event"}:
             if type(request["protocol_version"]) is not int or request["protocol_version"] != 1:
                 return self.domain.response(None, "invalid_request")
@@ -103,10 +119,11 @@ class Server(PeerServer):
 async def serve(config):
     path = Path(config["database"])
     private_database(path)
-    domain = Wishlist(path, bot_id=config["bot_id"], owner_id=config["owner_id"], timezone=config["timezone"])
+    domain = Wishlist(path, bot_id=config["bot_id"], owner_id=config["owner_id"], timezone=config["timezone"], web_enabled="web" in config)
     server = Server(domain, config["socket"], ingress_uid=config["ingress_uid"], socket_gid=config["socket_gid"],
                     language=config.get("language"))
     collection_server = None
+    web_server = None
     maintenance = None
     stopped = asyncio.Event()
     loop = asyncio.get_running_loop()
@@ -122,6 +139,17 @@ async def serve(config):
             collection_server = CollectionServer(domain, settings["socket"], ingress_uid=settings["client_uid"],
                                                  socket_gid=settings["socket_gid"])
             await collection_server.start()
+        if "web" in config:
+            from scripts.wishlist_web_domain import WebServer
+            settings = config["web"]
+            directory = socket_path(settings["socket"]).parent
+            private_directory(directory, uid=os.geteuid(), socket_directory=True)
+            os.chown(directory, -1, settings["socket_gid"])
+            web_server = WebServer(domain, settings["socket"], ingress_uid=settings["client_uid"], socket_gid=settings["socket_gid"])
+            await web_server.start()
+            if "collector" in config:
+                signal_file = socket_path(config["collector"]["socket"]).with_name("refresh")
+                domain.collection_wakeup = signal_file.touch
         await server.start()
         maintenance = asyncio.create_task(retain(domain, stopped))
         print('{"result":"ready","service":"wishlist"}', flush=True)
@@ -133,6 +161,8 @@ async def serve(config):
         await server.close()
         if collection_server is not None:
             await collection_server.close()
+        if web_server is not None:
+            await web_server.close()
         domain.close()
 
 

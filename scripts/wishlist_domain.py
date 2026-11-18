@@ -51,6 +51,8 @@ class IngressContext:
 
 
 def classification(details):
+    if details.get("web_mode"):
+        return []
     missing = [key for key in ("purpose", "purchase_mode") if not details.get(key)]
     if details.get("purpose") == "gift":
         if not details.get("recipient"):
@@ -104,13 +106,19 @@ def source_host(url):
 
 
 class Wishlist:
-    def __init__(self, path, *, bot_id, owner_id, timezone="Europe/Prague", clock=None):
+    def __init__(self, path, *, bot_id, owner_id, timezone="Europe/Prague", clock=None, web_enabled=False):
         if not re.fullmatch(r"[1-9][0-9]{0,15}", owner_id) or not bot_id or len(bot_id) > 100:
             raise ValueError("Invalid wishlist identity")
         self.bot_id, self.owner_id = bot_id, owner_id
         self.zone = ZoneInfo(timezone)
         self.clock = clock or (lambda: datetime.now(UTC))
         self.store = Store(path, bot_id=bot_id, owner_id=owner_id, timezone=timezone)
+        self.web_enabled = web_enabled or self.store.db.execute(
+            "SELECT 1 FROM metadata WHERE key='web_features_enabled'").fetchone() is not None
+        if web_enabled:
+            from scripts.wishlist_web_domain import activate
+            activate(self)
+        self.collection_wakeup = None
 
     def close(self):
         self.store.close()
@@ -196,6 +204,7 @@ class Wishlist:
         if observation and (availability is None or instant(observation["observed_at"]) > instant(availability["checked_at"])):
             availability = {"availability": observation["availability"], "checked_at": observation["observed_at"]}
         return {**record,
+                **({"web_mode": True} if self.web_enabled else {}),
                 "state": "removed" if record["removed_at"] else record["state"],
                 "collection_status": "stale" if overdue else record["collection_status"],
                 "collection_reason": "schedule_overdue" if overdue else record["collection_reason"],
@@ -216,14 +225,19 @@ class Wishlist:
         if operation == "wishlist.add":
             host = source_host(args["url"])
             details = args.get("details", {})
+            if self.web_enabled:
+                details = {"purpose": "self", "purchase_mode": "once", **details}
             self._validate_details(details)
             entry_id = "wi_" + uuid4().hex
             values = [details.get(key) for key in ("label", "purpose", "purchase_mode", "recipient", "note")]
             db.execute("""INSERT INTO entries
                 (entry_id, owner_id, version, state, classification, label, purpose, purchase_mode,
                  recipient, note, created_at, updated_at) VALUES (?, ?, 1, 'active', ?, ?, ?, ?, ?, ?, ?, ?)""",
-                       (entry_id, self.owner_id, "needs_details" if classification(details) else "complete",
+                       (entry_id, self.owner_id, "complete" if self.web_enabled else "needs_details" if classification(details) else "complete",
                         *values, stamp(now), stamp(now)))
+            if self.web_enabled:
+                db.execute("UPDATE entries SET category=? WHERE entry_id=? AND owner_id=?",
+                           (details.get("category", "uncategorized"), entry_id, self.owner_id))
             # Per-entry permission only. No global shop approval or collection happens here.
             db.execute("""INSERT INTO offers
                 (offer_id, entry_id, owner_id, url, shop_host, url_sha256,
@@ -247,6 +261,9 @@ class Wishlist:
             return reply("conflict")
         if entry["state"] == "removed" and operation not in ("wishlist.remove", "wishlist.restore"):
             return reply("not_found")
+        if self.web_enabled and operation in ("wishlist.record_purchase", "wishlist.pause", "wishlist.resume"):
+            from scripts.wishlist_web_domain import lifecycle
+            return lifecycle(self, db, request_id, operation, args, entry, now)
         updates = {}
         invalidate = False
         if operation == "wishlist.remove":
@@ -296,6 +313,11 @@ class Wishlist:
                 return reply("conflict")
             updates = {"state": "active", "paused_until": None}
             invalidate = True
+        if self.web_enabled and operation in ("wishlist.remove", "wishlist.restore"):
+            updates["lifecycle_revision"] = entry["lifecycle_revision"] + 1
+            # Remove/restore changes visibility, not the stored purchase lifecycle.
+            db.execute("UPDATE purchases SET lifecycle_revision=? WHERE sequence=(SELECT MAX(sequence) FROM purchases WHERE entry_id=? AND owner_id=? AND voided_at IS NULL) AND lifecycle_revision=?",
+                       (updates["lifecycle_revision"], entry["entry_id"], self.owner_id, entry["lifecycle_revision"]))
         updates.update(version=entry["version"] + 1, updated_at=stamp(now))
         # All keys are schema-limited fields or literals chosen above, never SQL from input.
         db.execute("UPDATE entries SET " + ", ".join(f"{key} = ?" for key in updates)

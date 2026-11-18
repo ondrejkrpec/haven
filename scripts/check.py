@@ -41,17 +41,18 @@ def main():
     ansible_env = {**os.environ, "ANSIBLE_CONFIG": str(ROOT / "ops/ansible.cfg"),
                    "ANSIBLE_HOME": str(ROOT / "build/ansible"),
                    "PATH": str(Path(python).parent) + os.pathsep + os.environ.get("PATH", "")}
-    for playbook in ("bootstrap", "verify", "reboot", "model-prepare", "model-configure", "service", "whatsapp-prepare", "telegram-prepare", "web", "backup", "wishlist", "wishlist-start", "wishlist-backup", "wishlist-browser", "wishlist-observability"):
+    for playbook in ("bootstrap", "verify", "reboot", "model-prepare", "model-configure", "service", "whatsapp-prepare", "telegram-prepare", "web", "backup", "wishlist", "wishlist-start", "wishlist-backup", "wishlist-browser", "wishlist-observability", "wishlist-web"):
         run(Path(python).parent / "ansible-playbook", "-i", "ops/inventory.example.yml",
             f"ops/{playbook}.yml", "--syntax-check", env=ansible_env, buffer_output=True)
     run(Path(python).parent / "ansible-lint", "--offline", "ops/bootstrap.yml",
         "ops/verify.yml", "ops/reboot.yml", "ops/model-prepare.yml", "ops/model-configure.yml", "ops/service.yml",
-        "ops/whatsapp-prepare.yml", "ops/telegram-prepare.yml", "ops/web.yml", "ops/backup.yml", "ops/wishlist.yml", "ops/wishlist-start.yml", "ops/wishlist-backup.yml", "ops/wishlist-browser.yml", "ops/wishlist-observability.yml",
+        "ops/whatsapp-prepare.yml", "ops/telegram-prepare.yml", "ops/web.yml", "ops/backup.yml", "ops/wishlist.yml", "ops/wishlist-start.yml", "ops/wishlist-backup.yml", "ops/wishlist-browser.yml", "ops/wishlist-observability.yml", "ops/wishlist-web.yml",
         env=ansible_env, buffer_output=True)
     run(ROOT / "build/tools/actionlint", "-shellcheck=", "-pyflakes=", ".github/workflows/checks.yml")
     run(python, "scripts/validate_config.py", "examples/instance.yaml")
     run(python, "scripts/validate_config.py", "templates/private/config/instance.yaml.example")
     run(python, "-m", "unittest", "discover", "-s", "tests", "-v")
+    run("node", "tests/wishlist_web.test.mjs")
     run("sha256sum", "-c", "SHA256SUMS", cwd=ROOT / "research/h0.1")
     # Include tracked and untracked public candidates, without ignored local data.
     with tempfile.TemporaryDirectory(prefix="haven-secret-scan-") as temporary:

@@ -3,7 +3,7 @@
   ansible.builtin.group:
     name: "{{ item }}"
     system: true
-  loop: [haven-wishlist, haven-language, haven-wishlist-build, haven-wishlist-ingress, haven-wishlist-language, haven-wishlist-collection]
+  loop: [haven-wishlist, haven-language, haven-wishlist-build, haven-wishlist-ingress, haven-wishlist-language, haven-wishlist-collection, haven-wishlist-web]
 
 - name: Create separate non-login identities
   ansible.builtin.user:
@@ -93,6 +93,7 @@
     - capability_policy
     - prepare_capabilities
     - wishlist_dependencies
+    - wishlist_web_domain
 
 - name: Install the dependency lock used to verify the artifact
   ansible.builtin.copy:

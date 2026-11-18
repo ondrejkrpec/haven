@@ -25,6 +25,7 @@ LANGUAGE_POLICY = {"schema_version": 1,
                    "exclude": ["tools", "logs", "cache", ".cache", "audio_cache", "image_cache"],
                    "required": ["config.yaml", "auth.json"], "sqlite": []}
 UNITS = ("haven.service", "haven-wishlist.service", "haven-wishlist-language.service")
+WEB_UPGRADE_UNITS = ("haven-wishlist-collector.timer", *UNITS)
 
 
 def configurations(*, bot_id, owner_id, timezone, ingress_uid, domain_uid, language_uid, ingress_gid, language_gid,
