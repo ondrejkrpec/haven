@@ -430,6 +430,51 @@ sudo tailscale serve status --json</code></pre>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_purchase_statistics_source_implementation_2026_11_19"><a class="anchor" href="#_purchase_statistics_source_implementation_2026_11_19"></a>Purchase statistics, source implementation 2026-11-19</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The web now implements the owner-confirmed spending and net-savings summaries, globally and for each category. This is checked source and synthetic acceptance, separate from pilot installation and owner acceptance. The initial category order is retained. No collector, model or shop request is needed to calculate a summary.</p>
+</div>
+<div class="paragraph">
+<p>The period control defaults to the current Prague calendar month and offers month, year and all history. Arrows navigate earlier months/years; future navigation is disabled. Purchases are selected by their saved purchase date; legacy timestamps without a saved date are converted to the owner&#8217;s configured time zone. Corrections move a purchase into its corrected period; voided purchases contribute nothing. Existing version/lifecycle protections still prevent cancellation from overwriting newer changes. Metadata-only edits do not prevent cancellation.</p>
+</div>
+<div class="paragraph">
+<p>Summaries follow the list&#8217;s search and shop, stock, mode and lifecycle filters. In the default active view, purchased one-time items are excluded; select Purchased or All non-removed to include them. Removed items are included only through the Removed filter. Category filtering and category totals use the saved purchase category, while the list groups by the item&#8217;s current category. A moved item can therefore contribute historical purchases to its former category without appearing in that category&#8217;s current list. The UI explains this distinction in expandable help.</p>
+</div>
+<div class="paragraph">
+<p>Migration 7 appends a constrained purchase category and an owner/entry index without changing existing purchase values or history. All pre-migration purchases use <code>uncategorized</code>; the current item category is never used to guess their original category. New web and web-enabled Telegram purchases capture the category at recording; amount, quantity and date corrections keep that saved category. A backdated new purchase uses the item&#8217;s category at recording; the service cannot infer an undocumented past assignment.</p>
+</div>
+<div class="paragraph">
+<p>Spending uses paid unit price times quantity. Net savings use the already saved reference mean; overpayment reduces savings. Purchases without paid prices are excluded from both monetary totals and counted explicitly. Known paid amounts without a reference contribute to spending and an explicit unknown-savings count. A wholly unknown sum displays a dash; a selection with no purchases displays zero. Partial known sums remain visible with the missing-data counts. Category subtotals apply the same rules. Later observed prices cannot rewrite saved references.</p>
+</div>
+<div class="paragraph">
+<p><code>web.statistics</code> is an owner-authenticated read through the existing gateway/domain boundary. Arguments are <code>period</code> (<code>month</code>, <code>year</code>, <code>all</code>), <code>date</code> (an ISO calendar date in the selected period, no later than today) and an optional <code>filters</code> object with <code>state</code>, <code>category</code>, <code>shop</code>, <code>stock</code>, <code>mode</code> and <code>search</code>. Category values are the existing domain codes; blank values mean no restriction. State defaults to <code>default</code>; supported alternatives are <code>purchased</code>, <code>removed</code> and <code>all</code>. Unknown fields/types are rejected. The response returns <code>total</code> and <code>categories</code>, each with <code>count</code>, <code>unknown_price</code>, <code>unknown_reference</code>, <code>spending</code> and <code>savings</code>. Monetary totals are exact integer-halere decimal strings or null, retaining precision beyond JavaScript&#8217;s safe integer range.</p>
+</div>
+<div class="paragraph">
+<p>One read transaction produces the entire summary independently of paginated item details. The read refuses more than 10,000 purchased item identities or 128,000 non-voided purchases instead of presenting a truncated total. It writes no receipts or events. The browser clears old totals while loading, ignores superseded responses and shows an explicit unavailable state with retry on failure. Both the observability exporter and backup compatibility checks support schema 7. Deploy compatible domain, gateway, UI, observability and recovery helpers together using the existing guarded web playbook and fresh verified backups. Schema-6 code must not reopen the migrated database; application file rollback cannot remove the category column or rewind purchase history.</p>
+</div>
+<div class="sect2">
+<h3 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h3>
+<div class="paragraph">
+<p>The maintained domain and JavaScript suites cover historical categories, unknown prices/references, signed net savings, exact large amounts, period boundaries, corrections, voids, identity/filter validation and bounded reads. Migration tests retain all schema-6 purchase fields and refuse an old reader. Backup/recovery tests preserve the new category together with amount, quantity and reference.</p>
+</div>
+<div class="paragraph">
+<p>An opt-in browser acceptance uses the existing hash-pinned probe dependencies, a temporary SQLite database, local self-signed HTTPS and a fresh sandboxed Chromium profile. HTTPS certificate bypass is confined to this synthetic loopback fixture. It uses the production UI/gateway and in-process domain transport; the normal socket tests independently cover UID admission. It never connects to the pilot, a shop, an existing browser profile or a model. Run from the public repository with the separate probe environment:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">/absolute/path/to/probe-env/bin/python -m research.wishlist.statistics_browser \
+  --chromium /absolute/path/to/chromium \
+  --output build/statistics-qa</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The fixture checks desktop/mobile summaries, missing data, historical category filtering, period navigation, purchase-triggered updates, empty results, failure/retry and mobile overflow. It writes synthetic screenshots and a small result receipt to the chosen output directory. These checks do not establish live migration, installed service isolation or owner acceptance.</p>
+</div>
+</div>
+</div>
+</div>
       </article>
       <footer>Haven documentation · Check each guide for its verification scope.</footer>
     </main>
