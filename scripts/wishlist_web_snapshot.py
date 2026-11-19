@@ -10,7 +10,7 @@ import tempfile
 MODULES = ("wishlist_store", "wishlist_domain", "wishlist_contract", "wishlist_protocol", "wishlist_socket",
            "wishlist_service", "wishlist_web_domain", "wishlist_web_gateway", "wishlist_dependencies",
            "wishlist_operations", "wishlist_observability", "wishlist_language", "wishlist_language_contract",
-           "wishlist_model", "wishlist_telegram")
+           "wishlist_model", "wishlist_telegram", "wishlist_collection")
 FILES = (
     *(f"{root}/scripts/{module}.py" for root in ("/opt/haven-wishlist", "/var/lib/haven/haven-tools") for module in MODULES),
     "/opt/haven-wishlist/schemas/wishlist-request-v1.schema.json",
@@ -19,7 +19,10 @@ FILES = (
     *(f"/usr/local/lib/haven-backup/scripts/{name}.py" for name in ("backup_runtime", "wishlist_store", "wishlist_operations", "wishlist_observability")),
     "/var/lib/haven-wishlist/config.json", "/etc/haven-wishlist-web.json",
     *(f"/etc/systemd/system/{name}" for name in ("haven-wishlist.service", "haven-wishlist-web.service", "haven-wishlist-web.socket", "haven-wishlist-collector.path")),
-    *(f"/opt/haven-wishlist/web/wishlist/{name}" for name in ("index.html", "styles.css", "app.mjs", "model.mjs", "api.mjs")),
+    *(f"/opt/haven-wishlist/web/wishlist/{name}" for name in (
+        "index.html", "styles.css", "app.mjs", "model.mjs", "api.mjs",
+        "gambarino.woff2", "general-sans.woff2",
+    )),
 )
 
 

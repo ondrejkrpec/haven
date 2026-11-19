@@ -9,7 +9,8 @@
   vars:
     haven_web_modules: [wishlist_store, wishlist_domain, wishlist_contract, wishlist_protocol, wishlist_socket, wishlist_service,
                         wishlist_web_domain, wishlist_web_gateway, wishlist_dependencies, wishlist_operations,
-                        wishlist_observability, wishlist_language, wishlist_language_contract, wishlist_model, wishlist_telegram]
+                        wishlist_observability, wishlist_language, wishlist_language_contract, wishlist_model, wishlist_telegram,
+                        wishlist_collection]
   pre_tasks:
     - name: Require the explicit deployment and private owner configuration
       ansible.builtin.assert:
@@ -193,6 +194,16 @@
             group: root
             mode: '0644'
           loop: [index.html, styles.css, app.mjs, model.mjs, api.mjs]
+
+        - name: Install the optional owner-supplied webfonts
+          ansible.builtin.copy:
+            src: "{{ haven_wishlist_web_fonts }}/{{ item }}"
+            dest: "/opt/haven-wishlist/web/wishlist/{{ item }}"
+            owner: root
+            group: root
+            mode: '0644'
+          loop: [gambarino.woff2, general-sans.woff2]
+          when: haven_wishlist_web_fonts is defined
 
         - name: Load the existing domain settings without exposing identities
           ansible.builtin.slurp:

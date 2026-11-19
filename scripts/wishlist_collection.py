@@ -178,16 +178,23 @@ class Collection:
             previous = db.execute("SELECT sku, currency FROM observations WHERE offer_id=? ORDER BY sequence DESC LIMIT 1",
                                   (row["offer_id"],)).fetchone()
             key = "collection_availability:" + row["offer_id"]
-            availability = db.execute("SELECT value FROM metadata WHERE key=?", (key,)).fetchone()
-            pinned_sku = previous["sku"] if previous else json.loads(availability[0])["sku"] if availability else None
+            saved = db.execute("SELECT value FROM metadata WHERE key=?", (key,)).fetchone()
+            availability = json.loads(saved[0]) if saved else {}
+            pinned_sku = previous["sku"] if previous else availability.get("sku")
             if ((pinned_sku is not None and candidate["sku"] != pinned_sku) or (
                     previous and candidate["price"] is not None and candidate["currency"] != previous["currency"])):
                 result = {"status": "failed", "reason": "offer_unverified", "http_status": 200, "retry_after": 0}
             else:
                 # Retain the last verified stock state independently of price
                 # history and compactable worker payloads, in this transaction.
+                current_stock = candidate["availability"]
+                prior_stock = availability.get("availability")
+                stock_change = availability.get("change") if current_stock == prior_stock else None
+                if current_stock != "unknown" and prior_stock not in (None, "unknown", current_stock):
+                    stock_change = {"at": current, "previous": prior_stock}
                 db.execute("INSERT OR REPLACE INTO metadata VALUES (?, ?)", (key, canonical({
-                    "sku": candidate["sku"], "availability": candidate["availability"], "checked_at": current})))
+                    "sku": candidate["sku"], "availability": current_stock, "checked_at": current,
+                    **({"change": stock_change} if stock_change else {})})))
                 if candidate["price"] is not None:
                     db.execute("""INSERT INTO observations
                     (job_id, offer_id, observed_at, adapter, price, currency, availability, name, sku, conditions_verification)

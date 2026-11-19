@@ -2,9 +2,13 @@
 
 import io
 import json
+from pathlib import Path
+import shutil
+import tempfile
 import unittest
+from unittest.mock import patch
 
-from scripts.wishlist_web_gateway import Application, COOKIE
+from scripts.wishlist_web_gateway import Application, COOKIE, ROOT
 from waitress.proxy_headers import proxy_headers_middleware
 
 
@@ -89,6 +93,24 @@ class GatewayTests(unittest.TestCase):
         self.assertIn("connect-src 'self'", response["headers"]["Content-Security-Policy"])
         for path in ("/demo.mjs", "/../config.json", "/.git/config", "/scripts/"):
             self.assertEqual(self.call(path)["status"], "404 Not Found")
+
+    def test_owner_supplied_fonts_are_optional_same_origin_assets(self):
+        self.assertEqual(self.call("/general-sans.woff2")["status"], "404 Not Found")
+        with tempfile.TemporaryDirectory() as directory:
+            assets = Path(directory) / "wishlist"
+            shutil.copytree(ROOT, assets)
+            fake = b"wOF2" + bytes(44)
+            (assets / "general-sans.woff2").write_bytes(fake)
+            with patch("scripts.wishlist_web_gateway.ROOT", assets):
+                self.app = Application(self.app.config)
+            self.assertIn(b'href="/wishlist/general-sans.woff2"', self.call("/")["body"])
+            self.assertIn(b"@font-face", self.call("/styles.css")["body"])
+            self.assertIn("font-src 'self'", self.call("/")["headers"]["Content-Security-Policy"])
+            denied = self.call("/general-sans.woff2", headers={"HTTP_TAILSCALE_USER_LOGIN": ""})
+            self.assertEqual(denied["status"], "403 Forbidden")
+            response = self.call("/general-sans.woff2")
+            self.assertEqual(response["headers"]["Content-Type"], "font/woff2")
+            self.assertEqual(response["body"], fake)
 
     def test_domain_outage_returns_unknown_outcome_without_exposing_exception(self):
         self.bootstrap()

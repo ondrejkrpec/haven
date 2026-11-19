@@ -135,31 +135,45 @@ def cents(value):
     return int(Decimal(value.replace(",", ".")) * 100)
 
 
-def stats(domain, db, entry, at):
+def stats(domain, db, entry, at, *, include_change=False):
     first = at.astimezone(domain.zone).date() - timedelta(days=89)
     cutoff = stamp(datetime.combine(first, time(), domain.zone))
     rows = db.execute("""SELECT price, observed_at FROM observations
-        WHERE offer_id=? AND observed_at>=? AND observed_at<=? ORDER BY observed_at LIMIT 20001""",
+        WHERE offer_id=? AND observed_at>=? AND observed_at<=? ORDER BY observed_at, sequence LIMIT 20001""",
                       (entry["offer_id"], cutoff, stamp(at))).fetchall()
     if len(rows) > 20000:
         raise ValueError("history_limit")
     days = {}
     minimum = None
+    price_change = None
+    previous = None
     for row in rows:
         price = cents(row["price"])
         day = instant(row["observed_at"]).astimezone(domain.zone).date().isoformat()
         total, count = days.get(day, (0, 0))
         days[day] = (total + price, count + 1)
         minimum = price if minimum is None else min(minimum, price)
+        if include_change and previous is not None and price != previous:
+            price_change = {"at": row["observed_at"], "delta": price - previous}
+        previous = price
     average = (int((sum(Decimal(total) / count for total, count in days.values()) / len(days))
                    .quantize(Decimal(1), rounding=ROUND_HALF_UP)) if days else None)
     observation = entry["latest_observation"]
     unavailable = (entry["latest_availability"] or {}).get("availability") == "out_of_stock"
     current = None if unavailable or observation is None else cents(observation["price"])
     saving = average - current if average is not None and current is not None else None
-    return {"average": average, "minimum": minimum, "current": current, "saving": saving,
+    result = {"average": average, "minimum": minimum, "current": current, "saving": saving,
             "percentage": saving / average * 100 if saving is not None and average else None,
             "measured_days": len(days)}
+    if include_change and rows:
+        # A price immediately preceding the window can establish its first transition.
+        if price_change is None:
+            older = db.execute("""SELECT price FROM observations WHERE offer_id=? AND observed_at<?
+                ORDER BY observed_at DESC, sequence DESC LIMIT 1""", (entry["offer_id"], cutoff)).fetchone()
+            if older or len(rows) > 1:
+                price_change = {"at": rows[0]["observed_at"], "delta": previous - cents(older["price"]) if older else 0}
+        result["price_change"] = price_change
+    return result
 
 
 def purchase_values(domain, db, entry, args, now, *, require_price=False):
@@ -225,7 +239,8 @@ class WebApplication:
             named = db.execute("SELECT name FROM observations WHERE offer_id=? ORDER BY sequence DESC LIMIT 1", (entry["offer_id"],)).fetchone()
             if named:
                 projected["label"] = named[0]
-        return {**projected, "stats90": stats(self.domain, db, entry, self.domain.clock())}
+        return {**projected, "stock_change": entry.get("stock_change"),
+                "stats90": stats(self.domain, db, entry, self.domain.clock(), include_change=True)}
 
     def cursor(self, kind, entry_id, after, ceiling):
         payload = base64.urlsafe_b64encode(canonical([kind, self.domain.owner_id, entry_id, after, ceiling]).encode()).decode()

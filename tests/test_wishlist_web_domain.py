@@ -164,6 +164,37 @@ class WebDomainTests(unittest.TestCase):
         self.assertIsNone(second["cursor"])
         self.assertEqual(self.call("history", {"entry_id": entry["entry_id"], "cursor": cursor + "x"})["code"], "invalid_request")
 
+    def test_web_highlights_latest_price_transition_and_verified_restock_without_rewriting_history(self):
+        entry = self.add()
+        self.observe("1000.00")
+        first = self.get(entry)
+        self.assertIsNone(first["stats90"]["price_change"])
+        self.assertIsNone(first["stock_change"])
+
+        self.now += timedelta(days=1)
+        self.observe("750.00")
+        drop = self.get(entry)["stats90"]["price_change"]
+        self.assertEqual(drop["delta"], -25000)
+
+        self.now += timedelta(days=1)
+        self.observe(None, "out_of_stock")
+        unavailable = self.get(entry)
+        self.assertIsNone(unavailable["stats90"]["current"])
+        self.assertEqual(unavailable["stock_change"]["previous"], "in_stock")
+
+        self.now += timedelta(days=1)
+        self.observe("750.00")
+        restock = self.get(entry)["stock_change"]
+        self.assertEqual(restock["previous"], "out_of_stock")
+
+        self.now += timedelta(days=1)
+        self.observe("750.00")
+        current = self.get(entry)
+        self.assertEqual(current["stats90"]["price_change"], drop)
+        self.assertEqual(current["stock_change"], restock)
+        history = self.call("history", {"entry_id": entry["entry_id"]})["data"]["history"]
+        self.assertEqual([row["cents"] for row in history], [100000, 75000, 75000, 75000])
+
     def test_new_telegram_links_default_to_once_without_purpose_question(self):
         event = {"bot_id": BOT, "user_id": OWNER, "chat_id": OWNER, "chat_type": "private", "is_bot": False,
                  "edited": False, "message_id": "1", "text": "https://shop.example.com/item"}
