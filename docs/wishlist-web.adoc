@@ -1,4 +1,4 @@
-= Wishlist web: first interaction preview
+= Wishlist web
 
 Historical first delivery, 2026-11-18: a local, responsive interaction preview implemented the confirmed owner flows using synthetic data. That standalone preview is not connected to the pilot, its database, Telegram, shop fetchers or model credentials. The production implementation follows below; deployment and live acceptance must be recorded separately. Spending/savings dashboard requirements are deliberately unfinished; the UI labels that area as pending rather than displaying invented totals.
 
@@ -98,7 +98,15 @@ The identity-header and Unix-socket contracts were checked against the https://t
 
 Unix proxy compatibility: Serve 1.104.5 rewrites the backend Host to `localhost` and replaces `X-Forwarded-Host`/`X-Forwarded-Proto` with the outer request. Waitress trusts those two headers from its Unix `localhost` peer because the inherited HTTP socket admits root exclusively; the application then checks the resulting exact owner authority and Origin. The proxy setting must never be reused with an unprotected listener. Production asset and API URLs use the absolute `/wishlist/` mount so opening `/wishlist` without a trailing slash still works.
 
-== Purchase statistics, source implementation 2026-11-19
+== Purchase statistics, withdrawn from the web 2026-11-19
+
+The owner withdrew the entire “Nákupy v číslech” section after trying it. The current home page has no purchase-summary section, period controls, category totals or placeholder. It makes no automatic `web.statistics` calls. No replacement page or navigation entry is added. A separate statistics view is only a possible future direction.
+
+Purchase forms, item details, price charts, categories, receipts and all schema-7 data remain available. This is an asset-only UI change: no database migration, deletion, rollback or collector/coordinator restart is needed. The aggregate API and calculation helpers remain dormant for a possible future view.
+
+The following paragraphs document the retained calculation/data contract and the earlier delivery, not an enabled statistics screen.
+
+=== Retained contract and earlier delivery
 
 The web now implements the owner-confirmed spending and net-savings summaries, globally and for each category. This is checked source and synthetic acceptance, separate from pilot installation and owner acceptance. The initial category order is retained. No collector, model or shop request is needed to calculate a summary.
 
@@ -127,4 +135,4 @@ An opt-in browser acceptance uses the existing hash-pinned probe dependencies, a
   --output build/statistics-qa
 ----
 
-The fixture checks desktop/mobile summaries, missing data, historical category filtering, period navigation, purchase-triggered updates, empty results, failure/retry and mobile overflow. It writes synthetic screenshots and a small result receipt to the chosen output directory. These checks do not establish live migration, installed service isolation or owner acceptance.
+The current fixture checks that the summary section is absent and no automatic aggregate request is made, while desktop/mobile lists, filters, detail, price history and purchase recording still work. It writes synthetic screenshots and a small result receipt to the chosen output directory. These checks do not establish live migration, installed service isolation or owner acceptance.
