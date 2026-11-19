@@ -487,6 +487,32 @@ sudo tailscale serve status --json</code></pre>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_product_overview_detail_and_intake"><a class="anchor" href="#_product_overview_detail_and_intake"></a>Product overview, detail and intake</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The current home page uses responsive product rows. It groups by category and displays the shop, current or last known price, availability and meaningful changes. Search, category and sort are exposed alongside the list. Shop, availability, purchase mode and lifecycle are under additional filters. Removed and purchased views remain accessible. Product images are not part of the current data contract; a consistent placeholder occupies the same space on every row.</p>
+</div>
+<div class="paragraph">
+<p>The compact activity strip uses a rolling seven-day window and the latest verified transition per product and signal. Price changes compare adjacent observations of the same offer. An identical subsequent price does not erase a recent transition. Failed collection and unavailable offers do not advertise stale prices as fresh changes. A label about no detected changes is scoped to the available evidence. A first observation is not a price change.</p>
+</div>
+<div class="paragraph">
+<p><code>web.list</code> and <code>web.get</code> expose the optional latest price change (<code>stats90.price_change</code>, signed integer haléře and observation timestamp) and the latest verified stock change (<code>stock_change</code>, previous availability and timestamp). Existing fields and commands retain their meanings. The collector retains the new availability detail alongside the latest verified state in the existing metadata record, including successful checks without a price. Equal follow-up checks preserve the transition. No migration is needed; older stock events are not inferred. Price checks and collection limits are unchanged.</p>
+</div>
+<div class="paragraph">
+<p>The detail is a desktop drawer and a full-height mobile dialog. It prioritizes the shop link and current price. The price chart appears when daily averages differ; a single measurement or flat daily averages get a text summary. The measured-days table, observation count, dates without a price in the actual tracking interval and last successful check remain visible. Comparison statistics give their own measured coverage, separately from the selected chart period.</p>
+</div>
+<div class="paragraph">
+<p>Adding an item starts with its HTTPS URL. Name, category, mode and note can be provided up front or edited after saving. The saved item opens in its detail with collection status. Existing bounded collection resolves a name, availability and price when it can. Preview-before-save, automatic category inference and entries without a URL are separate design choices.</p>
+</div>
+<div class="paragraph">
+<p>The two optional owner-supplied webfonts are served from the existing authenticated origin. Obtain original WOFF2 copies for your own installation from <a href="https://www.fontshare.com/fonts/gambarino">Gambarino</a> and <a href="https://www.fontshare.com/fonts/general-sans">General Sans</a> under the foundry&#8217;s <a href="https://www.fontshare.com/licenses/itf-ffl">license</a>. Supply an absolute local directory via <code>haven_wishlist_web_fonts</code> to the existing web playbook. It accepts only the files named <code>gambarino.woff2</code> (regular) and <code>general-sans.woff2</code> (normal variable weight). No font binaries are bundled in the source repository. Without optional assets the stylesheet uses local/system fonts. Browser clients do not connect to Fontshare.</p>
+</div>
+<div class="paragraph">
+<p>The local HTTPS acceptance above also checks seven viewport widths, keyboard focus during refresh and detail loading, actual price/availability transitions, single and changing price histories, URL-only intake, and purchase correction, cancellation and removal undo. Pass <code>--fonts /absolute/path/to/owner-fonts</code> to exercise the optional files. Existing data and automatic collection remain the sources of truth.</p>
+</div>
+</div>
+</div>
       </article>
       <footer>Haven documentation · Check each guide for its verification scope.</footer>
     </main>
