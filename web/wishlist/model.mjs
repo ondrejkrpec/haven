@@ -76,14 +76,64 @@ export function entryMatches(entry, filters) {
   if (filters.stock && entry.availability !== filters.stock) return false;
   return entry.name.toLocaleLowerCase('cs').includes(filters.search.trim().toLocaleLowerCase('cs'));
 }
-export function visibleEntries(entries, filters, now = new Date().toISOString()) {
-  return entries.filter(entry => entryMatches(entry,filters)).sort((a, b) => {
+export const RECENT_DAYS = 7;
+
+export function signals(entry, now = new Date().toISOString()) {
+  const current = entry.availability === 'out_of_stock' || entry.availability === 'discontinued'
+    ? null : (entry.stats90?.current ?? entry.observations.at(-1)?.cents ?? null);
+  const verified = entry.collection === 'ok';
+  let observed = entry.stats90?.price_change ?? null;
+  if (!entry.stats90 && entry.observations.length > 1) {
+    // The standalone preview owns its entire price history.
+    let previous = entry.observations[0];
+    observed = {at:previous.at, delta:0};
+    for (const observation of entry.observations.slice(1)) {
+      if (observation.cents !== previous.cents) {
+        observed = {at:observation.at, delta:observation.cents - previous.cents};
+      }
+      previous = observation;
+    }
+  }
+  const recent = at => {
+    const age = Date.parse(now) - Date.parse(at);
+    return age >= 0 && age < RECENT_DAYS * 86400000;
+  };
+  const change = verified && current != null && observed ? {
+    ...observed, recent:observed.delta !== 0 && recent(observed.at),
+  } : null;
+  const stockChange = verified && recent(entry.stockChange?.at) ? entry.stockChange : null;
+  return {current, change, stockChange};
+}
+
+export function visibleEntries(entries, filters, now = new Date().toISOString(), measured = null) {
+  const data = measured ?? new Map(entries.map(entry => [entry.id, signals(entry, now)]));
+  const recentAt = value => [value.change?.recent ? value.change.at : '', value.stockChange?.at || ''].sort().at(-1);
+  return entries.filter(entry => {
+    if (!entryMatches(entry,filters)) return false;
+    const value = data.get(entry.id);
+    if (filters.event === 'drop') return value.change?.recent && value.change.delta < 0;
+    if (filters.event === 'rise') return value.change?.recent && value.change.delta > 0;
+    if (filters.event === 'stock') return Boolean(value.stockChange);
+    return true;
+  }).sort((a, b) => {
     const group = CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category);
     if (group) return group;
-    const sa = priceStats(a, now), sb = priceStats(b, now);
-    return (sb.percentage ?? -Infinity) - (sa.percentage ?? -Infinity)
-      || (sb.saving ?? -Infinity) - (sa.saving ?? -Infinity) || a.name.localeCompare(b.name, 'cs');
+    let order = 0;
+    if (filters.sort === 'price') order = (data.get(a.id).current ?? Infinity) - (data.get(b.id).current ?? Infinity);
+    if (filters.sort === 'newest') order = b.createdAt.localeCompare(a.createdAt);
+    if (filters.sort === 'recent') order = recentAt(data.get(b.id)).localeCompare(recentAt(data.get(a.id)));
+    return order || a.name.localeCompare(b.name, 'cs');
   });
+}
+
+export function historyCoverage(entry, at, range) {
+  const end = dayKey(at), windowStart = dayShift(end, 1 - range);
+  const added = dayKey(entry.createdAt);
+  const start = added > windowStart ? added : windowStart;
+  const observations = entry.observations.filter(observation => observation.at <= at && dayKey(observation.at) >= start);
+  const days = new Set(observations.map(observation => dayKey(observation.at))).size;
+  const missing = Math.max(0, Math.round((Date.parse(end) - Date.parse(start)) / 86400000) + 1 - days);
+  return {start, end, count:observations.length, days, missing};
 }
 export function statisticsPeriod(period, anchor) {
   if (!['month','year','all'].includes(period) || !/^\d{4}-\d{2}-\d{2}$/.test(anchor)

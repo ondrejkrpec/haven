@@ -27,6 +27,10 @@ ASSETS = {"/": ("index.html", "text/html; charset=utf-8"),
           "/model.mjs": ("model.mjs", "text/javascript; charset=utf-8"),
           "/api.mjs": ("api.mjs", "text/javascript; charset=utf-8")}
 ROOT = Path(__file__).resolve().parents[1] / "web/wishlist"
+FONTS = {
+    "gambarino.woff2": ("Gambarino", "400"),
+    "general-sans.woff2": ("General Sans", "200 700"),
+}
 OPERATIONS = {"web." + value for value in ("list", "get", "history", "purchases", "statistics", "add", "update", "purchase",
                                         "correct_purchase", "void_purchase", "remove", "restore", "unmute", "refresh")}
 
@@ -82,9 +86,27 @@ class Application:
         self.secret = secrets.token_bytes(32)
         self.host = urlsplit(config["origin"]).netloc
         self.assets = {}
+        if ROOT.is_symlink() or ROOT.parent.is_symlink():
+            raise ValueError("web_asset_symlink")
+        font_css = []
+        for name, (family, weight) in FONTS.items():
+            path = ROOT / name
+            if path.is_symlink():
+                raise ValueError("web_asset_symlink")
+            if not path.exists():
+                continue
+            info = path.stat()
+            if not stat.S_ISREG(info.st_mode) or not 48 <= info.st_size <= 128 * 1024:
+                raise ValueError("web_font_size")
+            body = path.read_bytes()
+            if not body.startswith(b"wOF2"):
+                raise ValueError("web_font_format")
+            self.assets["/" + name] = (body, "font/woff2")
+            font_css.append(f"@font-face{{font-family:'{family}';src:url('./{name}') format('woff2');"
+                            f"font-style:normal;font-weight:{weight};font-display:swap}}\n")
         for route, (name, mime) in ASSETS.items():
             path = ROOT / name
-            if path.is_symlink() or ROOT.is_symlink() or ROOT.parent.is_symlink():
+            if path.is_symlink():
                 raise ValueError("web_asset_symlink")
             body = path.read_bytes()
             if name == "index.html":
@@ -94,6 +116,11 @@ class Application:
                 body = body.replace(b'href="./styles.css"', b'href="/wishlist/styles.css"')
                 body = body.replace(b'src="./app.mjs"', b'src="/wishlist/app.mjs"')
                 body = body.replace(b'href="./"', b'href="/wishlist/"')
+                if "/general-sans.woff2" in self.assets:
+                    font = b'<link rel="preload" href="/wishlist/general-sans.woff2" as="font" type="font/woff2" crossorigin>\n  '
+                    body = body.replace(b'<link rel="stylesheet"', font + b'<link rel="stylesheet"', 1)
+            elif name == "styles.css" and font_css:
+                body = "".join(font_css).encode() + body
             self.assets[route] = (body, mime)
 
     def signature(self, payload):
@@ -122,7 +149,7 @@ class Application:
                        ("X-Content-Type-Options", "nosniff"), ("Referrer-Policy", "no-referrer"),
                        ("Cross-Origin-Resource-Policy", "same-origin"),
                        ("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; "
-                        "img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")]
+                        "img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")]
             start_response(code, headers + extra)
             return [b"" if environ.get("REQUEST_METHOD") == "HEAD" else body]
 

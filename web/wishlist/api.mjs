@@ -44,7 +44,8 @@ export function toUI(entry) {
     checkedAt:entry.latest_availability?.checked_at || observation?.observed_at || null,
     availability:entry.latest_availability?.availability || observation?.availability || 'unknown',
     collection:entry.collection_status,collectionReason:entry.collection_reason,nextCollectionAt:entry.next_collection_at,
-    lastAttemptAt:entry.last_attempt_at,stats90:entry.stats90,observations:latest?[latest]:[],purchases:[]};
+    lastAttemptAt:entry.last_attempt_at,stats90:entry.stats90,stockChange:entry.stock_change,
+    observations:latest?[latest]:[],purchases:[]};
 }
 export async function list() {
   const entries = [];

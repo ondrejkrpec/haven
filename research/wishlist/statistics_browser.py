@@ -8,18 +8,23 @@ import argparse
 from datetime import timedelta
 import json
 from pathlib import Path
+import shutil
 import ssl
 import subprocess
 import tempfile
 from threading import Event, Thread
 from uuid import uuid4
+from unittest.mock import patch
 from wsgiref.simple_server import WSGIRequestHandler, make_server
 
 from playwright.sync_api import expect, sync_playwright
 
+from scripts.wishlist_collection import Collection
 from scripts.wishlist_domain import Wishlist
 from scripts.wishlist_web_domain import WebApplication
-from scripts.wishlist_web_gateway import Application
+from scripts.wishlist_web_gateway import Application, ROOT
+
+VIEWPORTS = [(1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844), (320, 760)]
 
 
 class QuietHandler(WSGIRequestHandler):
@@ -38,6 +43,32 @@ def fixture(path):
         assert result["code"] == "ok", result
         return result
 
+    now = domain.clock()
+    check_at = now - timedelta(days=4)
+    domain.clock = lambda: check_at
+    call("add", {"url": "https://www.momenti.cz/synthetic-fixture/", "details": {
+        "label": "Testovací konvice", "category": "home", "purchase_mode": "once"}})
+    collection = Collection(domain)
+
+    def observe(price, availability="in_stock"):
+        claim = collection.handle({"protocol_version": 1, "operation": "collection.claim", "claim_id": uuid4().hex})
+        assert claim["code"] == "ok", claim
+        offer = {"name": "Syntetický produkt", "sku": "EXAMPLE-1", "price": price, "currency": "CZK" if price else None,
+                 "availability": availability, "conditions_verification": "not_verified"}
+        result = {"status": "ok", "reason": "structured_offer_candidate" if price else "source_out_of_stock",
+                  "http_status": 200, "retry_after": 0, "offer": offer}
+        completed = collection.handle({"protocol_version": 1, "operation": "collection.complete",
+                                       "job": claim["job"], "result": result})
+        assert completed["code"] == "ok", completed
+
+    for price, availability in (("1000.00", "in_stock"), ("750.00", "in_stock"), (None, "out_of_stock"), ("750.00", "in_stock")):
+        observe(price, availability)
+        check_at += timedelta(days=1)
+    check_at = now - timedelta(hours=1)
+    call("add", {"url": "https://www.fabini.cz/synthetic-fixture/", "details": {
+        "label": "Testovací pánev", "category": "home", "purchase_mode": "once"}})
+    observe("1250.00")
+    check_at = now
     entry = call("add", {"url": "https://shop.example.com/item", "details": {
         "label": "Testovací lampa", "category": "home", "purchase_mode": "recurring"}})["data"]["entry"]
     for price, quantity, date in (("800", 2, today.isoformat()), ("100", 1, today.isoformat()),
@@ -56,6 +87,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--chromium", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--fonts", type=Path, help="Optionally verify separately obtained owner webfonts")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="haven-statistics-browser-") as temporary:
@@ -73,8 +105,15 @@ def main():
                 domain, application = fixture(root / "synthetic.sqlite3")
                 server = make_server("127.0.0.1", 0, lambda *_: [], handler_class=QuietHandler)
                 origin = f"https://127.0.0.1:{server.server_port}"
-                gateway = Application({"origin": origin, "owner_login": "owner@example.com"},
-                                      transport=lambda config, request: application.handle(request))
+                assets = ROOT
+                if args.fonts:
+                    assets = root / "wishlist"
+                    shutil.copytree(ROOT, assets)
+                    for name in ("gambarino.woff2", "general-sans.woff2"):
+                        shutil.copyfile(args.fonts / name, assets / name)
+                with patch("scripts.wishlist_web_gateway.ROOT", assets):
+                    gateway = Application({"origin": origin, "owner_login": "owner@example.com"},
+                                          transport=lambda config, request: application.handle(request))
 
                 def mounted(environ, start):
                     environ["HTTP_TAILSCALE_USER_LOGIN"] = "owner@example.com"
@@ -114,22 +153,72 @@ def main():
                         if request.method == "POST" and request.url.endswith("/api/command"):
                             operations.append(request.post_data_json.get("operation"))
                     page.on("request", record)
+                    page.clock.install()
                     page.goto(shared["origin"] + "/wishlist/")
-                    expect(page.locator("#visible-count")).to_have_text("1")
+                    expect(page.locator("#visible-count")).to_have_text("3")
                     expect(page.locator("#purchase-statistics")).to_have_count(0)
+                    expect(page.locator(".summary-card")).to_have_count(0)
+                    expect(page.get_by_text("Znovu skladem")).to_be_visible()
+                    expect(page.get_by_text("Zlevnilo o")).to_be_visible()
+                    page.get_by_role("button", name="Zlevnění · 1").click()
+                    expect(page.locator("#visible-count")).to_have_text("1")
+                    page.locator("#reset-filters").click()
+                    page.locator("#more-filters summary").click()
+                    page.locator("#filter-stock").select_option("in_stock")
+                    expect(page.locator("#visible-count")).to_have_text("2")
+                    page.locator("#reset-filters").click()
+                    page.locator("#more-filters summary").click()
+                    page.locator("#sort").select_option("name")
+                    expect(page.locator(".item-title").first).to_have_text("Testovací konvice")
+                    page.locator("#sort").select_option("newest")
+                    expect(page.locator(".item-title").first).to_have_text("Testovací pánev")
+                    page.locator("#sort").select_option("recent")
                     page.locator("#filter-category").select_option(label="Domácnost")
-                    expect(page.locator("#visible-count")).to_have_text("0")
+                    expect(page.locator("#visible-count")).to_have_text("2")
                     page.locator("#filter-category").select_option(label="Dárky")
                     expect(page.locator("#visible-count")).to_have_text("1")
                     page.locator("#search").fill("nenalezeno")
                     expect(page.locator("#visible-count")).to_have_text("0")
                     page.locator("#reset-filters").click()
-                    expect(page.locator("#visible-count")).to_have_text("1")
-                    for width, height, name in [(1440, 1100, "desktop"), (390, 844, "mobile")]:
+                    expect(page.locator("#visible-count")).to_have_text("3")
+                    if args.fonts:
+                        assert page.evaluate("""async () => {
+                            await document.fonts.ready;
+                            const fonts = [...document.fonts].filter(font => font.status === 'loaded').map(font => font.family);
+                            return fonts.includes('Gambarino') && fonts.some(name => name.includes('General Sans'));
+                        }""")
+                    for width, height in VIEWPORTS:
                         page.set_viewport_size({"width": width, "height": height})
                         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
                         expect(page.locator("#purchase-statistics")).to_have_count(0)
-                        page.screenshot(path=str(args.output / ("wishlist-" + name + ".png")), full_page=True)
+                        if width in (320, 390):
+                            price = page.locator(".product-price").first.bounding_box()
+                            assert price and price["y"] + price["height"] < height
+                        if width in (1440, 390):
+                            page.screenshot(path=str(args.output / f"wishlist-{width}.png"), full_page=True)
+                    kettle = page.get_by_role("button", name="Testovací konvice", exact=True)
+                    kettle.focus()
+                    with page.expect_response(lambda response: response.request.method == "POST"
+                                              and response.request.post_data_json.get("operation") == "web.list"
+                                              and response.request.post_data_json["arguments"]["state"] == "removed"):
+                        page.clock.fast_forward("00:31")
+                    expect(kettle).to_be_focused()
+                    page.keyboard.press("Enter")
+                    expect(page.locator("svg.chart")).to_be_visible()
+                    expect(page.locator("#detail-close")).to_be_focused()
+                    expect(page.locator("#open-shop")).to_have_class("button primary")
+                    expect(page.locator(".detail-history")).to_contain_text("Dní bez ceny")
+                    page.get_by_role("button", name="Měsíc", exact=True).click()
+                    expect(page.get_by_role("button", name="Měsíc", exact=True)).to_be_focused()
+                    page.locator("#daily-summary").click()
+                    expect(page.locator(".daily-table")).to_be_visible()
+                    page.keyboard.press("Escape")
+                    expect(kettle).to_be_focused()
+                    page.get_by_role("button", name="Testovací pánev", exact=True).click()
+                    expect(page.locator(".chart-empty")).to_contain_text("Jediná naměřená cena")
+                    expect(page.locator("svg.chart")).to_have_count(0)
+                    expect(page.locator(".detail-history")).to_contain_text("Rozsah")
+                    page.keyboard.press("Escape")
                     page.get_by_role("button", name="Testovací lampa", exact=True).click()
                     expect(page.locator(".purchase-card")).to_have_count(4)
                     page.get_by_role("button", name="Zavřít detail", exact=True).click()
@@ -139,16 +228,48 @@ def main():
                     expect(page.locator("#editor")).not_to_be_visible()
                     page.get_by_role("button", name="Testovací lampa", exact=True).click()
                     expect(page.locator(".purchase-card")).to_have_count(5)
+                    last_purchase = page.locator(".purchase-card").first
+                    last_purchase.get_by_role("button", name="Opravit", exact=True).click()
+                    page.locator('#editor [name="price"]').fill("350")
+                    page.locator("#editor-submit").click()
+                    expect(page.locator("#editor")).not_to_be_visible()
+                    expect(last_purchase).to_contain_text("350")
+                    last_purchase.get_by_role("button", name="Stornovat nákup").click()
+                    expect(last_purchase).to_contain_text("Stornováno")
+                    page.keyboard.press("Escape")
+                    kettle.click()
+                    page.get_by_role("button", name="Odstranit položku", exact=True).click()
+                    expect(page.locator("#toast-undo")).to_be_visible()
+                    expect(page.locator("#visible-count")).to_have_text("2")
+                    page.locator("#toast-undo").click()
+                    expect(page.locator("#visible-count")).to_have_text("3")
+                    page.locator("#add-button").click()
+                    url = page.locator('#editor [name="url"]')
+                    expect(url).to_be_focused()
+                    expect(page.locator('#editor [name="name"]')).not_to_be_visible()
+                    url.fill("http://shop.example.com/invalid")
+                    page.locator("#editor-submit").click()
+                    expect(url).to_have_attribute("aria-invalid", "true")
+                    expect(url).to_be_focused()
+                    url.fill("https://shop.example.com/new-synthetic-item")
+                    page.locator("#editor-submit").click()
+                    expect(page.locator("#editor")).not_to_be_visible()
+                    expect(page.locator("#detail")).to_be_visible()
+                    expect(page.locator("#detail-content")).to_contain_text("Odkaz je uložený")
+                    page.keyboard.press("Escape")
+                    expect(page.locator("#visible-count")).to_have_text("4")
                     assert "web.statistics" not in operations
                     assert not errors, errors
                     (args.output / "wishlist-browser.json").write_text(json.dumps({
                         "result": "passed", "scope": "synthetic local HTTPS; no pilot or shop access",
                         "revision": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
                         "dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()),
-                        "browser": browser.version, "viewports": [1440, 390],
+                        "browser": browser.version, "viewports": [width for width, _ in VIEWPORTS],
+                        "same_origin_fonts": bool(args.fonts),
                         "checks": ["purchase summaries absent", "no automatic aggregate requests", "list filters",
                                    "search and empty result", "purchase history retained", "purchase recording",
-                                   "no mobile overflow", "no page errors"]}, indent=2) + "\n")
+                                   "price and stock changes", "sorting", "responsive rows", "keyboard focus",
+                                   "informative and single-price histories", "URL-first add", "no page errors"]}, indent=2) + "\n")
                     context.close()
                 finally:
                     browser.close()
