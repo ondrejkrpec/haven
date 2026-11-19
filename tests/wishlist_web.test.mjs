@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createEntry, priceStats, comparison, parseMoney, endOfDay, recordPurchase,
   correctPurchase, voidPurchase, removeEntry, restoreEntry, resumeNotifications,
-  remainingDays, visibleEntries, updateEntry} from '../web/wishlist/model.mjs';
+  remainingDays, visibleEntries, updateEntry, purchaseStatistics, statisticsPeriod,
+  shiftStatisticsDate, money} from '../web/wishlist/model.mjs';
 
 const now = '2026-11-18T12:00:00.000Z';
 function entry(mode = 'once') {
@@ -92,4 +93,74 @@ test('source URL is immutable and text search is case insensitive', () => {
   assert.equal(visibleEntries([e],{...filters,search:'TEST'},now).length,1);
   e.state='purchased';assert.equal(visibleEntries([e],filters,now).length,0);
   removeEntry(e);assert.equal(visibleEntries([e],{...filters,state:'removed'},now).length,1);
+});
+test('purchase totals use saved categories, current filters and exclude voids', () => {
+  const e=entry('recurring');e.observations=[{at:now,cents:100000}];
+  const p=recordPurchase(e,{price:'800',quantity:2,date:'2026-11-18'},now);
+  updateEntry(e,{name:e.name,category:'Dárky',mode:'recurring',note:''});
+  const options={period:'month',date:'2026-11-01',filters:{...filters,category:'Domácnost'}};
+  assert.equal(purchaseStatistics([e],options).total.spending,'160000');
+  assert.equal(purchaseStatistics([e],options).total.savings,'40000');
+  assert.equal(purchaseStatistics([e],{...options,filters:{...filters,category:'Dárky'}}).total.count,0);
+  assert.equal(purchaseStatistics([e],{...options,filters:{...filters,search:'other'}}).total.count,0);
+  correctPurchase(e,p.id,{price:'1200',quantity:3,date:'2026-11-18'},now);
+  assert.equal(purchaseStatistics([e],options).total.savings,'-60000');
+  voidPurchase(e,p.id,now);assert.equal(purchaseStatistics([e],options).total.count,0);
+});
+test('unknown price, missing reference and empty selection never invent known totals', () => {
+  const e=entry('recurring');
+  e.purchases=[{date:'2026-11-18',quantity:1,unitCents:null,reference:null},
+    {date:'2026-11-18',quantity:2,unitCents:10000,reference:null}];
+  const options={period:'month',date:'2026-11-01',filters};
+  let result=purchaseStatistics([e],options);
+  assert.equal(result.categories[0].category,'Nezařazeno');
+  assert.deepEqual(result.total,{count:2,unknown_price:1,unknown_reference:1,spending:'20000',savings:null});
+  e.purchases.pop();result=purchaseStatistics([e],options);
+  assert.equal(result.total.spending,null);assert.equal(result.total.savings,null);
+  e.purchases=[];result=purchaseStatistics([e],options);
+  assert.equal(result.total.spending,'0');assert.equal(result.total.savings,'0');
+});
+test('period boundaries cover leap years and navigation crosses years without day clipping', () => {
+  assert.deepEqual(statisticsPeriod('month','2024-02-01'),{start:'2024-02-01',end:'2024-02-29'});
+  assert.deepEqual(statisticsPeriod('year','2026-11-01'),{start:'2026-01-01',end:'2026-12-31'});
+  assert.deepEqual(statisticsPeriod('all','2026-11-01'),{start:null,end:null});
+  assert.equal(shiftStatisticsDate('2026-01-31','month',-1),'2025-12-01');
+  assert.equal(shiftStatisticsDate('2024-02-29','year',1),'2025-02-01');
+  assert.throws(()=>statisticsPeriod('month','2026-02-30'));
+});
+test('spending totals filter purchase dates rather than creation date', () => {
+  const e=entry('recurring');
+  for(const date of ['2025-11-18','2026-10-01','2026-11-01']) recordPurchase(e,{price:'10',quantity:1,date},now);
+  const options={period:'month',date:'2026-11-01',filters};
+  assert.equal(purchaseStatistics([e],options).total.count,1);
+  assert.equal(purchaseStatistics([e],{...options,period:'year'}).total.count,2);
+  assert.equal(purchaseStatistics([e],{...options,period:'all'}).total.count,3);
+});
+test('totals and money formatting preserve halere beyond safe integers', () => {
+  const e=entry('recurring');
+  e.purchases=Array.from({length:101},()=>({category:'Domácnost',unitCents:9999999999,quantity:9999,date:'2026-11-18',reference:0}));
+  const result=purchaseStatistics([e],{period:'all',date:'2026-11-01',filters});
+  const expected=9999999999n*9999n*101n;
+  assert.equal(result.total.spending,String(expected));assert.equal(result.total.savings,String(-expected));
+  assert.equal(money(String(expected)).replace(/\s/g,''),'100989899989901,01Kč');
+  assert.equal(money('-1').replace(/\s/g,''),'-0,01Kč');
+  assert.equal(money(null),'—');
+});
+test('production adapter requests aggregate statistics without loading entry details', async () => {
+  const originalFetch=globalThis.fetch,originalLocation=globalThis.location;
+  const calls=[];
+  globalThis.location={origin:'https://haven.example.ts.net'};
+  globalThis.fetch=async(url,options)=>{
+    calls.push({url:String(url),options});
+    return {status:200,json:async()=>String(url).endsWith('bootstrap')?{code:'ok',csrf:'a'.repeat(64)}
+      :{code:'ok',data:{total:{count:2,spending:'1000',savings:null},categories:[{category:'home',count:2}]}}};
+  };
+  try {
+    const api=await import('../web/wishlist/api.mjs');
+    const result=await api.statistics({period:'year',date:'2026-01-01',filters:{...filters,category:'Domácnost'}});
+    assert.equal(result.categories[0].category,'Domácnost');
+    assert.equal(calls.length,2);
+    const request=JSON.parse(calls[1].options.body);
+    assert.equal(request.operation,'web.statistics');assert.equal(request.arguments.filters.category,'home');
+  } finally {globalThis.fetch=originalFetch;globalThis.location=originalLocation;}
 });

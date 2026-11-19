@@ -99,6 +99,18 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(result["status"], "503 Service Unavailable")
         self.assertNotIn(b"confidential", result["body"])
 
+    def test_statistics_use_the_same_owner_origin_and_csrf_boundary(self):
+        self.bootstrap()
+        payload = {"protocol_version": 1, "request_id": "a" * 32,
+                   "operation": "web.statistics", "arguments": {"period": "month"}}
+        headers = {"HTTP_ORIGIN": "https://haven.example.ts.net", "HTTP_X_CSRF_TOKEN": self.csrf}
+        self.assertEqual(self.call("/api/command", method="POST", payload=payload, headers=headers)["status"], "200 OK")
+        self.assertEqual(self.calls[-1], payload)
+        for changed in ({"HTTP_ORIGIN": "https://attacker.example.com"}, {"HTTP_X_CSRF_TOKEN": "bad"},
+                        {"HTTP_TAILSCALE_USER_LOGIN": "other@example.com"}):
+            self.assertEqual(self.call("/api/command", method="POST", payload=payload, headers={**headers, **changed})["status"], "403 Forbidden")
+        self.assertEqual(len(self.calls), 1)
+
 
     def test_root_unix_proxy_rewrites_host_and_only_exact_original_authority_is_admitted(self):
         self.app = proxy_headers_middleware(self.app, trusted_proxy="localhost", trusted_proxy_count=1,

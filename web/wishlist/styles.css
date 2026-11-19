@@ -291,7 +291,7 @@ main {
 }
 .summary {
   display:grid;
-  grid-template-columns:1fr 1fr 1.3fr;
+  grid-template-columns:1fr 1fr;
   gap:17px;
   margin-bottom:35px;
 }
@@ -331,24 +331,6 @@ main {
 .summary-card.accent {
   background:#edf2e5;
   border-color:#e0e8d5;
-}
-.pending {
-  background:#f6f7f3;
-  border-style:dashed;
-}
-.tiny-label {
-  font-size:8px;
-  letter-spacing:.8px;
-  color:#7d8675;
-  background:#e9ece3;
-  padding:4px 6px;
-  border-radius:4px;
-}
-.pending-title {
-  font-family:var(--serif);
-  font-size:25px;
-  margin-top:19px;
-  color:#76816e;
 }
 .wishlist {
   background:#fff;
@@ -1209,24 +1191,6 @@ dialog::backdrop {
   .summary {
     grid-template-columns:1fr 1fr;
   }
-  .summary .pending {
-    grid-column:1/-1;
-    min-height:0;
-    display:flex;
-    align-items:center;
-    gap:14px;
-    padding:14px 18px;
-  }
-  .pending .summary-top {
-    flex:1;
-  }
-  .pending-title {
-    font-size:18px;
-    margin:0;
-  }
-  .pending small {
-    display:none;
-  }
   .toast {
     left:calc(50% + 32px);
   }
@@ -1302,21 +1266,6 @@ dialog::backdrop {
   }
   .summary-card small {
     font-size:8px;
-  }
-  .summary .pending {
-    padding:12px 14px;
-    gap:8px;
-  }
-  .pending .summary-top {
-    font-size:9px;
-    gap:8px;
-  }
-  .tiny-label {
-    font-size:7px;
-    letter-spacing:.4px;
-  }
-  .pending-title {
-    font-size:16px;
   }
   .list-heading {
     padding:20px 16px 17px;
@@ -1551,4 +1500,74 @@ dialog::backdrop {
 }
 .remove-link {
   margin-left:18px;
+}
+
+/* Purchase summaries share the list filters and keep historical categories. */
+.purchase-statistics {
+  margin-bottom:28px;
+  padding:24px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fff;
+}
+.statistics-heading,.statistics-controls,.period-navigation {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.statistics-heading {
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+.statistics-heading h2 { margin:0 0 6px; font-size:17px; }
+.statistics-heading p,.statistics-scope,.statistics-note {
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+  margin:0;
+}
+.statistics-controls { flex-wrap:wrap; }
+.statistics-controls select {
+  background:#f7f9f4;
+  border:1px solid var(--line);
+  border-radius:6px;
+  min-height:42px;
+  padding:8px 12px;
+  font:inherit;
+  font-size:12px;
+}
+.period-navigation { gap:4px; }
+.period-navigation strong { min-width:120px; text-align:center; font-size:12px; }
+.period-navigation .icon-button { min-width:42px; min-height:42px; font-size:19px; }
+.statistics-scope { margin:14px 0 4px; max-width:760px; }
+.statistics-help { font-size:12px; color:var(--muted); margin-bottom:20px; }
+.statistics-help summary { cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.statistics-help p { max-width:760px; line-height:1.6; }
+.statistics-totals {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+.statistics-totals>div { padding:18px; border-radius:8px; background:#f4f7ef; min-width:0; }
+.statistics-totals span { display:block; color:var(--muted); font-size:12px; }
+.statistics-totals strong { display:block; font-family:var(--serif); font-size:clamp(24px,3vw,36px); margin-top:8px; overflow-wrap:anywhere; }
+.statistics-totals small { display:block; color:var(--muted); font-size:11px; margin-top:8px; }
+.statistics-totals .negative { color:#a3493e; }
+.statistics-note { margin:12px 0; }
+.statistics-categories { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.statistics-categories section { padding:14px; border:1px solid var(--line); border-radius:8px; min-width:0; }
+.statistics-categories h3 { font-size:12px; margin:0 0 12px; }
+.statistics-categories dl { margin:0; }
+.statistics-categories dl div { display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; font-size:12px; margin-top:7px; }
+.statistics-categories dt { color:var(--muted); }
+.statistics-categories dd { margin:0; overflow-wrap:anywhere; }
+.statistics-categories p { color:var(--muted); font-size:11px; line-height:1.5; margin:12px 0 0; }
+@media(max-width:680px) {
+  .purchase-statistics { padding:16px; }
+  .statistics-heading,.statistics-controls { width:100%; }
+  .statistics-controls { justify-content:space-between; gap:8px; }
+  .period-navigation strong { min-width:100px; }
+  .statistics-totals { gap:10px; }
+  .statistics-totals>div { padding:14px; }
+  .statistics-categories { gap:10px; }
 }

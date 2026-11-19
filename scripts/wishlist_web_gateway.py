@@ -27,7 +27,7 @@ ASSETS = {"/": ("index.html", "text/html; charset=utf-8"),
           "/model.mjs": ("model.mjs", "text/javascript; charset=utf-8"),
           "/api.mjs": ("api.mjs", "text/javascript; charset=utf-8")}
 ROOT = Path(__file__).resolve().parents[1] / "web/wishlist"
-OPERATIONS = {"web." + value for value in ("list", "get", "history", "purchases", "add", "update", "purchase",
+OPERATIONS = {"web." + value for value in ("list", "get", "history", "purchases", "statistics", "add", "update", "purchase",
                                         "correct_purchase", "void_purchase", "remove", "restore", "unmute", "refresh")}
 
 
