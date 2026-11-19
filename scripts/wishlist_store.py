@@ -109,6 +109,9 @@ MIGRATIONS = ((
     "ALTER TABLE purchases ADD COLUMN voided_at TEXT",
     "ALTER TABLE purchases ADD COLUMN corrected_at TEXT",
     "CREATE INDEX observations_offer_date ON observations (offer_id, observed_at)",
+), (
+    "ALTER TABLE purchases ADD COLUMN category TEXT NOT NULL DEFAULT 'uncategorized' CHECK (category IN ('uncategorized','home','personal_care','gifts'))",
+    "CREATE INDEX purchases_owner_entry ON purchases (owner_id, entry_id, sequence)",
 ))
 
 

@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
+from uuid import uuid4
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -17,7 +18,9 @@ from scripts import backup_capture as capture
 from scripts import backup_restore as restore
 from scripts import backup_runtime as runtime
 from scripts import wishlist_operations as operations
-from scripts.wishlist_store import MIGRATIONS, Store
+from scripts.wishlist_store import MIGRATIONS
+from scripts.wishlist_domain import Wishlist
+from scripts.wishlist_web_domain import WebApplication
 
 
 class OperationsTests(unittest.TestCase):
@@ -40,7 +43,19 @@ class OperationsTests(unittest.TestCase):
                 (language / name).mkdir(mode=0o700)
             (language / 'SOUL.md').write_text('SYNTHETIC_BOOTSTRAP')
             database = domain / 'state/wishlist.sqlite3'
-            store = Store(database, bot_id='123', owner_id='456', timezone='Europe/Prague')
+            wishlist = Wishlist(database, bot_id='123', owner_id='456', web_enabled=True)
+            store = wishlist.store
+            application = WebApplication(wishlist)
+            def command(operation, arguments):
+                result = application.handle({'protocol_version': 1, 'request_id': uuid4().hex,
+                                             'operation': 'web.' + operation, 'arguments': arguments})
+                self.assertEqual(result['code'], 'ok', result)
+                return result
+            entry = command('add', {'url': 'https://shop.example.com/synthetic-gift',
+                                   'details': {'category': 'gifts', 'purchase_mode': 'once'}})['data']['entry']
+            command('purchase', {'entry_id': entry['entry_id'], 'expected_version': entry['version'],
+                                 'unit_price': '123.45', 'quantity': 2})
+            store.db.execute('UPDATE purchases SET reference_price=20000')
             store.db.execute("INSERT INTO language_sessions VALUES ('456','456',1,'{}','2030-01-01')")
             store.close()
             database.chmod(0o600)
@@ -71,6 +86,8 @@ class OperationsTests(unittest.TestCase):
             self.assertEqual(operations.database_status(db)['schema_version'], len(MIGRATIONS))
             with closing(sqlite3.connect(db)) as connection:
                 self.assertEqual(connection.execute('SELECT COUNT(*) FROM language_sessions').fetchone()[0], 1)
+                self.assertEqual(connection.execute('SELECT category,unit_price,quantity,reference_price FROM purchases').fetchall(),
+                                 [('gifts', 12345, 2, 20000)])
             restore.rebuild(payload, root / 'model', digest, owners, component='language')
             self.assertEqual((root / 'model/auth.json').stat().st_mode & 0o777, 0o600)
             controller.stop.assert_called_once()

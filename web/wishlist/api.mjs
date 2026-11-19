@@ -58,6 +58,10 @@ export async function list() {
   }
   return entries;
 }
+export async function statistics({period,date,filters}) {
+  const response=await command('statistics',{period,date,filters:{...filters,category:filters.category?categoryCode(filters.category):''}});
+  return {...response.data,categories:response.data.categories.map(group=>({...group,category:categoryNames[group.category]}))};
+}
 export async function detail(id) {
   const response=await command('get',{entry_id:id}),entry=toUI(response.data.entry);
   for(const kind of ['history','purchases']){
@@ -68,7 +72,8 @@ export async function detail(id) {
       values.push(...page.data[kind]);cursor=page.data.cursor;
       if(values.length>128000)throw new Error('Historie je příliš velká pro tento graf. Zobrazení nebylo zkráceno.');
     }while(cursor);
-    entry[kind==='history'?'observations':'purchases']=values;
+    entry[kind==='history'?'observations':'purchases']=kind==='purchases'
+      ? values.map(p=>({...p,category:categoryNames[p.category] || 'Nezařazeno'})) : values;
   }
   entry.historyLoaded=true;
   return entry;

@@ -97,3 +97,34 @@ The identity-header and Unix-socket contracts were checked against the https://t
 
 
 Unix proxy compatibility: Serve 1.104.5 rewrites the backend Host to `localhost` and replaces `X-Forwarded-Host`/`X-Forwarded-Proto` with the outer request. Waitress trusts those two headers from its Unix `localhost` peer because the inherited HTTP socket admits root exclusively; the application then checks the resulting exact owner authority and Origin. The proxy setting must never be reused with an unprotected listener. Production asset and API URLs use the absolute `/wishlist/` mount so opening `/wishlist` without a trailing slash still works.
+
+== Purchase statistics, source implementation 2026-11-19
+
+The web now implements the owner-confirmed spending and net-savings summaries, globally and for each category. This is checked source and synthetic acceptance, separate from pilot installation and owner acceptance. The initial category order is retained. No collector, model or shop request is needed to calculate a summary.
+
+The period control defaults to the current Prague calendar month and offers month, year and all history. Arrows navigate earlier months/years; future navigation is disabled. Purchases are selected by their saved purchase date; legacy timestamps without a saved date are converted to the owner's configured time zone. Corrections move a purchase into its corrected period; voided purchases contribute nothing. Existing version/lifecycle protections still prevent cancellation from overwriting newer changes. Metadata-only edits do not prevent cancellation.
+
+Summaries follow the list's search and shop, stock, mode and lifecycle filters. In the default active view, purchased one-time items are excluded; select Purchased or All non-removed to include them. Removed items are included only through the Removed filter. Category filtering and category totals use the saved purchase category, while the list groups by the item's current category. A moved item can therefore contribute historical purchases to its former category without appearing in that category's current list. The UI explains this distinction in expandable help.
+
+Migration 7 appends a constrained purchase category and an owner/entry index without changing existing purchase values or history. All pre-migration purchases use `uncategorized`; the current item category is never used to guess their original category. New web and web-enabled Telegram purchases capture the category at recording; amount, quantity and date corrections keep that saved category. A backdated new purchase uses the item's category at recording; the service cannot infer an undocumented past assignment.
+
+Spending uses paid unit price times quantity. Net savings use the already saved reference mean; overpayment reduces savings. Purchases without paid prices are excluded from both monetary totals and counted explicitly. Known paid amounts without a reference contribute to spending and an explicit unknown-savings count. A wholly unknown sum displays a dash; a selection with no purchases displays zero. Partial known sums remain visible with the missing-data counts. Category subtotals apply the same rules. Later observed prices cannot rewrite saved references.
+
+`web.statistics` is an owner-authenticated read through the existing gateway/domain boundary. Arguments are `period` (`month`, `year`, `all`), `date` (an ISO calendar date in the selected period, no later than today) and an optional `filters` object with `state`, `category`, `shop`, `stock`, `mode` and `search`. Category values are the existing domain codes; blank values mean no restriction. State defaults to `default`; supported alternatives are `purchased`, `removed` and `all`. Unknown fields/types are rejected. The response returns `total` and `categories`, each with `count`, `unknown_price`, `unknown_reference`, `spending` and `savings`. Monetary totals are exact integer-halere decimal strings or null, retaining precision beyond JavaScript's safe integer range.
+
+One read transaction produces the entire summary independently of paginated item details. The read refuses more than 10,000 purchased item identities or 128,000 non-voided purchases instead of presenting a truncated total. It writes no receipts or events. The browser clears old totals while loading, ignores superseded responses and shows an explicit unavailable state with retry on failure. Both the observability exporter and backup compatibility checks support schema 7. Deploy compatible domain, gateway, UI, observability and recovery helpers together using the existing guarded web playbook and fresh verified backups. Schema-6 code must not reopen the migrated database; application file rollback cannot remove the category column or rewind purchase history.
+
+=== Verification
+
+The maintained domain and JavaScript suites cover historical categories, unknown prices/references, signed net savings, exact large amounts, period boundaries, corrections, voids, identity/filter validation and bounded reads. Migration tests retain all schema-6 purchase fields and refuse an old reader. Backup/recovery tests preserve the new category together with amount, quantity and reference.
+
+An opt-in browser acceptance uses the existing hash-pinned probe dependencies, a temporary SQLite database, local self-signed HTTPS and a fresh sandboxed Chromium profile. HTTPS certificate bypass is confined to this synthetic loopback fixture. It uses the production UI/gateway and in-process domain transport; the normal socket tests independently cover UID admission. It never connects to the pilot, a shop, an existing browser profile or a model. Run from the public repository with the separate probe environment:
+
+[source,sh]
+----
+/absolute/path/to/probe-env/bin/python -m research.wishlist.statistics_browser \
+  --chromium /absolute/path/to/chromium \
+  --output build/statistics-qa
+----
+
+The fixture checks desktop/mobile summaries, missing data, historical category filtering, period navigation, purchase-triggered updates, empty results, failure/retry and mobile overflow. It writes synthetic screenshots and a small result receipt to the chosen output directory. These checks do not establish live migration, installed service isolation or owner acceptance.

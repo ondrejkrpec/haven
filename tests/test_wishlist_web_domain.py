@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 from uuid import uuid4
 
 from scripts.wishlist_collection import Collection
@@ -14,6 +15,7 @@ from scripts.wishlist_operations import WEB_UPGRADE_UNITS
 from scripts.wishlist_collector import request as socket_request
 from scripts.wishlist_telegram import TelegramApplication
 from scripts.wishlist_web_domain import WebApplication, WebServer
+from scripts.wishlist_store import MIGRATIONS
 
 OWNER, BOT = "100001", "200001"
 
@@ -178,6 +180,121 @@ class WebDomainTests(unittest.TestCase):
         self.assertEqual(self.domain.store.db.execute("SELECT COUNT(*) FROM purchases").fetchone()[0], 0)
         self.assertEqual(self.change("update", entry, patch={"url": "https://other.example.com/"})["code"], "invalid_request")
 
+    def summary(self, **args):
+        result = self.call("statistics", {"filters": {"state": "all"}, **args})
+        self.assertEqual(result["code"], "ok", result)
+        return result["data"]
+
+    def test_statistics_include_all_purchases_without_opening_details_and_follow_state_filter(self):
+        entry = self.add()
+        self.observe()
+        self.change("purchase", self.get(entry), unit_price="800", quantity=2)
+        total = self.summary()["total"]
+        self.assertEqual(total, {"count": 1, "spending": "160000", "savings": "40000", "unknown_price": 0, "unknown_reference": 0})
+        self.assertEqual(self.summary(filters={})["total"]["count"], 0)
+        self.assertEqual(self.summary(filters={"state": "purchased"})["total"], total)
+        self.change("remove", self.get(entry))
+        self.assertEqual(self.summary()["total"]["count"], 0)
+        self.assertEqual(self.summary(filters={"state": "removed"})["total"], total)
+
+    def test_statistics_use_purchase_category_after_moves_and_other_current_filters(self):
+        entry = self.add("recurring")
+        self.change("update", entry, patch={"label": "Česká pánev"})
+        self.change("purchase", self.get(entry), unit_price="200")
+        self.change("update", self.get(entry), patch={"category": "gifts"})
+        data = self.summary(filters={"category": "home", "search": "ČESKÁ", "mode": "recurring", "shop": "www.momenti.cz", "stock": "unknown"})
+        self.assertEqual(data["total"]["count"], 1)
+        self.assertEqual(data["categories"][0]["category"], "home")
+        self.assertEqual(self.summary(filters={"category": "gifts"})["total"]["count"], 0)
+        self.assertEqual(self.summary(filters={"search": "jiný výrobek"})["total"]["count"], 0)
+        self.assertEqual(self.summary(filters={"stock": "in_stock"})["total"]["count"], 0)
+        self.assertEqual(self.summary(filters={"mode": "once"})["total"]["count"], 0)
+        self.assertEqual(self.summary(filters={"shop": "other.example.com"})["total"]["count"], 0)
+
+    def test_unknown_price_reference_zero_and_net_overpayment_are_distinct(self):
+        entry = self.add("recurring")
+        for _ in range(3):
+            self.change("purchase", self.get(entry), unit_price="100")
+        db = self.domain.store.db
+        rows = db.execute("SELECT sequence FROM purchases ORDER BY sequence").fetchall()
+        db.execute("UPDATE purchases SET unit_price=NULL WHERE sequence=?", (rows[0][0],))
+        db.execute("UPDATE purchases SET reference_price=50,unit_price=100 WHERE sequence=?", (rows[1][0],))
+        total = self.summary()["total"]
+        self.assertEqual(total, {"count": 3, "spending": "10100", "savings": "-50", "unknown_price": 1, "unknown_reference": 1})
+        db.execute("UPDATE purchases SET unit_price=NULL")
+        self.assertIsNone(self.summary()["total"]["spending"])
+        self.assertIsNone(self.summary()["total"]["savings"])
+        db.execute("UPDATE purchases SET unit_price=0,reference_price=0 WHERE sequence=?", (rows[1][0],))
+        self.assertEqual(self.summary()["total"]["spending"], "0")
+        self.assertEqual(self.summary()["total"]["savings"], "0")
+
+    def test_month_year_and_all_periods_and_prague_legacy_dates(self):
+        entry = self.add("recurring")
+        self.change("purchase", entry, unit_price="100", purchase_date="2026-10-31")
+        db = self.domain.store.db
+        db.execute("UPDATE purchases SET purchase_date=NULL,purchased_at='2026-10-31T23:30:00Z'")
+        self.assertEqual(self.summary()["total"]["count"], 1)  # November in Prague.
+        self.assertEqual(self.summary(date="2026-10-01")["total"]["count"], 0)
+        db.execute("UPDATE purchases SET purchase_date='2025-11-18'")
+        self.assertEqual(self.summary(period="year")["total"]["count"], 0)
+        self.assertEqual(self.summary(period="year", date="2025-02-01")["total"]["count"], 1)
+        self.assertEqual(self.summary(period="all")["total"]["count"], 1)
+        self.assertEqual(self.summary(date="2024-02-01")["end"], "2024-02-29")
+
+    def test_corrections_and_voids_update_totals_without_reclassifying_purchase(self):
+        entry = self.add("recurring")
+        self.observe()
+        self.change("purchase", self.get(entry), unit_price="800", quantity=2)
+        purchase = self.call("purchases", {"entry_id": entry["entry_id"]})["data"]["purchases"][0]
+        self.change("update", self.get(entry), patch={"category": "gifts", "note": "Later metadata"})
+        self.change("correct_purchase", self.get(entry), purchase_id=purchase["id"], unit_price="1200", quantity=3, purchase_date="2026-11-18")
+        total = self.summary(filters={"category": "home"})["total"]
+        self.assertEqual((total["spending"], total["savings"]), ("360000", "-60000"))
+        self.change("void_purchase", self.get(entry), purchase_id=purchase["id"])
+        self.assertEqual(self.summary()["total"]["count"], 0)
+        self.assertEqual(self.summary()["total"]["spending"], "0")
+        self.assertEqual(self.get(entry)["note"], "Later metadata")
+
+    def test_statistics_reject_untrusted_filters_are_read_only_and_refuse_partial_totals(self):
+        for args in ({"owner_id": "100002"}, {"filters": {"owner_id": "100002"}}, {"filters": []},
+                     {"filters": {"state": "paused"}}, {"filters": {"search": "x" * 201}},
+                     {"period": "quarter"}, {"date": "2026-02-30"}, {"date": "2027-01-01"}):
+            self.assertEqual(self.call("statistics", args)["code"], "invalid_request")
+        entry = self.add("recurring")
+        self.change("purchase", entry, unit_price="100")
+        self.change("purchase", self.get(entry), unit_price="200")
+        before = self.domain.store.db.execute("SELECT COUNT(*) FROM receipts").fetchone()[0]
+        self.summary()
+        self.assertEqual(self.domain.store.db.execute("SELECT COUNT(*) FROM receipts").fetchone()[0], before)
+        with patch("scripts.wishlist_web_domain.STATISTICS_PURCHASES", 1):
+            self.assertEqual(self.call("statistics", {})["code"], "unavailable")
+        with patch("scripts.wishlist_web_domain.STATISTICS_ENTRIES", 0):
+            self.assertEqual(self.call("statistics", {})["code"], "unavailable")
+
+    def test_statistics_decimal_strings_preserve_large_exact_totals(self):
+        entry = self.add("recurring")
+        self.change("purchase", entry, unit_price="99999999.99", quantity=9999)
+        db = self.domain.store.db
+        original = dict(db.execute("SELECT * FROM purchases").fetchone())
+        for _ in range(100):
+            row = {key: value for key, value in original.items() if key != "sequence"}
+            row["request_id"] = uuid4().hex
+            db.execute("INSERT INTO receipts VALUES (?,?,?,?,?)", (row["request_id"], OWNER, "synthetic", "{}", "2026-11-18"))
+            db.execute(f"INSERT INTO purchases ({','.join(row)}) VALUES ({','.join('?' for _ in row)})", tuple(row.values()))
+        self.assertEqual(self.summary()["total"]["spending"], str(9999999999 * 9999 * 101))
+
+    def test_statistics_exclude_another_owner_even_with_unfiltered_period(self):
+        db = self.domain.store.db
+        entry = self.add("recurring")
+        self.change("purchase", entry, unit_price="100")
+        for table in ("entries", "offers", "receipts", "purchases"):
+            original = dict(db.execute(f"SELECT * FROM {table} LIMIT 1").fetchone())
+            row = {key: ("100002" if key == "owner_id" else "wi_" + "f" * 32 if key == "entry_id" else
+                         "of_" + "f" * 32 if key == "offer_id" else "f" * 64 if key == "request_id" else value)
+                   for key, value in original.items() if key != "sequence"}
+            db.execute(f"INSERT INTO {table} ({','.join(row)}) VALUES ({','.join('?' for _ in row)})", tuple(row.values()))
+        self.assertEqual(self.summary(period="all")["total"]["count"], 1)
+
 
 class SocketTests(unittest.IsolatedAsyncioTestCase):
     async def test_gateway_peer_is_distinct_and_cannot_invoke_collector_or_telegram(self):
@@ -201,6 +318,35 @@ class SocketTests(unittest.IsolatedAsyncioTestCase):
 
 
 class RecoveryTests(unittest.TestCase):
+    def test_schema_seven_preserves_six_purchases_without_guessing_their_category(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "state"
+            with patch("scripts.wishlist_store.MIGRATIONS", MIGRATIONS[:6]):
+                legacy = Wishlist(path, bot_id=BOT, owner_id=OWNER)
+            application = TelegramApplication(legacy)
+            def event(text, identity):
+                return {"bot_id": BOT, "user_id": OWNER, "chat_id": OWNER, "chat_type": "private",
+                        "is_bot": False, "edited": False, "message_id": identity, "text": text}
+            application.handle(event("https://shop.example.com/legacy", "1"))
+            token = legacy.store.db.execute("SELECT token FROM clarifications").fetchone()[0]
+            application.handle(event("wl dopln " + token + " pro mě opakovaně", "2"))
+            application.handle(event("wl koupeno #1", "3"))
+            legacy.store.db.execute("UPDATE entries SET category='home'")
+            original = dict(legacy.store.db.execute("SELECT * FROM purchases").fetchone())
+            legacy.close()
+            current = Wishlist(path, bot_id=BOT, owner_id=OWNER, web_enabled=True)
+            try:
+                purchase = dict(current.store.db.execute("SELECT * FROM purchases").fetchone())
+                self.assertEqual(purchase.pop("category"), "uncategorized")
+                self.assertEqual(purchase, original)
+                self.assertEqual(current.store.db.execute("PRAGMA user_version").fetchone()[0], 7)
+                self.assertEqual(current.store.db.execute("PRAGMA integrity_check").fetchone()[0], "ok")
+                self.assertEqual(current.store.db.execute("PRAGMA foreign_key_check").fetchall(), [])
+            finally:
+                current.close()
+            with patch("scripts.wishlist_store.MIGRATIONS", MIGRATIONS[:6]), self.assertRaises(ValueError):
+                Wishlist(path, bot_id=BOT, owner_id=OWNER)
+
     def test_web_upgrade_resume_intent_keeps_timer_and_writers_after_restart(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

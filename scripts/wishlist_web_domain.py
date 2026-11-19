@@ -1,6 +1,7 @@
 """Owner-only web operations executed by the existing single database writer."""
 
 import base64
+import calendar
 from datetime import datetime, time, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 import hashlib
@@ -16,6 +17,100 @@ from scripts.wishlist_socket import PeerServer
 CATEGORIES = ("uncategorized", "home", "personal_care", "gifts")
 ENTRY = re.compile(r"wi_[a-f0-9]{32}\Z")
 REQUEST = re.compile(r"[a-f0-9]{32}\Z")
+STATISTICS_ENTRIES = 10000
+STATISTICS_PURCHASES = 128000
+
+
+class StatisticsLimit(ValueError):
+    """Refuse an incomplete summary rather than returning a truncated total."""
+
+
+def statistics(domain, db, args):
+    """Read one owner-scoped snapshot; sum exact integer halere without SQL overflow."""
+    if set(args) - {"period", "date", "filters"}:
+        raise ValueError("statistics_arguments")
+    now = domain.clock()
+    period = args.get("period", "month")
+    selected = args.get("date", now.astimezone(domain.zone).date().isoformat())
+    if not isinstance(selected, str) or period not in ("month", "year", "all"):
+        raise ValueError("statistics_period")
+    date = datetime.strptime(selected, "%Y-%m-%d").date()
+    if date.isoformat() != selected or date > now.astimezone(domain.zone).date():
+        raise ValueError("statistics_date")
+    start, end = None, None
+    if period != "all":
+        start = date.replace(month=1 if period == "year" else date.month, day=1).isoformat()
+        end = date.replace(month=12 if period == "year" else date.month,
+                           day=31 if period == "year" else calendar.monthrange(date.year, date.month)[1]).isoformat()
+    filters = {"state": "default", "category": "", "search": "", "shop": "", "mode": "", "stock": ""}
+    supplied = args.get("filters", {})
+    if not isinstance(supplied, dict) or set(supplied) - set(filters) or any(not isinstance(v, str) for v in supplied.values()):
+        raise ValueError("statistics_filters")
+    filters.update(supplied)
+    if (filters["state"] not in ("default", "all", "purchased", "removed")
+            or filters["category"] not in ("", *CATEGORIES)
+            or filters["mode"] not in ("", "once", "recurring")
+            or filters["stock"] not in ("", "unknown", "in_stock", "out_of_stock", "preorder", "backorder", "limited", "discontinued")
+            or len(filters["search"]) > 200 or len(filters["shop"]) > 253):
+        raise ValueError("statistics_filters")
+    candidates = db.execute("""SELECT entry_id FROM entries WHERE owner_id=? AND entry_id IN
+        (SELECT entry_id FROM purchases WHERE owner_id=? AND voided_at IS NULL) LIMIT ?""",
+                            (domain.owner_id, domain.owner_id, STATISTICS_ENTRIES + 1)).fetchall()
+    if len(candidates) > STATISTICS_ENTRIES:
+        raise StatisticsLimit("statistics_entries")
+    matching = set()
+    for row in candidates:
+        entry = domain._entry(db, row["entry_id"])
+        state = entry["state"]
+        expected = filters["state"]
+        if (expected == "default" and state != "active"
+                or expected == "all" and state == "removed"
+                or expected not in ("default", "all") and state != expected):
+            continue
+        availability = (entry["latest_availability"] or entry["latest_observation"] or {}).get("availability", "unknown")
+        if (filters["shop"] and entry["shop_host"] != filters["shop"]
+                or filters["mode"] and entry["purchase_mode"] != filters["mode"]
+                or filters["stock"] and availability != filters["stock"]):
+            continue
+        label = entry["label"]
+        if not label:
+            named = db.execute("SELECT name FROM observations WHERE offer_id=? ORDER BY sequence DESC LIMIT 1", (entry["offer_id"],)).fetchone()
+            label = named[0] if named else entry["shop_host"]
+        if filters["search"].strip().lower() in label.lower():
+            matching.add(entry["entry_id"])
+    groups = {category: {"count": 0, "unknown_price": 0, "unknown_reference": 0, "spending": 0, "savings": 0}
+              for category in CATEGORIES if not filters["category"] or category == filters["category"]}
+    rows = db.execute("SELECT * FROM purchases WHERE owner_id=? AND voided_at IS NULL ORDER BY sequence LIMIT ?",
+                      (domain.owner_id, STATISTICS_PURCHASES + 1))
+    for index, purchase in enumerate(rows):
+        if index == STATISTICS_PURCHASES:
+            raise StatisticsLimit("statistics_purchases")
+        if purchase["entry_id"] not in matching or purchase["category"] not in groups:
+            continue
+        purchased = purchase["purchase_date"] or instant(purchase["purchased_at"]).astimezone(domain.zone).date().isoformat()
+        if start and not start <= purchased <= end:
+            continue
+        group = groups[purchase["category"]]
+        group["count"] += 1
+        price, quantity, reference = purchase["unit_price"], purchase["quantity"], purchase["reference_price"]
+        if price is None:
+            group["unknown_price"] += 1
+        else:
+            group["spending"] += price * quantity
+            if reference is None:
+                group["unknown_reference"] += 1
+            else:
+                group["savings"] += (reference - price) * quantity
+    total = {key: sum(group[key] for group in groups.values()) for key in ("count", "unknown_price", "unknown_reference", "spending", "savings")}
+
+    def project(group):
+        # Decimal strings preserve halere beyond JavaScript's safe integer range.
+        return {**group,
+                "spending": str(group["spending"]) if not group["count"] or group["count"] > group["unknown_price"] else None,
+                "savings": str(group["savings"]) if not group["count"] or group["count"] > group["unknown_price"] + group["unknown_reference"] else None}
+
+    return {"period": period, "date": selected, "start": start, "end": end, "generated_at": stamp(now),
+            "total": project(total), "categories": [{"category": category, **project(group)} for category, group in groups.items()]}
 
 
 def activate(domain):
@@ -96,10 +191,10 @@ def lifecycle(domain, db, request_id, operation, args, entry, now):
             purchased = now if values["date"] == now.astimezone(domain.zone).date().isoformat() else datetime.combine(datetime.fromisoformat(values["date"]).date(), time(12), domain.zone)
             muted = stamp(purchased + timedelta(days=30))
         db.execute("""INSERT INTO purchases (owner_id,entry_id,request_id,purchased_at,recorded_at,
-            unit_price,quantity,purchase_date,reference_price,previous_state,previous_muted_until,lifecycle_revision)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""", (domain.owner_id, entry["entry_id"], request_id,
+            unit_price,quantity,purchase_date,reference_price,previous_state,previous_muted_until,lifecycle_revision,category)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""", (domain.owner_id, entry["entry_id"], request_id,
             args.get("purchased_at", stamp(now)), stamp(now), values["price"], values["quantity"], values["date"],
-            values["reference"], entry["state"], entry["notifications_muted_until"], entry["lifecycle_revision"] + 1))
+            values["reference"], entry["state"], entry["notifications_muted_until"], entry["lifecycle_revision"] + 1, entry["category"]))
     elif operation == "wishlist.pause":
         if instant(args["paused_until"]) <= now:
             raise ValueError("pause_date")
@@ -158,7 +253,8 @@ class WebApplication:
             else:
                 data.append({"id": row["sequence"], "unitCents": row["unit_price"], "quantity": row["quantity"],
                              "date": row["purchase_date"] or instant(row["purchased_at"]).astimezone(self.domain.zone).date().isoformat(),
-                             "reference": row["reference_price"], "voidedAt": row["voided_at"], "correctedAt": row["corrected_at"],
+                             "reference": row["reference_price"], "category": row["category"],
+                             "voidedAt": row["voided_at"], "correctedAt": row["corrected_at"],
                              "canVoid": row["previous_state"] is not None and row["lifecycle_revision"] == entry["lifecycle_revision"]})
         cursor = self.cursor(kind, entry["entry_id"], rows[127]["sequence"], ceiling) if len(rows) > 128 else None
         return {kind: data, "cursor": cursor}
@@ -175,7 +271,7 @@ class WebApplication:
                 raise ValueError("web_request")
             request_id = digest(["web", self.domain.owner_id, request["request_id"]])
             operation, args = request["operation"][4:], request["arguments"]
-            read = operation in ("list", "get", "history", "purchases")
+            read = operation in ("list", "get", "history", "purchases", "statistics")
             with self.domain.store.transaction() as db:
                 if read:
                     return self.read(db, request_id, operation, args)
@@ -194,12 +290,16 @@ class WebApplication:
             if result["committed"] and self.domain.collection_wakeup:
                 self.domain.collection_wakeup()
             return result
+        except StatisticsLimit:
+            return self.domain.response(request_id, "unavailable")
         except (ValueError, TypeError, KeyError, OverflowError):
             return self.domain.response(request_id, "invalid_request")
         except sqlite3.Error:
             return self.domain.response(request_id, "unavailable")
 
     def read(self, db, request_id, operation, args):
+        if operation == "statistics":
+            return self.domain.response(request_id, "ok", data=statistics(self.domain, db, args))
         if operation == "list":
             if not COMMAND_VALIDATOR.is_valid({"operation": "wishlist.list", "arguments": args}) or args.get("limit", 15) > 20:
                 raise ValueError("list")
