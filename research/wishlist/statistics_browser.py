@@ -5,7 +5,7 @@ separate environment. Never connects to the pilot or a product shop.
 """
 
 import argparse
-from datetime import datetime, timedelta
+from datetime import timedelta
 import json
 from pathlib import Path
 import ssl
@@ -14,7 +14,6 @@ import tempfile
 from threading import Event, Thread
 from uuid import uuid4
 from wsgiref.simple_server import WSGIRequestHandler, make_server
-from zoneinfo import ZoneInfo
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -110,92 +109,46 @@ def main():
                     context.route("**/*", lambda route: route.continue_() if route.request.url.startswith(shared["origin"] + "/") else route.abort())
                     page = context.new_page()
                     page.on("pageerror", lambda error: errors.append(str(error)))
+                    operations = []
+                    def record(request):
+                        if request.method == "POST" and request.url.endswith("/api/command"):
+                            operations.append(request.post_data_json.get("operation"))
+                    page.on("request", record)
                     page.goto(shared["origin"] + "/wishlist/")
-                    expect(page.locator("#statistics-spending")).to_have_text("1 700 Kč", use_inner_text=True)
-                    expect(page.locator("#statistics-savings")).to_have_text("400 Kč", use_inner_text=True)
-                    expect(page.locator("#statistics-results")).to_contain_text("Nákupy s neznámou cenou: 1")
-                    expect(page.locator("#statistics-results")).to_contain_text("Nákupy bez referenčního průměru: 1")
+                    expect(page.locator("#visible-count")).to_have_text("1")
+                    expect(page.locator("#purchase-statistics")).to_have_count(0)
                     page.locator("#filter-category").select_option(label="Domácnost")
-                    expect(page.locator("#statistics-spending")).to_have_text("1 700 Kč", use_inner_text=True)
                     expect(page.locator("#visible-count")).to_have_text("0")
                     page.locator("#filter-category").select_option(label="Dárky")
-                    expect(page.locator("#statistics-spending")).to_have_text("0 Kč", use_inner_text=True)
-                    page.locator("#reset-filters").click()
-                    page.locator("#statistics-previous").click()
-                    expect(page.locator("#statistics-spending")).to_have_text("100 Kč", use_inner_text=True)
-                    page.locator("#statistics-next").click()
-                    expect(page.locator("#statistics-spending")).to_have_text("1 700 Kč", use_inner_text=True)
-                    expect(page.locator("#statistics-next")).to_be_disabled()
-                    page.locator("#statistics-period").select_option("all")
-                    expect(page.locator("#statistics-spending")).to_have_text("1 800 Kč", use_inner_text=True)
-                    expect(page.locator("#period-navigation")).to_be_hidden()
-                    page.locator("#statistics-period").select_option("year")
-                    local_now = datetime.now(ZoneInfo("Europe/Prague"))
-                    year = local_now.year
-                    expected = "1 700 Kč" if local_now.month == 1 else "1 800 Kč"
-                    expect(page.locator("#statistics-spending")).to_have_text(expected, use_inner_text=True)
-                    expect(page.locator("#statistics-date")).to_have_text(str(year))
-                    page.locator("#statistics-period").select_option("month")
-                    expect(page.locator("#statistics-spending")).to_have_text("1 700 Kč", use_inner_text=True)
-                    page.screenshot(path=str(args.output / "statistics-desktop.png"), full_page=True)
-                    page.set_viewport_size({"width": 390, "height": 844})
-                    expect(page.locator("#statistics-spending")).to_have_text("1 700 Kč", use_inner_text=True)
-                    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-                    page.screenshot(path=str(args.output / "statistics-mobile.png"), full_page=True)
+                    expect(page.locator("#visible-count")).to_have_text("1")
                     page.locator("#search").fill("nenalezeno")
-                    expect(page.locator("#statistics-spending")).to_have_text("0 Kč", use_inner_text=True)
-                    page.locator("#search").fill("")
-                    expect(page.locator("#statistics-spending")).to_have_text("1 700 Kč", use_inner_text=True)
-
-                    delayed = []
-                    def reordered(route):
-                        request = route.request.post_data_json
-                        if request.get("operation") == "web.statistics" and request["arguments"]["filters"]["search"] == "delayed":
-                            delayed.append(route)
-                        else:
-                            route.continue_()
-
-                    page.route("**/api/command", reordered)
-                    with page.expect_request(lambda request: request.method == "POST" and request.post_data_json.get("arguments", {}).get("filters", {}).get("search") == "delayed"):
-                        page.locator("#search").fill("delayed")
-                    page.locator("#search").fill("Testovací")
-                    expect(page.locator("#statistics-spending")).to_have_text("1 700 Kč", use_inner_text=True)
-                    assert len(delayed) == 1
-                    delayed[0].fulfill(status=200, content_type="application/json", body=json.dumps({
-                        "code": "ok", "data": {"total": {"count": 0, "spending": "0", "savings": "0",
-                                                             "unknown_price": 0, "unknown_reference": 0}, "categories": []}}))
-                    page.wait_for_timeout(100)
-                    expect(page.locator("#statistics-spending")).to_have_text("1 700 Kč", use_inner_text=True)
-                    page.unroute("**/api/command", reordered)
-
-                    def outage(route):
-                        if route.request.post_data_json.get("operation") == "web.statistics":
-                            route.fulfill(status=503, content_type="application/json", body='{"code":"unavailable"}')
-                        else:
-                            route.continue_()
-
-                    page.route("**/api/command", outage)
-                    page.locator("#search").fill("lampa")
-                    expect(page.locator("#statistics-retry")).to_be_visible()
-                    expect(page.locator("#statistics-spending")).to_have_count(0)
-                    page.unroute("**/api/command", outage)
-                    page.locator("#statistics-retry").click()
-                    expect(page.locator("#statistics-spending")).to_have_text("1 700 Kč", use_inner_text=True)
+                    expect(page.locator("#visible-count")).to_have_text("0")
+                    page.locator("#reset-filters").click()
+                    expect(page.locator("#visible-count")).to_have_text("1")
+                    for width, height, name in [(1440, 1100, "desktop"), (390, 844, "mobile")]:
+                        page.set_viewport_size({"width": width, "height": height})
+                        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+                        expect(page.locator("#purchase-statistics")).to_have_count(0)
+                        page.screenshot(path=str(args.output / ("wishlist-" + name + ".png")), full_page=True)
+                    page.get_by_role("button", name="Testovací lampa", exact=True).click()
+                    expect(page.locator(".purchase-card")).to_have_count(4)
+                    page.get_by_role("button", name="Zavřít detail", exact=True).click()
                     page.get_by_role("button", name="Označit jako koupené: Testovací lampa").click()
                     page.locator('#editor [name="price"]').fill("300")
                     page.locator("#editor-submit").click()
-                    expect(page.locator("#statistics-spending")).to_have_text("2 000 Kč", use_inner_text=True)
-                    page.locator("#filter-category").select_option(label="Dárky")
-                    expect(page.locator("#statistics-spending")).to_have_text("300 Kč", use_inner_text=True)
+                    expect(page.locator("#editor")).not_to_be_visible()
+                    page.get_by_role("button", name="Testovací lampa", exact=True).click()
+                    expect(page.locator(".purchase-card")).to_have_count(5)
+                    assert "web.statistics" not in operations
                     assert not errors, errors
-                    (args.output / "statistics-browser.json").write_text(json.dumps({
+                    (args.output / "wishlist-browser.json").write_text(json.dumps({
                         "result": "passed", "scope": "synthetic local HTTPS; no pilot or shop access",
                         "revision": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
                         "dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()),
                         "browser": browser.version, "viewports": [1440, 390],
-                        "checks": ["known and unknown money", "saved category filter", "current filters", "period navigation",
-                                   "empty result", "outage hides stale totals", "retry", "purchase refreshes totals",
-                                   "late response cannot replace current totals", "no mobile overflow", "no page errors"]}, indent=2) + "\n")
+                        "checks": ["purchase summaries absent", "no automatic aggregate requests", "list filters",
+                                   "search and empty result", "purchase history retained", "purchase recording",
+                                   "no mobile overflow", "no page errors"]}, indent=2) + "\n")
                     context.close()
                 finally:
                     browser.close()
@@ -203,7 +156,7 @@ def main():
             shared["server"].shutdown()
             shared["server"].server_close()
             thread.join(timeout=5)
-    print("Synthetic desktop/mobile statistics acceptance passed.")
+    print("Synthetic desktop/mobile wishlist acceptance passed.")
 
 
 if __name__ == "__main__":

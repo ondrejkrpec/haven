@@ -27,16 +27,6 @@
         <div class="summary-card"><div class="summary-top"><span>V hledáčku</span><span data-icon="heart"></span></div><div class="summary-value" id="active-count">—</div><small>položek na tvém wishlistu</small></div>
         <div class="summary-card accent"><div class="summary-top"><span>Pod obvyklou cenou</span><span data-icon="trend"></span></div><div class="summary-value" id="discount-count">—</div><small>proti průměru za 90 dní</small></div>
       </section>
-      <section class="purchase-statistics" aria-labelledby="statistics-title" id="purchase-statistics">
-        <div class="statistics-heading"><div><h2 id="statistics-title">Nákupy v číslech</h2><p>Kolik jsi utratil a jak výhodně jsi nakoupil.</p></div>
-          <div class="statistics-controls"><label><span class="sr-only">Období statistik</span><select id="statistics-period"><option value="month">Měsíc</option><option value="year">Rok</option><option value="all">Celá historie</option></select></label>
-            <div class="period-navigation" id="period-navigation"><button class="icon-button" id="statistics-previous" aria-label="Předchozí období">←</button><strong id="statistics-date"></strong><button class="icon-button" id="statistics-next" aria-label="Následující období">→</button></div>
-          </div>
-        </div>
-        <p class="statistics-scope">Souhrny odpovídají filtrům a hledání níže.</p>
-        <details class="statistics-help"><summary>Jak číst souhrny</summary><p>Koupené jednorázové položky zahrneš filtrem Koupené nebo Všechny neodstraněné. Kategorie nákupu zůstává platná k datu nákupu; ostatní filtry odpovídají současnému stavu položky. Neznámé částky vynecháváme a uvádíme jejich počet. Prázdný výběr má nulové součty.</p></details>
-        <div id="statistics-results" aria-live="polite" aria-atomic="true"></div>
-      </section>
       <section class="wishlist" aria-label="Položky wishlistu">
         <div class="list-heading"><div><h2>V hledáčku <span id="visible-count"></span></h2><p id="list-description">Seskupeno podle kategorií, výhodnější ceny nahoře.</p></div><button class="text-button" id="reset-filters" hidden>Zrušit filtry</button></div>
         <div class="filters"><label class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="Najít položku…" aria-label="Hledat podle názvu"></label><div class="filter-controls">

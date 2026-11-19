@@ -1,7 +1,6 @@
 import {CATEGORIES, money, dayKey, priceStats, comparison, remainingDays, visibleEntries,
   createEntry, updateEntry, recordPurchase, correctPurchase, voidPurchase,
-  removeEntry, restoreEntry, resumeNotifications, inputMoney, parseMoney,
-  purchaseStatistics, shiftStatisticsDate} from './model.mjs';
+  removeEntry, restoreEntry, resumeNotifications, inputMoney, parseMoney} from './model.mjs';
 const live = document.querySelector('meta[name="haven-mode"]')?.content === 'production';
 const api = live ? await import('./api.mjs') : null;
 const {demoState} = live ? {demoState: null} : await import('./demo.mjs');
@@ -42,8 +41,6 @@ else try {
 }
 let selected = null, range = 90, formAction = null, formEntry = null, formPurchase = null, undoAction = null;
 let toastTimer, loading = live, loadError = null, detailGeneration = 0, formRequestId = null, formVersion = null;
-let statisticsPeriod = 'month', statisticsDate = dayKey(new Date()).slice(0,7)+'-01';
-let statisticsGeneration = 0, statisticsTimer;
 const pendingActions = new Map(), refreshing = new Set();
 function toast(message, undo = null) {
   clearTimeout(toastTimer); undoAction = undo;
@@ -104,7 +101,6 @@ function render() {
     return heading + row(entry);
   }).join('');
   $('#empty').hidden = entries.length !== 0;
-  refreshStatistics();
   if (live && (loading || loadError)) {
     $('#empty').hidden = false;
     $('#empty-message').textContent = loading ? 'Načítám tvůj wishlist…' : loadError;
@@ -118,51 +114,6 @@ function render() {
   $('#empty-message').textContent = isUnfilteredEmpty ? 'Přidej první odkaz a začni si skládat svůj wishlist.' : 'Zkus změnit hledání nebo filtry.';
   $('#empty-action').textContent = isUnfilteredEmpty ? 'Přidat položku' : 'Zrušit filtry';
   $('#empty-action').onclick = isUnfilteredEmpty ? () => openEditor('add') : resetFilters;
-}
-function showStatistics(result) {
-  const details = group => [
-    group.unknown_price ? `Nákupy s neznámou cenou: ${group.unknown_price}. Nejsou v peněžních součtech.` : '',
-    group.unknown_reference ? `Nákupy bez referenčního průměru: ${group.unknown_reference}. Jsou v útratě, ale jejich úsporu neznáme.` : '',
-  ].filter(Boolean).join(' ');
-  const total = result.total;
-  $('#statistics-results').innerHTML = `<div class="statistics-totals">
-    <div><span>Utraceno</span><strong id="statistics-spending">${money(total.spending)}</strong></div>
-    <div><span>Čistá úspora</span><strong id="statistics-savings" class="${total.savings != null && BigInt(total.savings)<0n?'negative':''}">${money(total.savings)}</strong><small>Nákup nad průměrem úsporu snižuje.</small></div>
-    </div><p class="statistics-note">${total.count ? `Počet nákupů: ${total.count}.` : 'Pro toto období a filtry nejsou žádné nákupy.'} ${details(total)}</p>
-    <div class="statistics-categories" aria-label="Nákupy podle kategorií">${result.categories.map(group=>`<section><h3>${escape(group.category)}</h3><dl><div><dt>Utraceno</dt><dd>${money(group.spending)}</dd></div><div><dt>Úspora</dt><dd>${money(group.savings)}</dd></div></dl><p>${group.count} nákupů${group.unknown_price?` · neznámá cena: ${group.unknown_price}`:''}${group.unknown_reference?` · neznámá úspora: ${group.unknown_reference}`:''}</p></section>`).join('')}</div>`;
-}
-function refreshStatistics() {
-  const generation = ++statisticsGeneration;
-  clearTimeout(statisticsTimer);
-  const all = statisticsPeriod === 'all';
-  $('#period-navigation').hidden = all;
-  $('#statistics-date').textContent = all ? '' : new Intl.DateTimeFormat('cs-CZ', {
-    timeZone:'Europe/Prague',year:'numeric',...(statisticsPeriod==='month'?{month:'long'}:{}),
-  }).format(new Date(statisticsDate+'T12:00:00Z'));
-  $('#statistics-previous').disabled = statisticsDate <= '0001-01-01';
-  const next = shiftStatisticsDate(statisticsDate,statisticsPeriod,1);
-  $('#statistics-next').disabled = next > dayKey(new Date());
-  const options = {period:statisticsPeriod,date:statisticsDate,filters:filters()};
-  const section = $('#purchase-statistics');
-  section.setAttribute('aria-busy',String(live));
-  if (!live) {showStatistics(purchaseStatistics(state.entries,options));return;}
-  $('#statistics-results').innerHTML = '<p class="statistics-note">Načítám nákupní statistiky…</p>';
-  if (loading || loadError) {
-    section.setAttribute('aria-busy','false');
-    if(loadError)$('#statistics-results').textContent='Statistiky nejsou dostupné. Obnov načtení wishlistu.';
-    return;
-  }
-  statisticsTimer = setTimeout(async()=>{
-    try {
-      const result = await api.statistics(options);
-      if (generation===statisticsGeneration) showStatistics(result);
-    } catch {
-      if (generation===statisticsGeneration) {
-        $('#statistics-results').innerHTML='<p class="statistics-note" role="alert">Statistiky se nepodařilo načíst. Součty nejsou dostupné.</p><button class="text-button" id="statistics-retry">Zkusit znovu</button>';
-        $('#statistics-retry').onclick=refreshStatistics;
-      }
-    } finally {if(generation===statisticsGeneration)section.setAttribute('aria-busy','false');}
-  },180);
 }
 function row(entry) {
   const stats = priceStats(entry), days = remainingDays(entry), failed = ['failed','blocked','stale'].includes(entry.collection);
@@ -314,14 +265,6 @@ $('#add-button').onclick=()=>openEditor('add');
 $('#history-info').onclick=()=>$('#info-dialog').showModal();
 $('#reset-filters').onclick=resetFilters;
 $('#search').addEventListener('input',render);
-$('#statistics-period').addEventListener('change',()=>{
-  statisticsPeriod=$('#statistics-period').value;
-  statisticsDate=dayKey(new Date()).slice(0,statisticsPeriod==='year'?4:7)+(statisticsPeriod==='year'?'-01-01':'-01');
-  refreshStatistics();
-});
-for (const [id,offset] of [['statistics-previous',-1],['statistics-next',1]]) $("#"+id).onclick=()=>{
-  statisticsDate=shiftStatisticsDate(statisticsDate,statisticsPeriod,offset);refreshStatistics();
-};
 for(const select of document.querySelectorAll('.filter-controls select'))select.addEventListener('change',render);
 $('#toast-close').onclick=()=>{$('#toast').hidden=true;undoAction=null;};
 $('#toast-undo').onclick=async()=>{const undo=undoAction;undoAction=null;try{if(undo)await undo();}catch(error){toast(error.message);}};
