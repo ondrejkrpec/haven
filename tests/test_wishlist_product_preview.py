@@ -1,12 +1,17 @@
 """Preview reuses collection without obtaining any write authority."""
 
 import asyncio
+import json
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import AsyncMock
+from unittest.mock import Mock
+from types import SimpleNamespace
 
+from scripts.wishlist_interpreter import CategoryServer
+from scripts.wishlist_model import suggest_category
 from scripts.wishlist_product_preview import PreviewServer
 from scripts.wishlist_web_gateway import exchange
 
@@ -17,6 +22,36 @@ def request(url):
 
 
 class PreviewTests(unittest.IsolatedAsyncioTestCase):
+    async def test_category_only_accepts_public_title_and_checks_taxonomy(self):
+        backend = AsyncMock()
+        backend.interpret.return_value = {"category": "home"}
+        clock = 100
+        server = CategoryServer("/tmp/not-used.sock", client_uid=1000, backend=backend, clock=lambda: clock)
+        request_ = {"name": "Pánev"}
+        with self.assertRaises(ValueError):
+            await server.respond(request_ | {"url": "https://example.com"})
+        self.assertEqual(await server.respond(request_), {"category": "home"})
+        self.assertEqual(await server.respond(request_), {"category": None})
+        backend.interpret.assert_awaited_once_with(request_, category=True)
+        clock += 6
+        backend.interpret.return_value = {"category": "anything-else"}
+        self.assertEqual(await server.respond(request_), {"category": None})
+
+    def test_category_model_request_uses_no_tools_and_only_the_title(self):
+        client = Mock()
+        generate = client.chat.completions.create
+        choice = SimpleNamespace(finish_reason="stop", message=SimpleNamespace(tool_calls=[], content="home"))
+        generate.return_value = SimpleNamespace(choices=[choice])
+        self.assertEqual(suggest_category(client, "Pánev"), {"category": "home"})
+        sent = generate.call_args.kwargs
+        self.assertEqual(sent["messages"][1]["role"], "user")
+        self.assertEqual(json.loads(sent["messages"][1]["content"]), {"name": "Pánev"})
+        self.assertEqual(sent["tools"], [])
+        self.assertEqual(sent["model"], "gpt-5.4-mini")
+        self.assertEqual(sent["extra_body"], {"reasoning": {"enabled": False}})
+        choice.message.content = "home and gifts"
+        self.assertEqual(suggest_category(client, "Pánev"), {"category": None})
+
     async def test_socket_returns_partial_offer_and_validates_peer(self):
         outcome = {"status": "ok", "http_status": 200, "retry_after": 0,
                    "offer": {"name": "Syntetický produkt", "price": None, "availability": "out_of_stock"}}

@@ -6,6 +6,17 @@ import unicodedata
 from scripts.wishlist_contract import COMMAND_VALIDATOR
 from scripts.wishlist_domain import canonical
 
+PRODUCT_CATEGORIES = ("uncategorized", "home", "personal_care", "gifts")
+
+
+def validate_category_request(request):
+    if (not isinstance(request, dict) or set(request) != {"name"}
+            or not isinstance(request["name"], str) or not 1 <= len(request["name"]) <= 200
+            or not request["name"].strip() or any(ord(char) < 32 for char in request["name"])):
+        raise ValueError("category_request")
+    return request
+
+
 REASONS = {"purpose", "purchase_mode", "recipient", "which_item", "request", "unsupported", "prices_unavailable", "help"}
 QUESTIONS = {
     "purpose": "Je to pro tebe, nebo jako dárek? Pokud dárek, pro koho?",

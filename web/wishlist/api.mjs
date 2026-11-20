@@ -1,5 +1,5 @@
 /** Same-origin production adapter. It never loads or persists demonstration data. */
-const categoryNames = {uncategorized:'Nezařazeno',home:'Domácnost',personal_care:'Drogerie',gifts:'Dárky'};
+export const categoryNames = {uncategorized:'Nezařazeno',home:'Domácnost',personal_care:'Drogerie',gifts:'Dárky'};
 export const categoryCode = name => Object.entries(categoryNames).find(([, label]) => label === name)?.[0] || 'uncategorized';
 let csrf;
 export const requestId = () => crypto.randomUUID().replaceAll('-', '');
@@ -11,8 +11,8 @@ const messages = {
   unavailable:'Výsledek se nepodařilo ověřit. Zkontroluj přehled; opakování stejného požadavku změnu nezdvojí.',
 };
 async function http(path, options = {}) {
-  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 12000);
-  const {signal, ...requestOptions} = options;
+  const {signal, timeout = 12000, ...requestOptions} = options;
+  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), timeout);
   const abort = () => controller.abort();
   if (signal?.aborted) abort();
   signal?.addEventListener('abort', abort, {once:true});
@@ -37,7 +37,8 @@ export async function bootstrap() {
 export async function command(operation, arguments_, id = requestId(), retry = true, signal) {
   if (!csrf) await bootstrap();
   const response = await http('command', {method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},
-    body:JSON.stringify({protocol_version:1,operation:'web.'+operation,arguments:arguments_,request_id:id}),signal});
+    body:JSON.stringify({protocol_version:1,operation:'web.'+operation,arguments:arguments_,request_id:id}),
+    signal,timeout:operation === 'preview' ? 18000 : 12000});
   if (response.code === 'csrf_expired' && retry && !signal?.aborted) {
     await bootstrap();
     return command(operation,arguments_,id,false,signal);

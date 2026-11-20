@@ -14,7 +14,7 @@ MODULES = ("wishlist_store", "wishlist_domain", "wishlist_contract", "wishlist_p
 FILES = (
     *(f"{root}/scripts/{module}.py" for root in ("/opt/haven-wishlist", "/var/lib/haven/haven-tools") for module in MODULES),
     *(f"/opt/haven-wishlist/scripts/{module}.py" for module in
-      ("wishlist_product_preview", "wishlist_collector", "wishlist_fetch")),
+      ("wishlist_product_preview", "wishlist_collector", "wishlist_fetch", "wishlist_interpreter", "wishlist_model")),
     "/opt/haven-wishlist/schemas/wishlist-request-v1.schema.json",
     "/var/lib/haven/haven-tools/schemas/wishlist-request-v1.schema.json",
     "/opt/haven-wishlist/requirements-web.txt",
@@ -22,7 +22,7 @@ FILES = (
     "/var/lib/haven-wishlist/config.json", "/etc/haven-wishlist-web.json",
     *(f"/etc/systemd/system/{name}" for name in (
         "haven-wishlist.service", "haven-wishlist-web.service", "haven-wishlist-web.socket",
-        "haven-wishlist-collector.path", "haven-wishlist-preview.service",
+        "haven-wishlist-collector.path", "haven-wishlist-preview.service", "haven-wishlist-language.service",
     )),
     *(f"/opt/haven-wishlist/web/wishlist/{name}" for name in (
         "index.html", "styles.css", "app.mjs", "model.mjs", "api.mjs",
