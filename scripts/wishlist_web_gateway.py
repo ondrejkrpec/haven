@@ -159,7 +159,7 @@ class Application:
         if not self.preview_slots.acquire(blocking=False):
             return {"code": "ok", "data": {"status": "retry_later"}}
         try:
-            return self.preview_transport(endpoint, request, timeout=16)
+            return self.preview_transport(endpoint, request, timeout=21)
         finally:
             self.preview_slots.release()
 

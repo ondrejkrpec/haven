@@ -31,7 +31,7 @@ def suggest_category(client, name):
     response = client.chat.completions.create(
         model=CATEGORY_MODEL, messages=[{"role": "system", "content": CATEGORY_PROMPT},
                                        {"role": "user", "content": canonical({"name": name})}],
-        tools=[], timeout=5, no_progress_timeout=4,
+        tools=[], timeout=7, no_progress_timeout=6,
         extra_body={"reasoning": {"enabled": False}},
     )
     if len(response.choices) != 1:
