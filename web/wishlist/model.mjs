@@ -1,5 +1,9 @@
 /** Local interaction model. Money is stored as integer haléře; no shop requests. */
-export const CATEGORIES = ['Nezařazeno', 'Domácnost', 'Drogerie', 'Dárky'];
+export const categoryNames = {
+  uncategorized:'Nezařazeno', home:'Domácnost', personal_care:'Drogerie', gifts:'Dárky',
+  kitchen:'Kuchyně', clothing:'Oblečení',
+};
+export const CATEGORIES = Object.values(categoryNames);
 export const ZONE = 'Europe/Prague';
 export function money(value) {
   if (value == null) return '—';

@@ -375,7 +375,7 @@ class MigrationTests(unittest.TestCase):
                 store.db.execute("INSERT INTO language_sessions VALUES ('456','456',1,'{}','2030-01-01')")
                 store.close()
             store = Store(path, **args)
-            self.assertEqual(store.db.execute("PRAGMA user_version").fetchone()[0], 7)
+            self.assertEqual(store.db.execute("PRAGMA user_version").fetchone()[0], len(MIGRATIONS))
             self.assertEqual(store.db.execute("SELECT COUNT(*) FROM language_sessions").fetchone()[0], 1)
             store.close()
             before = path.read_bytes()

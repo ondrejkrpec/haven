@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
+import sqlite3
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -365,7 +366,8 @@ class RecoveryTests(unittest.TestCase):
             legacy.store.db.execute("UPDATE entries SET category='home'")
             original = dict(legacy.store.db.execute("SELECT * FROM purchases").fetchone())
             legacy.close()
-            current = Wishlist(path, bot_id=BOT, owner_id=OWNER, web_enabled=True)
+            with patch("scripts.wishlist_store.MIGRATIONS", MIGRATIONS[:7]):
+                current = Wishlist(path, bot_id=BOT, owner_id=OWNER, web_enabled=True)
             try:
                 purchase = dict(current.store.db.execute("SELECT * FROM purchases").fetchone())
                 self.assertEqual(purchase.pop("category"), "uncategorized")
@@ -377,6 +379,52 @@ class RecoveryTests(unittest.TestCase):
                 current.close()
             with patch("scripts.wishlist_store.MIGRATIONS", MIGRATIONS[:6]), self.assertRaises(ValueError):
                 Wishlist(path, bot_id=BOT, owner_id=OWNER)
+
+    def test_schema_eight_expands_categories_and_preserves_existing_purchase_history(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "state"
+            now = datetime(2026, 11, 20, 12, tzinfo=UTC)
+            settings = dict(bot_id=BOT, owner_id=OWNER, web_enabled=True, clock=lambda: now)
+
+            def call(operation, arguments):
+                result = WebApplication(domain).handle({"protocol_version": 1, "operation": "web." + operation,
+                                                        "arguments": arguments, "request_id": uuid4().hex})
+                self.assertEqual(result["code"], "ok", result)
+                return result["data"]
+
+            with patch("scripts.wishlist_store.MIGRATIONS", MIGRATIONS[:7]):
+                domain = Wishlist(path, **settings)
+            try:
+                entry = call("add", {"url": "https://shop.example.com/legacy",
+                                     "details": {"category": "home", "purchase_mode": "recurring"}})["entry"]
+                ref = {"entry_id": entry["entry_id"], "expected_version": entry["version"]}
+                call("purchase", ref | {"unit_price": "250", "quantity": 2})
+                tables = ("entries", "offers", "purchases")
+                original = [dict(domain.store.db.execute(f"SELECT * FROM {table}").fetchone()) for table in tables]
+            finally:
+                domain.close()
+
+            domain = Wishlist(path, **settings)
+            try:
+                db = domain.store.db
+                self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 8)
+                self.assertEqual([dict(db.execute(f"SELECT * FROM {table}").fetchone()) for table in tables], original)
+                self.assertEqual(db.execute("PRAGMA integrity_check").fetchone()[0], "ok")
+                self.assertEqual(db.execute("PRAGMA foreign_key_check").fetchall(), [])
+                with self.assertRaises(sqlite3.IntegrityError):
+                    db.execute("UPDATE entries SET category='invalid'")
+                for category in ("kitchen", "clothing"):
+                    entry = call("get", {"entry_id": entry["entry_id"]})["entry"]
+                    ref = {"entry_id": entry["entry_id"], "expected_version": entry["version"]}
+                    edited = call("update", ref | {"patch": {"category": category}})["entry"]
+                    self.assertEqual(edited["category"], category)
+                    call("purchase", ref | {"expected_version": edited["version"], "unit_price": "100"})
+                    summary = call("statistics", {"filters": {"category": category}})
+                    self.assertEqual(summary["total"]["count"], 1)
+                self.assertEqual(dict(db.execute("SELECT * FROM purchases ORDER BY sequence LIMIT 1").fetchone()),
+                                 original[2])
+            finally:
+                domain.close()
 
     def test_web_upgrade_resume_intent_keeps_timer_and_writers_after_restart(self):
         with tempfile.TemporaryDirectory() as temporary:

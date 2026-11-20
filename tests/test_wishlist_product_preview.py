@@ -58,6 +58,11 @@ class PreviewTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sent["tools"], [])
         self.assertEqual(sent["model"], "gpt-6.1-terra")
         self.assertEqual(sent["extra_body"], {"reasoning": {"enabled": False}})
+        for title, category in (("Nerezová pánev", "kitchen"), ("Bavlněné tričko", "clothing")):
+            with self.subTest(category=category):
+                choice.message.content = category
+                self.assertEqual(suggest_category(client, title), {"category": category})
+                self.assertIn(category, sent["messages"][0]["content"])
         choice.message.content = "home and gifts"
         self.assertEqual(suggest_category(client, "Pánev"), {"category": None})
 

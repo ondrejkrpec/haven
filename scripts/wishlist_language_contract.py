@@ -3,10 +3,10 @@
 import re
 import unicodedata
 
-from scripts.wishlist_contract import COMMAND_VALIDATOR
+from scripts.wishlist_contract import CATEGORIES, COMMAND_VALIDATOR
 from scripts.wishlist_domain import canonical
 
-PRODUCT_CATEGORIES = ("uncategorized", "home", "personal_care", "gifts")
+PRODUCT_CATEGORIES = CATEGORIES
 
 
 def validate_category_request(request):

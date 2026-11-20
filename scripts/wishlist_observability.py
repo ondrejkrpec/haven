@@ -63,7 +63,7 @@ def collect(database=DATABASE, *, deferred_hosts=(), now=None):
             db.set_progress_handler(lambda: int(time.monotonic() > deadline), 1000)
             db.row_factory = sqlite3.Row
             db.execute("BEGIN")
-            if db.execute("PRAGMA user_version").fetchone()[0] not in (5, 6, 7):
+            if db.execute("PRAGMA user_version").fetchone()[0] not in (5, 6, 7, 8):
                 return result
             metadata = dict(db.execute("SELECT key,value FROM metadata WHERE key IN ('collection_last_scan','retention_last_run')"))
             # CASE prevents malformed historical usage from breaking the export.
