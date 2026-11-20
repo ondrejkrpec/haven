@@ -135,7 +135,7 @@ class ObservabilityTests(Fixture, unittest.TestCase):
             other.symlink_to(path)
             self.assertEqual(metrics.collect(other)['status'], 'unavailable')
         with self.fixture() as (domain, path):
-            domain.store.db.execute('PRAGMA user_version=8')
+            domain.store.db.execute('PRAGMA user_version=99')
             self.assertEqual(metrics.collect(path)['status'], 'unavailable')
 
     def test_monitor_never_pings_success_for_missing_stale_or_failed_collection(self):

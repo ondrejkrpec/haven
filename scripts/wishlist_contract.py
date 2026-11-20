@@ -8,6 +8,7 @@ import re
 from jsonschema import Draft202012Validator, FormatChecker
 
 SCHEMA = json.loads((Path(__file__).resolve().parents[1] / "schemas/wishlist-request-v1.schema.json").read_text())
+CATEGORIES = tuple(SCHEMA["$defs"]["entryFields"]["properties"]["category"]["enum"])
 FORMATS = FormatChecker()
 
 

@@ -1,5 +1,6 @@
 /** Same-origin production adapter. It never loads or persists demonstration data. */
-export const categoryNames = {uncategorized:'Nezařazeno',home:'Domácnost',personal_care:'Drogerie',gifts:'Dárky'};
+import {categoryNames} from './model.mjs';
+export {categoryNames};
 export const categoryCode = name => Object.entries(categoryNames).find(([, label]) => label === name)?.[0] || 'uncategorized';
 let csrf;
 export const requestId = () => crypto.randomUUID().replaceAll('-', '');

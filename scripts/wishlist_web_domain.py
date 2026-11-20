@@ -10,11 +10,10 @@ import json
 import re
 import sqlite3
 
-from scripts.wishlist_contract import COMMAND_VALIDATOR
+from scripts.wishlist_contract import CATEGORIES, COMMAND_VALIDATOR
 from scripts.wishlist_domain import canonical, digest, instant, stamp
 from scripts.wishlist_socket import PeerServer
 
-CATEGORIES = ("uncategorized", "home", "personal_care", "gifts")
 ENTRY = re.compile(r"wi_[a-f0-9]{32}\Z")
 REQUEST = re.compile(r"[a-f0-9]{32}\Z")
 STATISTICS_ENTRIES = 10000
