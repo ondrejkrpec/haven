@@ -136,6 +136,7 @@
             - {database: passwd, key: haven-wishlist-web}
             - {database: group, key: haven-wishlist-web}
             - {database: passwd, key: haven-preview}
+            - {database: passwd, key: haven-language}
           register: haven_web_identities
 
         - name: Select exact peer identities
@@ -144,6 +145,7 @@
             haven_web_client_uid: "{{ haven_web_identities.results[1].ansible_facts.getent_passwd['haven-wishlist-web'][1] }}"
             haven_web_socket_gid: "{{ haven_web_identities.results[2].ansible_facts.getent_group['haven-wishlist-web'][1] }}"
             haven_web_preview_uid: "{{ haven_web_identities.results[3].ansible_facts.getent_passwd['haven-preview'][1] }}"
+            haven_web_language_uid: "{{ haven_web_identities.results[4].ansible_facts.getent_passwd['haven-language'][1] }}"
 
         - name: Create root-owned HTTP code and asset directories
           ansible.builtin.file:
@@ -195,7 +197,7 @@
             owner: root
             group: root
             mode: '0644'
-          loop: [wishlist_product_preview, wishlist_collector, wishlist_fetch]
+          loop: [wishlist_product_preview, wishlist_collector, wishlist_fetch, wishlist_interpreter, wishlist_model]
 
         - name: Install schemas in both public code roots
           ansible.builtin.copy:
@@ -280,13 +282,14 @@
             group: root
             mode: '0644'
           loop: [haven-wishlist.service, haven-wishlist-web.socket, haven-wishlist-web.service,
-                 haven-wishlist-collector.path, haven-wishlist-preview.service]
+                 haven-wishlist-collector.path, haven-wishlist-preview.service, haven-wishlist-language.service]
 
         - name: Verify installed units before loading them
           ansible.builtin.command:
             argv: [systemd-analyze, verify, /etc/systemd/system/haven-wishlist.service,
                    /etc/systemd/system/haven-wishlist-web.socket, /etc/systemd/system/haven-wishlist-web.service,
-                   /etc/systemd/system/haven-wishlist-collector.path, /etc/systemd/system/haven-wishlist-preview.service]
+                   /etc/systemd/system/haven-wishlist-collector.path, /etc/systemd/system/haven-wishlist-preview.service,
+                   /etc/systemd/system/haven-wishlist-language.service]
           changed_when: false
 
         - name: Reload unit definitions

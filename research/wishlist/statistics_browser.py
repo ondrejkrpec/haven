@@ -44,6 +44,10 @@ async def fixture_offer(payload, **_):
             "offer": {"name": name, "price": None, "availability": "out_of_stock"}}
 
 
+async def fixture_category(_):
+    return "home"
+
+
 def fixture(path):
     domain = Wishlist(path, bot_id="200001", owner_id="100001", web_enabled=True)
     application = WebApplication(domain)
@@ -124,6 +128,7 @@ def main():
                     for name in ("gambarino.woff2", "general-sans.woff2"):
                         shutil.copyfile(args.fonts / name, assets / name)
                 preview = PreviewServer(root / "preview.sock", ingress_uid=1000, fetcher=fixture_offer)
+                preview.category_for = fixture_category
                 with patch("scripts.wishlist_web_gateway.ROOT", assets):
                     gateway = Application({"origin": origin, "owner_login": "owner@example.com", "preview": {}},
                                           transport=lambda config, request: application.handle(request),
@@ -320,6 +325,7 @@ def main():
                     expect(page.locator("#product-preview")).to_have_attribute("data-state", "ready")
                     expect(page.locator("#preview-product strong")).to_have_text("Testovací pánev, ø 26 cm")
                     expect(page.locator("#preview-product")).to_contain_text("Cena není k dispozici")
+                    expect(page.locator("#preview-product")).to_contain_text("Návrh kategorie · Domácnost")
                     expect(page.locator("#editor-submit")).to_have_text("Přidat položku")
                     assert "web.add" not in operations
                     expect(page.locator("#visible-count")).to_have_text("3")
@@ -327,6 +333,9 @@ def main():
                     page.locator(".extra-fields summary").click()
                     name = page.locator('#editor [name="name"]')
                     expect(name).to_have_value("Testovací pánev, ø 26 cm")
+                    category = page.locator('#editor [name="category"]')
+                    expect(category).to_have_value("Domácnost")
+                    category.select_option("Dárky")
                     name.fill("Vlastní název položky")
                     # Hold an older response open even after its request has finished
                     # to verify the UI guard independently of native fetch abortion.
@@ -360,11 +369,13 @@ def main():
                     page.clock.run_for(100)
                     expect(page.locator("#product-preview")).to_have_attribute("data-state", "unsupported")
                     expect(name).to_have_value("Vlastní název položky")
+                    expect(category).to_have_value("Dárky")
                     page.locator("#editor-submit").click()
                     expect(page.locator("#editor")).not_to_be_visible()
                     expect(page.locator("#detail")).to_be_visible()
                     expect(page.locator("#detail-content")).to_contain_text("Odkaz je uložený")
                     expect(page.locator("#detail-title")).to_have_text("Vlastní název položky")
+                    expect(page.locator("#detail .context-label")).to_contain_text("Dárky")
                     page.keyboard.press("Escape")
                     expect(page.locator("#visible-count")).to_have_text("4")
                     page.locator("#add-button").click()

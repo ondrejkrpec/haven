@@ -42,7 +42,7 @@ else try {
 let selected = null, range = 90, formAction = null, formEntry = null, formPurchase = null, undoAction = null;
 let toastTimer, loading = live, loadError = null, detailGeneration = 0, formRequestId = null, formVersion = null;
 let eventFilter = '', detailError = null, detailReturn = null, editorReturn = null, formBusy = false, listGeneration = 0;
-let previewTimer, previewRequest, suggestedName = '';
+let previewTimer, previewRequest, suggestedName = '', suggestedCategory = '';
 const pendingActions = new Map(), refreshing = new Set();
 const rendered = new WeakMap();
 const failedCheck = entry => ['failed','blocked','stale'].includes(entry.collection);
@@ -375,7 +375,7 @@ function showPreview(status, message, product = null) {
   content.innerHTML = product ? `<span class="thumbnail" aria-hidden="true">${icon('package')}</span>
     <div><strong>${escape(product.name)}</strong><p>${escape(product.shop)}</p>
     <p>${product.price == null ? 'Cena není k dispozici' : money(Math.round(Number(product.price) * 100))}
-      · ${stock(product.availability)}</p></div>` : '';
+      · ${stock(product.availability)}</p>${product.category ? `<p>Návrh kategorie · ${escape(product.category)}</p>` : ''}</div>` : '';
   action.hidden = !['loading', 'unavailable', 'retry_later', 'manual'].includes(status);
   setText(action, status === 'loading' ? 'Přeskočit náhled' : 'Zkusit náhled znovu');
   setText($('#preview-message'), product ? '' : message);
@@ -389,9 +389,11 @@ function showPreview(status, message, product = null) {
 
 function schedulePreview(input, delay = 450) {
   stopPreview();
-  const name = input.form.elements.name;
+  const {name, category} = input.form.elements;
   if (suggestedName && name.value === suggestedName) name.value = '';
   suggestedName = '';
+  if (suggestedCategory && category.value === suggestedCategory) category.value = 'Nezařazeno';
+  suggestedCategory = '';
   showPreview('', '');
   if (!input.value.trim()) return;
   previewTimer = setTimeout(async () => {
@@ -414,9 +416,11 @@ function schedulePreview(input, delay = 450) {
       if (result.status === 'ready') {
         const title = shortProductName(result.name);
         if (!name.value.trim()) name.value = suggestedName = title;
+        const categoryLabel = Object.hasOwn(api.categoryNames, result.category) && api.categoryNames[result.category];
+        if (categoryLabel && !category.dataset.edited) category.value = suggestedCategory = categoryLabel;
         const shop = new URL(url).hostname.replace(/^www\./, '');
         showPreview('ready', result.price == null ? 'Náhled je připravený. Obchod neposkytl aktuální cenu.'
-          : 'Náhled je připravený. Údaje můžeš upravit před přidáním.', {...result, name: title, shop});
+          : 'Náhled je připravený. Údaje můžeš upravit před přidáním.', {...result, name: title, shop, category:categoryLabel});
       } else if (result.status === 'unsupported') {
         showPreview('unsupported', 'Pro tento obchod náhled zatím není dostupný. Odkaz můžeš uložit ručně.');
       } else if (result.status === 'retry_later') {
@@ -438,6 +442,7 @@ function openEditor(action, id = null, purchaseId = null) {
   if (formBusy) return;
   stopPreview();
   suggestedName = '';
+  suggestedCategory = '';
   $('#editor-submit').hidden = $('#editor-submit').disabled = false;
   editorReturn=focusSelector(document.activeElement);
   formAction=action;formEntry=id;formPurchase=purchaseId;
@@ -481,6 +486,12 @@ $('#editor-form').addEventListener('input', event => {
   if (event.target.name === 'name') suggestedName = '';
   $('#form-error').hidden = true;
   updatePurchaseTotal();
+});
+$('#editor-form').addEventListener('change', event => {
+  if (event.target.name === 'category') {
+    event.target.dataset.edited = 'true';
+    suggestedCategory = '';
+  }
 });
 $('#editor-form').addEventListener('submit',async event=>{
   event.preventDefault();
