@@ -156,7 +156,74 @@ def invalid_constant(value):
     raise ExtractionError("invalid_document")
 
 
-def extract(html, source_url, *, http_status=200, required_condition=None):
+def single_fabini_variant(products, requested):
+    host, path, query = requested
+    if host != "www.fabini.cz" or not path.startswith("/products/") or query:
+        return None
+    variants, linked = set(), False
+    for product, source in products:
+        if source != "jsonld":
+            continue
+        product_url = one(product, "url", required=False)
+        main_product = product_url is not None and identity(product_url) == requested
+        for offer in values(product, "offers"):
+            if not isinstance(offer, dict) or "Offer" not in types(offer):
+                if main_product:
+                    return None
+                continue
+            offer_url = one(offer, "url", required=False)
+            offer_identity = identity(offer_url) if offer_url is not None else None
+            if offer_identity is None or offer_identity[:2] != (host, path):
+                if main_product:
+                    return None
+                continue
+            offer_query = offer_identity[2]
+            if (len(offer_query) != 1 or offer_query[0][0] != "variant"
+                    or not re.fullmatch(r"[1-9][0-9]{0,19}", offer_query[0][1])):
+                return None
+            variants.add(offer_query[0][1])
+            linked |= main_product
+    if linked and len(variants) == 1:
+        return f"https://{host}{path}?variant={variants.pop()}"
+    return None
+
+
+def exact_offer(products, requested, required_condition):
+    candidates, sources = {}, set()
+    for product, source in products:
+        for offer in values(product, "offers"):
+            if not isinstance(offer, dict) or "Offer" not in types(offer):
+                continue
+            offer_url = one(offer, "url", required=False) or one(product, "url", required=False)
+            if offer_url is None or identity(offer_url) != requested:
+                continue
+            if required_condition is not None and type_name(one(offer, "itemCondition", required=False)) != required_condition:
+                raise ExtractionError("offer_condition_unverified")
+            if (values(offer, "validForMemberTier") or values(offer, "eligibleQuantity")
+                    or any(isinstance(p, dict) and (values(p, "validForMemberTier") or values(p, "eligibleQuantity"))
+                           for p in values(offer, "priceSpecification"))):
+                raise ExtractionError("conditional_offer")
+            currency = one(offer, "priceCurrency")
+            if not re.fullmatch(r"[A-Z]{3}", currency):
+                raise ExtractionError("invalid_currency")
+            availability = AVAILABILITY.get(type_name(one(offer, "availability")))
+            if availability is None:
+                raise ExtractionError("unknown_availability")
+            result = {
+                "name": one(product, "name"), "sku": one(product, "sku", required=False),
+                "price": amount(one(offer, "price")), "currency": currency,
+                "availability": availability,
+                "conditions_verification": "not_verified",
+            }
+            signature = json.dumps(result, sort_keys=True)
+            candidates[signature] = result
+            sources.add(source)
+    if len(candidates) > 1:
+        raise ExtractionError("conflicting_offers")
+    return next(iter(candidates.values()), None), sorted(sources)
+
+
+def extract(html, source_url, *, http_status=200, required_condition=None, resolve_fabini_variant=False):
     """Return a candidate; a shop can additionally require an explicit item condition."""
     output = {"schema_version": 1, "http_status": http_status, "model_calls": 0}
     if http_status in (401, 403, 429):
@@ -171,9 +238,9 @@ def extract(html, source_url, *, http_status=200, required_condition=None):
         document = Document()
         document.feed(text)
         document.close()
-        canonical = [n.attrs.get("href") for n in document.nodes
+        canonical = [identity(n.attrs.get("href")) for n in document.nodes
                      if n.tag == "link" and n.attrs.get("rel") == "canonical"]
-        if canonical and any(identity(url)[:2] != requested[:2] for url in canonical):
+        if any(url[:2] != requested[:2] for url in canonical):
             raise ExtractionError("canonical_mismatch")
         products = []
         for node in document.nodes:
@@ -184,41 +251,21 @@ def extract(html, source_url, *, http_status=200, required_condition=None):
                 products.extend((p, "jsonld") for p in json_products(value))
         if not products:
             raise ExtractionError("product_data_missing")
-        candidates, sources = {}, set()
-        for product, source in products:
-            for offer in values(product, "offers"):
-                if not isinstance(offer, dict) or "Offer" not in types(offer):
-                    continue
-                offer_url = one(offer, "url", required=False) or one(product, "url", required=False)
-                if offer_url is None or identity(offer_url) != requested:
-                    continue
-                if required_condition is not None and type_name(one(offer, "itemCondition", required=False)) != required_condition:
-                    raise ExtractionError("offer_condition_unverified")
-                if (values(offer, "validForMemberTier") or values(offer, "eligibleQuantity")
-                        or any(isinstance(p, dict) and (values(p, "validForMemberTier") or values(p, "eligibleQuantity"))
-                               for p in values(offer, "priceSpecification"))):
-                    raise ExtractionError("conditional_offer")
-                currency = one(offer, "priceCurrency")
-                if not re.fullmatch(r"[A-Z]{3}", currency):
-                    raise ExtractionError("invalid_currency")
-                availability = AVAILABILITY.get(type_name(one(offer, "availability")))
-                if availability is None:
-                    raise ExtractionError("unknown_availability")
-                result = {
-                    "name": one(product, "name"), "sku": one(product, "sku", required=False),
-                    "price": amount(one(offer, "price")), "currency": currency,
-                    "availability": availability,
-                    "conditions_verification": "not_verified",
-                }
-                signature = json.dumps(result, sort_keys=True)
-                candidates[signature] = result
-                sources.add(source)
-        if not candidates:
+        offer, evidence = exact_offer(products, requested, required_condition)
+        variant_url = None
+        if offer is None and resolve_fabini_variant and requested in canonical:
+            variant_url = single_fabini_variant(products, requested)
+            if variant_url:
+                offer, evidence = exact_offer(
+                    [(product, source) for product, source in products if source == "jsonld"],
+                    identity(variant_url), required_condition)
+        if offer is None:
             raise ExtractionError("exact_offer_missing")
-        if len(candidates) != 1:
-            raise ExtractionError("conflicting_offers")
-        return {**output, "status": "extracted", "reason": "structured_offer_candidate",
-                "evidence": sorted(sources), "offer": next(iter(candidates.values()))}
+        result = {**output, "status": "extracted", "reason": "structured_offer_candidate",
+                  "evidence": evidence, "offer": offer}
+        if variant_url:
+            result["variant_url"] = variant_url
+        return result
     except (ExtractionError, UnicodeError, json.JSONDecodeError, RecursionError, ValueError) as error:
         reason = str(error) if isinstance(error, ExtractionError) else "invalid_document"
         return {**output, "status": "needs_review", "reason": reason}

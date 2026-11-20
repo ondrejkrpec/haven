@@ -375,7 +375,8 @@ function showPreview(status, message, product = null) {
   content.innerHTML = product ? `<span class="thumbnail" aria-hidden="true">${icon('package')}</span>
     <div><strong>${escape(product.name)}</strong><p>${escape(product.shop)}</p>
     <p>${product.price == null ? 'Cena není k dispozici' : money(Math.round(Number(product.price) * 100))}
-      · ${stock(product.availability)}</p>${product.category ? `<p>Návrh kategorie · ${escape(product.category)}</p>` : ''}</div>` : '';
+      · ${stock(product.availability)}</p>${product.variant_url ? '<p>Odkaz doplněn o konkrétní variantu.</p>' : ''}
+      ${product.category ? `<p>Návrh kategorie · ${escape(product.category)}</p>` : ''}</div>` : '';
   action.hidden = !['loading', 'unavailable', 'retry_later', 'manual'].includes(status);
   setText(action, status === 'loading' ? 'Přeskočit náhled' : 'Zkusit náhled znovu');
   setText($('#preview-message'), product ? '' : message);
@@ -418,6 +419,7 @@ function schedulePreview(input, delay = 450) {
         if (!name.value.trim()) name.value = suggestedName = title;
         const categoryLabel = Object.hasOwn(api.categoryNames, result.category) && api.categoryNames[result.category];
         if (categoryLabel && !category.dataset.edited) category.value = suggestedCategory = categoryLabel;
+        if (result.variant_url) input.value = result.variant_url;
         const shop = new URL(url).hostname.replace(/^www\./, '');
         showPreview('ready', result.price == null ? 'Náhled je připravený. Obchod neposkytl aktuální cenu.'
           : 'Náhled je připravený. Údaje můžeš upravit před přidáním.', {...result, name: title, shop, category:categoryLabel});
