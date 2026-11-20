@@ -14,7 +14,7 @@ from scripts.wishlist_socket import PeerServer
 
 class PreviewServer(PeerServer):
     def __init__(self, path, *, ingress_uid, fetcher=run_fetch_process, clock=time.monotonic, category_endpoint=None):
-        super().__init__(path, ingress_uid=ingress_uid, deadline=22, max_connections=4)
+        super().__init__(path, ingress_uid=ingress_uid, deadline=25, max_connections=4)
         self.fetcher = fetcher
         self.clock = clock
         self.active_hosts = set()
@@ -25,7 +25,7 @@ class PreviewServer(PeerServer):
         if self.category_endpoint is None:
             return None
         try:
-            reply = await request(self.category_endpoint, {"name": name}, timeout=10.5)
+            reply = await request(self.category_endpoint, {"name": name}, timeout=14.5)
             value = reply.get("category")
             return value if value in PRODUCT_CATEGORIES else None
         except (OSError, ValueError, TimeoutError, EOFError):

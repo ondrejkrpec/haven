@@ -71,7 +71,7 @@ class GatewayTests(unittest.TestCase):
         self.app.preview_transport.assert_not_called()
         response = self.call("/api/command", method="POST", payload=request, headers=headers)
         self.assertEqual(response["status"], "200 OK")
-        self.app.preview_transport.assert_called_once_with(endpoint, request, timeout=21)
+        self.app.preview_transport.assert_called_once_with(endpoint, request, timeout=24)
         self.assertEqual(self.calls, [])
 
     def test_cookie_is_secure_scoped_and_httponly_and_csrf_requires_origin(self):
