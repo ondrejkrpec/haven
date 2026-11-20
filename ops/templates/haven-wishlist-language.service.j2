@@ -15,7 +15,7 @@ WorkingDirectory=/opt/haven-wishlist
 Environment=PYTHONPATH=/opt/haven-wishlist:/opt/haven-wishlist/vendor
 Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=HOME=/var/lib/haven-language
-ExecStart=/opt/haven-wishlist/native/venv/bin/python -B -m scripts.wishlist_interpreter --config /etc/haven-wishlist/language.json{% if haven_web_preview_uid is defined %} --category-client-uid {{ haven_web_preview_uid }}{% endif %}
+ExecStart=/opt/haven-wishlist/native/venv/bin/python -B -m scripts.wishlist_interpreter --config /etc/haven-wishlist/language.json{{ ' --category-client-uid ' ~ haven_web_preview_uid if haven_web_preview_uid is defined else '' }}
 Restart=on-failure
 RestartSec=5
 RestartPreventExitStatus=78

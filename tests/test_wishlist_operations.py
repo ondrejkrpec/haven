@@ -182,6 +182,13 @@ class OperationsTests(unittest.TestCase):
             with self.subTest(changed=changed), self.assertRaises(ValueError):
                 operations.configurations(**{**args, **changed})
 
+    def test_language_unit_keeps_the_restart_directive_separate(self):
+        environment = Environment(loader=FileSystemLoader('ops/templates'), trim_blocks=True)
+        template = environment.get_template('haven-wishlist-language.service.j2')
+        for values, expected in (({}, ''), ({'haven_web_preview_uid': 1234}, ' --category-client-uid 1234')):
+            unit = template.render(**values)
+            self.assertIn('language.json' + expected + '\nRestart=on-failure\n', unit)
+
     def test_systemd_verifies_the_rendered_units(self):
         # Substitute only the executable path; the real verifier parses all hardening directives.
         with tempfile.TemporaryDirectory() as temporary:
@@ -196,6 +203,9 @@ class OperationsTests(unittest.TestCase):
                 source = Path('ops/templates') / (name + '.j2')
                 unit = root / name
                 text = source.read_text()
+                if name == 'haven-wishlist-language.service':
+                    text = Environment(loader=FileSystemLoader('ops/templates'), trim_blocks=True).get_template(source.name).render(
+                        haven_web_preview_uid=1234)
                 if name.startswith('haven-wishlist-observability.'):
                     text = Environment(loader=FileSystemLoader('ops/templates'), trim_blocks=True).get_template(source.name).render(
                         haven_wishlist_deferred_hosts=['www.alza.cz'])
