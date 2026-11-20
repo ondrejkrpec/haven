@@ -355,8 +355,20 @@ function stopPreview() {
   previewRequest = null;
 }
 
+function shortProductName(name) {
+  const normalized = name.trim().replace(/\s+/g, ' ');
+  const headline = normalized.split(/\s+(?:[-–—]|\|)\s+/, 1)[0];
+  const title = normalized.length > 70 && headline.length >= 12 ? headline : normalized;
+  if (title.length <= 70) return title;
+  const fragment = title.slice(0, 69);
+  const space = fragment.lastIndexOf(' ');
+  return (space >= 45 ? fragment.slice(0, space) : fragment).trimEnd() + '…';
+}
+
 function showPreview(status, message, product = null) {
   const panel = $('#product-preview'), content = $('#preview-product'), action = $('#preview-action');
+  const canSave = ['ready', 'unsupported', 'retry_later', 'unavailable', 'manual'].includes(status);
+  const extra = $('#editor-fields .extra-fields'), submit = $('#editor-submit');
   panel.hidden = !status;
   panel.dataset.state = status;
   content.hidden = !product;
@@ -369,8 +381,10 @@ function showPreview(status, message, product = null) {
   setText($('#preview-message'), product ? '' : message);
   $('#preview-message').hidden = Boolean(product);
   setText($('#preview-announcement'), product ? `${message} ${content.textContent.replace(/\s+/g, ' ').trim()}` : message);
-  setText($('#editor-fields .extra-fields summary'), product ? 'Upravit název a další údaje' : 'Nepovinné údaje');
-  setText($('#editor-submit'), product ? 'Přidat položku' : 'Uložit odkaz');
+  extra.hidden = submit.hidden = !canSave;
+  submit.disabled = !canSave;
+  setText(extra.querySelector('summary'), product ? 'Upravit název a další údaje' : 'Doplnit údaje ručně');
+  setText(submit, product ? 'Přidat položku' : 'Uložit odkaz');
 }
 
 function schedulePreview(input, delay = 450) {
@@ -387,6 +401,8 @@ function schedulePreview(input, delay = 450) {
       if (url.length > 4096 || new URL(url).hash) throw new Error();
     } catch {
       showPreview('invalid', 'Vlož úplný HTTPS odkaz na produkt bez přihlašovacích údajů a části za znakem #.');
+      input.setAttribute('aria-invalid', 'true');
+      input.setAttribute('aria-describedby', 'field-help-url preview-message');
       return;
     }
     const controller = new AbortController();
@@ -396,10 +412,11 @@ function schedulePreview(input, delay = 450) {
       const result = await api.preview(url, controller.signal);
       if (controller.signal.aborted) return;
       if (result.status === 'ready') {
-        if (!name.value.trim()) name.value = suggestedName = result.name;
+        const title = shortProductName(result.name);
+        if (!name.value.trim()) name.value = suggestedName = title;
         const shop = new URL(url).hostname.replace(/^www\./, '');
         showPreview('ready', result.price == null ? 'Náhled je připravený. Obchod neposkytl aktuální cenu.'
-          : 'Náhled je připravený. Údaje můžeš upravit před přidáním.', {...result, shop});
+          : 'Náhled je připravený. Údaje můžeš upravit před přidáním.', {...result, name: title, shop});
       } else if (result.status === 'unsupported') {
         showPreview('unsupported', 'Pro tento obchod náhled zatím není dostupný. Odkaz můžeš uložit ručně.');
       } else if (result.status === 'retry_later') {
@@ -421,6 +438,7 @@ function openEditor(action, id = null, purchaseId = null) {
   if (formBusy) return;
   stopPreview();
   suggestedName = '';
+  $('#editor-submit').hidden = $('#editor-submit').disabled = false;
   editorReturn=focusSelector(document.activeElement);
   formAction=action;formEntry=id;formPurchase=purchaseId;
   formRequestId=live?api.requestId():null;formVersion=id?entryById(id)?.version:null;
@@ -447,6 +465,7 @@ function openEditor(action, id = null, purchaseId = null) {
       `<label class="form-field"><span>Poznámka</span><textarea name="note" maxlength="2000">${escape(entry?.note||'')}</textarea></label>`;
     $('#editor-fields').innerHTML = url + (action === 'add'
       ? `${live ? previewPanel : ''}<details class="extra-fields"><summary>Nepovinné údaje</summary><div>${extra}</div></details>` : extra);
+    if (live && action === 'add') showPreview('', '');
   }
   if(!$('#editor').open)$('#editor').showModal();
   $('#editor-fields input:not([readonly])')?.focus({preventScroll:true});
@@ -465,10 +484,10 @@ $('#editor-form').addEventListener('input', event => {
 });
 $('#editor-form').addEventListener('submit',async event=>{
   event.preventDefault();
-  if (formBusy) return;
+  if (formBusy || $('#editor-submit').disabled) return;
   const data=Object.fromEntries(new FormData(event.target));
   const submit = $('#editor-submit');
-  let label = submit.textContent;
+  const label = submit.textContent;
   const url = event.target.elements.url;
   const inputs = [...$('#editor-fields').querySelectorAll('input,select,textarea')].filter(input => !input.disabled);
   let invalid = null, addedId = null;
@@ -478,10 +497,6 @@ $('#editor-form').addEventListener('submit',async event=>{
       data.url = validURL(data.url);
       invalid = null;
       stopPreview();
-      if ($('#product-preview')?.dataset.state === 'loading') {
-        showPreview('manual', 'Náhled je přeskočený. Odkaz můžeš uložit ručně.');
-        label = submit.textContent;
-      }
     }
     formBusy = true;
     submit.disabled = true;

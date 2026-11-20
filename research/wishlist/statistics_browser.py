@@ -37,8 +37,11 @@ class QuietHandler(WSGIRequestHandler):
 async def fixture_offer(payload, **_):
     if payload["url"].endswith("/unavailable"):
         return {"status": "failed", "http_status": None, "retry_after": 0}
+    name = "Rozpoznaný testovací produkt"
+    if payload["url"].endswith("/synthetic-preview"):
+        name = "Testovací pánev, ø 26 cm - vícevrstvá nerezová pánev s nepřilnavým keramickým povrchem"
     return {"status": "ok", "http_status": 200, "retry_after": 0,
-            "offer": {"name": "Rozpoznaný testovací produkt", "price": None, "availability": "out_of_stock"}}
+            "offer": {"name": name, "price": None, "availability": "out_of_stock"}}
 
 
 def fixture(path):
@@ -285,9 +288,23 @@ def main():
                     url = page.locator('#editor [name="url"]')
                     expect(url).to_be_focused()
                     expect(page.locator('#editor [name="name"]')).not_to_be_visible()
+                    disclosure = page.locator(".extra-fields summary")
+                    expect(disclosure).not_to_be_visible()
+                    expect(page.locator("#editor-submit")).to_be_disabled()
+                    expect(page.locator("#editor-submit")).not_to_be_visible()
                     page.screenshot(path=str(args.output / "wishlist-add-mobile.png"), animations="disabled")
+                    url.fill("http://shop.example.com/invalid")
+                    page.clock.run_for(500)
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "invalid")
+                    expect(url).to_have_attribute("aria-invalid", "true")
+                    expect(url).to_be_focused()
+                    url.fill("https://www.fabini.cz/products/unavailable")
+                    expect(page.locator("#editor-submit")).to_be_disabled()
+                    page.locator("#editor-form").evaluate("(form) => form.requestSubmit()")
+                    page.clock.run_for(500)
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "unavailable")
+                    expect(page.locator("#preview-action")).to_have_text("Zkusit náhled znovu")
                     if custom_select:
-                        disclosure = page.locator(".extra-fields summary")
                         disclosure.click()
                         category = page.get_by_role("combobox", name="Kategorie").last
                         category.focus()
@@ -298,20 +315,10 @@ def main():
                         expect(category).to_be_focused()
                         expect(page.locator("#editor")).to_be_visible()
                         disclosure.click()
-                    url.fill("http://shop.example.com/invalid")
-                    page.clock.run_for(500)
-                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "invalid")
-                    page.locator("#editor-submit").click()
-                    expect(url).to_have_attribute("aria-invalid", "true")
-                    expect(url).to_be_focused()
-                    url.fill("https://www.fabini.cz/products/unavailable")
-                    page.clock.run_for(500)
-                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "unavailable")
-                    expect(page.locator("#preview-action")).to_have_text("Zkusit náhled znovu")
                     url.fill("https://www.intimissimi.com/cz/product/synthetic-preview")
                     page.clock.run_for(500)
                     expect(page.locator("#product-preview")).to_have_attribute("data-state", "ready")
-                    expect(page.locator("#preview-product")).to_contain_text("Rozpoznaný testovací produkt")
+                    expect(page.locator("#preview-product strong")).to_have_text("Testovací pánev, ø 26 cm")
                     expect(page.locator("#preview-product")).to_contain_text("Cena není k dispozici")
                     expect(page.locator("#editor-submit")).to_have_text("Přidat položku")
                     assert "web.add" not in operations
@@ -319,7 +326,7 @@ def main():
                     page.screenshot(path=str(args.output / "wishlist-product-preview-mobile.png"), animations="disabled")
                     page.locator(".extra-fields summary").click()
                     name = page.locator('#editor [name="name"]')
-                    expect(name).to_have_value("Rozpoznaný testovací produkt")
+                    expect(name).to_have_value("Testovací pánev, ø 26 cm")
                     name.fill("Vlastní název položky")
                     # Hold an older response open even after its request has finished
                     # to verify the UI guard independently of native fetch abortion.
@@ -341,6 +348,11 @@ def main():
                     page.clock.run_for(500)
                     expect(page.locator("html")).to_have_attribute("data-old-preview-held", "true")
                     expect(page.locator("#product-preview")).to_have_attribute("data-state", "loading")
+                    expect(page.locator("#editor-submit")).to_be_disabled()
+                    page.keyboard.press("Enter")
+                    page.locator("#editor-form").evaluate("(form) => form.requestSubmit()")
+                    expect(page.locator("#editor")).to_be_visible()
+                    assert "web.add" not in operations
                     url.fill("https://shop.example.com/new-synthetic-item")
                     page.clock.run_for(500)
                     expect(page.locator("#product-preview")).to_have_attribute("data-state", "unsupported")
