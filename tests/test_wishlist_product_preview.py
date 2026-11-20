@@ -11,7 +11,7 @@ from unittest.mock import Mock
 from types import SimpleNamespace
 
 from scripts.wishlist_interpreter import CategoryServer
-from scripts.wishlist_model import suggest_category
+from scripts.wishlist_model import category_login, suggest_category
 from scripts.wishlist_product_preview import PreviewServer
 from scripts.wishlist_web_gateway import exchange
 
@@ -22,6 +22,15 @@ def request(url):
 
 
 class PreviewTests(unittest.IsolatedAsyncioTestCase):
+    def test_category_login_uses_latest_explicit_wishlist_grant_on_pinned_origin(self):
+        origin = "https://provider.example/route"
+        good = {"label": "wishlist", "auth_type": "oauth", "source": "manual:oauth", "id": "new",
+                "access_token": "synthetic"}
+        entries = [good | {"id": "old"}, good, good | {"base_url": "https://different.example"},
+                   good | {"label": "personal"}, good | {"source": "singleton"}]
+        self.assertEqual(category_login("openai-codex", origin, entries), good)
+        self.assertIsNone(category_login("openai-codex", origin, entries[2:]))
+
     async def test_category_only_accepts_public_title_and_checks_taxonomy(self):
         backend = AsyncMock()
         backend.interpret.return_value = {"category": "home"}
@@ -47,7 +56,7 @@ class PreviewTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sent["messages"][1]["role"], "user")
         self.assertEqual(json.loads(sent["messages"][1]["content"]), {"name": "Pánev"})
         self.assertEqual(sent["tools"], [])
-        self.assertEqual(sent["model"], "gpt-5.4-mini")
+        self.assertEqual(sent["model"], "gpt-6.1-terra")
         self.assertEqual(sent["extra_body"], {"reasoning": {"enabled": False}})
         choice.message.content = "home and gifts"
         self.assertEqual(suggest_category(client, "Pánev"), {"category": None})
