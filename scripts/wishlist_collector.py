@@ -79,7 +79,7 @@ async def run_fetch_process(payload, *, timeout, preview=False):
         if process.returncode != 0:
             return failure("network_failed")
         result = decode(output)
-        validate_result(result)
+        validate_result({key: value for key, value in result.items() if key != "variant_url"} if preview else result)
         return result
     except TimeoutError:
         return failure("fetch_timeout")

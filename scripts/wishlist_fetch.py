@@ -192,7 +192,7 @@ def retry_delay(value, now=None):
         return 0
 
 
-def fetch(url, adapter):
+def fetch(url, adapter, *, preview=False):
     try:
         host = source_host(url)
         if adapter == "unsupported":
@@ -247,7 +247,7 @@ def fetch(url, adapter):
                     from scripts.wishlist_intimissimi import public_offer
                     candidate = {"status": "extracted", "evidence": ["jsonld"], "offer": public_offer(html, url)}
                 else:
-                    candidate = extract(html, url)
+                    candidate = extract(html, url, resolve_fabini_variant=preview and adapter == "fabini-jsonld-v1")
                 required = REQUIRED_EVIDENCE[adapter]
                 if candidate["status"] != "extracted" or required not in candidate.get("evidence", []):
                     return failure("offer_unverified", http_status=status)
@@ -255,6 +255,8 @@ def fetch(url, adapter):
                 result = {"status": "ok", "reason": reason, "http_status": 200,
                           "retry_after": retry, "offer": candidate["offer"]}
                 validate_result(result)
+                if "variant_url" in candidate:
+                    result["variant_url"] = candidate["variant_url"]
                 return result
             finally:
                 client.close()
@@ -271,7 +273,7 @@ def main():
     try:
         request = decode(sys.stdin.buffer.read(MAX_FRAME + 1))
         if sys.argv[1:] == ["--preview"] and set(request) == {"url", "adapter"}:
-            result = fetch(request["url"], request["adapter"])
+            result = fetch(request["url"], request["adapter"], preview=True)
         elif (sys.argv[1:] or set(request) != {"url", "job"} or not isinstance(request["url"], str)
                 or hashlib.sha256(request["url"].encode()).hexdigest() != request["job"]["url_sha256"]):
             raise ValueError("fetch_job")

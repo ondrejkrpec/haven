@@ -114,6 +114,36 @@ class FetchTests(unittest.TestCase):
             self.assertEqual(headers["Accept-Encoding"], "identity")
             clients[0].close.assert_called_once()
 
+    def test_fabini_preview_resolves_the_single_variant_and_collection_stays_exact(self):
+        base = URL.split("?")[0]
+        variant = base + "?variant=123456"
+        record = product(url=variant) | {"url": base}
+        html = (f'<link rel="canonical" href="{base}">' + page(record)).encode()
+        with self.responses((200, {"Content-Type": "text/html"}, html)):
+            result = fetch.fetch(base + "?utm_source=synthetic", ADAPTER, preview=True)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["variant_url"], variant)
+        self.assertEqual(result["offer"]["price"], "249.90")
+        for requested in (base, base + "?variant=654321"):
+            with self.subTest(requested=requested), self.responses((200, {"Content-Type": "text/html"}, html)):
+                self.assertEqual(fetch.fetch(requested, ADAPTER, preview=requested != base)["reason"], "offer_unverified")
+        with self.responses((200, {"Content-Type": "text/html"}, html)):
+            exact = fetch.fetch(variant, ADAPTER)
+        self.assertEqual(exact["status"], "ok")
+        self.assertNotIn("variant_url", exact)
+
+    def test_fabini_preview_requires_an_unambiguous_variant_linked_to_the_canonical_product(self):
+        base = URL.split("?")[0]
+        variant = base + "?variant=123456"
+        canonical = f'<link rel="canonical" href="{base}">'
+        main = product(url=variant) | {"url": base}
+        other = product(url=base + "?variant=654321") | {"url": base + "?variant=654321"}
+        for html in (page(main), canonical + page(product(url=variant)), canonical + page([main, other]),
+                     canonical + page(product(url=variant + "&size=synthetic") | {"url": base}),
+                     canonical + page(product(url=variant.replace("/synthetic?", "/different?")) | {"url": base})):
+            with self.subTest(html=html), self.responses((200, {"Content-Type": "text/html"}, html.encode())):
+                self.assertEqual(fetch.fetch(base, ADAPTER, preview=True)["reason"], "offer_unverified")
+
     def test_redirect_rechecks_identity_and_refuses_other_hosts_private_ips_and_variants(self):
         for target in ("http://www.fabini.cz/products/synthetic?variant=two", "https://127.0.0.1/",
                        "https://other.example/products/synthetic?variant=two", "?variant=one",

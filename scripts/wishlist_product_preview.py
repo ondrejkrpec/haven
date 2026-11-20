@@ -65,6 +65,8 @@ class PreviewServer(PeerServer):
             return result | {"data": {"status": "retry_later" if delay else "unavailable"}}
         offer = outcome["offer"]
         data = {"status": "ready", "name": offer["name"], "price": offer["price"], "availability": offer["availability"]}
+        if "variant_url" in outcome:
+            data["variant_url"] = outcome["variant_url"]
         category = await self.category_for(offer["name"])
         if category and category != "uncategorized":
             data["category"] = category

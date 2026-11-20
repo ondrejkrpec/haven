@@ -197,7 +197,8 @@
             owner: root
             group: root
             mode: '0644'
-          loop: [wishlist_product_preview, wishlist_collector, wishlist_fetch, wishlist_interpreter, wishlist_model]
+          loop: [wishlist_product_preview, wishlist_collector, wishlist_fetch, wishlist_extract,
+                 wishlist_interpreter, wishlist_model]
 
         - name: Install schemas in both public code roots
           ansible.builtin.copy:
