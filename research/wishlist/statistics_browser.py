@@ -160,6 +160,31 @@ def main():
                     expect(page.locator(".summary-card")).to_have_count(0)
                     expect(page.get_by_text("Znovu skladem")).to_be_visible()
                     expect(page.get_by_text("Zlevnilo o")).to_be_visible()
+                    sort = page.locator("#sort")
+                    page.locator("#filter-category").focus()
+                    page.keyboard.press("Tab")
+                    expect(sort).to_be_focused()
+                    assert sort.evaluate("(el) => getComputedStyle(el).outlineStyle") == "solid"
+                    custom_select = page.evaluate(
+                        "CSS.supports('appearance', 'base-select') && CSS.supports('selector(::picker(select))')"
+                    )
+                    if custom_select:
+                        assert sort.evaluate("(el) => getComputedStyle(el).appearance") == "base-select"
+                        page.keyboard.press("Space")
+                        expect(sort).to_have_css("appearance", "base-select")
+                        assert sort.evaluate("(el) => el.matches(':open')")
+                        page.keyboard.press("Escape")
+                        expect(sort).to_be_focused()
+                        assert not sort.evaluate("(el) => el.matches(':open')")
+                        page.keyboard.press("Space")
+                        page.keyboard.press("End")
+                        page.keyboard.press("Enter")
+                        expect(sort).to_have_value("newest")
+                        expect(page.locator(".item-title").first).to_have_text("Testovací pánev")
+                        sort.select_option("recent")
+                    page.emulate_media(reduced_motion="reduce")
+                    assert page.locator("#add-button").evaluate("(el) => getComputedStyle(el).transitionDuration") == "0s, 0s, 0s"
+                    page.emulate_media(reduced_motion="no-preference")
                     page.get_by_role("button", name="Zlevnění · 1").click()
                     expect(page.locator("#visible-count")).to_have_text("1")
                     page.locator("#reset-filters").click()
@@ -193,7 +218,7 @@ def main():
                         expect(page.locator("#purchase-statistics")).to_have_count(0)
                         if width in (320, 390):
                             price = page.locator(".product-price").first.bounding_box()
-                            assert price and price["y"] + price["height"] < height
+                            assert price and price["y"] + price["height"] < height, (width, height, price)
                         if width in (1440, 390):
                             page.screenshot(path=str(args.output / f"wishlist-{width}.png"), full_page=True)
                     kettle = page.get_by_role("button", name="Testovací konvice", exact=True)
@@ -215,9 +240,11 @@ def main():
                     page.keyboard.press("Escape")
                     expect(kettle).to_be_focused()
                     page.get_by_role("button", name="Testovací pánev", exact=True).click()
-                    expect(page.locator(".chart-empty")).to_contain_text("Jediná naměřená cena")
+                    expect(page.locator(".chart-empty")).to_contain_text("První cena zaznamenána")
                     expect(page.locator("svg.chart")).to_have_count(0)
+                    expect(page.locator(".detail-stat-grid")).to_have_count(0)
                     expect(page.locator(".detail-history")).to_contain_text("Rozsah")
+                    page.screenshot(path=str(args.output / "wishlist-detail-mobile.png"), animations="disabled")
                     page.keyboard.press("Escape")
                     page.get_by_role("button", name="Testovací lampa", exact=True).click()
                     expect(page.locator(".purchase-card")).to_have_count(4)
@@ -247,6 +274,19 @@ def main():
                     url = page.locator('#editor [name="url"]')
                     expect(url).to_be_focused()
                     expect(page.locator('#editor [name="name"]')).not_to_be_visible()
+                    page.screenshot(path=str(args.output / "wishlist-add-mobile.png"), animations="disabled")
+                    if custom_select:
+                        disclosure = page.locator(".extra-fields summary")
+                        disclosure.click()
+                        category = page.get_by_role("combobox", name="Kategorie").last
+                        category.focus()
+                        page.keyboard.press("Space")
+                        assert category.evaluate("(el) => el.matches(':open')")
+                        page.keyboard.press("Escape")
+                        assert not category.evaluate("(el) => el.matches(':open')")
+                        expect(category).to_be_focused()
+                        expect(page.locator("#editor")).to_be_visible()
+                        disclosure.click()
                     url.fill("http://shop.example.com/invalid")
                     page.locator("#editor-submit").click()
                     expect(url).to_have_attribute("aria-invalid", "true")

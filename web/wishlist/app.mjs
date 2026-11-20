@@ -281,7 +281,7 @@ function history(entry, stats, now) {
   if (!points.length) return '<p class="chart-empty">V tomto období nemáme ověřenou cenu.</p>' + coverage;
   const variable = points.some(point => point.cents !== points[0].cents);
   const summary = variable ? chart(entry, points) :
-    `<p class="chart-empty">${count === 1 ? 'Jediná naměřená cena' : days === 1 ? 'Jeden měřený den' : 'Denní průměr beze změny'} ·
+    `<p class="chart-empty">${count === 1 ? 'První cena zaznamenána' : days === 1 ? 'Jeden měřený den' : 'Denní průměr beze změny'} ·
       ${money(Math.round(points[0].cents))}</p>`;
   const base = historyCoverage(entry, now, 90);
   return `${summary}${coverage}
@@ -289,7 +289,7 @@ function history(entry, stats, now) {
       <table class="daily-table"><caption class="sr-only">Denní průměry ceny</caption><thead><tr><th scope="col">Den</th><th scope="col">Cena</th></tr></thead>
       <tbody>${points.map(p => `<tr><td>${calendarDate(p.date)}</td><td>${money(Math.round(p.cents))}</td></tr>`).join('')}</tbody></table>
     </details>
-    ${stats.average == null ? '' : `<div class="detail-stat-grid">
+    ${stats.average == null || base.count < 2 || stats.average === stats.minimum ? '' : `<div class="detail-stat-grid">
       <div class="detail-stat"><small>Průměr z měření</small><strong>${money(stats.average)}</strong></div>
       <div class="detail-stat"><small>Naměřené minimum</small><strong>${money(stats.minimum)}</strong></div></div>
       <p class="chart-caption">Srovnávací období ${calendarDate(base.start)} – ${calendarDate(base.end)} · Dní s cenou: ${base.days}</p>`}`;
