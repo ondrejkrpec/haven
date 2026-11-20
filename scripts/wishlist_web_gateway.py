@@ -12,6 +12,7 @@ import secrets
 import socket
 import stat
 import struct
+from threading import BoundedSemaphore
 import time
 from urllib.parse import urlsplit
 
@@ -37,7 +38,8 @@ OPERATIONS = {"web." + value for value in ("list", "get", "history", "purchases"
 
 def load_config(path):
     config = decode(path.read_bytes())
-    if (set(config) != {"schema_version", "origin", "owner_login", "socket", "service_uid", "http_socket"}
+    required = {"schema_version", "origin", "owner_login", "socket", "service_uid", "http_socket"}
+    if (not required <= set(config) or set(config) - required - {"preview"}
             or type(config["schema_version"]) is not int or config["schema_version"] != 1
             or not isinstance(config["origin"], str) or not isinstance(config["owner_login"], str)
             or not re.fullmatch(r"[A-Za-z0-9@._+\-]{1,254}", config["owner_login"])
@@ -49,13 +51,21 @@ def load_config(path):
         raise ValueError("web_origin")
     socket_path(config["socket"])
     socket_path(config["http_socket"])
+    if "preview" in config:
+        preview = config["preview"]
+        if (not isinstance(preview, dict) or set(preview) != {"socket", "service_uid"}
+                or type(preview["service_uid"]) is not int or not 1 <= preview["service_uid"] < 2**31
+                or preview["service_uid"] == config["service_uid"]
+                or preview["socket"] in (config["socket"], config["http_socket"])):
+            raise ValueError("preview_config")
+        socket_path(preview["socket"])
     return config
 
 
-def exchange(config, message):
-    deadline = time.monotonic() + 5
+def exchange(config, message, *, timeout=5):
+    deadline = time.monotonic() + timeout
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-        client.settimeout(5)
+        client.settimeout(timeout)
         client.connect(config["socket"])
         if peer_uid(client) != config["service_uid"]:
             raise PermissionError("domain_identity")
@@ -81,8 +91,10 @@ def exchange(config, message):
 
 
 class Application:
-    def __init__(self, config, *, transport=exchange, clock=time.time):
+    def __init__(self, config, *, transport=exchange, preview_transport=exchange, clock=time.time):
         self.config, self.transport, self.clock = config, transport, clock
+        self.preview_transport = preview_transport
+        self.preview_slots = BoundedSemaphore(2)
         self.secret = secrets.token_bytes(32)
         self.host = urlsplit(config["origin"]).netloc
         self.assets = {}
@@ -140,6 +152,17 @@ class Application:
         except (KeyError, ValueError):
             return None
 
+    def product_preview(self, request):
+        endpoint = self.config.get("preview")
+        if endpoint is None:
+            return {"code": "ok", "data": {"status": "unsupported"}}
+        if not self.preview_slots.acquire(blocking=False):
+            return {"code": "ok", "data": {"status": "retry_later"}}
+        try:
+            return self.preview_transport(endpoint, request, timeout=10)
+        finally:
+            self.preview_slots.release()
+
     def __call__(self, environ, start_response):
         extra = []
 
@@ -193,9 +216,12 @@ class Application:
             if len(raw) != size:
                 raise ValueError("body")
             request = decode(raw)
-            if request.get("operation") not in OPERATIONS:
+            if request.get("operation") == "web.preview":
+                result = self.product_preview(request)
+            elif request.get("operation") in OPERATIONS:
+                result = self.transport(self.config, request)
+            else:
                 return respond("403 Forbidden", {"code": "denied"})
-            result = self.transport(self.config, request)
             code = {"ok": "200 OK", "needs_clarification": "200 OK", "conflict": "409 Conflict",
                     "invalid_request": "400 Bad Request", "not_found": "404 Not Found", "denied": "403 Forbidden"}.get(result.get("code"), "503 Service Unavailable")
             return respond(code, result)

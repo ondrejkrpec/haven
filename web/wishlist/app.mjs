@@ -42,6 +42,7 @@ else try {
 let selected = null, range = 90, formAction = null, formEntry = null, formPurchase = null, undoAction = null;
 let toastTimer, loading = live, loadError = null, detailGeneration = 0, formRequestId = null, formVersion = null;
 let eventFilter = '', detailError = null, detailReturn = null, editorReturn = null, formBusy = false, listGeneration = 0;
+let previewTimer, previewRequest, suggestedName = '';
 const pendingActions = new Map(), refreshing = new Set();
 const rendered = new WeakMap();
 const failedCheck = entry => ['failed','blocked','stale'].includes(entry.collection);
@@ -341,8 +342,85 @@ function field(label, name, value = '', attributes = '', help = '') {
 function select(label, name, choices, value) {
   return `<label class="form-field"><span>${label}</span><select name="${name}">${choices.map(([v,l])=>`<option value="${escape(v)}" ${v===value?'selected':''}>${escape(l)}</option>`).join('')}</select></label>`;
 }
+const previewPanel = `<p class="sr-only" id="preview-announcement" role="status"></p>
+<section class="product-preview" id="product-preview" aria-label="Náhled produktu" hidden>
+  <p id="preview-message"></p>
+  <div id="preview-product" class="preview-product" hidden></div>
+  <button type="button" class="text-button" id="preview-action" hidden></button>
+</section>`;
+
+function stopPreview() {
+  clearTimeout(previewTimer);
+  previewRequest?.abort();
+  previewRequest = null;
+}
+
+function showPreview(status, message, product = null) {
+  const panel = $('#product-preview'), content = $('#preview-product'), action = $('#preview-action');
+  panel.hidden = !status;
+  panel.dataset.state = status;
+  content.hidden = !product;
+  content.innerHTML = product ? `<span class="thumbnail" aria-hidden="true">${icon('package')}</span>
+    <div><strong>${escape(product.name)}</strong><p>${escape(product.shop)}</p>
+    <p>${product.price == null ? 'Cena není k dispozici' : money(Math.round(Number(product.price) * 100))}
+      · ${stock(product.availability)}</p></div>` : '';
+  action.hidden = !['loading', 'unavailable', 'retry_later', 'manual'].includes(status);
+  setText(action, status === 'loading' ? 'Přeskočit náhled' : 'Zkusit náhled znovu');
+  setText($('#preview-message'), product ? '' : message);
+  $('#preview-message').hidden = Boolean(product);
+  setText($('#preview-announcement'), product ? `${message} ${content.textContent.replace(/\s+/g, ' ').trim()}` : message);
+  setText($('#editor-fields .extra-fields summary'), product ? 'Upravit název a další údaje' : 'Nepovinné údaje');
+  setText($('#editor-submit'), product ? 'Přidat položku' : 'Uložit odkaz');
+}
+
+function schedulePreview(input, delay = 450) {
+  stopPreview();
+  const name = input.form.elements.name;
+  if (suggestedName && name.value === suggestedName) name.value = '';
+  suggestedName = '';
+  showPreview('', '');
+  if (!input.value.trim()) return;
+  previewTimer = setTimeout(async () => {
+    let url;
+    try {
+      url = validURL(input.value);
+      if (url.length > 4096 || new URL(url).hash) throw new Error();
+    } catch {
+      showPreview('invalid', 'Vlož úplný HTTPS odkaz na produkt bez přihlašovacích údajů a části za znakem #.');
+      return;
+    }
+    const controller = new AbortController();
+    previewRequest = controller;
+    showPreview('loading', 'Načítám údaje o produktu…');
+    try {
+      const result = await api.preview(url, controller.signal);
+      if (controller.signal.aborted) return;
+      if (result.status === 'ready') {
+        if (!name.value.trim()) name.value = suggestedName = result.name;
+        const shop = new URL(url).hostname.replace(/^www\./, '');
+        showPreview('ready', result.price == null ? 'Náhled je připravený. Obchod neposkytl aktuální cenu.'
+          : 'Náhled je připravený. Údaje můžeš upravit před přidáním.', {...result, shop});
+      } else if (result.status === 'unsupported') {
+        showPreview('unsupported', 'Pro tento obchod náhled zatím není dostupný. Odkaz můžeš uložit ručně.');
+      } else if (result.status === 'retry_later') {
+        showPreview('retry_later', 'Náhled teď čeká. Můžeš to zkusit později nebo uložit odkaz ručně.');
+      } else {
+        showPreview('unavailable', 'Náhled se nepodařilo načíst. Zkus to znovu nebo ulož odkaz ručně.');
+      }
+    } catch {
+      if (!controller.signal.aborted) {
+        showPreview('unavailable', 'Náhled se nepodařilo načíst. Zkus to znovu nebo ulož odkaz ručně.');
+      }
+    } finally {
+      if (previewRequest === controller) previewRequest = null;
+    }
+  }, delay);
+}
+
 function openEditor(action, id = null, purchaseId = null) {
   if (formBusy) return;
+  stopPreview();
+  suggestedName = '';
   editorReturn=focusSelector(document.activeElement);
   formAction=action;formEntry=id;formPurchase=purchaseId;
   formRequestId=live?api.requestId():null;formVersion=id?entryById(id)?.version:null;
@@ -362,12 +440,13 @@ function openEditor(action, id = null, purchaseId = null) {
     $('#editor-submit').textContent=action==='add'?'Uložit odkaz':'Uložit změny';
     const url = field('Odkaz na produkt','url',entry?.url||'',`required type="url" maxlength="4096"
       spellcheck="false" placeholder="https://obchod.cz/produkt…" ${entry?'readonly':''}`,
-      entry?'Odkaz patří ke sledované variantě.':'Vlož HTTPS odkaz na konkrétní variantu. Haven zkusí zjistit název, cenu a dostupnost po uložení.');
+      entry ? 'Odkaz patří ke sledované variantě.' : live ? 'Vlož HTTPS odkaz na konkrétní variantu.'
+        : 'Vlož HTTPS odkaz na konkrétní variantu. Ukázka údaje z obchodů nenačítá.');
     const extra = field('Název','name',entry?.name||'',`${entry?'required':''} maxlength="200"`)+
       `<div class="form-pair">${select('Kategorie','category',CATEGORIES.map(c=>[c,c]),entry?.category||'Nezařazeno')}${select('Nákup','mode',[['once','Jednorázově'],['recurring','Opakovaně']],entry?.mode||'once')}</div>`+
       `<label class="form-field"><span>Poznámka</span><textarea name="note" maxlength="2000">${escape(entry?.note||'')}</textarea></label>`;
     $('#editor-fields').innerHTML = url + (action === 'add'
-      ? `<details class="extra-fields"><summary>Nepovinné údaje</summary><div>${extra}</div></details>` : extra);
+      ? `${live ? previewPanel : ''}<details class="extra-fields"><summary>Nepovinné údaje</summary><div>${extra}</div></details>` : extra);
   }
   if(!$('#editor').open)$('#editor').showModal();
   $('#editor-fields input:not([readonly])')?.focus({preventScroll:true});
@@ -379,6 +458,8 @@ function updatePurchaseTotal(){
 $('#editor-form').addEventListener('input', event => {
   event.target.removeAttribute('aria-invalid');
   if (event.target.name === 'url') event.target.setAttribute('aria-describedby', 'field-help-url');
+  if (live && formAction === 'add' && event.target.name === 'url') schedulePreview(event.target);
+  if (event.target.name === 'name') suggestedName = '';
   $('#form-error').hidden = true;
   updatePurchaseTotal();
 });
@@ -386,7 +467,8 @@ $('#editor-form').addEventListener('submit',async event=>{
   event.preventDefault();
   if (formBusy) return;
   const data=Object.fromEntries(new FormData(event.target));
-  const submit = $('#editor-submit'), label = submit.textContent;
+  const submit = $('#editor-submit');
+  let label = submit.textContent;
   const url = event.target.elements.url;
   const inputs = [...$('#editor-fields').querySelectorAll('input,select,textarea')].filter(input => !input.disabled);
   let invalid = null, addedId = null;
@@ -395,6 +477,11 @@ $('#editor-form').addEventListener('submit',async event=>{
       invalid = url;
       data.url = validURL(data.url);
       invalid = null;
+      stopPreview();
+      if ($('#product-preview')?.dataset.state === 'loading') {
+        showPreview('manual', 'Náhled je přeskočený. Odkaz můžeš uložit ručně.');
+        label = submit.textContent;
+      }
     }
     formBusy = true;
     submit.disabled = true;
@@ -446,6 +533,15 @@ function action(button){
   }catch(error){toast(error.message);}
 }
 document.addEventListener('click',event=>{
+  if (event.target.closest('#preview-action')) {
+    const input = $('#editor-form').elements.url;
+    input.focus({preventScroll:true});
+    if ($('#product-preview').dataset.state === 'loading') {
+      stopPreview();
+      showPreview('manual', 'Náhled je přeskočený. Odkaz můžeš uložit ručně.');
+    } else schedulePreview(input, 0);
+    return;
+  }
   const close=event.target.closest('[data-close]');
   if(close){
     if (close.dataset.close !== 'editor' || !formBusy) $('#'+close.dataset.close).close();
@@ -470,6 +566,8 @@ for(const dialog of document.querySelectorAll('dialog')){
 }
 $('#editor').addEventListener('cancel', event => { if (formBusy) event.preventDefault(); });
 $('#editor').addEventListener('close', () => {
+  if ($('#editor').open) return;
+  stopPreview();
   setText($('#editor-status'), '');
   if ($('#detail').open) {
     if (!$('#detail').contains(document.activeElement)) restoreFocus(editorReturn, '#detail-close', $('#detail'));

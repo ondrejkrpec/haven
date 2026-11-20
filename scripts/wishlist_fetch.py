@@ -270,10 +270,13 @@ def fetch(url, adapter):
 def main():
     try:
         request = decode(sys.stdin.buffer.read(MAX_FRAME + 1))
-        if (set(request) != {"url", "job"} or not isinstance(request["url"], str)
+        if sys.argv[1:] == ["--preview"] and set(request) == {"url", "adapter"}:
+            result = fetch(request["url"], request["adapter"])
+        elif (sys.argv[1:] or set(request) != {"url", "job"} or not isinstance(request["url"], str)
                 or hashlib.sha256(request["url"].encode()).hexdigest() != request["job"]["url_sha256"]):
             raise ValueError("fetch_job")
-        result = fetch(request["url"], request["job"]["adapter"])
+        else:
+            result = fetch(request["url"], request["job"]["adapter"])
     except Exception:
         result = failure("invalid_document")
     print(json.dumps(result, ensure_ascii=True))

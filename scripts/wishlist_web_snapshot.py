@@ -13,12 +13,17 @@ MODULES = ("wishlist_store", "wishlist_domain", "wishlist_contract", "wishlist_p
            "wishlist_model", "wishlist_telegram", "wishlist_collection")
 FILES = (
     *(f"{root}/scripts/{module}.py" for root in ("/opt/haven-wishlist", "/var/lib/haven/haven-tools") for module in MODULES),
+    *(f"/opt/haven-wishlist/scripts/{module}.py" for module in
+      ("wishlist_product_preview", "wishlist_collector", "wishlist_fetch")),
     "/opt/haven-wishlist/schemas/wishlist-request-v1.schema.json",
     "/var/lib/haven/haven-tools/schemas/wishlist-request-v1.schema.json",
     "/opt/haven-wishlist/requirements-web.txt",
     *(f"/usr/local/lib/haven-backup/scripts/{name}.py" for name in ("backup_runtime", "wishlist_store", "wishlist_operations", "wishlist_observability")),
     "/var/lib/haven-wishlist/config.json", "/etc/haven-wishlist-web.json",
-    *(f"/etc/systemd/system/{name}" for name in ("haven-wishlist.service", "haven-wishlist-web.service", "haven-wishlist-web.socket", "haven-wishlist-collector.path")),
+    *(f"/etc/systemd/system/{name}" for name in (
+        "haven-wishlist.service", "haven-wishlist-web.service", "haven-wishlist-web.socket",
+        "haven-wishlist-collector.path", "haven-wishlist-preview.service",
+    )),
     *(f"/opt/haven-wishlist/web/wishlist/{name}" for name in (
         "index.html", "styles.css", "app.mjs", "model.mjs", "api.mjs",
         "gambarino.woff2", "general-sans.woff2",

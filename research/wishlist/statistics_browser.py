@@ -5,6 +5,7 @@ separate environment. Never connects to the pilot or a product shop.
 """
 
 import argparse
+import asyncio
 from datetime import timedelta
 import json
 from pathlib import Path
@@ -21,6 +22,7 @@ from playwright.sync_api import expect, sync_playwright
 
 from scripts.wishlist_collection import Collection
 from scripts.wishlist_domain import Wishlist
+from scripts.wishlist_product_preview import PreviewServer
 from scripts.wishlist_web_domain import WebApplication
 from scripts.wishlist_web_gateway import Application, ROOT
 
@@ -30,6 +32,13 @@ VIEWPORTS = [(1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 900), (3
 class QuietHandler(WSGIRequestHandler):
     def log_message(self, *_):
         pass
+
+
+async def fixture_offer(payload, **_):
+    if payload["url"].endswith("/unavailable"):
+        return {"status": "failed", "http_status": None, "retry_after": 0}
+    return {"status": "ok", "http_status": 200, "retry_after": 0,
+            "offer": {"name": "Rozpoznaný testovací produkt", "price": None, "availability": "out_of_stock"}}
 
 
 def fixture(path):
@@ -111,9 +120,11 @@ def main():
                     shutil.copytree(ROOT, assets)
                     for name in ("gambarino.woff2", "general-sans.woff2"):
                         shutil.copyfile(args.fonts / name, assets / name)
+                preview = PreviewServer(root / "preview.sock", ingress_uid=1000, fetcher=fixture_offer)
                 with patch("scripts.wishlist_web_gateway.ROOT", assets):
-                    gateway = Application({"origin": origin, "owner_login": "owner@example.com"},
-                                          transport=lambda config, request: application.handle(request))
+                    gateway = Application({"origin": origin, "owner_login": "owner@example.com", "preview": {}},
+                                          transport=lambda config, request: application.handle(request),
+                                          preview_transport=lambda config, request, **_: asyncio.run(preview.respond(request)))
 
                 def mounted(environ, start):
                     environ["HTTP_TAILSCALE_USER_LOGIN"] = "owner@example.com"
@@ -288,16 +299,72 @@ def main():
                         expect(page.locator("#editor")).to_be_visible()
                         disclosure.click()
                     url.fill("http://shop.example.com/invalid")
+                    page.clock.run_for(500)
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "invalid")
                     page.locator("#editor-submit").click()
                     expect(url).to_have_attribute("aria-invalid", "true")
                     expect(url).to_be_focused()
+                    url.fill("https://www.fabini.cz/products/unavailable")
+                    page.clock.run_for(500)
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "unavailable")
+                    expect(page.locator("#preview-action")).to_have_text("Zkusit náhled znovu")
+                    url.fill("https://www.intimissimi.com/cz/product/synthetic-preview")
+                    page.clock.run_for(500)
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "ready")
+                    expect(page.locator("#preview-product")).to_contain_text("Rozpoznaný testovací produkt")
+                    expect(page.locator("#preview-product")).to_contain_text("Cena není k dispozici")
+                    expect(page.locator("#editor-submit")).to_have_text("Přidat položku")
+                    assert "web.add" not in operations
+                    expect(page.locator("#visible-count")).to_have_text("3")
+                    page.screenshot(path=str(args.output / "wishlist-product-preview-mobile.png"), animations="disabled")
+                    page.locator(".extra-fields summary").click()
+                    name = page.locator('#editor [name="name"]')
+                    expect(name).to_have_value("Rozpoznaný testovací produkt")
+                    name.fill("Vlastní název položky")
+                    # Hold an older response open even after its request has finished
+                    # to verify the UI guard independently of native fetch abortion.
+                    page.evaluate("""() => {
+                        const fetchNormally = window.fetch;
+                        window.fetch = async (url, options) => {
+                            const body = options?.body && JSON.parse(options.body);
+                            if (body?.operation !== 'web.preview' || !body.arguments.url.endsWith('/stale-preview')) {
+                                return fetchNormally(url, options);
+                            }
+                            const response = await fetchNormally(url, options);
+                            return new Promise(resolve => {
+                                window.releaseOldPreview = () => resolve(response);
+                                document.documentElement.dataset.oldPreviewHeld = 'true';
+                            });
+                        };
+                    }""")
+                    url.fill("https://www.momenti.cz/stale-preview")
+                    page.clock.run_for(500)
+                    expect(page.locator("html")).to_have_attribute("data-old-preview-held", "true")
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "loading")
                     url.fill("https://shop.example.com/new-synthetic-item")
+                    page.clock.run_for(500)
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "unsupported")
+                    page.evaluate("window.releaseOldPreview()")
+                    page.clock.run_for(100)
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "unsupported")
+                    expect(name).to_have_value("Vlastní název položky")
                     page.locator("#editor-submit").click()
                     expect(page.locator("#editor")).not_to_be_visible()
                     expect(page.locator("#detail")).to_be_visible()
                     expect(page.locator("#detail-content")).to_contain_text("Odkaz je uložený")
+                    expect(page.locator("#detail-title")).to_have_text("Vlastní název položky")
                     page.keyboard.press("Escape")
                     expect(page.locator("#visible-count")).to_have_text("4")
+                    page.locator("#add-button").click()
+                    url.fill("https://www.ifantazie.cz/synthetic-confirm")
+                    page.clock.run_for(500)
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "ready")
+                    assert operations.count("web.add") == 1
+                    page.locator("#editor-submit").click()
+                    expect(page.locator("#detail-title")).to_have_text("Rozpoznaný testovací produkt")
+                    page.keyboard.press("Escape")
+                    expect(page.locator("#visible-count")).to_have_text("5")
+                    assert operations.count("web.add") == 2
                     assert "web.statistics" not in operations
                     assert not errors, errors
                     (args.output / "wishlist-browser.json").write_text(json.dumps({
@@ -309,7 +376,8 @@ def main():
                         "checks": ["purchase summaries absent", "no automatic aggregate requests", "list filters",
                                    "search and empty result", "purchase history retained", "purchase recording",
                                    "price and stock changes", "sorting", "responsive rows", "keyboard focus",
-                                   "informative and single-price histories", "URL-first add", "no page errors"]}, indent=2) + "\n")
+                                   "informative and single-price histories", "pre-save preview and manual fallback",
+                                   "unavailable, partial and superseded previews", "no page errors"]}, indent=2) + "\n")
                     context.close()
                 finally:
                     browser.close()
