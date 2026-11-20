@@ -38,7 +38,7 @@ export async function command(operation, arguments_, id = requestId(), retry = t
   if (!csrf) await bootstrap();
   const response = await http('command', {method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},
     body:JSON.stringify({protocol_version:1,operation:'web.'+operation,arguments:arguments_,request_id:id}),
-    signal,timeout:operation === 'preview' ? 23000 : 12000});
+    signal,timeout:operation === 'preview' ? 26000 : 12000});
   if (response.code === 'csrf_expired' && retry && !signal?.aborted) {
     await bootstrap();
     return command(operation,arguments_,id,false,signal);
