@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "11f0f6545519f1e578c7851d6d1ff10d4e528bf0",
-  "checked_at_utc": "2026-11-20T10:05:11.728503+00:00",
+  "source_revision": "31e0a879c300bb9346667fd467ac5c48cde23e7b",
+  "checked_at_utc": "2026-11-20T13:28:01.207000+00:00",
   "files": [
     {
       "path": "_/css/site.css",
