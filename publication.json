@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "7bcc3a8421695daebb879397777bfe59fcb0dfc9",
-  "checked_at_utc": "2026-11-20T14:27:47.688589+00:00",
+  "source_revision": "85b5226f0a54c60e40fb2abd28dc577a620b6dea",
+  "checked_at_utc": "2026-11-20T15:07:33.607290+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -141,7 +141,7 @@
     },
     {
       "path": "haven/_attachments/schemas/wishlist-request-v1.schema.json",
-      "sha256": "10f23a79fb0d28715f7ec28d603775503f8325937fc4d22f0e806326b52e49d1"
+      "sha256": "bc757e9c2e4847f0fd9ecf94e7b34ce50b4e3a5e09e3dbe76a972a0016824bb0"
     },
     {
       "path": "haven/adr/0001-configuration-validation.html",
@@ -377,7 +377,7 @@
     },
     {
       "path": "haven/wishlist-web.html",
-      "sha256": "e7b26e5d67fc44234b11cb66c683ed3c6bcc541dbaff039345f7e7ffdcb94e61"
+      "sha256": "1789cd3d914322b6e3e32a3a8c916b11babf852e0188b7430d6ca0c1dcf733ce"
     },
     {
       "path": "index.html",
