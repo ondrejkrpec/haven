@@ -12,28 +12,42 @@ const messages = {
 };
 async function http(path, options = {}) {
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 12000);
+  const {signal, ...requestOptions} = options;
+  const abort = () => controller.abort();
+  if (signal?.aborted) abort();
+  signal?.addEventListener('abort', abort, {once:true});
   try {
-    const response = await fetch(new URL('/wishlist/api/' + path, location.origin), {...options, credentials:'same-origin', cache:'no-store', signal:controller.signal});
+    const response = await fetch(new URL('/wishlist/api/' + path, location.origin), {...requestOptions, credentials:'same-origin', cache:'no-store', signal:controller.signal});
     const result = await response.json();
     if (response.status >= 500) throw Object.assign(new Error(messages.unavailable), {code:'unavailable',uncertain:true});
     return result;
   } catch (error) {
     if (error.code) throw error;
     throw Object.assign(new Error(messages.unavailable), {code:'unavailable',uncertain:true});
-  } finally {clearTimeout(timer);}
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', abort);
+  }
 }
 export async function bootstrap() {
   const response = await http('bootstrap');
   if (response.code !== 'ok' || !/^[a-f0-9]{64}$/.test(response.csrf)) throw Object.assign(new Error(messages.denied), {code:'denied'});
   csrf = response.csrf;
 }
-export async function command(operation, arguments_, id = requestId(), retry = true) {
+export async function command(operation, arguments_, id = requestId(), retry = true, signal) {
   if (!csrf) await bootstrap();
   const response = await http('command', {method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},
-    body:JSON.stringify({protocol_version:1,operation:'web.'+operation,arguments:arguments_,request_id:id})});
-  if (response.code === 'csrf_expired' && retry) {await bootstrap();return command(operation,arguments_,id,false);}
+    body:JSON.stringify({protocol_version:1,operation:'web.'+operation,arguments:arguments_,request_id:id}),signal});
+  if (response.code === 'csrf_expired' && retry && !signal?.aborted) {
+    await bootstrap();
+    return command(operation,arguments_,id,false,signal);
+  }
   if (response.code !== 'ok') throw Object.assign(new Error(messages[response.code] || messages.unavailable), {code:response.code,uncertain:response.code==='unavailable'});
   return response;
+}
+export async function preview(url, signal) {
+  const response = await command('preview', {url}, requestId(), true, signal);
+  return response.data;
 }
 export function toUI(entry) {
   const observation = entry.latest_observation;

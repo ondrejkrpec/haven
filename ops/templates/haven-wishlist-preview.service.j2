@@ -1,0 +1,37 @@
+[Unit]
+Description=Haven read-only product preview worker
+
+[Service]
+Type=exec
+User=haven-preview
+Group=haven-wishlist-web
+WorkingDirectory=/opt/haven-wishlist
+RuntimeDirectory=haven-wishlist-preview
+RuntimeDirectoryMode=0750
+Environment=PYTHONPATH=/opt/haven-wishlist:/opt/haven-wishlist/vendor
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/haven-wishlist/native/venv/bin/python -B -m scripts.wishlist_product_preview --socket /run/haven-wishlist-preview/request.sock --client-uid {{ haven_web_client_uid }}
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=10
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectProc=invisible
+InaccessiblePaths=-/var/lib/haven -/var/lib/haven-wishlist -/var/lib/haven-language -/var/lib/haven-backup -/etc/haven-backup -/etc/haven-wishlist -/etc/haven-wishlist-web.json -/run/haven-wishlist-web-domain -/run/haven-wishlist-collection -/run/haven-wishlist
+MemoryMax=256M
+TasksMax=16
+StandardOutput=journal
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target

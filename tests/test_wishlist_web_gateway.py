@@ -6,7 +6,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from scripts.wishlist_web_gateway import Application, COOKIE, ROOT
 from waitress.proxy_headers import proxy_headers_middleware
@@ -55,6 +55,23 @@ class GatewayTests(unittest.TestCase):
         for headers in ({"HTTP_TAILSCALE_USER_LOGIN": ""}, {"HTTP_TAILSCALE_USER_LOGIN": "other@example.com"}, {"HTTP_HOST": "attacker.example.com"}):
             for path in ("/", "/api/bootstrap"):
                 self.assertEqual(self.call(path, headers=headers)["status"], "403 Forbidden")
+        self.assertEqual(self.calls, [])
+
+    def test_preview_has_owner_and_csrf_checks_and_never_reaches_writer(self):
+        endpoint = {"socket": "/run/test-preview/request.sock", "service_uid": 1200}
+        self.app.config["preview"] = endpoint
+        self.app.preview_transport = Mock(return_value={"code": "ok", "data": {"status": "unsupported"}})
+        self.bootstrap()
+        request = {"protocol_version": 1, "operation": "web.preview", "request_id": "1" * 32,
+                   "arguments": {"url": "https://shop.example.com/product"}}
+        headers = {"HTTP_ORIGIN": "https://haven.example.ts.net", "HTTP_X_CSRF_TOKEN": self.csrf}
+        for change in ({"HTTP_X_CSRF_TOKEN": "wrong"}, {"HTTP_TAILSCALE_USER_LOGIN": "other@example.com"}):
+            response = self.call("/api/command", method="POST", payload=request, headers=headers | change)
+            self.assertEqual(response["status"], "403 Forbidden")
+        self.app.preview_transport.assert_not_called()
+        response = self.call("/api/command", method="POST", payload=request, headers=headers)
+        self.assertEqual(response["status"], "200 OK")
+        self.app.preview_transport.assert_called_once_with(endpoint, request, timeout=10)
         self.assertEqual(self.calls, [])
 
     def test_cookie_is_secure_scoped_and_httponly_and_csrf_requires_origin(self):

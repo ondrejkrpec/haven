@@ -60,17 +60,22 @@ async def run_fetch(admission, *, timeout=40):
     job, url = admission["job"], admission["url"]
     if (set(job) != JOB_KEYS or hashlib.sha256(url.encode()).hexdigest() != job["url_sha256"]):
         raise ValueError("collector_admission")
+    return await run_fetch_process({"url": url, "job": job}, timeout=timeout)
+
+
+async def run_fetch_process(payload, *, timeout, preview=False):
     # Clean environment, fixed executable/module, no shell; OS isolation is supplied by the unit.
     environment = {"PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"}
     if "PYTHONPATH" in os.environ:
         environment["PYTHONPATH"] = os.environ["PYTHONPATH"]
+    arguments = ("--preview",) if preview else ()
     process = await asyncio.create_subprocess_exec(
-        sys.executable, "-B", "-m", "scripts.wishlist_fetch", env=environment,
+        sys.executable, "-B", "-m", "scripts.wishlist_fetch", *arguments, env=environment,
         stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
         start_new_session=True)
     try:
         async with asyncio.timeout(timeout):
-            output, _ = await process.communicate(json.dumps({"url": url, "job": job}).encode())
+            output, _ = await process.communicate(json.dumps(payload).encode())
         if process.returncode != 0:
             return failure("network_failed")
         result = decode(output)

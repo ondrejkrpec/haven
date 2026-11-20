@@ -118,6 +118,15 @@
             groups: haven-wishlist-web
             append: true
 
+        - name: Create the isolated preview identity
+          ansible.builtin.user:
+            name: haven-preview
+            group: haven-wishlist-web
+            system: true
+            create_home: false
+            home: /nonexistent
+            shell: /usr/sbin/nologin
+
         - name: Resolve domain and web UIDs and IPC group
           ansible.builtin.getent:
             database: "{{ item.database }}"
@@ -126,6 +135,7 @@
             - {database: passwd, key: haven-wishlist}
             - {database: passwd, key: haven-wishlist-web}
             - {database: group, key: haven-wishlist-web}
+            - {database: passwd, key: haven-preview}
           register: haven_web_identities
 
         - name: Select exact peer identities
@@ -133,6 +143,7 @@
             haven_web_domain_uid: "{{ haven_web_identities.results[0].ansible_facts.getent_passwd['haven-wishlist'][1] }}"
             haven_web_client_uid: "{{ haven_web_identities.results[1].ansible_facts.getent_passwd['haven-wishlist-web'][1] }}"
             haven_web_socket_gid: "{{ haven_web_identities.results[2].ansible_facts.getent_group['haven-wishlist-web'][1] }}"
+            haven_web_preview_uid: "{{ haven_web_identities.results[3].ansible_facts.getent_passwd['haven-preview'][1] }}"
 
         - name: Create root-owned HTTP code and asset directories
           ansible.builtin.file:
@@ -176,6 +187,15 @@
             group: haven
             mode: '0640'
           loop: "{{ haven_web_modules }}"
+
+        - name: Install the read-only preview worker and shared fetch process
+          ansible.builtin.copy:
+            src: "../scripts/{{ item }}.py"
+            dest: "/opt/haven-wishlist/scripts/{{ item }}.py"
+            owner: root
+            group: root
+            mode: '0644'
+          loop: [wishlist_product_preview, wishlist_collector, wishlist_fetch]
 
         - name: Install schemas in both public code roots
           ansible.builtin.copy:
@@ -259,18 +279,25 @@
             owner: root
             group: root
             mode: '0644'
-          loop: [haven-wishlist.service, haven-wishlist-web.socket, haven-wishlist-web.service, haven-wishlist-collector.path]
+          loop: [haven-wishlist.service, haven-wishlist-web.socket, haven-wishlist-web.service,
+                 haven-wishlist-collector.path, haven-wishlist-preview.service]
 
         - name: Verify installed units before loading them
           ansible.builtin.command:
             argv: [systemd-analyze, verify, /etc/systemd/system/haven-wishlist.service,
                    /etc/systemd/system/haven-wishlist-web.socket, /etc/systemd/system/haven-wishlist-web.service,
-                   /etc/systemd/system/haven-wishlist-collector.path]
+                   /etc/systemd/system/haven-wishlist-collector.path, /etc/systemd/system/haven-wishlist-preview.service]
           changed_when: false
 
         - name: Reload unit definitions
           ansible.builtin.systemd_service:
             daemon_reload: true
+
+        - name: Start the isolated preview worker
+          ansible.builtin.systemd_service:
+            name: haven-wishlist-preview.service
+            state: restarted
+            enabled: true
 
       always:
         - name: Resume every journalled writer and timer even after an installation error
