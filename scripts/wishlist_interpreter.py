@@ -79,7 +79,7 @@ class NativeWorker:
             stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
             start_new_session=True, limit=8192)
         try:
-            async with asyncio.timeout(6 if category else WORKER_TIMEOUT):
+            async with asyncio.timeout(10 if category else WORKER_TIMEOUT):
                 await write_frame(process.stdin, prepared)
                 process.stdin.close()
                 response = await read_frame(process.stdout)
@@ -113,7 +113,7 @@ class InterpreterServer(PeerServer):
 
 class CategoryServer(PeerServer):
     def __init__(self, path, *, client_uid, backend, clock=time.monotonic):
-        super().__init__(path, ingress_uid=client_uid, deadline=7, max_connections=1)
+        super().__init__(path, ingress_uid=client_uid, deadline=11, max_connections=1)
         self.backend = backend
         self.clock = clock
         self.next_attempt = 0
