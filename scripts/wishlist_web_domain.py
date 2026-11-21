@@ -239,6 +239,7 @@ class WebApplication:
             if named:
                 projected["label"] = named[0]
         return {**projected, "stock_change": entry.get("stock_change"),
+                **({"image": "/wishlist/api/image/i/" + entry["entry_id"][3:]} if entry.get("image_url") else {}),
                 "stats90": stats(self.domain, db, entry, self.domain.clock(), include_change=True)}
 
     def cursor(self, kind, entry_id, after, ceiling):
@@ -285,7 +286,7 @@ class WebApplication:
                 raise ValueError("web_request")
             request_id = digest(["web", self.domain.owner_id, request["request_id"]])
             operation, args = request["operation"][4:], request["arguments"]
-            read = operation in ("list", "get", "history", "purchases", "statistics")
+            read = operation in ("list", "get", "history", "purchases", "statistics", "photo")
             with self.domain.store.transaction() as db:
                 if read:
                     return self.read(db, request_id, operation, args)
@@ -323,12 +324,17 @@ class WebApplication:
             return result
         if set(args) - {"entry_id", "cursor"} or not ENTRY.fullmatch(args.get("entry_id", "")):
             raise ValueError("entry")
-        if "cursor" in args and (operation == "get" or not isinstance(args["cursor"], str) or len(args["cursor"]) > 512):
+        if "cursor" in args and (operation in ("get", "photo") or not isinstance(args["cursor"], str) or len(args["cursor"]) > 512):
             raise ValueError("cursor")
         entry = self.domain._entry(db, args["entry_id"])
         if entry is None:
             return self.domain.response(request_id, "not_found")
-        data = {"entry": self.project(db, entry)} if operation == "get" else self.page(db, operation, entry, args)
+        if operation == "photo":
+            if not entry.get("image_url"):
+                return self.domain.response(request_id, "not_found")
+            data = {"shop": entry["shop_host"], "url": entry["image_url"]}
+        else:
+            data = {"entry": self.project(db, entry)} if operation == "get" else self.page(db, operation, entry, args)
         return self.domain.response(request_id, "ok", data=data)
 
     def change(self, db, request_id, operation, args):

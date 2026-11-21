@@ -42,8 +42,8 @@ def _values(value, depth=0):
             _values(item, depth + 1)
 
 
-def decode(raw):
-    if not 0 < len(raw) <= MAX_FRAME:
+def decode(raw, *, limit=MAX_FRAME):
+    if not 0 < len(raw) <= limit:
         raise ValueError("frame_size")
     text = raw.decode("utf-8")
     depth, quoted, escaped = 0, False, False
@@ -70,10 +70,10 @@ def decode(raw):
     return value
 
 
-def encode(value):
+def encode(value, *, limit=MAX_FRAME):
     _values(value)
     raw = canonical(value).encode("utf-8")
-    if not isinstance(value, dict) or not 0 < len(raw) <= MAX_FRAME:
+    if not isinstance(value, dict) or not 0 < len(raw) <= limit:
         raise ValueError("frame_size")
     return struct.pack("!I", len(raw)) + raw
 
@@ -85,8 +85,8 @@ async def read_frame(reader):
     return decode(await reader.readexactly(size))
 
 
-async def write_frame(writer, value):
-    writer.write(encode(value))
+async def write_frame(writer, value, *, limit=MAX_FRAME):
+    writer.write(encode(value, limit=limit))
     await writer.drain()
 
 

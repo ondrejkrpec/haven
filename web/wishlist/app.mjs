@@ -13,6 +13,7 @@ const paths = {
   lock:'M6 10h12v11H6zM8 10V6a4 4 0 0 1 8 0v4',
   package:'m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 9v9m-8-13.5 8 4.5 8-4.5M8 5.25l8 4.5',
   check:'m5 12 4 4L19 6', external:'M14 3h7v7M21 3 11 13M10 3H3v18h18v-7',
+  sliders:'M4 7h16M4 17h16M8 4v6m8 4v6', bag:'M5 8h14l1 12H4L5 8Zm4 0V6a3 3 0 0 1 6 0v2',
   repeat:'m17 2 4 4-4 4M3 11V8a2 2 0 0 1 2-2h16M7 22l-4-4 4-4M21 13v3a2 2 0 0 1-2 2H3',
   muted:'M18 8a6 6 0 0 0-10-4M6 6a6 6 0 0 0 0 2c0 7-3 7-3 9h14M10 21h4M3 3l18 18',
   info:'M12 11v6M12 7h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',
@@ -22,7 +23,19 @@ const paths = {
 const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[name] || paths.info}"/></svg>`;
 function icons(root = document) { root.querySelectorAll('[data-icon]').forEach(node => node.replaceWith(document.createRange().createContextualFragment(icon(node.dataset.icon)))); }
 icons();
-const date = value => value ? new Intl.DateTimeFormat('cs-CZ', {timeZone:'Europe/Prague', day:'numeric', month:'numeric', year:'numeric'}).format(new Date(value)) : 'Zatím neověřeno';
+const dateFormat = new Intl.DateTimeFormat('cs-CZ', {timeZone:'Europe/Prague', day:'numeric', month:'numeric', year:'numeric'});
+const date = value => value ? dateFormat.format(new Date(value)) : 'Zatím neověřeno';
+const numberFormat = new Intl.NumberFormat('cs-CZ');
+const shopName = url => new URL(url).hostname.replace(/^www\./, '');
+function thumbnail(source, {large = false, lazy = false} = {}) {
+  // Only authenticated same-origin raster responses can replace the placeholder.
+  const image = /^\/wishlist\/api\/image\/[ip]\/[a-f0-9]{32}$/.test(source)
+    ? `<img src="${source}" alt="" width="160" height="160"${lazy ? ' loading="lazy"' : ''} decoding="async">` : '';
+  return `<span class="thumbnail${large ? ' thumbnail-large' : ''}" aria-hidden="true">${icon('package')}${image}</span>`;
+}
+document.addEventListener('error', event => {
+  if (event.target instanceof HTMLImageElement && event.target.closest('.thumbnail')) event.target.remove();
+}, true);
 const stock = value => ({in_stock:'Skladem',out_of_stock:'Nedostupné',unknown:'Neověřená dostupnost',preorder:'Předobjednávka',backorder:'Na objednávku',limited:'Omezená dostupnost',discontinued:'Prodej ukončen'}[value] || 'Neověřená dostupnost');
 const storageKey = 'haven.wishlist.preview.v1';
 let state, lastSaved = null;
@@ -44,6 +57,7 @@ let toastTimer, loading = live, loadError = null, detailGeneration = 0, formRequ
 let eventFilter = '', detailError = null, detailReturn = null, editorReturn = null, formBusy = false, listGeneration = 0;
 let previewTimer, previewRequest, suggestedName = '', suggestedCategory = '';
 const pendingActions = new Map(), refreshing = new Set();
+let toastReturn, highlightedId, highlightTimer;
 const rendered = new WeakMap();
 const failedCheck = entry => ['failed','blocked','stale'].includes(entry.collection);
 
@@ -80,11 +94,29 @@ function renderMarkup(container, markup, fallback) {
   if (hadFocus) restoreFocus(selector, fallback, container);
 }
 
+function dismissToast() {
+  clearTimeout(toastTimer);
+  const toast = $('#toast');
+  const hadFocus = toast.contains(document.activeElement);
+  toast.hidden = true;
+  undoAction = null;
+  if (hadFocus) restoreFocus(toastReturn, $('#detail').open ? '#detail-close' : '#list-title');
+}
+
 function toast(message, undo = null) {
-  clearTimeout(toastTimer); undoAction = undo;
-  $('#toast-message').textContent = message; $('#toast-undo').hidden = !undo; $('#toast').hidden = false;
+  const notice = $('#toast');
+  const host = [...document.querySelectorAll('dialog[open]')].at(-1) || document.body;
+  if (notice.parentElement !== host) host.append(notice, $('#toast-status'));
+  if (!notice.contains(document.activeElement)) toastReturn = focusSelector(document.activeElement);
+  clearTimeout(toastTimer);
+  undoAction = undo;
+  $('#toast-message').textContent = message;
+  $('#toast-undo').hidden = !undo;
+  notice.hidden = false;
   setText($('#toast-status'), message);
-  if (!undo) toastTimer = setTimeout(() => { $('#toast').hidden = true; }, 8000);
+  if (!undo) toastTimer = setTimeout(() => {
+    if (!notice.contains(document.activeElement) && !notice.matches(':hover')) dismissToast();
+  }, 8000);
 }
 function commit(change) {
   if (live) throw new Error("Produkční změny musí potvrdit server.");
@@ -166,9 +198,9 @@ function render() {
   const titles = {default:'V hledáčku', purchased:'Koupené položky', removed:'Odstraněné položky', all:'Všechny položky'};
   setText($('#list-label'), titles[f.state]);
   const groups = new Map();
-  for (const entry of entries) {
+  for (const [index, entry] of entries.entries()) {
     if (!groups.has(entry.category)) groups.set(entry.category, []);
-    groups.get(entry.category).push(row(entry, measured.get(entry.id)));
+    groups.get(entry.category).push(row(entry, measured.get(entry.id), index >= 5));
   }
   renderMarkup($('#rows'), [...groups].map(([category, rows]) => `<section class="product-group"><h3>${escape(category)}</h3>
     <ul class="product-list" role="list">${rows.join('')}</ul></section>`).join(''), '#list-title');
@@ -187,7 +219,7 @@ function render() {
 
 function priceChange(change) {
   if (!change) return '';
-  if (!change.recent) return `<span class="price-change">${change.delta === 0 ? 'Beze změny' : 'Bez nedávné změny'}</span>`;
+  if (!change.recent) return '';
   const down = change.delta < 0;
   return `<span class="price-change ${down ? 'drop' : 'rise'}">
     ${down ? '↓ Zlevnilo' : '↑ Zdražilo'} o ${money(Math.abs(change.delta))} · ${date(change.at)}</span>`;
@@ -200,29 +232,33 @@ function availability(entry, change) {
     ${change ? `<span class="subtext">Změna ${date(change.at)}</span>` : ''}`;
 }
 
-function row(entry, measured) {
+function row(entry, measured, lazy) {
   const {current, change, stockChange} = measured;
   const id = escape(entry.id), name = escape(entry.name), days = remainingDays(entry);
   const type = entry.removedAt ? 'restore' : entry.state === 'active' ? 'purchase' : null;
-  const actionLabel = type === 'restore' ? 'Obnovit' : 'Označit jako koupené';
-  const status = failedCheck(entry) ? current == null ? 'Cena neověřená' : `Poslední známá · ${date(entry.observations.at(-1)?.at)}` :
+  const actionLabel = type === 'restore' ? 'Obnovit' : 'Zapsat nákup';
+  const latest = entry.observations.at(-1);
+  const price = current ?? latest?.cents;
+  const knownOnly = price != null && (current == null || failedCheck(entry) || entry.collection === 'pending');
+  const status = knownOnly ? 'Poslední známá' :
     entry.collection === 'pending' ? 'Čeká na kontrolu' :
-    entry.collection === 'unsupported' ? 'Obchod bez sledování' : current == null ? 'Cena není k dispozici' :
-    entry.stats90?.price_change === null ? 'První měření' : '';
-  return `<li class="product-row">
-    <div class="product-item"><span class="thumbnail" aria-hidden="true">${icon('package')}</span><div class="product-identity">
-      <button type="button" class="item-title" data-action="detail" data-id="${id}">${name}</button>
-      <div class="item-meta"><a href="${escape(entry.url)}" data-shop="${id}" target="_blank" rel="noopener noreferrer">${escape(new URL(entry.url).hostname.replace(/^www\./,''))}</a>
-      ${entry.mode === 'recurring' ? '<span>Opakovaně</span>' : ''}
-      ${days ? `<button type="button" class="text-button mute-button" data-action="unmute" data-id="${id}" aria-label="Obnovit upozornění pro ${name}; pozastavena ještě ${days} dní">Ztlumeno · ${days} d</button>` : ''}</div>
-    </div></div>
-    <div class="product-stock">${availability(entry, stockChange)}</div>
+    entry.collection === 'unsupported' ? 'Obchod bez sledování' : price == null ? 'Cena není k dispozici' : '';
+  return `<li class="product-row${entry.id === highlightedId ? ' is-new' : ''}">
+    ${thumbnail(entry.image, {lazy})}
+    <button type="button" class="item-title" data-action="detail" data-id="${id}">${name}</button>
     <div class="product-price">
-      ${current == null ? '' : `<span class="price${failedCheck(entry) ? ' is-stale' : ''}">${money(current)}</span>`}
-      ${status ? `<span class="subtext">${status}</span>` : priceChange(change)}
+      ${price == null ? '' : `<span class="price${knownOnly ? ' is-stale' : ''}">${money(price)}</span>`}
+      ${status ? `<span class="subtext">${status}</span>` : ''}
     </div>
-    ${type ? `<button type="button" class="row-action icon-button" data-action="${type}" data-id="${id}" aria-label="${actionLabel}: ${name}" title="${actionLabel}">${icon(type === 'restore' ? 'restore' : 'check')}</button>` : ''}</li>`;
+    <div class="product-signals">${change?.recent ? priceChange(change) : ''}${availability(entry, stockChange)}</div>
+    <div class="item-meta">
+      <a href="${escape(entry.url)}" data-shop="${id}" target="_blank" rel="noopener noreferrer">${escape(shopName(entry.url))}</a>
+      ${entry.mode === 'recurring' && !days ? '<span>Opakovaně</span>' : ''}
+      ${days ? `<button type="button" class="text-button mute-button" data-action="unmute" data-id="${id}" aria-label="Obnovit upozornění pro ${name}; pozastavena ještě ${days} dní">Ztlumeno · ${days} d</button>` : ''}
+    </div>
+    ${type ? `<button type="button" class="row-action text-button" data-action="${type}" data-id="${id}" aria-label="${actionLabel}: ${name}">${icon(type === 'restore' ? 'restore' : 'bag')} ${actionLabel}</button>` : ''}</li>`;
 }
+
 async function openDetail(id) {
   if (!entryById(id)) return;
   detailReturn = focusSelector(document.activeElement);
@@ -255,35 +291,45 @@ async function loadDetail(id) {
 }
 
 function chart(entry, points) {
-  const width = 500, height = 176, left = 70, right = 18, top = 16, bottom = 26;
+  const width = 600, height = 140, inset = 5;
   const low = Math.min(...points.map(p => p.cents)), high = Math.max(...points.map(p => p.cents));
   const padding = Math.max((high - low) * .2, high * .06, 100);
   const minimum = Math.max(0, low - padding), maximum = high + padding;
   const first = Date.parse(points[0].date), last = Date.parse(points.at(-1).date);
-  const x = p => left + (last === first ? .5 : (Date.parse(p.date) - first) / (last - first)) * (width - left - right);
-  const y = p => top + (maximum - p.cents) / (maximum - minimum) * (height - top - bottom);
+  const x = p => inset + (Date.parse(p.date) - first) / (last - first) * (width - 2 * inset);
+  const y = p => inset + (maximum - p.cents) / (maximum - minimum) * (height - 2 * inset);
   const segments = [[]];
-  points.forEach((p,i) => {if(i && Date.parse(p.date)-Date.parse(points[i-1].date)>86400000) segments.push([]);segments.at(-1).push(p);});
-  return `<svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="chart-title chart-desc"><title id="chart-title">Vývoj ceny: ${escape(entry.name)}</title><desc id="chart-desc">${points.length} dní s cenou, od ${points[0].date} do ${points.at(-1).date}. Denní průměry; dny bez ceny vynecháváme.</desc>
-    ${[0,.5,1].map(f => {const value = maximum - (maximum-minimum)*f, yy = top+f*(height-top-bottom);return `<line x1="${left}" x2="${width-right}" y1="${yy}" y2="${yy}" stroke="#dedfcd" stroke-dasharray="3 4"/><text x="${left-9}" y="${yy+4}" text-anchor="end">${Math.round(value/100).toLocaleString('cs-CZ')}</text>`;}).join('')}
-    ${segments.map(segment => `<polyline points="${segment.map(p => `${x(p)},${y(p)}`).join(' ')}" fill="none" stroke="#2e513e" stroke-width="2" stroke-linejoin="round"/>`).join('')}
-    ${points.map(p => `<circle cx="${x(p)}" cy="${y(p)}" r="2.5" fill="#2e513e"><title>${p.date}: ${money(Math.round(p.cents))}</title></circle>`).join('')}
-    <text x="${left}" y="${height-5}">${date(points[0].date+'T12:00:00Z')}</text><text x="${width-right}" y="${height-5}" text-anchor="end">${date(points.at(-1).date+'T12:00:00Z')}</text></svg>`;
+  points.forEach((p,i) => {
+    if (i && Date.parse(p.date) - Date.parse(points[i-1].date) > 86400000) segments.push([]);
+    segments.at(-1).push(p);
+  });
+  return `<figure class="price-figure">
+    <figcaption id="chart-title" class="sr-only">Vývoj ceny: ${escape(entry.name)}</figcaption>
+    <p id="chart-desc" class="sr-only">${points.length} dní s cenou, od ${calendarDate(points[0].date)} do ${calendarDate(points.at(-1).date)}. Denní průměry v korunách, dny bez ceny vynecháváme.</p>
+    <div class="chart-axis" aria-hidden="true">${[maximum, (maximum+minimum)/2, minimum].map(value =>
+      `<span>${numberFormat.format(Math.round(value / 100))}</span>`).join('')}</div>
+    <svg class="chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-labelledby="chart-title" aria-describedby="chart-desc">
+      ${[inset,height/2,height-inset].map(yy => `<line x1="0" x2="${width}" y1="${yy}" y2="${yy}"/>`).join('')}
+      ${segments.map(segment => `<polyline points="${segment.map(p => `${x(p)},${y(p)}`).join(' ')}" vector-effect="non-scaling-stroke"/>`).join('')}
+      ${points.map(p => `<line class="chart-point" x1="${x(p)}" x2="${x(p)}" y1="${y(p)}" y2="${y(p)}"><title>${calendarDate(p.date)} · ${money(Math.round(p.cents))}</title></line>`).join('')}
+    </svg>
+    <div class="chart-dates" aria-hidden="true"><time datetime="${points[0].date}">${calendarDate(points[0].date)}</time><time datetime="${points.at(-1).date}">${calendarDate(points.at(-1).date)}</time></div>
+  </figure>`;
 }
 
 const calendarDate = value => date(value + 'T12:00:00Z');
-function history(entry, stats, now) {
+function history(entry, stats, now, period) {
   if (detailError) return `<p class="detail-status warning">${escape(detailError)}</p>
     <button type="button" class="button secondary" id="retry-history" data-action="retry-history" data-id="${escape(entry.id)}">Načíst znovu</button>`;
   if (live && !entry.historyLoaded) return '<p class="chart-empty">Načítám cenovou historii…</p>';
-  const points = priceStats(entry, now, range).daily;
-  const {start, end, count, days, missing} = historyCoverage(entry, now, range);
+  const points = priceStats(entry, now, period).daily;
+  const {start, end, count, days, missing} = historyCoverage(entry, now, period);
   const coverage = `<p class="chart-caption">Rozsah ${calendarDate(start)} – ${calendarDate(end)} · Měření ${count} · Dní s cenou ${days} · Dní bez ceny ${missing}</p>`;
   if (!points.length) return '<p class="chart-empty">V tomto období nemáme ověřenou cenu.</p>' + coverage;
   const variable = points.some(point => point.cents !== points[0].cents);
   const summary = variable ? chart(entry, points) :
     `<p class="chart-empty">${count === 1 ? 'První cena zaznamenána' : days === 1 ? 'Jeden měřený den' : 'Denní průměr beze změny'} ·
-      ${money(Math.round(points[0].cents))}</p>`;
+      ${days === 1 ? calendarDate(points[0].date) : money(Math.round(points[0].cents))}</p>`;
   const base = historyCoverage(entry, now, 90);
   return `${summary}${coverage}
     <details class="chart-caption" id="daily-disclosure"><summary id="daily-summary">Denní ceny v tabulce</summary>
@@ -300,35 +346,44 @@ function renderDetail() {
   if (!entry) {$('#detail').close();return;}
   const now = new Date().toISOString(), stats = priceStats(entry, now), days = remainingDays(entry);
   const {current, change, stockChange} = signals(entry, now);
+  const pending = entry.collection === 'pending' || refreshing.has(entry.id);
+  const knownOnly = current != null && (pending || failedCheck(entry));
+  const firstDay = entry.observations[0] && dayKey(entry.observations[0].at);
+  const latestDay = entry.observations.at(-1) && dayKey(entry.observations.at(-1).at);
+  const hasHistory = firstDay !== latestDay && (!live || entry.historyLoaded);
   const failed = failedCheck(entry), id = escape(entry.id);
   const edit = `<button type="button" class="button secondary" data-action="edit" data-id="${id}">${icon('edit')} Upravit</button>`;
   const comparisonText = current != null && stats.percentage != null && Math.abs(stats.percentage) >= 0.05
     ? `<p class="chart-caption">Proti průměru z měření · ${escape(comparison(stats))}</p>` : '';
   renderMarkup($('#detail-content'), `<div class="detail-top"><span class="context-label">${escape(entry.category)} · ${entry.mode === 'recurring' ? 'Opakovaně' : 'Jednorázově'}</span><button type="button" class="icon-button" id="detail-close" data-close="detail" aria-label="Zavřít detail">${icon('close')}</button></div>
-    <h2 id="detail-title" tabindex="-1">${escape(entry.name)}</h2>
-    <div class="detail-price"><div><small>${failed && current != null ? 'Poslední známá cena' : 'Aktuální cena'}</small>
-      ${current != null ? `<strong>${money(current)}</strong>` : '<span>Cena není k dispozici</span>'}</div>
-      <div>${availability(entry, stockChange)}</div></div>
-    ${priceChange(change)}
-    ${current == null && stats.latest ? `<p class="detail-status">Naposledy naměřeno ${money(stats.latest.cents)} dne ${date(stats.latest.at)}.</p>` : ''}
-    ${failed ? '<p class="detail-status warning">Poslední kontrola se nepodařila. Stav odpovídá poslednímu úspěšnému ověření.</p>' : ''}
-    ${entry.collection === 'pending' ? `<p class="detail-status">${live ? 'Odkaz je uložený. Čeká na první ověření ceny a dostupnosti.' : 'Odkaz je uložený v ukázce.'}</p>` : ''}
+    <div class="detail-product">${thumbnail(entry.image, {large:true})}<div>
+      <h2 id="detail-title" tabindex="-1">${escape(entry.name)}</h2>
+      <p class="context-label">${escape(shopName(entry.url))}</p>
+      <div class="detail-price"><div><small>${knownOnly || current == null && stats.latest ? 'Poslední známá cena' : 'Aktuální cena'}</small>
+        ${current != null || stats.latest ? `<strong>${money(current ?? stats.latest.cents)}</strong>` : '<span>Cena není k dispozici</span>'}</div>
+      </div>
+      <div class="product-signals">${change?.recent ? priceChange(change) : ''}${availability(entry, stockChange)}</div>
+    </div></div>
+    ${failed ? '<p class="detail-status warning">Poslední kontrola se nepodařila. Zobrazený stav pochází z posledního úspěšného ověření.</p>' : ''}
+    ${pending ? `<p class="detail-status">${live ? stats.latest || entry.checkedAt
+      ? 'Čeká na další ověření ceny a dostupnosti.'
+      : 'Odkaz je uložený. Čeká na první ověření ceny a dostupnosti.' : 'Odkaz je uložený v ukázce.'}</p>` : ''}
     ${entry.collection === 'unsupported' ? '<p class="detail-status">Odkaz je uložený. Tento obchod Haven zatím neumí sledovat.</p>' : ''}
     ${entry.collection === 'ok' && current != null ? '<p class="sr-only">Cena a dostupnost ověřeny.</p>' : ''}
     ${entry.state === 'purchased' && !entry.removedAt ? '<p class="detail-status">Tato položka už je koupená.</p>' : ''}
     <div class="detail-actions">
       <a class="button primary" id="open-shop" href="${escape(entry.url)}" target="_blank" rel="noopener noreferrer">Otevřít v obchodě ${icon('external')}</a>
       ${entry.removedAt ? `<button type="button" class="button secondary" data-action="restore" data-id="${id}">${icon('restore')} Obnovit položku</button>` :
-        `${entry.state === 'active' ? `<button type="button" class="button secondary" data-action="purchase" data-id="${id}">${icon('check')} Koupeno</button>` : ''}${edit}`}
+        `${entry.state === 'active' ? `<button type="button" class="button secondary" data-action="purchase" data-id="${id}">${icon('bag')} Zapsat nákup</button>` : ''}${edit}`}
     </div>
     ${days ? `<div class="detail-quiet">Upozornění pozastavena ještě ${days} dní.<button type="button" class="text-button" data-action="unmute" data-id="${id}">Obnovit</button></div>` : ''}
     <section class="detail-section">
       <div class="section-title"><h3>Vývoj ceny</h3><button type="button" class="text-button" id="history-info">Jak číst historii</button></div>
-      <div class="detail-history"><div class="chart-tabs" role="group" aria-label="Období cenové historie">${[[30,'Měsíc'],[90,'90 dní'],[365,'Rok'],[36500,'Vše']].map(([value,label])=>`<button type="button" data-range="${value}" aria-pressed="${range===value}">${label}</button>`).join('')}</div>
-      ${history(entry, stats, now)}${comparisonText}</div>
+      <div class="detail-history">${hasHistory ? `<div class="chart-tabs" role="group" aria-label="Období cenové historie">${[[30,'Měsíc'],[90,'90 dní'],[365,'Rok'],[36500,'Vše']].map(([value,label])=>`<button type="button" data-range="${value}" aria-pressed="${range===value}">${label}</button>`).join('')}</div>` : ''}
+      ${history(entry, stats, now, hasHistory ? range : 36500)}${comparisonText}</div>
     </section>
     ${entry.note ? `<section class="detail-section"><div class="section-title"><h3>Tvoje poznámka</h3></div><p class="detail-note">${escape(entry.note)}</p></section>` : ''}
-    <section class="detail-section"><dl class="detail-meta"><div><dt>Přidáno</dt><dd>${date(entry.createdAt)}</dd></div><div><dt>Poslední úspěšná kontrola</dt><dd>${date(entry.checkedAt)}</dd></div><div><dt>Kategorie</dt><dd>${escape(entry.category)}</dd></div><div><dt>Nákup</dt><dd>${entry.mode === 'recurring' ? 'Opakovaný' : 'Jednorázový'}</dd></div></dl></section>
+    <section class="detail-section"><dl class="detail-meta"><div><dt>Přidáno</dt><dd>${date(entry.createdAt)}</dd></div><div><dt>Poslední úspěšná kontrola</dt><dd>${date(entry.checkedAt)}</dd></div></dl></section>
     ${entry.purchases.length ? `<section class="detail-section"><div class="section-title"><h3>Nákupy této položky</h3></div>${[...entry.purchases].reverse().map(p => `<div class="purchase-card ${p.voidedAt ? 'voided' : ''}"><div><strong>${date(p.date+'T12:00:00Z')}</strong><span>${p.unitCents==null?'Cena nezadaná':money(p.unitCents*p.quantity)}</span></div><p>${p.quantity} × ${money(p.unitCents)} za kus${p.voidedAt ? ' · Stornováno' : ''}<br>${p.reference == null || p.unitCents == null ? 'Srovnání zatím není známé.' : `Průměr při nákupu ${money(p.reference)} · ${p.reference >= p.unitCents ? 'Úspora' : 'Nad průměrem'} ${money(Math.abs(p.reference-p.unitCents)*p.quantity)}`}</p>${!p.voidedAt ? `<div class="purchase-edit-actions"><button class="text-button" data-action="correct" data-id="${escape(entry.id)}" data-purchase="${escape(p.id)}">Opravit</button><button class="text-button" ${p.canVoid===false?'disabled title="Předchozí stav nelze bezpečně obnovit po novější změně nebo u historického nákupu."':''} data-action="void" data-id="${escape(entry.id)}" data-purchase="${escape(p.id)}">Stornovat nákup</button></div>` : ''}</div>`).join('')}</section>` : ''}
     ${!entry.removedAt ? `<section class="detail-section detail-actions" id="detail-refresh">
       ${entry.state === 'active' ? `<button type="button" class="button secondary" aria-disabled="${refreshing.has(entry.id)}" data-action="refresh" data-id="${id}">${icon('refresh')} ${refreshing.has(entry.id) ? 'Kontroluji…' : 'Zkontrolovat cenu'}</button>` : ''}
@@ -336,9 +391,54 @@ function renderDetail() {
     '#detail-close');
 }
 function field(label, name, value = '', attributes = '', help = '') {
-  return `<label class="form-field"><span>${label}</span><input name="${name}" autocomplete="off" value="${escape(value)}"
-    ${help ? `aria-describedby="field-help-${name}"` : ''} ${attributes}>${help ? `<small id="field-help-${name}">${help}</small>` : ''}</label>`;
+  return `<div class="form-field"><label for="field-${name}">${label}</label>
+    <input id="field-${name}" name="${name}" autocomplete="off" value="${escape(value)}"
+    ${help ? `aria-describedby="field-help-${name}"` : ''} ${attributes}>
+    ${help ? `<small id="field-help-${name}">${help}</small>` : ''}
+    <p class="field-error" id="field-error-${name}" hidden></p></div>`;
 }
+
+function fieldError(input, message = '') {
+  const error = $('#field-error-' + input.name);
+  if (!error) return;
+  error.textContent = message;
+  error.hidden = !message;
+  if (message) input.setAttribute('aria-invalid', 'true');
+  else input.removeAttribute('aria-invalid');
+  const references = [$('#field-help-' + input.name)?.id, message && error.id].filter(Boolean);
+  if (references.length) input.setAttribute('aria-describedby', references.join(' '));
+  else input.removeAttribute('aria-describedby');
+}
+
+function validateForm(form, data) {
+  const issues = new Map();
+  if (formAction === 'add') {
+    try {
+      data.url = validURL(data.url);
+      if (data.url.length > 4096 || new URL(data.url).hash) {
+        throw new Error('Vlož HTTPS odkaz bez části za znakem #, nejvýše 4 096 znaků.');
+      }
+    } catch (error) {
+      issues.set(form.elements.url, error.message);
+    }
+  }
+  if (formAction === 'edit' && !data.name.trim()) issues.set(form.elements.name, 'Zadej název položky.');
+  if (['purchase', 'correct'].includes(formAction)) {
+    try { parseMoney(data.price); }
+    catch (error) { issues.set(form.elements.price, error.message); }
+    if (!/^\d{1,4}$/.test(data.quantity) || Number(data.quantity) < 1) {
+      issues.set(form.elements.quantity, 'Zadej celé číslo od 1 do 9 999.');
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date) || data.date > dayKey(new Date())) {
+      issues.set(form.elements.date, 'Zadej platné datum nákupu, nejpozději dnes.');
+    }
+  }
+  for (const [input, message] of issues) fieldError(input, message);
+  const first = issues.keys().next().value;
+  first?.focus();
+  return !first;
+}
+
 function select(label, name, choices, value) {
   return `<label class="form-field"><span>${label}</span><select name="${name}">${choices.map(([v,l])=>`<option value="${escape(v)}" ${v===value?'selected':''}>${escape(l)}</option>`).join('')}</select></label>`;
 }
@@ -367,16 +467,18 @@ function shortProductName(name) {
 
 function showPreview(status, message, product = null) {
   const panel = $('#product-preview'), content = $('#preview-product'), action = $('#preview-action');
+  const focusedAction = document.activeElement === action;
   const canSave = ['ready', 'unsupported', 'retry_later', 'unavailable', 'manual'].includes(status);
   const extra = $('#editor-fields .extra-fields'), submit = $('#editor-submit');
   panel.hidden = !status;
   panel.dataset.state = status;
   content.hidden = !product;
-  content.innerHTML = product ? `<span class="thumbnail" aria-hidden="true">${icon('package')}</span>
-    <div><strong>${escape(product.name)}</strong><p>${escape(product.shop)}</p>
-    <p>${product.price == null ? 'Cena není k dispozici' : money(Math.round(Number(product.price) * 100))}
-      · ${stock(product.availability)}</p>${product.variant_url ? '<p>Odkaz doplněn o konkrétní variantu.</p>' : ''}
-      ${product.category ? `<p>Návrh kategorie · ${escape(product.category)}</p>` : ''}</div>` : '';
+  content.innerHTML = product ? `${thumbnail(product.image)}<div class="preview-identity">
+    <strong>${escape(product.name)}</strong><p>${escape(product.shop)}</p>
+    <p class="preview-price">${product.price == null ? 'Cena není k dispozici' : money(Math.round(Number(product.price) * 100))}</p>
+    <p>${stock(product.availability)}</p><p id="preview-category" hidden></p></div>` : '';
+  setText($('#field-help-url'), product?.variant_url ? 'Odkaz byl doplněn o konkrétní variantu.'
+    : 'Vlož HTTPS odkaz na konkrétní variantu.');
   action.hidden = !['loading', 'unavailable', 'retry_later', 'manual'].includes(status);
   setText(action, status === 'loading' ? 'Přeskočit náhled' : 'Zkusit náhled znovu');
   setText($('#preview-message'), product ? '' : message);
@@ -386,6 +488,16 @@ function showPreview(status, message, product = null) {
   submit.disabled = !canSave;
   setText(extra.querySelector('summary'), product ? 'Upravit název a další údaje' : 'Doplnit údaje ručně');
   setText(submit, product ? 'Přidat položku' : 'Uložit odkaz');
+  if (focusedAction && action.hidden) {
+    (canSave ? extra.querySelector('summary') : $('#field-url')).focus();
+  }
+}
+
+function showCategory(category) {
+  const status = $('#preview-category');
+  if (!status) return;
+  status.hidden = !category;
+  setText(status, category ? `Návrh kategorie · ${category}` : '');
 }
 
 function schedulePreview(input, delay = 450) {
@@ -417,12 +529,18 @@ function schedulePreview(input, delay = 450) {
       if (result.status === 'ready') {
         const title = shortProductName(result.name);
         if (!name.value.trim()) name.value = suggestedName = title;
-        const categoryLabel = Object.hasOwn(api.categoryNames, result.category) && api.categoryNames[result.category];
-        if (categoryLabel && !category.dataset.edited) category.value = suggestedCategory = categoryLabel;
         if (result.variant_url) input.value = result.variant_url;
-        const shop = new URL(url).hostname.replace(/^www\./, '');
         showPreview('ready', result.price == null ? 'Náhled je připravený. Obchod neposkytl aktuální cenu.'
-          : 'Náhled je připravený. Údaje můžeš upravit před přidáním.', {...result, name: title, shop, category:categoryLabel});
+          : 'Náhled je připravený. Údaje můžeš upravit před přidáním.', {...result, name: title, shop:shopName(url)});
+        if (/^[a-f0-9]{32}$/.test(result.category_token)) {
+          const code = await api.previewCategory(result.category_token, controller.signal).catch(() => null);
+          const label = Object.hasOwn(api.categoryNames, code) && api.categoryNames[code];
+          if (label && !controller.signal.aborted && !category.dataset.edited) {
+            category.value = suggestedCategory = label;
+            showCategory(label);
+            setText($('#preview-announcement'), `Návrh kategorie: ${label}.`);
+          }
+        }
       } else if (result.status === 'unsupported') {
         showPreview('unsupported', 'Pro tento obchod náhled zatím není dostupný. Odkaz můžeš uložit ručně.');
       } else if (result.status === 'retry_later') {
@@ -458,7 +576,13 @@ function openEditor(action, id = null, purchaseId = null) {
     $('#editor-eyebrow').textContent=entry.name;
     $('#editor-submit').textContent=action==='correct'?'Uložit opravu':'Potvrdit nákup';
     const latest=priceStats(entry).latest;
-    $('#editor-fields').innerHTML=`<div class="form-pair">${field('Cena za kus · Kč','price',inputMoney(p ? p.unitCents : latest?.cents),'required inputmode="decimal" maxlength="11"')}${field('Počet kusů','quantity',p?.quantity??1,'required type="number" min="1" max="9999" step="1"')}</div>${field('Datum nákupu','date',p?.date??dayKey(new Date()),`required type="date" max="${dayKey(new Date())}"`)}<div class="purchase-total"><span>Celkem zaplaceno</span><strong id="purchase-total">—</strong></div><p class="purchase-reference">Zadej skutečně zaplacenou cenu. ${entry.mode==='recurring'?'Po nákupu ztlumíme upozornění na 30 dní od data nákupu.':'Po nákupu položku najdeš ve filtru Koupené.'}</p>`;
+    $('#editor-fields').innerHTML = `<div class="form-pair">
+      ${field('Cena za kus (Kč)', 'price', inputMoney(p?.unitCents), 'required inputmode="decimal" maxlength="11"')}
+      ${field('Počet kusů', 'quantity', p?.quantity ?? 1, 'required type="number" min="1" max="9999" step="1"')}</div>
+      ${action === 'purchase' && latest ? `<button type="button" class="text-button use-price" id="use-last-price" value="${inputMoney(latest.cents)}">Použít poslední cenu · ${money(latest.cents)}</button>` : ''}
+      ${field('Datum nákupu', 'date', p?.date ?? dayKey(new Date()), `required type="date" max="${dayKey(new Date())}"`)}
+      <div class="purchase-total"><span>Celkem zaplaceno</span><output id="purchase-total" for="field-price field-quantity">—</output></div>
+      <p class="purchase-reference">${entry.mode === 'recurring' ? 'Po nákupu ztlumíme upozornění na 30 dní od data nákupu.' : 'Po nákupu položku najdeš ve filtru Koupené.'}</p>`;
     updatePurchaseTotal();
   } else {
     $('#editor-title').textContent=action==='add'?'Přidat položku':'Upravit položku';
@@ -474,16 +598,16 @@ function openEditor(action, id = null, purchaseId = null) {
       ? `${live ? previewPanel : ''}<details class="extra-fields"><summary>Nepovinné údaje</summary><div>${extra}</div></details>` : extra);
     if (live && action === 'add') showPreview('', '');
   }
-  if(!$('#editor').open)$('#editor').showModal();
-  $('#editor-fields input:not([readonly])')?.focus({preventScroll:true});
+  if (!$('#editor').open) $('#editor').showModal();
+  const initialFocus = matchMedia('(pointer: coarse)').matches ? '#editor-title' : '#editor-fields input:not([readonly])';
+  $(initialFocus)?.focus({preventScroll:true});
 }
 function updatePurchaseTotal(){
   if(!$('#purchase-total'))return;
   try{const data=new FormData($('#editor-form'));const quantity=Number(data.get('quantity'));$('#purchase-total').textContent=Number.isInteger(quantity)&&quantity>0?money(parseMoney(data.get('price'))*quantity):'—';}catch{$('#purchase-total').textContent='—';}
 }
 $('#editor-form').addEventListener('input', event => {
-  event.target.removeAttribute('aria-invalid');
-  if (event.target.name === 'url') event.target.setAttribute('aria-describedby', 'field-help-url');
+  fieldError(event.target);
   if (live && formAction === 'add' && event.target.name === 'url') schedulePreview(event.target);
   if (event.target.name === 'name') suggestedName = '';
   $('#form-error').hidden = true;
@@ -493,6 +617,7 @@ $('#editor-form').addEventListener('change', event => {
   if (event.target.name === 'category') {
     event.target.dataset.edited = 'true';
     suggestedCategory = '';
+    showCategory('');
   }
 });
 $('#editor-form').addEventListener('submit',async event=>{
@@ -501,47 +626,43 @@ $('#editor-form').addEventListener('submit',async event=>{
   const data=Object.fromEntries(new FormData(event.target));
   const submit = $('#editor-submit');
   const label = submit.textContent;
-  const url = event.target.elements.url;
   const inputs = [...$('#editor-fields').querySelectorAll('input,select,textarea')].filter(input => !input.disabled);
-  let invalid = null, addedId = null;
+  if (!validateForm(event.target, data)) return;
+  let addedId = null, saved = false;
   try{
-    if (formAction === 'add') {
-      invalid = url;
-      data.url = validURL(data.url);
-      invalid = null;
-      stopPreview();
-    }
+    if (formAction === 'add') stopPreview();
     formBusy = true;
     submit.disabled = true;
     submit.textContent = 'Ukládám…';
     setText($('#editor-status'), 'Ukládám…');
     for (const input of inputs) input.disabled = true;
     if(live){addedId=await submitLiveForm(data);}
-    else if(formAction==='add'){commit(next=>next.entries.push(createEntry(data)));toast('Položka je přidaná do místní ukázky.');}
-    else if(formAction==='edit'){delete data.url;commit(next=>updateEntry(next.entries.find(e=>e.id===formEntry),data));toast('Změny jsou uložené.');}
-    else if(formAction==='purchase'){commit(next=>recordPurchase(next.entries.find(e=>e.id===formEntry),data));toast('Nákup je zapsaný.');}
-    else if(formAction==='correct'){commit(next=>correctPurchase(next.entries.find(e=>e.id===formEntry),formPurchase,data));toast('Nákup je opravený.');}
+    else if(formAction==='add'){const entry = createEntry(data); commit(next=>next.entries.push(entry)); addedId = entry.id;}
+    else if(formAction==='edit'){delete data.url;commit(next=>updateEntry(next.entries.find(e=>e.id===formEntry),data));}
+    else if(formAction==='purchase'){commit(next=>recordPurchase(next.entries.find(e=>e.id===formEntry),data));}
+    else if(formAction==='correct'){commit(next=>correctPurchase(next.entries.find(e=>e.id===formEntry),formPurchase,data));}
+    saved = true;
     $('#editor').close();
   }catch(error){
     $('#form-error').textContent=error.code === 'invalid_request' && ['add','edit'].includes(formAction)
       ? 'Údaje se nepodařilo uložit. Zkontroluj odkaz a vyplněná pole.' : error.message;
     $('#form-error').hidden=false;
-    if (invalid) {
-      invalid.setAttribute('aria-invalid', 'true');
-      invalid.setAttribute('aria-describedby', 'field-help-url form-error');
-    }
     setText($('#editor-status'), '');
   }finally{
     formBusy=false;
     submit.disabled=false;
     submit.textContent=label;
     for (const input of inputs) input.disabled = false;
-    if (!$('#form-error').hidden) (invalid || $('#form-error')).focus();
+    if (!$('#form-error').hidden) $('#form-error').focus();
   }
   if (addedId && entryById(addedId)) {
+    highlightedId = addedId;
+    clearTimeout(highlightTimer);
+    render();
     $('#add-button').focus({preventScroll:true});
     openDetail(addedId);
   }
+  if (saved) toast({add:'Položka je přidaná.', edit:'Změny jsou uložené.', purchase:'Nákup je zapsaný.', correct:'Nákup je opravený.'}[formAction]);
 });
 function action(button){
   const id=button.dataset.id,kind=button.dataset.action;
@@ -561,6 +682,15 @@ function action(button){
   }catch(error){toast(error.message);}
 }
 document.addEventListener('click',event=>{
+  const usePrice = event.target.closest('#use-last-price');
+  if (usePrice) {
+    const price = $('#field-price');
+    price.value = usePrice.value.replace('.', ',');
+    fieldError(price);
+    updatePurchaseTotal();
+    price.focus();
+    return;
+  }
   if (event.target.closest('#preview-action')) {
     const input = $('#editor-form').elements.url;
     input.focus({preventScroll:true});
@@ -576,6 +706,14 @@ document.addEventListener('click',event=>{
     return;
   }
   if (event.target.closest('#history-info')) {$('#info-dialog').showModal();return;}
+  if (event.target.closest('[data-action="void"]')) {
+    const button = event.target.closest('[data-action="void"]');
+    const confirmation = $('#confirm-dialog');
+    confirmation.returnValue = '';
+    confirmation.addEventListener('close', () => { if (confirmation.returnValue === 'confirm') action(button); }, {once:true});
+    confirmation.showModal();
+    return;
+  }
   const eventButton = event.target.closest('[data-event]');
   if (eventButton) {
     eventFilter = eventFilter === eventButton.dataset.event ? '' : eventButton.dataset.event;
@@ -591,6 +729,12 @@ for(const dialog of document.querySelectorAll('dialog')){
     const rect=dialog.getBoundingClientRect();
     if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();
   });
+  dialog.addEventListener('close', () => {
+    if ($('#toast').parentElement === dialog) {
+      dismissToast();
+      document.body.append($('#toast'), $('#toast-status'));
+    }
+  });
 }
 $('#editor').addEventListener('cancel', event => { if (formBusy) event.preventDefault(); });
 $('#editor').addEventListener('close', () => {
@@ -603,6 +747,9 @@ $('#editor').addEventListener('close', () => {
 });
 $('#detail').addEventListener('close', () => {
   if ($('#detail').open) return;
+  if (selected === highlightedId) {
+    highlightTimer = setTimeout(() => { highlightedId = null; render(); }, 5500);
+  }
   selected = null;
   detailGeneration++;
   if (!$('#editor').open) restoreFocus(detailReturn, '#list-title');
@@ -611,8 +758,13 @@ $('#add-button').onclick=()=>openEditor('add');
 $('#reset-filters').onclick=resetFilters;
 $('#search').addEventListener('input',render);
 for(const select of document.querySelectorAll('.filters select,.secondary-filters select'))select.addEventListener('change',render);
-$('#toast-close').onclick=()=>{$('#toast').hidden=true;undoAction=null;};
-$('#toast-undo').onclick=async()=>{const undo=undoAction;undoAction=null;try{if(undo)await undo();}catch(error){toast(error.message);}};
+$('#toast-close').onclick = dismissToast;
+$('#toast-undo').onclick = async () => {
+  const undo = undoAction;
+  dismissToast();
+  try { if (undo) await undo(); }
+  catch (error) { toast(error.message); }
+};
 $('#reset-demo').onclick=()=>{
   const previous=structuredClone(state);commit(next=>Object.assign(next,demoState()));
   toast('Ukázková data jsou obnovená.',()=>{commit(next=>Object.assign(next,previous));toast('Obnovení ukázky je vrácené.');});
@@ -671,7 +823,6 @@ async function submitLiveForm(data) {
   const saved = result.data?.entry;
   if (saved && !entryById(saved.entry_id)) state.entries.push(api.toUI(saved));
   await loadLive().catch(showLoadError);
-  toast(operation==='add'?'Odkaz je uložený.':operation==='update'?'Změny jsou uložené.':'Nákup je uložený.');
   if(operation==='add' && result.entry_id && saved?.collection_status==='pending') {
     pollRefresh(result.entry_id, saved.last_attempt_at).catch(error=>toast(error.message));
   }

@@ -1,5 +1,6 @@
 """W3 no-model HTTPS worker. Run in a killable process with a whole-job deadline."""
 
+import base64
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 import hashlib
@@ -19,6 +20,7 @@ from urllib.parse import urljoin, urlsplit
 from scripts.wishlist_collection import ADAPTERS, validate_result
 from scripts.wishlist_domain import source_host
 from scripts.wishlist_extract import MAX_BYTES, extract, identity
+from scripts.wishlist_media import IMAGE_TYPES, MAX_IMAGE_BYTES, image_url, valid_image
 from scripts.wishlist_protocol import MAX_FRAME, decode
 
 TIMEOUT = 10
@@ -245,7 +247,7 @@ def fetch(url, adapter, *, preview=False):
                     candidate = {"status": "extracted", "evidence": ["jsonld"], "offer": public_offer(html, url)}
                 elif adapter == "intimissimi-public-price-v1":
                     from scripts.wishlist_intimissimi import public_offer
-                    candidate = {"status": "extracted", "evidence": ["jsonld"], "offer": public_offer(html, url)}
+                    candidate = {"status": "extracted", "evidence": ["jsonld"], "offer": public_offer(html, url, include_image=True)}
                 else:
                     candidate = extract(html, url, resolve_fabini_variant=preview and adapter == "fabini-jsonld-v1")
                 required = REQUIRED_EVIDENCE[adapter]
@@ -254,7 +256,10 @@ def fetch(url, adapter, *, preview=False):
                 reason = "source_out_of_stock" if candidate["offer"]["price"] is None else "structured_offer_candidate"
                 result = {"status": "ok", "reason": reason, "http_status": 200,
                           "retry_after": retry, "offer": candidate["offer"]}
-                validate_result(result)
+                picture = result["offer"].pop("image_url", None) or candidate.get("image_url")
+                if picture:
+                    result["image_url"] = picture
+                validate_result(result, shop=host)
                 if "variant_url" in candidate:
                     result["variant_url"] = candidate["variant_url"]
                 return result
@@ -269,10 +274,42 @@ def fetch(url, adapter, *, preview=False):
         return failure("offer_unverified")
 
 
+def fetch_image(shop, url):
+    if not image_url(shop, url):
+        return {}
+    parsed = urlsplit(url)
+    client = connection(parsed.hostname)
+    try:
+        path = parsed.path + ("?" + parsed.query if parsed.query else "")
+        client.request("GET", path, headers={
+            "User-Agent": "HavenWishlistCollector/1.0", "Accept": "image/jpeg,image/png,image/webp",
+            "Accept-Encoding": "identity", "Connection": "close",
+        })
+        response = client.getresponse()
+        if response.status != 200 or response.getheader("Content-Encoding", "identity").lower() != "identity":
+            return {"retry_after": max(86400 if response.status == 429 else 0,
+                                       retry_delay(response.getheader("Retry-After")))}
+        mime = response.getheader("Content-Type", "").split(";", 1)[0].strip().lower()
+        if mime not in IMAGE_TYPES:
+            return {}
+        lengths = [value for key, value in response.getheaders() if key.lower() == "content-length"]
+        if lengths and (len(lengths) != 1 or not re.fullmatch(r"[0-9]{1,7}", lengths[0])
+                        or int(lengths[0]) > MAX_IMAGE_BYTES):
+            return {}
+        body = response.read(MAX_IMAGE_BYTES + 1)
+        if (not lengths or len(body) == int(lengths[0])) and valid_image(mime, body):
+            return {"mime": mime, "body": base64.b64encode(body).decode("ascii")}
+        return {}
+    finally:
+        client.close()
+
+
 def main():
     try:
         request = decode(sys.stdin.buffer.read(MAX_FRAME + 1))
-        if sys.argv[1:] == ["--preview"] and set(request) == {"url", "adapter"}:
+        if sys.argv[1:] == ["--image"] and set(request) == {"shop", "url"}:
+            result = fetch_image(request["shop"], request["url"])
+        elif sys.argv[1:] == ["--preview"] and set(request) == {"url", "adapter"}:
             result = fetch(request["url"], request["adapter"], preview=True)
         elif (sys.argv[1:] or set(request) != {"url", "job"} or not isinstance(request["url"], str)
                 or hashlib.sha256(request["url"].encode()).hexdigest() != request["job"]["url_sha256"]):

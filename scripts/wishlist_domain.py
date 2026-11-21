@@ -197,11 +197,12 @@ class Wishlist:
         availability_row = db.execute("SELECT value FROM metadata WHERE key=?",
                                       ("collection_availability:" + row["offer_id"],)).fetchone()
         availability = None
-        stock_change = None
+        stock_change = image_url = None
         if availability_row:
             saved = json.loads(availability_row[0])
             availability = {key: saved[key] for key in ("availability", "checked_at")}
             stock_change = saved.get("change")
+            image_url = saved.get("image_url")
         # A legacy writer may add a price without updating the new metadata.
         if observation and (availability is None or instant(observation["observed_at"]) > instant(availability["checked_at"])):
             availability = {"availability": observation["availability"], "checked_at": observation["observed_at"]}
@@ -214,6 +215,7 @@ class Wishlist:
                 "latest_observation": dict(observation) if observation else None,
                 "latest_availability": availability,
                 **({"stock_change": stock_change} if stock_change else {}),
+                **({"image_url": image_url} if image_url else {}),
                 "reference": f"#{row['sequence']}"}
 
     def _result(self, db, request_id, entry_id, *, committed):

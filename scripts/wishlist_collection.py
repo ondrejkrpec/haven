@@ -10,6 +10,8 @@ from uuid import uuid4
 from scripts.wishlist_domain import canonical, digest, instant, stamp
 from scripts.wishlist_extract import AVAILABILITY, amount
 
+from scripts.wishlist_media import image_url
+
 DAY = 86400
 LEASE = 120
 ADAPTERS = {"www.momenti.cz": "momenti-microdata-v1", "www.fabini.cz": "fabini-jsonld-v1",
@@ -24,9 +26,9 @@ REASONS = frozenset({
 })
 
 
-def validate_result(result):
+def validate_result(result, *, shop=None):
     keys = {"status", "reason", "http_status", "retry_after"}
-    if (not isinstance(result, dict) or not keys <= set(result) or set(result) - keys - {"offer"}
+    if (not isinstance(result, dict) or not keys <= set(result) or set(result) - keys - {"offer", "image_url"}
             or result["status"] not in ("ok", "blocked", "unsupported", "failed")
             or result["reason"] not in REASONS
             or (result["http_status"] is not None and (type(result["http_status"]) is not int
@@ -34,9 +36,11 @@ def validate_result(result):
             or type(result["retry_after"]) is not int or not 0 <= result["retry_after"] <= 31536000):
         raise ValueError("collection_result")
     if result["status"] != "ok":
-        if "offer" in result or result["reason"] in {"structured_offer_candidate", "source_out_of_stock"}:
+        if {"offer", "image_url"} & result.keys() or result["reason"] in {"structured_offer_candidate", "source_out_of_stock"}:
             raise ValueError("collection_failed_offer")
         return
+    if "image_url" in result and shop is not None and not image_url(shop, result["image_url"]):
+        raise ValueError("collection_image")
     offer = result.get("offer")
     if (result["http_status"] != 200 or result["reason"] not in {"structured_offer_candidate", "source_out_of_stock"}
             or not isinstance(offer, dict)
@@ -170,6 +174,8 @@ class Collection:
                 db.execute("UPDATE collection_jobs SET status='discarded', completed_at=? WHERE job_id=?",
                            (current, row["job_id"]))
             return {"protocol_version": 1, "code": "stale"}
+        if "image_url" in result and not image_url(offer["shop_host"], result["image_url"]):
+            raise ValueError("collection_image")
         if result["status"] == "ok" and row["adapter"] not in ADAPTERS.values():
             raise ValueError("unsupported_adapter")
         if result["status"] == "ok":
@@ -194,7 +200,8 @@ class Collection:
                     stock_change = {"at": current, "previous": prior_stock}
                 db.execute("INSERT OR REPLACE INTO metadata VALUES (?, ?)", (key, canonical({
                     "sku": candidate["sku"], "availability": current_stock, "checked_at": current,
-                    **({"change": stock_change} if stock_change else {})})))
+                    **({"change": stock_change} if stock_change else {}),
+                    **({"image_url": result["image_url"]} if "image_url" in result else {})})))
                 if candidate["price"] is not None:
                     db.execute("""INSERT INTO observations
                     (job_id, offer_id, observed_at, adapter, price, currency, availability, name, sku, conditions_verification)

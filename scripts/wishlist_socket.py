@@ -27,13 +27,14 @@ def private_directory(path, *, uid, socket_directory=False):
 
 
 class PeerServer:
-    def __init__(self, path, *, ingress_uid, socket_gid=None, deadline=DEADLINE, max_connections=8):
+    def __init__(self, path, *, ingress_uid, socket_gid=None, deadline=DEADLINE, max_connections=8, response_limit=MAX_FRAME):
         if (type(ingress_uid) is not int or ingress_uid < 1 or not 0 < deadline <= 30
                 or type(max_connections) is not int or not 1 <= max_connections <= 8):
             raise ValueError("server_limits")
         self.path = socket_path(str(path))
         self.ingress_uid, self.socket_gid = ingress_uid, socket_gid
         self.deadline, self.max_connections = deadline, max_connections
+        self.response_limit = response_limit
         self.tasks, self.server, self.inode = set(), None, None
         self.lease = None
 
@@ -122,7 +123,7 @@ class PeerServer:
                     return
                 request = await read_frame(reader)
                 response = await self.respond(request)
-                await write_frame(writer, response)
+                await write_frame(writer, response, limit=self.response_limit)
         except (ValueError, TypeError, OverflowError, RecursionError, asyncio.IncompleteReadError):
             try:
                 async with asyncio.timeout(self.deadline):
