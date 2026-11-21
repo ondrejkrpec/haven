@@ -184,7 +184,9 @@ main { max-width: calc(var(--content) + 2 * var(--gutter)); margin: auto; paddin
     color: var(--ink);
     box-shadow: 0 .5rem 1.75rem rgb(37 46 39 / .15);
   }
-  select::picker-icon { color: var(--green); }
+  select::picker-icon { color: var(--green); flex: none; }
+  select > button { flex: 1; min-width: 0; padding: 0; border: 0; background: transparent; text-align: start; }
+  select selectedcontent { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   option { min-height: 44px; align-items: center; gap: .5rem; padding: .375rem .65rem; white-space: normal; }
   option:checked { color: var(--green); background: var(--sage); }
   option:is(:hover, :focus-visible) { color: var(--ink); background: var(--wash); }

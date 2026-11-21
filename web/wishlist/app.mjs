@@ -26,6 +26,9 @@ icons();
 const dateFormat = new Intl.DateTimeFormat('cs-CZ', {timeZone:'Europe/Prague', day:'numeric', month:'numeric', year:'numeric'});
 const date = value => value ? dateFormat.format(new Date(value)) : 'Zatím neověřeno';
 const numberFormat = new Intl.NumberFormat('cs-CZ');
+const selectTrigger = typeof HTMLSelectedContentElement === 'function' && CSS.supports('appearance', 'base-select')
+  ? '<button type="button"><selectedcontent></selectedcontent></button>' : '';
+for (const field of document.querySelectorAll('select')) field.insertAdjacentHTML('afterbegin', selectTrigger);
 const shopName = url => new URL(url).hostname.replace(/^www\./, '');
 function thumbnail(source, {large = false, lazy = false} = {}) {
   // Only authenticated same-origin raster responses can replace the placeholder.
@@ -178,7 +181,7 @@ function render() {
   const shops = [...new Set(state.entries.map(entry => new URL(entry.url).hostname))].sort();
   const shopOptions = '<option value="">Všechny</option>' + shops.map(s => `<option>${escape(s)}</option>`).join('');
   if (rendered.get($('#filter-shop')) !== shopOptions) {
-    $('#filter-shop').innerHTML = shopOptions;
+    $('#filter-shop').innerHTML = selectTrigger + shopOptions;
     rendered.set($('#filter-shop'), shopOptions);
     $('#filter-shop').value = shops.includes(selectedShop) ? selectedShop : '';
   }
@@ -261,6 +264,7 @@ function row(entry, measured, lazy) {
 
 async function openDetail(id) {
   if (!entryById(id)) return;
+  if (!undoAction) dismissToast();
   detailReturn = focusSelector(document.activeElement);
   selected = id; range = 90; detailError = null; renderDetail();
   setText($('#detail-announcement'), '');
@@ -440,7 +444,7 @@ function validateForm(form, data) {
 }
 
 function select(label, name, choices, value) {
-  return `<label class="form-field"><span>${label}</span><select name="${name}">${choices.map(([v,l])=>`<option value="${escape(v)}" ${v===value?'selected':''}>${escape(l)}</option>`).join('')}</select></label>`;
+  return `<label class="form-field"><span>${label}</span><select name="${name}">${selectTrigger}${choices.map(([v,l])=>`<option value="${escape(v)}" ${v===value?'selected':''}>${escape(l)}</option>`).join('')}</select></label>`;
 }
 const previewPanel = `<p class="sr-only" id="preview-announcement" role="status"></p>
 <section class="product-preview" id="product-preview" aria-label="Náhled produktu" hidden>
@@ -560,6 +564,7 @@ function schedulePreview(input, delay = 450) {
 
 function openEditor(action, id = null, purchaseId = null) {
   if (formBusy) return;
+  if (!undoAction) dismissToast();
   stopPreview();
   suggestedName = '';
   suggestedCategory = '';
