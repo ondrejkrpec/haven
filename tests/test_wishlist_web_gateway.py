@@ -71,8 +71,23 @@ class GatewayTests(unittest.TestCase):
         self.app.preview_transport.assert_not_called()
         response = self.call("/api/command", method="POST", payload=request, headers=headers)
         self.assertEqual(response["status"], "200 OK")
-        self.app.preview_transport.assert_called_once_with(endpoint, request, timeout=24)
+        self.app.preview_transport.assert_called_once_with(endpoint, request, timeout=10)
         self.assertEqual(self.calls, [])
+
+    def test_photo_route_requires_session_and_rejects_non_image_payload(self):
+        self.app.config["preview"] = {}
+        self.app.preview_transport = Mock(return_value={"code": "ok", "data": {"mime": "text/html", "body": "PGgxPg=="}})
+        photo = "/api/image/p/" + "f" * 32
+        self.assertEqual(self.call(photo)["status"], "403 Forbidden")
+        self.app.preview_transport.assert_not_called()
+        self.bootstrap()
+        self.assertEqual(self.call(photo, headers={"HTTP_TAILSCALE_USER_LOGIN": "other@example.com"})["status"], "403 Forbidden")
+        self.assertEqual(self.call(photo)["status"], "404 Not Found")
+        self.assertEqual(self.app.preview_transport.call_args.args[1]["arguments"], {"token": "f" * 32})
+        self.assertEqual(self.calls, [])
+        denied = self.call("/api/command", method="POST", payload={"operation": "web.preview_image"},
+                           headers={"HTTP_ORIGIN": "https://haven.example.ts.net", "HTTP_X_CSRF_TOKEN": self.csrf})
+        self.assertEqual(denied["status"], "403 Forbidden")
 
     def test_cookie_is_secure_scoped_and_httponly_and_csrf_requires_origin(self):
         response = self.bootstrap()

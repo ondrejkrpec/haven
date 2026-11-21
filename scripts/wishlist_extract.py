@@ -8,6 +8,8 @@ from pathlib import Path
 import re
 from urllib.parse import parse_qsl, urlsplit
 
+from scripts.wishlist_media import product_image
+
 MAX_BYTES = 4 * 1024 * 1024
 VOID = frozenset("area base br col embed hr img input link meta param source track wbr".split())
 AVAILABILITY = {
@@ -189,9 +191,10 @@ def single_fabini_variant(products, requested):
 
 
 def exact_offer(products, requested, required_condition):
-    candidates, sources = {}, set()
+    candidates, sources, images = {}, set(), set()
     for product, source in products:
-        for offer in values(product, "offers"):
+        offers = values(product, "offers")
+        for offer in offers:
             if not isinstance(offer, dict) or "Offer" not in types(offer):
                 continue
             offer_url = one(offer, "url", required=False) or one(product, "url", required=False)
@@ -215,12 +218,14 @@ def exact_offer(products, requested, required_condition):
                 "availability": availability,
                 "conditions_verification": "not_verified",
             }
+            if len(offers) == 1 and result["sku"] and (image := product_image(product, offer_url)):
+                images.add(image)
             signature = json.dumps(result, sort_keys=True)
             candidates[signature] = result
             sources.add(source)
     if len(candidates) > 1:
         raise ExtractionError("conflicting_offers")
-    return next(iter(candidates.values()), None), sorted(sources)
+    return next(iter(candidates.values()), None), sorted(sources), next(iter(images)) if len(images) == 1 else None
 
 
 def extract(html, source_url, *, http_status=200, required_condition=None, resolve_fabini_variant=False):
@@ -251,12 +256,12 @@ def extract(html, source_url, *, http_status=200, required_condition=None, resol
                 products.extend((p, "jsonld") for p in json_products(value))
         if not products:
             raise ExtractionError("product_data_missing")
-        offer, evidence = exact_offer(products, requested, required_condition)
+        offer, evidence, image = exact_offer(products, requested, required_condition)
         variant_url = None
         if offer is None and resolve_fabini_variant and requested in canonical:
             variant_url = single_fabini_variant(products, requested)
             if variant_url:
-                offer, evidence = exact_offer(
+                offer, evidence, image = exact_offer(
                     [(product, source) for product, source in products if source == "jsonld"],
                     identity(variant_url), required_condition)
         if offer is None:
@@ -265,6 +270,8 @@ def extract(html, source_url, *, http_status=200, required_condition=None, resol
                   "evidence": evidence, "offer": offer}
         if variant_url:
             result["variant_url"] = variant_url
+        if image:
+            result["image_url"] = image
         return result
     except (ExtractionError, UnicodeError, json.JSONDecodeError, RecursionError, ValueError) as error:
         reason = str(error) if isinstance(error, ExtractionError) else "invalid_document"

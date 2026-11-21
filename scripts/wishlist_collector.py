@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from scripts.wishlist_collection import JOB_KEYS, validate_result
 from scripts.wishlist_fetch import failure
+from scripts.wishlist_media import IMAGE_FRAME_LIMIT
 from scripts.wishlist_protocol import MAX_FRAME, close_writer, decode, peer_uid, read_frame, write_frame
 from scripts.wishlist_socket import PeerServer, socket_path
 
@@ -64,11 +65,21 @@ async def run_fetch(admission, *, timeout=40):
 
 
 async def run_fetch_process(payload, *, timeout, preview=False):
+    result = await fetch_process(payload, timeout=timeout, mode="--preview" if preview else None)
+    validate_result({key: value for key, value in result.items() if key != "variant_url"})
+    return result
+
+
+async def run_image_process(payload, *, timeout):
+    return await fetch_process(payload, timeout=timeout, mode="--image", output_limit=IMAGE_FRAME_LIMIT)
+
+
+async def fetch_process(payload, *, timeout, mode=None, output_limit=MAX_FRAME):
     # Clean environment, fixed executable/module, no shell; OS isolation is supplied by the unit.
     environment = {"PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"}
     if "PYTHONPATH" in os.environ:
         environment["PYTHONPATH"] = os.environ["PYTHONPATH"]
-    arguments = ("--preview",) if preview else ()
+    arguments = (mode,) if mode else ()
     process = await asyncio.create_subprocess_exec(
         sys.executable, "-B", "-m", "scripts.wishlist_fetch", *arguments, env=environment,
         stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
@@ -78,9 +89,7 @@ async def run_fetch_process(payload, *, timeout, preview=False):
             output, _ = await process.communicate(json.dumps(payload).encode())
         if process.returncode != 0:
             return failure("network_failed")
-        result = decode(output)
-        validate_result({key: value for key, value in result.items() if key != "variant_url"} if preview else result)
-        return result
+        return decode(output, limit=output_limit)
     except TimeoutError:
         return failure("fetch_timeout")
     finally:

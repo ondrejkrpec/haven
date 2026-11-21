@@ -67,6 +67,19 @@ class WishlistExtractTests(unittest.TestCase):
             with self.subTest(html=html):
                 self.assertEqual(extract(html, URL)["status"], "needs_review")
 
+    def test_image_belongs_to_the_exact_offer_and_is_optional(self):
+        url = "https://www.fabini.cz/products/example?variant=two"
+        image = "https://cdn.shopify.com/variant-two.jpg"
+        unrelated = product(url=url.replace("two", "one")) | {"image": "https://cdn.shopify.com/variant-one.jpg"}
+        matched = product(url=url) | {"image": image}
+        self.assertEqual(extract(page([unrelated, matched]), url)["image_url"], image)
+        for value in ("https://images.example/variant.jpg", "https://[", "/product.svg"):
+            result = extract(page(matched | {"image": value}), url)
+            self.assertEqual(result["status"], "extracted")
+            self.assertNotIn("image_url", result)
+        multiple_offers = matched | {"offers": [matched["offers"], unrelated["offers"]]}
+        self.assertNotIn("image_url", extract(page(multiple_offers), url))
+
     def test_tracking_does_not_remove_variant_identity(self):
         self.assertEqual(extract(page(product()), URL + "&utm_source=synthetic")["status"], "extracted")
         self.assertEqual(extract(page(product()), URL + "&unknown=1")["status"], "needs_review")

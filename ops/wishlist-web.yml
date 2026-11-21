@@ -10,7 +10,7 @@
     haven_web_modules: [wishlist_store, wishlist_domain, wishlist_contract, wishlist_protocol, wishlist_socket, wishlist_service,
                         wishlist_web_domain, wishlist_web_gateway, wishlist_dependencies, wishlist_operations,
                         wishlist_observability, wishlist_language, wishlist_language_contract, wishlist_model, wishlist_telegram,
-                        wishlist_collection]
+                        wishlist_collection, wishlist_media]
   pre_tasks:
     - name: Require the explicit deployment and private owner configuration
       ansible.builtin.assert:
@@ -198,7 +198,7 @@
             group: root
             mode: '0644'
           loop: [wishlist_product_preview, wishlist_collector, wishlist_fetch, wishlist_extract,
-                 wishlist_interpreter, wishlist_model]
+                 wishlist_interpreter, wishlist_model, wishlist_intimissimi]
 
         - name: Install schemas in both public code roots
           ansible.builtin.copy:

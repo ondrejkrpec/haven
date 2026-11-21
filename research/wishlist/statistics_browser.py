@@ -26,6 +26,7 @@ from scripts.wishlist_product_preview import PreviewServer
 from scripts.wishlist_web_domain import WebApplication
 from scripts.wishlist_web_gateway import Application, ROOT
 
+PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGOo7CsEAAL8AXl6GkipAAAAAElFTkSuQmCC"  # One synthetic pixel.
 VIEWPORTS = [(1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844), (320, 760)]
 
 
@@ -41,11 +42,17 @@ async def fixture_offer(payload, **_):
     if payload["url"].endswith("/synthetic-preview"):
         name = "Testovací pánev, ø 26 cm - vícevrstvá nerezová pánev s nepřilnavým keramickým povrchem"
     return {"status": "ok", "http_status": 200, "retry_after": 0,
+            **({"image_url": "https://www.intimissimi.com/synthetic.png"} if payload["url"].endswith("/synthetic-preview") else {}),
             "offer": {"name": name, "price": None, "availability": "out_of_stock"}}
 
 
 async def fixture_category(_):
     return "home"
+
+
+async def fixture_image(payload, **_):
+    return {"mime": "image/png", "body": PNG} if payload["url"].endswith("/synthetic.png") else {}
+
 
 
 def fixture(path):
@@ -66,13 +73,15 @@ def fixture(path):
         "label": "Testovací konvice", "category": "home", "purchase_mode": "once"}})
     collection = Collection(domain)
 
-    def observe(price, availability="in_stock"):
+    def observe(price, availability="in_stock", image_url=None):
         claim = collection.handle({"protocol_version": 1, "operation": "collection.claim", "claim_id": uuid4().hex})
         assert claim["code"] == "ok", claim
         offer = {"name": "Syntetický produkt", "sku": "EXAMPLE-1", "price": price, "currency": "CZK" if price else None,
                  "availability": availability, "conditions_verification": "not_verified"}
         result = {"status": "ok", "reason": "structured_offer_candidate" if price else "source_out_of_stock",
                   "http_status": 200, "retry_after": 0, "offer": offer}
+        if image_url:
+            result["image_url"] = image_url
         completed = collection.handle({"protocol_version": 1, "operation": "collection.complete",
                                        "job": claim["job"], "result": result})
         assert completed["code"] == "ok", completed
@@ -83,7 +92,7 @@ def fixture(path):
     check_at = now - timedelta(hours=1)
     call("add", {"url": "https://www.fabini.cz/synthetic-fixture/", "details": {
         "label": "Testovací pánev", "category": "home", "purchase_mode": "once"}})
-    observe("1250.00")
+    observe("1250.00", image_url="https://www.fabini.cz/synthetic.png")
     check_at = now
     entry = call("add", {"url": "https://shop.example.com/item", "details": {
         "label": "Testovací lampa", "category": "home", "purchase_mode": "recurring"}})["data"]["entry"]
@@ -103,6 +112,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--chromium", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--axe", type=Path, help="Optionally run a local axe-core browser bundle")
     parser.add_argument("--fonts", type=Path, help="Optionally verify separately obtained owner webfonts")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
@@ -127,7 +137,8 @@ def main():
                     shutil.copytree(ROOT, assets)
                     for name in ("gambarino.woff2", "general-sans.woff2"):
                         shutil.copyfile(args.fonts / name, assets / name)
-                preview = PreviewServer(root / "preview.sock", ingress_uid=1000, fetcher=fixture_offer)
+                preview = PreviewServer(root / "preview.sock", ingress_uid=1000, fetcher=fixture_offer,
+                                        category_endpoint={}, image_fetcher=fixture_image)
                 preview.category_for = fixture_category
                 with patch("scripts.wishlist_web_gateway.ROOT", assets):
                     gateway = Application({"origin": origin, "owner_login": "owner@example.com", "preview": {}},
@@ -172,6 +183,16 @@ def main():
                         if request.method == "POST" and request.url.endswith("/api/command"):
                             operations.append(request.post_data_json.get("operation"))
                     page.on("request", record)
+                    a11y = {}
+                    def audit(name):
+                        if not args.axe:
+                            return
+                        page.evaluate(args.axe.read_text())
+                        report = page.evaluate("""async () => (await axe.run({
+                          runOnly: {type: 'tag', values: ['wcag2a','wcag2aa','wcag21aa','wcag22aa']}
+                        })).violations.map(({id, nodes}) => ({id, targets:nodes.map(node => node.target)}))""")
+                        a11y[name] = report
+
                     page.clock.install()
                     page.goto(shared["origin"] + "/wishlist/")
                     expect(page.locator("#visible-count")).to_have_text("3")
@@ -179,6 +200,8 @@ def main():
                     expect(page.locator(".summary-card")).to_have_count(0)
                     expect(page.get_by_text("Znovu skladem")).to_be_visible()
                     expect(page.get_by_text("Zlevnilo o")).to_be_visible()
+                    expect(page.locator("#rows img")).to_have_count(1)
+                    assert page.locator("#rows img").evaluate("(img) => img.decode().then(() => img.naturalWidth)") == 1
                     sort = page.locator("#sort")
                     page.locator("#filter-category").focus()
                     page.keyboard.press("Tab")
@@ -225,6 +248,7 @@ def main():
                     expect(page.locator("#visible-count")).to_have_text("0")
                     page.locator("#reset-filters").click()
                     expect(page.locator("#visible-count")).to_have_text("3")
+                    page.evaluate("document.activeElement.blur()")
                     if args.fonts:
                         assert page.evaluate("""async () => {
                             await document.fonts.ready;
@@ -239,6 +263,7 @@ def main():
                             price = page.locator(".product-price").first.bounding_box()
                             assert price and price["y"] + price["height"] < height, (width, height, price)
                         if width in (1440, 390):
+                            audit(f"list-{width}")
                             page.screenshot(path=str(args.output / f"wishlist-{width}.png"), full_page=True)
                     kettle = page.get_by_role("button", name="Testovací konvice", exact=True)
                     kettle.focus()
@@ -254,22 +279,59 @@ def main():
                     expect(page.locator(".detail-history")).to_contain_text("Dní bez ceny")
                     page.get_by_role("button", name="Měsíc", exact=True).click()
                     expect(page.get_by_role("button", name="Měsíc", exact=True)).to_be_focused()
+                    assert float(page.locator(".chart-axis span").first.evaluate("(el) => getComputedStyle(el).fontSize").removesuffix("px")) >= 12
                     page.locator("#daily-summary").click()
                     expect(page.locator(".daily-table")).to_be_visible()
+                    audit("detail-with-history")
+                    page.locator("#history-info").click()
+                    expect(page.locator("#info-dialog")).to_be_visible()
+                    audit("history-help")
+                    page.keyboard.press("Escape")
+                    expect(page.locator("#history-info")).to_be_focused()
                     page.keyboard.press("Escape")
                     expect(kettle).to_be_focused()
                     page.get_by_role("button", name="Testovací pánev", exact=True).click()
                     expect(page.locator(".chart-empty")).to_contain_text("První cena zaznamenána")
                     expect(page.locator("svg.chart")).to_have_count(0)
                     expect(page.locator(".detail-stat-grid")).to_have_count(0)
+                    expect(page.locator(".chart-tabs")).to_have_count(0)
                     expect(page.locator(".detail-history")).to_contain_text("Rozsah")
                     page.screenshot(path=str(args.output / "wishlist-detail-mobile.png"), animations="disabled")
+                    page.get_by_role("button", name="Upravit", exact=True).click()
+                    page.locator('#editor textarea[name="note"]').fill("Syntetická poznámka.")
+                    audit("edit")
+                    page.locator("#editor-submit").click()
+                    expect(page.locator("#editor")).not_to_be_visible()
+                    expect(page.locator(".detail-note")).to_have_text("Syntetická poznámka.")
+                    expect(page.locator("#detail #toast")).to_be_visible()
+                    remove = page.get_by_role("button", name="Odstranit položku", exact=True)
+                    remove.focus()
+                    assert remove.evaluate("""el => {
+                        const b = el.getBoundingClientRect(), toast = document.querySelector('#toast').getBoundingClientRect();
+                        return b.bottom <= toast.top || b.right <= toast.left;
+                    }""")
                     page.keyboard.press("Escape")
+                    expect(page.locator("#detail")).not_to_be_visible()
                     page.get_by_role("button", name="Testovací lampa", exact=True).click()
                     expect(page.locator(".purchase-card")).to_have_count(4)
                     page.get_by_role("button", name="Zavřít detail", exact=True).click()
-                    page.get_by_role("button", name="Označit jako koupené: Testovací lampa").click()
-                    page.locator('#editor [name="price"]').fill("300")
+                    page.get_by_role("button", name="Zapsat nákup: Testovací konvice").click()
+                    price = page.locator("#field-price")
+                    expect(price).to_have_value("")
+                    page.locator("#use-last-price").click()
+                    expect(price).to_have_value("750,00")
+                    page.keyboard.press("Escape")
+                    page.get_by_role("button", name="Zapsat nákup: Testovací lampa").click()
+                    price.fill("nesmysl")
+                    page.locator("#field-quantity").fill("0")
+                    page.locator("#editor-submit").click()
+                    expect(price).to_have_attribute("aria-invalid", "true")
+                    expect(price).to_be_focused()
+                    expect(page.locator("#field-error-quantity")).to_be_visible()
+                    audit("purchase-invalid")
+                    page.screenshot(path=str(args.output / "wishlist-purchase-error-mobile.png"), animations="disabled")
+                    price.fill("300")
+                    page.locator("#field-quantity").fill("1")
                     page.locator("#editor-submit").click()
                     expect(page.locator("#editor")).not_to_be_visible()
                     page.get_by_role("button", name="Testovací lampa", exact=True).click()
@@ -281,6 +343,12 @@ def main():
                     expect(page.locator("#editor")).not_to_be_visible()
                     expect(last_purchase).to_contain_text("350")
                     last_purchase.get_by_role("button", name="Stornovat nákup").click()
+                    expect(page.get_by_role("button", name="Ponechat nákup")).to_be_focused()
+                    audit("cancel-purchase")
+                    page.keyboard.press("Escape")
+                    expect(last_purchase).not_to_contain_text("Stornováno")
+                    last_purchase.get_by_role("button", name="Stornovat nákup").click()
+                    page.locator("#confirm-dialog").get_by_role("button", name="Stornovat nákup").click()
                     expect(last_purchase).to_contain_text("Stornováno")
                     page.keyboard.press("Escape")
                     kettle.click()
@@ -297,6 +365,7 @@ def main():
                     expect(disclosure).not_to_be_visible()
                     expect(page.locator("#editor-submit")).to_be_disabled()
                     expect(page.locator("#editor-submit")).not_to_be_visible()
+                    audit("add-initial")
                     page.screenshot(path=str(args.output / "wishlist-add-mobile.png"), animations="disabled")
                     url.fill("http://shop.example.com/invalid")
                     page.clock.run_for(500)
@@ -326,9 +395,11 @@ def main():
                     expect(page.locator("#preview-product strong")).to_have_text("Testovací pánev, ø 26 cm")
                     expect(page.locator("#preview-product")).to_contain_text("Cena není k dispozici")
                     expect(page.locator("#preview-product")).to_contain_text("Návrh kategorie · Domácnost")
+                    assert page.locator("#preview-product img").evaluate("(img) => img.decode().then(() => img.naturalWidth)") == 1
                     expect(page.locator("#editor-submit")).to_have_text("Přidat položku")
                     assert "web.add" not in operations
                     expect(page.locator("#visible-count")).to_have_text("3")
+                    audit("add-ready")
                     page.screenshot(path=str(args.output / "wishlist-product-preview-mobile.png"), animations="disabled")
                     page.locator(".extra-fields summary").click()
                     name = page.locator('#editor [name="name"]')
@@ -375,7 +446,7 @@ def main():
                     expect(page.locator("#detail")).to_be_visible()
                     expect(page.locator("#detail-content")).to_contain_text("Odkaz je uložený")
                     expect(page.locator("#detail-title")).to_have_text("Vlastní název položky")
-                    expect(page.locator("#detail .context-label")).to_contain_text("Dárky")
+                    expect(page.locator("#detail .detail-top .context-label")).to_contain_text("Dárky")
                     page.keyboard.press("Escape")
                     expect(page.locator("#visible-count")).to_have_text("4")
                     page.locator("#add-button").click()
@@ -387,9 +458,52 @@ def main():
                     expect(page.locator("#detail-title")).to_have_text("Rozpoznaný testovací produkt")
                     page.keyboard.press("Escape")
                     expect(page.locator("#visible-count")).to_have_text("5")
+                    page.locator("#add-button").click()
+                    page.evaluate("""() => {
+                        const request = window.fetch;
+                        window.fetch = async (url, options) => {
+                            const response = await request(url, options);
+                            const action = options?.body && JSON.parse(options.body);
+                            if (action?.operation === 'web.preview' && action.arguments.url.endsWith('/skip-focus')) {
+                                return new Promise(resolve => { window.finishPreview = () => resolve(response); });
+                            }
+                            if (action?.operation === 'web.preview_category') {
+                                return new Promise(resolve => { window.finishCategory = () => resolve(response); });
+                            }
+                            return response;
+                        };
+                    }""")
+                    # Previous checks may have previewed this shop within the server's two-second throttle.
+                    page.wait_for_timeout(2100)
+                    url.fill("https://www.momenti.cz/skip-focus")
+                    page.clock.run_for(500)
+                    skip = page.get_by_role("button", name="Přeskočit náhled")
+                    expect(skip).to_be_visible()
+                    skip.focus()
+                    page.wait_for_function("Boolean(window.finishPreview)")
+                    page.evaluate("window.finishPreview()")
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "ready")
+                    expect(disclosure).to_be_focused()
+                    expect(page.locator("#editor-submit")).to_be_enabled()
+                    disclosure.click()
+                    category.select_option("Dárky")
+                    page.wait_for_function("Boolean(window.finishCategory)")
+                    page.evaluate("window.finishCategory()")
+                    expect(category).to_have_value("Dárky")
+                    expect(page.locator("#preview-category")).not_to_be_visible()
+                    page.keyboard.press("Escape")
+                    kettle.click()
+                    page.get_by_role("button", name="Zkontrolovat cenu", exact=True).click()
+                    expect(page.get_by_text("Čeká na další ověření ceny a dostupnosti.")).to_be_visible()
+                    expect(page.get_by_text("Poslední známá cena", exact=True)).to_be_visible()
+                    expect(page.locator("svg.chart")).to_be_visible()
+                    page.keyboard.press("Escape")
                     assert operations.count("web.add") == 2
                     assert "web.statistics" not in operations
                     assert not errors, errors
+                    if a11y:
+                        (args.output / "wishlist-axe.json").write_text(json.dumps(a11y, indent=2) + "\n")
+                        assert not any(a11y.values()), a11y
                     (args.output / "wishlist-browser.json").write_text(json.dumps({
                         "result": "passed", "scope": "synthetic local HTTPS; no pilot or shop access",
                         "revision": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),

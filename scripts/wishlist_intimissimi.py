@@ -16,6 +16,8 @@ from scripts.wishlist_extract import (
 )
 
 
+from scripts.wishlist_media import product_image
+
 def require(condition):
     if not condition:
         raise ExtractionError("offer_unverified")
@@ -60,7 +62,7 @@ def requested(url):
     return match[2] + "   " + match[3], match[1] + match[2] + ".html", match[3]
 
 
-def public_offer(html, url):
+def public_offer(html, url, *, include_image=False):
     require(isinstance(html, (str, bytes)) and len(html) <= MAX_BYTES)
     pid, master_path, variant = requested(url)
     document = Document()
@@ -152,16 +154,18 @@ def public_offer(html, url):
     # Absence is meaningful only after exact variant, SKU and zero stock are
     # verified. A present/conflicting price never falls back to availability.
     missing = (None, "", "null")
+    image = product_image(product, url) if include_image else None
+    media = {"image_url": image} if image else {}
     if (not available and offer.get("price") in missing
             and visible_price.attrs.get("content") in missing and not text(visible_price)):
         require(offer.get("priceCurrency") in (*missing, "CZK")
                 and currency.attrs.get("content") in (*missing, "CZK"))
         return {"name": title, "sku": pid, "price": None, "currency": None,
-                "availability": "out_of_stock", "conditions_verification": "not_verified"}
+                "availability": "out_of_stock", "conditions_verification": "not_verified", **media}
     require(offer.get("priceCurrency") == "CZK")
     price = amount(str(offer.get("price", "")))
     require(currency.attrs.get("content") == "CZK" and amount(visible_price.attrs.get("content", "")) == price)
     display = re.fullmatch(r"([0-9]{1,9}|[0-9]{1,3}(?: [0-9]{3})+),([0-9]{2}) Kč", text(visible_price))
     require(display is not None and amount(display[1].replace(" ", "") + "." + display[2]) == price)
     return {"name": title, "sku": pid, "price": price, "currency": "CZK", "availability": availability,
-            "conditions_verification": "not_verified"}
+            "conditions_verification": "not_verified", **media}

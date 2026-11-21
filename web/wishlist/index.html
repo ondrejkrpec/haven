@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#fefdf3">
+  <meta name="theme-color" content="#f8f7ef">
   <meta name="description" content="Soukromý wishlist Havenu pro sledování cen a dostupnosti.">
   <title>Wishlist · Haven</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%232b4d3b'/%3E%3Cpath d='M12 12v16m16-16v16M12 20h16' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
@@ -13,7 +13,7 @@
 <body>
   <a class="skip-link" href="#main">Přeskočit na wishlist</a>
   <header class="topbar">
-    <a href="./" class="brand" aria-label="Haven, wishlist"><span class="brand-mark" aria-hidden="true">h.</span> haven</a>
+    <a href="./" class="brand" translate="no" aria-label="Haven, wishlist"><span class="brand-mark" aria-hidden="true">h.</span> haven</a>
     <span class="preview-badge"><span data-icon="lock"></span> Interaktivní návrh · ukázková data</span>
   </header>
   <main id="main" tabindex="-1">
@@ -23,17 +23,13 @@
     </div>
 
     <section class="wishlist" aria-labelledby="list-title">
-      <div id="activity" class="activity" hidden>
-        <span id="activity-label">Za posledních 7 dní</span>
-        <div id="activity-controls" class="activity-controls"></div>
-      </div>
       <div class="filters" aria-label="Filtry wishlistu">
-        <label class="search"><span data-icon="search"></span><input id="search" name="search" type="search" autocomplete="off" placeholder="Najít položku…" aria-label="Hledat podle názvu"></label>
+        <label class="search"><span data-icon="search"></span><input id="search" name="search" type="search" autocomplete="off" placeholder="Najít položku…" aria-label="Najít položku"></label>
         <label class="select-control"><span>Kategorie</span><select id="filter-category" name="category"><option value="">Všechny</option></select></label>
         <label class="select-control"><span>Řazení</span><select id="sort" name="sort"><option value="recent">Poslední změny</option><option value="name">Podle názvu</option><option value="price">Od nejlevnější</option><option value="newest">Naposledy přidané</option></select></label>
       </div>
       <details id="more-filters" class="more-filters">
-        <summary>Další filtry <span id="more-count" hidden></span></summary>
+        <summary><span data-icon="sliders"></span> Další filtry <span id="more-count" hidden></span></summary>
         <div class="secondary-filters">
           <label class="select-control"><span>Obchod</span><select id="filter-shop" name="shop"><option value="">Všechny</option></select></label>
           <label class="select-control"><span>Dostupnost</span><select id="filter-stock" name="stock"><option value="">Všechny stavy</option></select></label>
@@ -44,6 +40,10 @@
       <div class="list-heading">
         <h2 id="list-title" tabindex="-1"><span id="list-label">V hledáčku</span> <span id="visible-count" hidden></span></h2>
         <button type="button" class="text-button" id="reset-filters" hidden>Zrušit filtry</button>
+      </div>
+      <div id="activity" class="activity" hidden>
+        <span id="activity-label">Za posledních 7 dní</span>
+        <div id="activity-controls" class="activity-controls"></div>
       </div>
       <p class="sr-only" id="list-status" role="status"></p>
       <div id="rows"></div>
@@ -58,9 +58,9 @@
   </main>
   <dialog id="detail" class="detail-dialog" aria-labelledby="detail-title"><div id="detail-content"></div><p class="sr-only" id="detail-announcement" role="status"></p></dialog>
   <dialog id="editor" class="form-dialog" aria-labelledby="editor-title">
-    <form id="editor-form">
+    <form id="editor-form" novalidate>
       <div class="dialog-heading">
-        <div><h2 id="editor-title">Přidat položku</h2><p class="context-label" id="editor-eyebrow" hidden></p></div>
+        <div><h2 id="editor-title" tabindex="-1">Přidat položku</h2><p class="context-label" id="editor-eyebrow" hidden></p></div>
         <button type="button" class="icon-button" data-close="editor" aria-label="Zavřít"><span data-icon="close"></span></button>
       </div>
       <div id="editor-fields"></div>
@@ -77,6 +77,16 @@
     <p>Průměr počítáme z měřených dní za posledních 90 kalendářních dní. Více cen v jednom dni nejprve zprůměrujeme. Dny bez ceny vynecháváme.</p>
     <p>Minimum je nejnižší naměřená cena ve stejném okně. Skutečné pokrytí a měřené dny najdeš přímo u historie.</p>
     <p>Zlevnění nebo zdražení porovnává po sobě jdoucí ověřené ceny stejné položky. Srovnání nezahrnuje dopravu, kupony ani členské výhody.</p>
+  </dialog>
+  <dialog id="confirm-dialog" class="form-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-description">
+    <form method="dialog">
+      <div class="dialog-heading"><h2 id="confirm-title">Stornovat nákup?</h2></div>
+      <p id="confirm-description">Tento nákup zůstane v historii jako stornovaný a může se obnovit předchozí stav položky.</p>
+      <div class="form-actions">
+        <button class="button secondary" value="cancel" autofocus>Ponechat nákup</button>
+        <button class="button danger" value="confirm">Stornovat nákup</button>
+      </div>
+    </form>
   </dialog>
   <div class="toast" id="toast" hidden><span id="toast-message"></span><button type="button" class="text-button" id="toast-undo" hidden>Vrátit zpět</button><button type="button" class="icon-button" id="toast-close" aria-label="Zavřít oznámení"><span data-icon="close"></span></button></div>
   <p class="sr-only" id="toast-status" role="status"></p>

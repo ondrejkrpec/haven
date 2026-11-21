@@ -1,6 +1,7 @@
 """Preview reuses collection without obtaining any write authority."""
 
 import asyncio
+from base64 import b64decode
 import json
 import os
 from pathlib import Path
@@ -11,10 +12,13 @@ from unittest.mock import Mock
 from types import SimpleNamespace
 
 from scripts.wishlist_interpreter import CategoryServer
+from scripts.wishlist_media import IMAGE_FRAME_LIMIT, image_content
 from scripts.wishlist_model import category_login, suggest_category
 from scripts.wishlist_product_preview import PreviewServer
 from scripts.wishlist_web_gateway import exchange
 
+
+PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGOo7CsEAAL8AXl6GkipAAAAAElFTkSuQmCC"
 
 def request(url):
     return {"protocol_version": 1, "operation": "web.preview", "request_id": "1" * 32,
@@ -86,6 +90,39 @@ class PreviewTests(unittest.IsolatedAsyncioTestCase):
                 server.ingress_uid = os.getuid() + 1
                 denied = await asyncio.to_thread(exchange, endpoint, request(url))
                 self.assertEqual(denied["code"], "denied")
+            finally:
+                await server.close()
+
+    async def test_category_and_preview_photo_use_only_verified_cached_metadata(self):
+        item = "https://www.fabini.cz/products/synthetic"
+        picture = "https://cdn.shopify.com/synthetic.png"
+        fetcher = AsyncMock(return_value={"status": "ok", "http_status": 200, "retry_after": 0,
+                                          "image_url": picture, "offer": {
+                                              "name": "Syntetická pánev", "price": "199.00", "availability": "in_stock"}})
+        images = AsyncMock(return_value={"mime": "image/png", "body": PNG})
+        with TemporaryDirectory() as root:
+            server = PreviewServer(Path(root) / "request.sock", ingress_uid=os.getuid(), fetcher=fetcher,
+                                   category_endpoint={}, image_fetcher=images)
+            server.category_for = AsyncMock(return_value="kitchen")
+            await server.start()
+            try:
+                endpoint = {"socket": str(server.path), "service_uid": os.getuid()}
+                data = (await asyncio.to_thread(exchange, endpoint, request(item)))["data"]
+                server.category_for.assert_not_awaited()
+                self.assertEqual(data["category_token"], "1" * 32)
+                self.assertEqual(data["image"], "/wishlist/api/image/p/" + "1" * 32)
+                category = request(item) | {"operation": "web.preview_category", "arguments": {"token": data["category_token"]}}
+                self.assertEqual((await server.respond(category))["data"]["category"], "kitchen")
+                self.assertIsNone((await server.respond(category))["data"]["category"])
+                server.category_for.assert_awaited_once_with("Syntetická pánev")
+                photo = request(item) | {"operation": "web.preview_image", "arguments": {"token": "1" * 32}}
+                for _ in range(2):
+                    result = await asyncio.to_thread(exchange, endpoint, photo, response_limit=IMAGE_FRAME_LIMIT)
+                    self.assertEqual(image_content(result["data"]), (b64decode(PNG), "image/png"))
+                images.assert_awaited_once_with({"shop": "www.fabini.cz", "url": picture}, timeout=3)
+                result = await server.respond(photo | {"arguments": {"shop": "www.momenti.cz", "url": picture}})
+                self.assertEqual(result["data"], {})
+                self.assertIsNone(image_content({"mime": "image/jpeg", "body": PNG}))
             finally:
                 await server.close()
 

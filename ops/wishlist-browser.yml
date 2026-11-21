@@ -200,7 +200,7 @@
         group: root
         mode: '0644'
       loop: [wishlist_browser, wishlist_egress, wishlist_alza, wishlist_fetch, wishlist_collection,
-             wishlist_domain, wishlist_store, wishlist_contract, wishlist_extract, wishlist_protocol, wishlist_socket, wishlist_process]
+             wishlist_domain, wishlist_store, wishlist_contract, wishlist_extract, wishlist_media, wishlist_protocol, wishlist_socket, wishlist_process]
 
     - name: Install the public request shape used by imported validators
       ansible.builtin.copy:

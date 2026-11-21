@@ -39,7 +39,7 @@ export async function command(operation, arguments_, id = requestId(), retry = t
   if (!csrf) await bootstrap();
   const response = await http('command', {method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},
     body:JSON.stringify({protocol_version:1,operation:'web.'+operation,arguments:arguments_,request_id:id}),
-    signal,timeout:operation === 'preview' ? 26000 : 12000});
+    signal,timeout:operation === 'preview_category' ? 17000 : 12000});
   if (response.code === 'csrf_expired' && retry && !signal?.aborted) {
     await bootstrap();
     return command(operation,arguments_,id,false,signal);
@@ -51,6 +51,10 @@ export async function preview(url, signal) {
   const response = await command('preview', {url}, requestId(), true, signal);
   return response.data;
 }
+export async function previewCategory(token, signal) {
+  const response = await command('preview_category', {token}, requestId(), true, signal);
+  return response.data.category;
+}
 export function toUI(entry) {
   const observation = entry.latest_observation;
   const latest = observation ? {at:observation.observed_at,cents:Math.round(Number(observation.price)*100)} : null;
@@ -60,7 +64,7 @@ export function toUI(entry) {
     checkedAt:entry.latest_availability?.checked_at || observation?.observed_at || null,
     availability:entry.latest_availability?.availability || observation?.availability || 'unknown',
     collection:entry.collection_status,collectionReason:entry.collection_reason,nextCollectionAt:entry.next_collection_at,
-    lastAttemptAt:entry.last_attempt_at,stats90:entry.stats90,stockChange:entry.stock_change,
+    image:entry.image,lastAttemptAt:entry.last_attempt_at,stats90:entry.stats90,stockChange:entry.stock_change,
     observations:latest?[latest]:[],purchases:[]};
 }
 export async function list() {

@@ -16,6 +16,7 @@ from threading import BoundedSemaphore
 import time
 from urllib.parse import urlsplit
 
+from scripts.wishlist_media import IMAGE_FRAME_LIMIT, image_content
 from scripts.wishlist_protocol import MAX_FRAME, decode, encode, peer_uid
 from scripts.wishlist_socket import socket_path
 
@@ -62,7 +63,7 @@ def load_config(path):
     return config
 
 
-def exchange(config, message, *, timeout=5):
+def exchange(config, message, *, timeout=5, response_limit=MAX_FRAME):
     deadline = time.monotonic() + timeout
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
         client.settimeout(timeout)
@@ -85,9 +86,9 @@ def exchange(config, message, *, timeout=5):
             return data
 
         size = struct.unpack("!I", read(4))[0]
-        if not 0 < size <= MAX_FRAME:
+        if not 0 < size <= response_limit:
             raise ValueError("domain_frame")
-        return decode(read(size))
+        return decode(read(size), limit=response_limit)
 
 
 class Application:
@@ -95,6 +96,8 @@ class Application:
         self.config, self.transport, self.clock = config, transport, clock
         self.preview_transport = preview_transport
         self.preview_slots = BoundedSemaphore(2)
+        self.category_slots = BoundedSemaphore(1)
+        self.image_slots = BoundedSemaphore(2)
         self.secret = secrets.token_bytes(32)
         self.host = urlsplit(config["origin"]).netloc
         self.assets = {}
@@ -156,12 +159,37 @@ class Application:
         endpoint = self.config.get("preview")
         if endpoint is None:
             return {"code": "ok", "data": {"status": "unsupported"}}
-        if not self.preview_slots.acquire(blocking=False):
+        category = request["operation"] == "web.preview_category"
+        slots = self.category_slots if category else self.preview_slots
+        if not slots.acquire(blocking=False):
             return {"code": "ok", "data": {"status": "retry_later"}}
         try:
-            return self.preview_transport(endpoint, request, timeout=24)
+            return self.preview_transport(endpoint, request, timeout=16 if category else 10)
         finally:
-            self.preview_slots.release()
+            slots.release()
+
+    def photo(self, kind, photo_id):
+        endpoint = self.config.get("preview")
+        if endpoint is None or not self.image_slots.acquire(timeout=3.5):
+            return None
+        try:
+            request = {"protocol_version": 1, "request_id": secrets.token_hex(16)}
+            if kind == "i":
+                result = self.transport(self.config, request | {
+                    "operation": "web.photo", "arguments": {"entry_id": "wi_" + photo_id},
+                })
+                if result.get("code") != "ok":
+                    return None
+                args = result["data"]
+            else:
+                args = {"token": photo_id}
+            result = self.preview_transport(endpoint, request | {"operation": "web.preview_image", "arguments": args},
+                                            timeout=4, response_limit=IMAGE_FRAME_LIMIT)
+            return image_content(result.get("data")) if result.get("code") == "ok" else None
+        except (OSError, ValueError, KeyError):
+            return None
+        finally:
+            self.image_slots.release()
 
     def __call__(self, environ, start_response):
         extra = []
@@ -189,6 +217,13 @@ class Application:
         if method in ("GET", "HEAD") and path in self.assets:
             body, mime = self.assets[path]
             return respond("200 OK", body, mime)
+        if method in ("GET", "HEAD") and (match := re.fullmatch(r"/api/image/([ip])/([a-f0-9]{32})", path)):
+            if self.session(environ) is None:
+                return respond("403 Forbidden", {"code": "denied"})
+            image = self.photo(*match.groups())
+            if image:
+                return respond("200 OK", *image)
+            return respond("404 Not Found", {"code": "not_found"})
         if method == "GET" and path == "/api/bootstrap":
             session = self.session(environ)
             if session is None:
@@ -216,7 +251,7 @@ class Application:
             if len(raw) != size:
                 raise ValueError("body")
             request = decode(raw)
-            if request.get("operation") == "web.preview":
+            if request.get("operation") in ("web.preview", "web.preview_category"):
                 result = self.product_preview(request)
             elif request.get("operation") in OPERATIONS:
                 result = self.transport(self.config, request)
