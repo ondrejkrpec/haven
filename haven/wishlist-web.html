@@ -512,6 +512,9 @@ sudo tailscale serve status --json</code></pre>
 <p>The two optional owner-supplied webfonts are served from the existing authenticated origin. Obtain original WOFF2 copies for your own installation from <a href="https://www.fontshare.com/fonts/gambarino">Gambarino</a> and <a href="https://www.fontshare.com/fonts/general-sans">General Sans</a> under the foundry&#8217;s <a href="https://www.fontshare.com/licenses/itf-ffl">license</a>. Supply an absolute local directory via <code>haven_wishlist_web_fonts</code> to the existing web playbook. It accepts only the files named <code>gambarino.woff2</code> (regular) and <code>general-sans.woff2</code> (normal variable weight). No font binaries are bundled in the source repository. Without optional assets the stylesheet uses local/system fonts. Browser clients do not connect to Fontshare.</p>
 </div>
 <div class="paragraph">
+<p>The first screen shows the shared skeleton while the interface and optional fonts initialize. List requests can run during font loading. The interface uses any fonts ready within 1.5 seconds and keeps its chosen fonts until the next navigation.</p>
+</div>
+<div class="paragraph">
 <p>The local HTTPS acceptance above also checks eight viewport widths from 320 to 3840 pixels, keyboard focus during refresh and detail loading, actual price/availability transitions, single and changing price histories, URL-only intake, and purchase correction, cancellation and removal undo. Pass <code>--fonts /absolute/path/to/owner-fonts</code> to exercise the optional files. Existing data and automatic collection remain the sources of truth.</p>
 </div>
 <div class="paragraph">
