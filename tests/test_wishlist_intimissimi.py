@@ -6,7 +6,8 @@ import unittest
 
 from scripts import wishlist_fetch
 from scripts.wishlist_extract import ExtractionError
-from scripts.wishlist_intimissimi import public_offer
+from scripts.wishlist_intimissimi import colour_variants, public_offer
+from scripts.wishlist_media import image_url
 from tests import test_wishlist_fetch as fetch_tests
 
 URL = "https://www.intimissimi.com/cz/product/synthetic_top-TOP100+++123AM.html"
@@ -58,6 +59,30 @@ def unavailable_page():
 
 class IntimissimiTests(unittest.TestCase):
     responses = fetch_tests.FetchTests.responses
+
+    def test_colour_only_link_offers_verified_size_choices_in_preview_only(self):
+        url = "https://www.intimissimi.com/cz/product/synthetic_top-TOP100.html?dwvar_TOP100_Z_COL_INTU=123A"
+        html = (page().replace(f'data-pid="{PID}" data-variant-pid="{PID}"',
+                              'data-pid="TOP100_color_123A" data-variant-pid="TOP100_color_123A"')
+                .replace('data-size-id="M" checked', 'data-size-id="M"')
+                .replace("123a -", "123A -").encode())
+        self.assertEqual(colour_variants(html, url), [{"size": "M", "url": URL}])
+        for wrong in (url.replace("123A", "123B"), url + "&size=L"):
+            with self.subTest(wrong=wrong), self.assertRaises(ExtractionError):
+                colour_variants(html, wrong)
+        with self.responses((200, {"Content-Type": "text/html"}, html)):
+            self.assertNotIn("variants", wishlist_fetch.fetch(url, ADAPTER))
+        with self.responses((200, {"Content-Type": "text/html"}, html)):
+            self.assertEqual(wishlist_fetch.fetch(url, ADAPTER, preview=True)["variants"],
+                             [{"size": "M", "url": URL}])
+
+    def test_saved_original_resolves_to_bounded_public_thumbnail(self):
+        host = "www.intimissimi.com"
+        original = f"https://{host}/on/demandware.static/-/Sites-INT_EC_COM/default/dw1234abcd/images/TOP100123A-M.jpeg"
+        sized = original.replace(host, host + "/dw/image/v2/BHHR_PRD") + "?sw=600&sfrm=jpeg"
+        self.assertEqual(image_url(host, original), sized)
+        self.assertEqual(image_url(host, sized), sized)
+        self.assertIsNone(image_url(host, original.replace(host, "other.example")))
 
     def test_primary_gallery_falls_back_to_a_photo_of_the_verified_colour(self):
         prefix = ("https://www.intimissimi.com/dw/image/v2/BHHR_PRD/on/demandware.static/"

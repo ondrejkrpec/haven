@@ -15,6 +15,9 @@ IMAGE_HOSTS = {
 MAX_IMAGE_BYTES = 512 * 1024
 IMAGE_FRAME_LIMIT = 4 * ((MAX_IMAGE_BYTES + 2) // 3) + 1024
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+INTIMISSIMI_ORIGINAL = re.compile(
+    r"/on/demandware\.static/-/Sites-INT_EC_COM/default/dw[0-9a-f]{8}/images/[A-Za-z0-9_-]+\.jpe?g"
+)
 
 
 def image_url(shop, value):
@@ -33,6 +36,8 @@ def image_url(shop, value):
             if not re.fullmatch(r"/usr/www\.ifantazie\.cz/user/shop/(?:big|detail|orig)/[\w .~()+-]+",
                                 unquote(parsed.path, errors="strict")):
                 return None
+        if (shop == parsed.hostname == "www.intimissimi.com" and INTIMISSIMI_ORIGINAL.fullmatch(parsed.path)):
+            return f"https://www.intimissimi.com/dw/image/v2/BHHR_PRD{parsed.path}?sw=600&sfrm=jpeg"
     except ValueError:
         return None
     return value

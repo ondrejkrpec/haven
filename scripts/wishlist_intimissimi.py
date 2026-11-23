@@ -14,9 +14,8 @@ from urllib.parse import unquote, urljoin, urlsplit
 from scripts.wishlist_extract import (
     Document, ExtractionError, MAX_BYTES, amount, identity, invalid_constant, json_products, types,
 )
-
-
 from scripts.wishlist_media import image_url, product_image
+
 
 def require(condition):
     if not condition:
@@ -62,6 +61,50 @@ def requested(url):
     return match[2] + "   " + match[3], match[1] + match[2] + ".html", match[3]
 
 
+def colour_variants(html, url):
+    """Resolve colour-only CZ product links to the sizes listed for that colour."""
+    require(isinstance(html, bytes) and len(html) <= MAX_BYTES)
+    host, path, query = identity(url)
+    product_path = re.fullmatch(r"(/cz/product/[a-z0-9_-]+-)([A-Z0-9]{2,24})\.html", path)
+    require(host == "www.intimissimi.com" and product_path is not None and not urlsplit(url).fragment)
+    model = product_path[2]
+    key, colour = only(query)
+    require(key in {f"dwvar_{model}_Z_COL_INTU", f"dwvar_{model}_Z_COL_INTD"}
+            and re.fullmatch(r"[A-Z0-9]{1,16}", colour) is not None)
+
+    document = Document()
+    document.feed(html.decode("utf-8-sig"))
+    document.close()
+    canonical = only([n for n in document.nodes if n.tag == "link" and n.attrs.get("rel") == "canonical"])
+    require(identity(canonical.attrs.get("href")) == (host, path, ()))
+    root = only([n for n in document.nodes if {"js-intProductDetail", "product-detail"} <= classes(n)])
+    colour_pid = f"{model}_color_{colour}"
+    require(root.attrs.get("data-pid") == colour_pid and root.attrs.get("data-variant-pid") == colour_pid)
+    verified_colour = text(only([n for n in walk(root) if "js-product-color-id" in classes(n)]))
+    require(verified_colour.startswith(colour + " - "))
+    wrapper = only([n for n in walk(root)
+                    if {"cc-intProductDetail-size-wrapper", "sizebay-js-desktop-size-buttons"} <= classes(n)])
+    structured_skus = set()
+    for node in document.nodes:
+        if node.tag == "script" and (node.attrs.get("type") or "").lower() == "application/ld+json":
+            value = json.loads(node.text(), parse_constant=invalid_constant, object_pairs_hook=pairs)
+            structured_skus.update(record["sku"] for record in json_products(value)
+                                   if isinstance(record.get("sku"), str))
+    sizes = []
+    for label in walk(wrapper):
+        size = label.attrs.get("for") or ""
+        if (label.tag != "label" or "js-intProductDetail-size-item" not in classes(label)
+                or not re.fullmatch(r"[A-Z0-9]{1,8}", size) or f"{model}   {colour}{size}" not in structured_skus):
+            continue
+        require(any(n.tag == "input" and n.attrs.get("type") == "radio" and n.attrs.get("data-size-id") == size
+                    for n in walk(label)))
+        require(size not in sizes)
+        sizes.append(size)
+    require(0 < len(sizes) <= 16)
+    # The colour page can display a different price from a specific size.
+    return [{"size": size, "url": f"https://{host}{path[:-5]}+++{colour}{size}.html"} for size in sizes]
+
+
 def gallery_image(nodes, visible, url, model, colour):
     # The primary gallery uses a colour-specific photo for all sizes.
     path = re.compile(r"/dw/image/v2/[^/]+/on/demandware\.static/-/Sites-INT_EC_COM/default/"
@@ -75,8 +118,8 @@ def gallery_image(nodes, visible, url, model, colour):
                     or "productImageCarouselItem" not in classes(node) or not visible(node)):
                 continue
             srcset = (node.attrs.get("srcset") or "").split(",", 16)[:16]
-            candidates = [node.attrs.get("src"), node.attrs.get("data-src"),
-                          *(option.split()[0] for option in srcset if option.strip())]
+            candidates = [*(option.split()[0] for option in srcset if option.strip()),
+                          node.attrs.get("data-src"), node.attrs.get("src")]
             for candidate in candidates:
                 if not candidate or len(candidate) > 1024:
                     continue
@@ -183,8 +226,8 @@ def public_offer(html, url, *, include_image=False):
     missing = (None, "", "null")
     image = None
     if include_image:
-        image = (product_image(product, url)
-                 or gallery_image(nodes, visible, url, pid.split()[0], colour_match[1].upper()))
+        image = (gallery_image(nodes, visible, url, pid.split()[0], colour_match[1].upper())
+                 or product_image(product, url))
     media = {"image_url": image} if image else {}
     if (not available and offer.get("price") in missing
             and visible_price.attrs.get("content") in missing and not text(visible_price)):

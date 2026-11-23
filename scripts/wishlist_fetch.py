@@ -19,7 +19,7 @@ from urllib.parse import urljoin, urlsplit
 
 from scripts.wishlist_collection import ADAPTERS, validate_result
 from scripts.wishlist_domain import source_host
-from scripts.wishlist_extract import MAX_BYTES, extract, identity
+from scripts.wishlist_extract import MAX_BYTES, ExtractionError, extract, identity
 from scripts.wishlist_media import IMAGE_TYPES, MAX_IMAGE_BYTES, image_url, valid_image
 from scripts.wishlist_protocol import MAX_FRAME, decode
 
@@ -246,8 +246,15 @@ def fetch(url, adapter, *, preview=False):
                     from scripts.wishlist_alza import public_offer
                     candidate = {"status": "extracted", "evidence": ["jsonld"], "offer": public_offer(html, url)}
                 elif adapter == "intimissimi-public-price-v1":
-                    from scripts.wishlist_intimissimi import public_offer
-                    candidate = {"status": "extracted", "evidence": ["jsonld"], "offer": public_offer(html, url, include_image=True)}
+                    from scripts.wishlist_intimissimi import colour_variants, public_offer
+                    try:
+                        offer = public_offer(html, url, include_image=True)
+                    except ExtractionError:
+                        if preview:
+                            variants = colour_variants(html, url)
+                            return failure("offer_unverified", http_status=status, retry_after=retry) | {"variants": variants}
+                        raise
+                    candidate = {"status": "extracted", "evidence": ["jsonld"], "offer": offer}
                 else:
                     candidate = extract(html, url, resolve_fabini_variant=preview and adapter == "fabini-jsonld-v1")
                 required = REQUIRED_EVIDENCE[adapter]
@@ -275,7 +282,8 @@ def fetch(url, adapter, *, preview=False):
 
 
 def fetch_image(shop, url):
-    if not image_url(shop, url):
+    url = image_url(shop, url)
+    if not url:
         return {}
     parsed = urlsplit(url)
     client = connection(parsed.hostname)
