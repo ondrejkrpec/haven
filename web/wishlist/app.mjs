@@ -3,8 +3,27 @@ import {CATEGORIES, money, dayKey, priceStats, comparison, remainingDays, visibl
   createEntry, updateEntry, recordPurchase, correctPurchase, voidPurchase,
   removeEntry, restoreEntry, resumeNotifications, inputMoney, parseMoney} from './model.mjs';
 const live = document.querySelector('meta[name="haven-mode"]')?.content === 'production';
+const fontsReady = prepareFonts();
 const api = live ? await import('./api.mjs') : null;
 const {demoState} = live ? {demoState: null} : await import('./demo.mjs');
+
+async function prepareFonts() {
+  const fonts = document.fonts;
+  if (!fonts) return;
+  const ready = new Set();
+  const options = [['generalSans', '1rem "General Sans"'], ['gambarino', '1rem Gambarino']];
+  const requests = options.map(async ([key, font]) => {
+    if ((await fonts.load(font)).length) ready.add(key);
+  });
+  let timer;
+  await Promise.race([
+    Promise.allSettled(requests),
+    new Promise(resolve => { timer = setTimeout(resolve, 1500); }),
+  ]);
+  clearTimeout(timer);
+  // Choose the fonts once per navigation so a late download can't resize visible content.
+  for (const key of ready) document.documentElement.dataset[key] = '';
+}
 
 const $ = selector => document.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -880,9 +899,14 @@ $('#reset-demo').onclick=()=>{
 window.addEventListener('storage',event=>{
   if(!live && event.key===storageKey)toast('Ukázka se změnila v jiné kartě. Obnov stránku, než budeš pokračovat.');
 });
-render();
+if (live) render();
+const shellReady = fontsReady.then(() => {
+  if (!live) render();
+  document.documentElement.removeAttribute('data-wishlist-starting');
+});
 
-function showLoadError(error) {
+async function showLoadError(error) {
+  await shellReady;
   loading=false;loadError=error.message;render();
 }
 function reloadList() {
@@ -950,6 +974,8 @@ async function loadLive() {
   loadError = null;
   if (loading) {
     render();
+    await shellReady;
+    if (generation !== listGeneration) return;
     await waitForListPhotos();
     if (generation !== listGeneration) return;
   }

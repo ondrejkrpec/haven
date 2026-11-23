@@ -6,7 +6,8 @@ separate environment. Never connects to the pilot or a product shop.
 
 import argparse
 import asyncio
-from datetime import timedelta
+from base64 import b64decode
+from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 import shutil
@@ -111,6 +112,66 @@ def fixture(path):
     return domain, application
 
 
+def check_font_startup(context, origin, output):
+    for width, height, finish_in_time in ((1440, 1100, True), (390, 844, False)):
+        page = context.new_page()
+        page.set_viewport_size({"width": width, "height": height})
+        clock = datetime.now(timezone.utc)
+        page.clock.install(time=clock)
+        page.clock.pause_at(clock + timedelta(seconds=10))
+        held = []
+        pattern = "**/general-sans.woff2"
+        page.route(pattern, lambda route: held.append(route))
+
+        def release_font():
+            while held:
+                held.pop().continue_()
+            page.unroute(pattern)
+
+        try:
+            with page.expect_request(lambda request: request.url.endswith("/general-sans.woff2")):
+                page.goto(origin + "/wishlist/", wait_until="domcontentloaded")
+            startup = page.locator(".startup-skeleton").first
+            heading = page.locator("h1")
+            add = page.locator("#add-button")
+            expect(startup).to_be_visible()
+            expect(heading).to_be_hidden()
+            expect(add).to_be_hidden()
+            expect(page.locator("#list-pending")).to_be_visible()
+            expect(page.locator("#rows .item-title")).to_have_count(3)
+            expect(page.locator("#rows .item-title").first).to_be_hidden()
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+            session = context.new_cdp_session(page)
+            capture = session.send("Page.captureScreenshot", {"format": "png"})
+            (output / f"wishlist-font-loading-{width}.png").write_bytes(b64decode(capture["data"]))
+            session.detach()
+            if finish_in_time:
+                release_font()
+            else:
+                page.clock.run_for(1501)
+            expect(startup).to_be_hidden()
+            expect(heading).to_be_visible()
+            expect(add).to_be_visible()
+            expect(page.locator("html")).to_have_attribute("data-gambarino", "")
+            if finish_in_time:
+                expect(page.locator("html")).to_have_attribute("data-general-sans", "")
+            else:
+                geometry = """() => [...document.querySelectorAll('h1, #add-button, #search')].map(node => {
+                    const {fontFamily, fontSize} = getComputedStyle(node);
+                    return [fontFamily, fontSize, node.getBoundingClientRect().toJSON()];
+                })"""
+                before = page.evaluate(geometry)
+                release_font()
+                page.clock.resume()
+                page.wait_for_function("""() => [...document.fonts].some(face =>
+                    face.family.includes('General Sans') && face.status === 'loaded')""")
+                assert page.evaluate(geometry) == before
+                assert page.locator("html").get_attribute("data-general-sans") is None
+        finally:
+            page.unroute_all(behavior="ignoreErrors")
+            page.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--chromium", required=True, type=Path)
@@ -179,6 +240,8 @@ def main():
                 try:
                     context = browser.new_context(ignore_https_errors=True, viewport={"width": 1440, "height": 1100})
                     context.route("**/*", lambda route: route.continue_() if route.request.url.startswith(shared["origin"] + "/") else route.abort())
+                    if args.fonts:
+                        check_font_startup(context, shared["origin"], args.output)
                     page = context.new_page()
                     page.on("pageerror", lambda error: errors.append(str(error)))
                     operations = []
@@ -656,6 +719,7 @@ def main():
                         "dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()),
                         "browser": browser.version, "viewports": [width for width, _ in VIEWPORTS],
                         "same_origin_fonts": bool(args.fonts),
+                        "stable_startup_with_delayed_fonts": bool(args.fonts),
                         "checks": ["list and visible photos reveal together", "failed, slow and offscreen photos",
                                    "shared skeleton styling and reduced motion",
                                    "purchase summaries absent", "no automatic aggregate requests", "list filters",

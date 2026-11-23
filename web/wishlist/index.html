@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="cs">
+<html lang="cs" data-wishlist-starting>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,24 +11,41 @@
   <script type="module" src="./app.mjs"></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Přeskočit na wishlist</a>
-  <header class="topbar">
+  <a class="skip-link" href="#main" data-startup-content>Přeskočit na wishlist</a>
+  <div class="topbar startup-skeleton skeleton" aria-hidden="true">
+    <span class="skeleton-fill skeleton-brand"></span>
+    <span class="skeleton-fill skeleton-badge"></span>
+  </div>
+  <header class="topbar" data-startup-content>
     <a href="./" class="brand" translate="no" aria-label="Haven, wishlist"><span class="brand-mark" aria-hidden="true">h.</span> haven</a>
     <span class="preview-badge"><span data-icon="lock"></span> Interaktivní návrh · ukázková data</span>
   </header>
   <main id="main" tabindex="-1">
-    <div class="page-heading">
+    <div class="page-heading" data-startup-content>
       <h1>Wishlist<span>.</span></h1>
       <button type="button" class="button primary" id="add-button"><span data-icon="plus"></span> Přidat položku</button>
     </div>
+    <div class="page-heading startup-skeleton skeleton" aria-hidden="true">
+      <span class="skeleton-fill skeleton-page-title"></span>
+      <span class="skeleton-fill skeleton-add"></span>
+    </div>
 
     <section class="wishlist" aria-labelledby="list-title">
-      <div class="filters" aria-label="Filtry wishlistu">
+      <div class="startup-skeleton skeleton" aria-hidden="true">
+        <div class="filters">
+          <span class="skeleton-fill skeleton-search"></span>
+          <div class="select-control"><span class="skeleton-fill skeleton-filter-label"></span><span class="skeleton-fill skeleton-input"></span></div>
+          <div class="select-control"><span class="skeleton-fill skeleton-filter-label"></span><span class="skeleton-fill skeleton-input"></span></div>
+        </div>
+        <div class="more-filters skeleton-more"><span class="skeleton-fill"></span></div>
+        <div class="list-heading"><span class="skeleton-fill skeleton-list-title"></span></div>
+      </div>
+      <div class="filters" aria-label="Filtry wishlistu" data-startup-content>
         <label class="search"><span data-icon="search"></span><input id="search" name="search" type="search" autocomplete="off" placeholder="Najít položku…" aria-label="Najít položku"></label>
         <label class="select-control"><span>Kategorie</span><select id="filter-category" name="category"><option value="">Všechny</option></select></label>
         <label class="select-control"><span>Řazení</span><select id="sort" name="sort"><option value="recent">Poslední změny</option><option value="name">Podle názvu</option><option value="price">Od nejlevnější</option><option value="newest">Naposledy přidané</option></select></label>
       </div>
-      <details id="more-filters" class="more-filters">
+      <details id="more-filters" class="more-filters" data-startup-content>
         <summary><span data-icon="sliders"></span> Další filtry <span id="more-count" hidden></span></summary>
         <div class="disclosure-content"><div class="secondary-filters">
           <label class="select-control"><span>Obchod</span><select id="filter-shop" name="shop"><option value="">Všechny</option></select></label>
@@ -37,13 +54,13 @@
           <label class="select-control"><span>Stav položky</span><select id="filter-state" name="state"><option value="default">Aktuální položky</option><option value="purchased">Koupené</option><option value="removed">Odstraněné</option><option value="all">Všechny neodstraněné</option></select></label>
         </div></div>
       </details>
-      <div class="list-heading">
+      <div class="list-heading" data-startup-content>
         <h2 id="list-title" tabindex="-1"><span id="list-label">V hledáčku</span> <span id="visible-count" hidden></span></h2>
         <button type="button" class="text-button" id="reset-filters" hidden>Zrušit filtry</button>
       </div>
-      <p class="sr-only" id="list-status" role="status"></p>
-      <div id="list-content" aria-busy="false">
-        <div id="list-pending" hidden aria-hidden="true">
+      <p class="sr-only" id="list-status" role="status">Načítám wishlist…</p>
+      <div id="list-content" aria-busy="true">
+        <div id="list-pending" aria-hidden="true">
           <p class="list-loading-label">Načítám wishlist…</p>
           <div class="product-group list-skeleton skeleton">
             <span class="skeleton-group skeleton-fill"></span>
