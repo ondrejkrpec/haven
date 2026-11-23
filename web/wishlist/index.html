@@ -41,36 +41,38 @@
         <h2 id="list-title" tabindex="-1"><span id="list-label">V hledáčku</span> <span id="visible-count" hidden></span></h2>
         <button type="button" class="text-button" id="reset-filters" hidden>Zrušit filtry</button>
       </div>
-      <div id="activity" class="activity" hidden>
-        <span id="activity-label">Za posledních 7 dní</span>
-        <div id="activity-controls" class="activity-controls"></div>
-      </div>
       <p class="sr-only" id="list-status" role="status"></p>
       <div id="list-content" aria-busy="false">
         <div id="list-pending" hidden aria-hidden="true">
           <p class="list-loading-label">Načítám wishlist…</p>
-          <div class="product-group list-skeleton">
-            <span class="skeleton-group"></span>
+          <div class="product-group list-skeleton skeleton">
+            <span class="skeleton-group skeleton-fill"></span>
             <ul class="product-list">
               <li class="product-row">
-                <span class="thumbnail"></span><span class="skeleton-name"></span>
-                <span class="skeleton-price"></span><span class="skeleton-meta"></span>
-                <span class="skeleton-stock"></span><span class="skeleton-action"></span>
+                <span class="thumbnail skeleton-fill"></span><span class="skeleton-name skeleton-fill"></span>
+                <span class="skeleton-price skeleton-fill"></span><span class="skeleton-meta skeleton-fill"></span>
+                <span class="skeleton-stock skeleton-fill"></span><span class="skeleton-action skeleton-fill"></span>
               </li>
               <li class="product-row">
-                <span class="thumbnail"></span><span class="skeleton-name"></span>
-                <span class="skeleton-price"></span><span class="skeleton-meta"></span>
-                <span class="skeleton-stock"></span><span class="skeleton-action"></span>
+                <span class="thumbnail skeleton-fill"></span><span class="skeleton-name skeleton-fill"></span>
+                <span class="skeleton-price skeleton-fill"></span><span class="skeleton-meta skeleton-fill"></span>
+                <span class="skeleton-stock skeleton-fill"></span><span class="skeleton-action skeleton-fill"></span>
               </li>
               <li class="product-row">
-                <span class="thumbnail"></span><span class="skeleton-name"></span>
-                <span class="skeleton-price"></span><span class="skeleton-meta"></span>
-                <span class="skeleton-stock"></span><span class="skeleton-action"></span>
+                <span class="thumbnail skeleton-fill"></span><span class="skeleton-name skeleton-fill"></span>
+                <span class="skeleton-price skeleton-fill"></span><span class="skeleton-meta skeleton-fill"></span>
+                <span class="skeleton-stock skeleton-fill"></span><span class="skeleton-action skeleton-fill"></span>
               </li>
             </ul>
           </div>
         </div>
-        <div id="rows"></div>
+        <div id="list-results">
+          <div id="activity" class="activity" hidden>
+            <span id="activity-label">Za posledních 7 dní</span>
+            <div id="activity-controls" class="activity-controls"></div>
+          </div>
+          <div id="rows"></div>
+        </div>
       </div>
       <div class="empty" id="empty" hidden>
         <h3 id="empty-title"></h3>
