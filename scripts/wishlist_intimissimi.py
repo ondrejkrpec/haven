@@ -9,14 +9,14 @@ from decimal import Decimal
 from html import unescape
 import json
 import re
-from urllib.parse import unquote, urlsplit
+from urllib.parse import unquote, urljoin, urlsplit
 
 from scripts.wishlist_extract import (
     Document, ExtractionError, MAX_BYTES, amount, identity, invalid_constant, json_products, types,
 )
 
 
-from scripts.wishlist_media import product_image
+from scripts.wishlist_media import image_url, product_image
 
 def require(condition):
     if not condition:
@@ -60,6 +60,33 @@ def requested(url):
     match = re.fullmatch(r"(/cz/product/[a-z0-9_-]+-)([A-Z0-9]{2,24}) {3}([A-Z0-9]{2,24})\.html", path)
     require(match is not None)
     return match[2] + "   " + match[3], match[1] + match[2] + ".html", match[3]
+
+
+def gallery_image(nodes, visible, url, model, colour):
+    # The primary gallery uses a colour-specific photo for all sizes.
+    path = re.compile(r"/dw/image/v2/[^/]+/on/demandware\.static/-/Sites-INT_EC_COM/default/"
+                      rf"dw[0-9a-f]{{8}}/images/{re.escape(model + colour)}-[A-Z0-9]+\.jpe?g",
+                      re.IGNORECASE)
+    for gallery in nodes:
+        if "cc-intProductDetail-images-wrapper" not in classes(gallery) or not visible(gallery):
+            continue
+        for node in walk(gallery):
+            if (node.tag != "img" or node.attrs.get("itemprop") != "image"
+                    or "productImageCarouselItem" not in classes(node) or not visible(node)):
+                continue
+            srcset = (node.attrs.get("srcset") or "").split(",", 16)[:16]
+            candidates = [node.attrs.get("src"), node.attrs.get("data-src"),
+                          *(option.split()[0] for option in srcset if option.strip())]
+            for candidate in candidates:
+                if not candidate or len(candidate) > 1024:
+                    continue
+                try:
+                    approved = image_url("www.intimissimi.com", urljoin(url, candidate))
+                    if approved and path.fullmatch(urlsplit(approved).path):
+                        return approved
+                except ValueError:
+                    continue
+    return None
 
 
 def public_offer(html, url, *, include_image=False):
@@ -154,7 +181,10 @@ def public_offer(html, url, *, include_image=False):
     # Absence is meaningful only after exact variant, SKU and zero stock are
     # verified. A present/conflicting price never falls back to availability.
     missing = (None, "", "null")
-    image = product_image(product, url) if include_image else None
+    image = None
+    if include_image:
+        image = (product_image(product, url)
+                 or gallery_image(nodes, visible, url, pid.split()[0], colour_match[1].upper()))
     media = {"image_url": image} if image else {}
     if (not available and offer.get("price") in missing
             and visible_price.attrs.get("content") in missing and not text(visible_price)):

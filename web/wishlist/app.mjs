@@ -58,6 +58,7 @@ else try {
 let selected = null, range = 90, formAction = null, formEntry = null, formPurchase = null, undoAction = null;
 let toastTimer, loading = live, loadError = null, detailGeneration = 0, formRequestId = null, formVersion = null;
 let eventFilter = '', detailError = null, detailReturn = null, editorReturn = null, formBusy = false, listGeneration = 0;
+let editorInitialValues;
 let previewTimer, previewRequest, suggestedName = '', suggestedCategory = '';
 const pendingActions = new Map(), refreshing = new Set();
 let toastReturn, highlightedId, highlightTimer;
@@ -443,10 +444,13 @@ function validateForm(form, data) {
   return !first;
 }
 
-function select(label, name, choices, value) {
-  return `<label class="form-field"><span>${label}</span><select name="${name}">${selectTrigger}${choices.map(([v,l])=>`<option value="${escape(v)}" ${v===value?'selected':''}>${escape(l)}</option>`).join('')}</select></label>`;
+function select(label, name, choices, value, description = '') {
+  const options = choices.map(([code, title]) => `<option value="${escape(code)}"${code === value ? ' selected' : ''}${code ? '' : ' disabled'}>${escape(title)}</option>`);
+  const describedBy = description ? ` aria-describedby="${description}"` : '';
+  return `<label class="form-field"><span>${label}</span><select name="${name}"${describedBy}>${selectTrigger}${options.join('')}</select></label>`;
 }
 const previewPanel = `<p class="sr-only" id="preview-announcement" role="status"></p>
+<p class="sr-only" id="category-announcement" role="status"></p>
 <section class="product-preview" id="product-preview" aria-label="Náhled produktu" hidden>
   <p id="preview-message"></p>
   <div id="preview-product" class="preview-product" hidden></div>
@@ -478,30 +482,33 @@ function showPreview(status, message, product = null) {
   panel.dataset.state = status;
   content.hidden = !product;
   content.innerHTML = product ? `${thumbnail(product.image)}<div class="preview-identity">
-    <strong>${escape(product.name)}</strong><p>${escape(product.shop)}</p>
-    <p class="preview-price">${product.price == null ? 'Cena není k dispozici' : money(Math.round(Number(product.price) * 100))}</p>
-    <p>${stock(product.availability)}</p><p id="preview-category" hidden></p></div>` : '';
-  setText($('#field-help-url'), product?.variant_url ? 'Odkaz byl doplněn o konkrétní variantu.'
-    : 'Vlož HTTPS odkaz na konkrétní variantu.');
+    <strong>${escape(product.name)}</strong>
+    <div class="preview-facts"><span class="preview-price">${product.price == null ? 'Cena nezjištěna' : money(Math.round(Number(product.price) * 100))}</span>
+    <span>${stock(product.availability)}</span><span>${escape(product.shop)}</span></div>
+    ${product.variant_url ? '<p>Odkaz doplněn o variantu.</p>' : ''}</div>` : '';
   action.hidden = !['loading', 'unavailable', 'retry_later', 'manual'].includes(status);
   setText(action, status === 'loading' ? 'Přeskočit náhled' : 'Zkusit náhled znovu');
   setText($('#preview-message'), product ? '' : message);
   $('#preview-message').hidden = Boolean(product);
   setText($('#preview-announcement'), product ? `${message} ${content.textContent.replace(/\s+/g, ' ').trim()}` : message);
-  extra.hidden = submit.hidden = !canSave;
+  $('#add-category').hidden = extra.hidden = submit.hidden = !canSave;
   submit.disabled = !canSave;
-  setText(extra.querySelector('summary'), product ? 'Upravit název a další údaje' : 'Doplnit údaje ručně');
   setText(submit, product ? 'Přidat položku' : 'Uložit odkaz');
   if (focusedAction && action.hidden) {
     (canSave ? extra.querySelector('summary') : $('#field-url')).focus();
   }
 }
 
-function showCategory(category) {
-  const status = $('#preview-category');
+function showCategory(state = '', label = '') {
+  const status = $('#category-status');
   if (!status) return;
-  status.hidden = !category;
-  setText(status, category ? `Návrh kategorie · ${category}` : '');
+  const messages = {loading:'Navrhuji kategorii…', suggested:'Navrženo automaticky', unavailable:'Bez návrhu. Kategorii můžeš vybrat.'};
+  status.dataset.state = state;
+  status.hidden = !state;
+  setText(status, messages[state] || '');
+  setText($('#category-announcement'), state === 'suggested' ? `Návrh kategorie: ${label}.` : messages[state] || '');
+  const submit = $('#editor-submit');
+  submit.disabled = formBusy || submit.hidden || state === 'loading';
 }
 
 function schedulePreview(input, delay = 450) {
@@ -509,9 +516,10 @@ function schedulePreview(input, delay = 450) {
   const {name, category} = input.form.elements;
   if (suggestedName && name.value === suggestedName) name.value = '';
   suggestedName = '';
-  if (suggestedCategory && category.value === suggestedCategory) category.value = 'Nezařazeno';
+  if (!category.value || suggestedCategory && category.value === suggestedCategory) category.value = 'Nezařazeno';
   suggestedCategory = '';
   showPreview('', '');
+  showCategory();
   if (!input.value.trim()) return;
   previewTimer = setTimeout(async () => {
     let url;
@@ -519,14 +527,14 @@ function schedulePreview(input, delay = 450) {
       url = validURL(input.value);
       if (url.length > 4096 || new URL(url).hash) throw new Error();
     } catch {
-      showPreview('invalid', 'Vlož úplný HTTPS odkaz na produkt bez přihlašovacích údajů a části za znakem #.');
+      showPreview('invalid', 'Vlož platný HTTPS odkaz na produkt.');
       input.setAttribute('aria-invalid', 'true');
-      input.setAttribute('aria-describedby', 'field-help-url preview-message');
+      input.setAttribute('aria-describedby', 'preview-message');
       return;
     }
     const controller = new AbortController();
     previewRequest = controller;
-    showPreview('loading', 'Načítám údaje o produktu…');
+    showPreview('loading', 'Načítám produkt…');
     try {
       const result = await api.preview(url, controller.signal);
       if (controller.signal.aborted) return;
@@ -534,27 +542,28 @@ function schedulePreview(input, delay = 450) {
         const title = shortProductName(result.name);
         if (!name.value.trim()) name.value = suggestedName = title;
         if (result.variant_url) input.value = result.variant_url;
-        showPreview('ready', result.price == null ? 'Náhled je připravený. Obchod neposkytl aktuální cenu.'
-          : 'Náhled je připravený. Údaje můžeš upravit před přidáním.', {...result, name: title, shop:shopName(url)});
-        if (/^[a-f0-9]{32}$/.test(result.category_token)) {
+        showPreview('ready', 'Náhled je připravený.', {...result, name: title, shop:shopName(url)});
+        if (/^[a-f0-9]{32}$/.test(result.category_token) && !category.dataset.edited) {
+          category.value = '';
+          showCategory('loading');
           const code = await api.previewCategory(result.category_token, controller.signal).catch(() => null);
           const label = Object.hasOwn(api.categoryNames, code) && api.categoryNames[code];
-          if (label && !controller.signal.aborted && !category.dataset.edited) {
-            category.value = suggestedCategory = label;
-            showCategory(label);
-            setText($('#preview-announcement'), `Návrh kategorie: ${label}.`);
+          if (!controller.signal.aborted && !category.dataset.edited) {
+            category.value = label || 'Nezařazeno';
+            suggestedCategory = label || '';
+            showCategory(label ? 'suggested' : 'unavailable', label);
           }
         }
       } else if (result.status === 'unsupported') {
-        showPreview('unsupported', 'Pro tento obchod náhled zatím není dostupný. Odkaz můžeš uložit ručně.');
+        showPreview('unsupported', 'Tento obchod nemá náhled.');
       } else if (result.status === 'retry_later') {
-        showPreview('retry_later', 'Náhled teď čeká. Můžeš to zkusit později nebo uložit odkaz ručně.');
+        showPreview('retry_later', 'Obchod požádal o odklad náhledu.');
       } else {
-        showPreview('unavailable', 'Náhled se nepodařilo načíst. Zkus to znovu nebo ulož odkaz ručně.');
+        showPreview('unavailable', 'Náhled se nepodařilo načíst.');
       }
     } catch {
       if (!controller.signal.aborted) {
-        showPreview('unavailable', 'Náhled se nepodařilo načíst. Zkus to znovu nebo ulož odkaz ručně.');
+        showPreview('unavailable', 'Náhled se nepodařilo načíst.');
       }
     } finally {
       if (previewRequest === controller) previewRequest = null;
@@ -593,20 +602,51 @@ function openEditor(action, id = null, purchaseId = null) {
     $('#editor-title').textContent=action==='add'?'Přidat položku':'Upravit položku';
     $('#editor-submit').textContent=action==='add'?'Uložit odkaz':'Uložit změny';
     const url = field('Odkaz na produkt','url',entry?.url||'',`required type="url" maxlength="4096"
-      spellcheck="false" placeholder="https://obchod.cz/produkt…" ${entry?'readonly':''}`,
-      entry ? 'Odkaz patří ke sledované variantě.' : live ? 'Vlož HTTPS odkaz na konkrétní variantu.'
-        : 'Vlož HTTPS odkaz na konkrétní variantu. Ukázka údaje z obchodů nenačítá.');
-    const extra = field('Název','name',entry?.name||'',`${entry?'required':''} maxlength="200"`)+
-      `<div class="form-pair">${select('Kategorie','category',CATEGORIES.map(c=>[c,c]),entry?.category||'Nezařazeno')}${select('Nákup','mode',[['once','Jednorázově'],['recurring','Opakovaně']],entry?.mode||'once')}</div>`+
+      spellcheck="false" placeholder="https://…" ${entry?'readonly':''}`,
+      entry ? 'Odkaz patří ke sledované variantě.' : '');
+    const liveAdd = live && action === 'add';
+    const categoryOptions = CATEGORIES.map(c => [c, c]);
+    if (liveAdd) categoryOptions.unshift(['', 'Vyber kategorii']);
+    const category = select('Kategorie', 'category', categoryOptions,
+      entry?.category || 'Nezařazeno', liveAdd ? 'category-status' : '');
+    const addCategory = liveAdd ? `<div id="add-category" hidden>${category}
+      <p class="category-status" id="category-status" hidden></p></div>` : '';
+    const mode = select('Nákup','mode',[['once','Jednorázově'],['recurring','Opakovaně']],entry?.mode||'once');
+    const extra = field('Název','name',entry?.name||'',`${entry?'required':''} maxlength="200"`) +
+      (liveAdd ? mode : `<div class="form-pair">${category}${mode}</div>`) +
       `<label class="form-field"><span>Poznámka</span><textarea name="note" maxlength="2000">${escape(entry?.note||'')}</textarea></label>`;
     $('#editor-fields').innerHTML = url + (action === 'add'
-      ? `${live ? previewPanel : ''}<details class="extra-fields"><summary>Nepovinné údaje</summary><div>${extra}</div></details>` : extra);
-    if (live && action === 'add') showPreview('', '');
+      ? `${liveAdd ? previewPanel + addCategory : ''}<details class="extra-fields"><summary>Další údaje</summary><div>${extra}</div></details>` : extra);
+    if (liveAdd) showPreview('', '');
   }
+  editorInitialValues = editorValues();
   if (!$('#editor').open) $('#editor').showModal();
   const initialFocus = matchMedia('(pointer: coarse)').matches ? '#editor-title' : '#editor-fields input:not([readonly])';
   $(initialFocus)?.focus({preventScroll:true});
 }
+function editorValues() {
+  return JSON.stringify([...new FormData($('#editor-form'))]);
+}
+
+function editorChanged() {
+  return editorValues() !== editorInitialValues;
+}
+
+function requestEditorClose() {
+  if (formBusy || $('#discard-dialog').open) return;
+  if (!editorChanged()) {
+    $('#editor').close();
+    return;
+  }
+  const confirmation = $('#discard-dialog');
+  confirmation.returnValue = '';
+  confirmation.showModal();
+}
+
+$('#discard-dialog').addEventListener('close', event => {
+  if (event.target.returnValue === 'discard') $('#editor').close();
+});
+
 function updatePurchaseTotal(){
   if(!$('#purchase-total'))return;
   try{const data=new FormData($('#editor-form'));const quantity=Number(data.get('quantity'));$('#purchase-total').textContent=Number.isInteger(quantity)&&quantity>0?money(parseMoney(data.get('price'))*quantity):'—';}catch{$('#purchase-total').textContent='—';}
@@ -622,7 +662,7 @@ $('#editor-form').addEventListener('change', event => {
   if (event.target.name === 'category') {
     event.target.dataset.edited = 'true';
     suggestedCategory = '';
-    showCategory('');
+    showCategory();
   }
 });
 $('#editor-form').addEventListener('submit',async event=>{
@@ -701,13 +741,14 @@ document.addEventListener('click',event=>{
     input.focus({preventScroll:true});
     if ($('#product-preview').dataset.state === 'loading') {
       stopPreview();
-      showPreview('manual', 'Náhled je přeskočený. Odkaz můžeš uložit ručně.');
+      showPreview('manual', 'Náhled přeskočen.');
     } else schedulePreview(input, 0);
     return;
   }
   const close=event.target.closest('[data-close]');
   if(close){
-    if (close.dataset.close !== 'editor' || !formBusy) $('#'+close.dataset.close).close();
+    if (close.dataset.close === 'editor') requestEditorClose();
+    else $('#'+close.dataset.close).close();
     return;
   }
   if (event.target.closest('#history-info')) {$('#info-dialog').showModal();return;}
@@ -730,7 +771,8 @@ document.addEventListener('click',event=>{
 });
 for(const dialog of document.querySelectorAll('dialog')){
   dialog.addEventListener('click',event=>{
-    if(event.target!==dialog || dialog.id==='editor' && formBusy)return;
+    if (event.target !== dialog || dialog.id === 'discard-dialog') return;
+    if (dialog.id === 'editor' && (formBusy || editorChanged())) return;
     const rect=dialog.getBoundingClientRect();
     if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();
   });
@@ -741,7 +783,10 @@ for(const dialog of document.querySelectorAll('dialog')){
     }
   });
 }
-$('#editor').addEventListener('cancel', event => { if (formBusy) event.preventDefault(); });
+$('#editor').addEventListener('cancel', event => {
+  event.preventDefault();
+  requestEditorClose();
+});
 $('#editor').addEventListener('close', () => {
   if ($('#editor').open) return;
   stopPreview();

@@ -25,6 +25,7 @@ def shoptet_page(url):
       <meta itemprop="name" content="Synthetic shop item">
       <link itemprop="url" href="{url}">
       <meta itemprop="sku" content="SYNTHETIC-SHOP-1">
+      <meta itemprop="image" content="https://cdn.myshoptet.com/usr/www.ifantazie.cz/user/shop/big/synthetic.jpg">
       <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
         <link itemprop="url" href="{url}">
         <meta itemprop="price" content="249.90">
@@ -209,6 +210,14 @@ class FetchTests(unittest.TestCase):
         self.assertEqual(result["offer"]["price"], "249.90")
         self.assertEqual(result["offer"]["sku"], "SYNTHETIC-SHOP-1")
         self.assertEqual(result["offer"]["conditions_verification"], "not_verified")
+        self.assertEqual(result["image_url"],
+                         "https://cdn.myshoptet.com/usr/www.ifantazie.cz/user/shop/big/synthetic.jpg")
+        for path in ("other.example/user/shop/big/synthetic.jpg",
+                     "www.ifantazie.cz/user/shop/big/%2e%2e%2fsynthetic.jpg"):
+            other = shoptet_page(url).replace(
+                b"www.ifantazie.cz/user/shop/big/synthetic.jpg", path.encode())
+            with self.subTest(path=path), self.responses((200, {"Content-Type": "text/html"}, other)):
+                self.assertNotIn("image_url", fetch.fetch(url, "ifantazie-microdata-v1"))
         with self.responses((200, {"Content-Type": "text/html"}, page(product(url=url)).encode())):
             self.assertEqual(fetch.fetch(url, "ifantazie-microdata-v1")["reason"], "offer_unverified")
 

@@ -3,13 +3,13 @@
 import base64
 import re
 import struct
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import unquote, urljoin, urlsplit
 
 # Add a CDN only for its corresponding merchant. Unlisted sources use a placeholder.
 IMAGE_HOSTS = {
     "www.momenti.cz": {"www.momenti.cz", "cdn.myshoptet.com"},
     "www.fabini.cz": {"www.fabini.cz", "cdn.shopify.com"},
-    "www.ifantazie.cz": {"www.ifantazie.cz"},
+    "www.ifantazie.cz": {"www.ifantazie.cz", "cdn.myshoptet.com"},
     "www.intimissimi.com": {"www.intimissimi.com", "static.intimissimi.com", "static.calzedonia.com"},
 }
 MAX_IMAGE_BYTES = 512 * 1024
@@ -29,6 +29,10 @@ def image_url(shop, value):
                 or parsed.password is not None or parsed.fragment
                 or not re.search(r"\.(?:jpe?g|png|webp)\Z", parsed.path, re.IGNORECASE)):
             return None
+        if shop == "www.ifantazie.cz" and parsed.hostname == "cdn.myshoptet.com":
+            if not re.fullmatch(r"/usr/www\.ifantazie\.cz/user/shop/(?:big|detail|orig)/[\w .~()+-]+",
+                                unquote(parsed.path, errors="strict")):
+                return None
     except ValueError:
         return None
     return value

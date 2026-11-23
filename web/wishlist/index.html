@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8f7ef">
+  <meta name="theme-color" content="#f5f6fa">
   <meta name="description" content="Soukromý wishlist Havenu pro sledování cen a dostupnosti.">
   <title>Wishlist · Haven</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%232b4d3b'/%3E%3Cpath d='M12 12v16m16-16v16M12 20h16' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%233843a2'/%3E%3Cpath d='M12 12v16m16-16v16M12 20h16' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./styles.css">
   <script type="module" src="./app.mjs"></script>
 </head>
@@ -30,12 +30,12 @@
       </div>
       <details id="more-filters" class="more-filters">
         <summary><span data-icon="sliders"></span> Další filtry <span id="more-count" hidden></span></summary>
-        <div class="secondary-filters">
+        <div class="filter-disclosure"><div class="secondary-filters">
           <label class="select-control"><span>Obchod</span><select id="filter-shop" name="shop"><option value="">Všechny</option></select></label>
           <label class="select-control"><span>Dostupnost</span><select id="filter-stock" name="stock"><option value="">Všechny stavy</option></select></label>
           <label class="select-control"><span>Způsob nákupu</span><select id="filter-mode" name="mode"><option value="">Všechny způsoby</option><option value="once">Jednorázově</option><option value="recurring">Opakovaně</option></select></label>
           <label class="select-control"><span>Stav položky</span><select id="filter-state" name="state"><option value="default">Aktuální položky</option><option value="purchased">Koupené</option><option value="removed">Odstraněné</option><option value="all">Všechny neodstraněné</option></select></label>
-        </div>
+        </div></div>
       </details>
       <div class="list-heading">
         <h2 id="list-title" tabindex="-1"><span id="list-label">V hledáčku</span> <span id="visible-count" hidden></span></h2>
@@ -69,6 +69,16 @@
       <div class="form-actions">
         <button type="button" class="button secondary" data-close="editor">Zrušit</button>
         <button type="submit" class="button primary" id="editor-submit">Přidat na wishlist</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="discard-dialog" class="form-dialog" aria-labelledby="discard-title" aria-describedby="discard-description">
+    <form method="dialog">
+      <div class="dialog-heading"><h2 id="discard-title">Zahodit rozpracované údaje?</h2></div>
+      <p id="discard-description">Vyplněné údaje se neuloží.</p>
+      <div class="form-actions">
+        <button class="button secondary" value="keep" autofocus>Pokračovat v úpravách</button>
+        <button class="button danger" value="discard">Zahodit</button>
       </div>
     </form>
   </dialog>

@@ -27,7 +27,7 @@ from scripts.wishlist_web_domain import WebApplication
 from scripts.wishlist_web_gateway import Application, ROOT
 
 PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGOo7CsEAAL8AXl6GkipAAAAAElFTkSuQmCC"  # One synthetic pixel.
-VIEWPORTS = [(1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844), (320, 760)]
+VIEWPORTS = [(3840, 2160), (1920, 1080), (1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844), (320, 760)]
 
 
 class QuietHandler(WSGIRequestHandler):
@@ -231,6 +231,10 @@ def main():
                     expect(page.locator("#visible-count")).to_have_text("1")
                     page.locator("#reset-filters").click()
                     page.locator("#more-filters summary").click()
+                    if page.evaluate("CSS.supports('selector(details::details-content)')"):
+                        assert page.locator("#more-filters").evaluate(
+                            "(el) => parseFloat(getComputedStyle(el, '::details-content').transitionDuration) > 0"
+                        )
                     page.locator("#filter-stock").select_option("in_stock")
                     expect(page.locator("#visible-count")).to_have_text("2")
                     page.locator("#reset-filters").click()
@@ -308,7 +312,7 @@ def main():
                     remove.focus()
                     assert remove.evaluate("""el => {
                         const b = el.getBoundingClientRect(), toast = document.querySelector('#toast').getBoundingClientRect();
-                        return b.bottom <= toast.top || b.right <= toast.left;
+                        return b.bottom <= toast.top || b.top >= toast.bottom || b.right <= toast.left || b.left >= toast.right;
                     }""")
                     page.keyboard.press("Escape")
                     expect(page.locator("#detail")).not_to_be_visible()
@@ -321,6 +325,7 @@ def main():
                     page.locator("#use-last-price").click()
                     expect(price).to_have_value("750,00")
                     page.keyboard.press("Escape")
+                    page.get_by_role("button", name="Zahodit", exact=True).click()
                     page.get_by_role("button", name="Zapsat nákup: Testovací lampa").click()
                     price.fill("nesmysl")
                     page.locator("#field-quantity").fill("0")
@@ -379,7 +384,6 @@ def main():
                     expect(page.locator("#product-preview")).to_have_attribute("data-state", "unavailable")
                     expect(page.locator("#preview-action")).to_have_text("Zkusit náhled znovu")
                     if custom_select:
-                        disclosure.click()
                         category = page.get_by_role("combobox", name="Kategorie").last
                         category.focus()
                         page.keyboard.press("Space")
@@ -388,13 +392,12 @@ def main():
                         assert not category.evaluate("(el) => el.matches(':open')")
                         expect(category).to_be_focused()
                         expect(page.locator("#editor")).to_be_visible()
-                        disclosure.click()
                     url.fill("https://www.intimissimi.com/cz/product/synthetic-preview")
                     page.clock.run_for(500)
                     expect(page.locator("#product-preview")).to_have_attribute("data-state", "ready")
                     expect(page.locator("#preview-product strong")).to_have_text("Testovací pánev, ø 26 cm")
-                    expect(page.locator("#preview-product")).to_contain_text("Cena není k dispozici")
-                    expect(page.locator("#preview-product")).to_contain_text("Návrh kategorie · Domácnost")
+                    expect(page.locator("#preview-product")).to_contain_text("Cena nezjištěna")
+                    expect(page.locator("#category-announcement")).to_have_text("Návrh kategorie: Domácnost.")
                     assert page.locator("#preview-product img").evaluate("(img) => img.decode().then(() => img.naturalWidth)") == 1
                     expect(page.locator("#editor-submit")).to_have_text("Přidat položku")
                     assert "web.add" not in operations
@@ -408,6 +411,15 @@ def main():
                     expect(category).to_have_value("Domácnost")
                     category.select_option("Dárky")
                     name.fill("Vlastní název položky")
+                    page.mouse.click(4, 4)
+                    expect(page.locator("#editor")).to_be_visible()
+                    expect(page.locator("#discard-dialog")).not_to_be_visible()
+                    expect(name).to_have_value("Vlastní název položky")
+                    page.get_by_role("button", name="Zrušit", exact=True).click()
+                    expect(page.get_by_role("button", name="Pokračovat v úpravách")).to_be_focused()
+                    audit("discard-confirmation")
+                    page.get_by_role("button", name="Pokračovat v úpravách").click()
+                    expect(name).to_have_value("Vlastní název položky")
                     # Hold an older response open even after its request has finished
                     # to verify the UI guard independently of native fetch abortion.
                     page.evaluate("""() => {
@@ -484,14 +496,20 @@ def main():
                     page.evaluate("window.finishPreview()")
                     expect(page.locator("#product-preview")).to_have_attribute("data-state", "ready")
                     expect(disclosure).to_be_focused()
-                    expect(page.locator("#editor-submit")).to_be_enabled()
-                    disclosure.click()
+                    expect(page.locator("#category-status")).to_have_text("Navrhuji kategorii…")
+                    expect(category).to_have_value("")
+                    expect(page.locator("#editor-submit")).to_be_disabled()
+                    page.locator("#editor-form").evaluate("(form) => form.requestSubmit()")
+                    assert operations.count("web.add") == 2
                     category.select_option("Dárky")
+                    expect(page.locator("#editor-submit")).to_be_enabled()
                     page.wait_for_function("Boolean(window.finishCategory)")
                     page.evaluate("window.finishCategory()")
                     expect(category).to_have_value("Dárky")
-                    expect(page.locator("#preview-category")).not_to_be_visible()
+                    expect(page.locator("#category-status")).not_to_be_visible()
                     page.keyboard.press("Escape")
+                    page.get_by_role("button", name="Zahodit", exact=True).click()
+                    expect(page.locator("#editor")).not_to_be_visible()
                     kettle.click()
                     page.get_by_role("button", name="Zkontrolovat cenu", exact=True).click()
                     expect(page.get_by_text("Čeká na další ověření ceny a dostupnosti.")).to_be_visible()
