@@ -31,6 +31,7 @@ const selectTrigger = typeof HTMLSelectedContentElement === 'function' && CSS.su
 for (const field of document.querySelectorAll('select')) field.insertAdjacentHTML('afterbegin', selectTrigger);
 const shopName = url => new URL(url).hostname.replace(/^www\./, '');
 const imagePath = /^\/wishlist\/api\/image\/[ip]\/[a-f0-9]{32}$/;
+const photoLoadTimeout = 5000;
 function thumbnail(source, {large = false, lazy = false} = {}) {
   // Only authenticated same-origin raster responses can replace the placeholder.
   const image = imagePath.test(source)
@@ -66,6 +67,7 @@ else try {
 let selected = null, range = 90, formAction = null, formEntry = null, formPurchase = null, undoAction = null;
 let toastTimer, loading = live, loadError = null, detailGeneration = 0, formRequestId = null, formVersion = null;
 let eventFilter = '', detailError = null, detailReturn = null, editorReturn = null, formBusy = false, listGeneration = 0;
+let listPhotoWait;
 let editorInitialValues;
 let previewTimer, previewRequest, suggestedName = '', suggestedCategory = '';
 const pendingActions = new Map(), refreshing = new Set();
@@ -178,7 +180,7 @@ function renderActivity(entries, measured) {
     if (stockChange) counts.stock++;
   }
   const buttons = Object.keys(events).filter(key => counts[key] || eventFilter === key);
-  $('#activity').hidden = loading || Boolean(loadError) || !entries.length && !eventFilter;
+  $('#activity').hidden = Boolean(loadError) || !entries.length && !eventFilter;
   setText($('#activity-label'), buttons.length ? `Za posledních ${RECENT_DAYS} dní` :
     comparable ? `Žádné zjištěné změny za posledních ${RECENT_DAYS} dní` : 'Zatím bez srovnatelných cenových měření');
   renderMarkup($('#activity-controls'), buttons.map(key => `<button type="button" class="activity-button"
@@ -210,14 +212,17 @@ function render() {
   const titles = {default:'V hledáčku', purchased:'Koupené položky', removed:'Odstraněné položky', all:'Všechny položky'};
   setText($('#list-label'), titles[f.state]);
   $('#list-pending').hidden = !loading;
-  $('#rows').hidden = loading;
+  $('#list-results').inert = loading;
   const groups = new Map();
-  for (const [index, entry] of entries.entries()) {
+  for (const entry of entries) {
     if (!groups.has(entry.category)) groups.set(entry.category, []);
-    groups.get(entry.category).push(row(entry, measured.get(entry.id), index >= 5));
+    groups.get(entry.category).push(row(entry, measured.get(entry.id)));
   }
-  renderMarkup($('#rows'), [...groups].map(([category, rows]) => `<section class="product-group"><h3>${escape(category)}</h3>
+  const rows = $('#rows');
+  const previousRows = rendered.get(rows);
+  renderMarkup(rows, [...groups].map(([category, rows]) => `<section class="product-group"><h3>${escape(category)}</h3>
     <ul class="product-list" role="list">${rows.join('')}</ul></section>`).join(''), '#list-title');
+  if (rendered.get(rows) !== previousRows) listPhotoWait?.update();
   $('#list-content').setAttribute('aria-busy', String(loading));
   const title = loadError ? 'Přehled se nepodařilo načíst' :
     entries.length ? '' : filtered ? 'Žádné odpovídající položky' : 'Wishlist je zatím prázdný';
@@ -247,7 +252,7 @@ function availability(entry, change) {
     ${change ? `<span class="subtext">Změna ${date(change.at)}</span>` : ''}`;
 }
 
-function row(entry, measured, lazy) {
+function row(entry, measured) {
   const {current, change, stockChange} = measured;
   const id = escape(entry.id), name = escape(entry.name), days = remainingDays(entry);
   const type = entry.removedAt ? 'restore' : entry.state === 'active' ? 'purchase' : null;
@@ -259,7 +264,7 @@ function row(entry, measured, lazy) {
     entry.collection === 'pending' ? 'Čeká na kontrolu' :
     entry.collection === 'unsupported' ? 'Obchod bez sledování' : price == null ? 'Cena není k dispozici' : '';
   return `<li class="product-row${entry.id === highlightedId ? ' is-new' : ''}">
-    ${thumbnail(entry.image, {lazy})}
+    ${thumbnail(entry.image, {lazy:true})}
     <button type="button" class="item-title" data-action="detail" data-id="${id}">${name}</button>
     <div class="product-price">
       ${price == null ? '' : `<span class="price${knownOnly ? ' is-stale' : ''}">${money(price)}</span>`}
@@ -463,10 +468,10 @@ function select(label, name, choices, value, description = '') {
 const previewPanel = `<p class="sr-only" id="preview-announcement" role="status"></p>
 <p class="sr-only" id="category-announcement" role="status"></p>
 <section class="product-preview" id="product-preview" aria-label="Náhled produktu" hidden>
-  <div class="preview-skeleton" id="preview-skeleton" aria-hidden="true" hidden>
-    <span class="skeleton-photo"></span>
-    <div class="skeleton-product"><span></span><span></span><span></span></div>
-    <div class="skeleton-category"><span></span><span></span></div>
+  <div class="preview-skeleton skeleton" id="preview-skeleton" aria-hidden="true" hidden>
+    <span class="skeleton-photo skeleton-fill"></span>
+    <div class="skeleton-product"><span class="skeleton-fill"></span><span class="skeleton-fill"></span><span class="skeleton-fill"></span></div>
+    <div class="skeleton-category"><span class="skeleton-fill"></span><span class="skeleton-fill"></span></div>
   </div>
   <p id="preview-message"></p>
   <label class="form-field" id="preview-size-field" hidden><span>Velikost</span><select id="preview-size"></select></label>
@@ -484,7 +489,7 @@ async function loadPreviewPhoto(source, signal) {
   if (!imagePath.test(source)) return null;
   const photo = new Image(160, 160);
   photo.alt = '';
-  const bounded = AbortSignal.any([signal, AbortSignal.timeout(5000)]);
+  const bounded = AbortSignal.any([signal, AbortSignal.timeout(photoLoadTimeout)]);
   if (bounded.aborted) return null;
   const cancel = () => photo.removeAttribute('src');
   bounded.addEventListener('abort', cancel, {once:true});
@@ -889,8 +894,44 @@ function reloadList() {
   if (retryFocused) $('#list-title').focus({preventScroll:true});
   loadLive().catch(showLoadError);
 }
+function waitForListPhotos() {
+  return new Promise(resolve => {
+    let revision = 0;
+    function finish() {
+      revision++;
+      clearTimeout(timer);
+      window.removeEventListener('resize', update);
+      listPhotoWait = null;
+      resolve();
+    }
+    function update() {
+      const current = ++revision;
+      const viewportHeight = document.documentElement.clientHeight;
+      const photos = [];
+      // The hidden results keep their layout so the real rows determine which photos to wait for.
+      for (const row of document.querySelectorAll('#rows .product-row')) {
+        const {top, bottom} = row.getBoundingClientRect();
+        if (top >= viewportHeight) break;
+        const photo = row.querySelector('img');
+        if (bottom > 0 && photo) photos.push(photo);
+      }
+      const operations = photos.map(photo => {
+        photo.loading = 'eager';
+        return photo.decode();
+      });
+      Promise.allSettled(operations).then(() => {
+        if (current === revision) finish();
+      });
+    }
+    const timer = setTimeout(finish, photoLoadTimeout);
+    listPhotoWait = {update, finish};
+    window.addEventListener('resize', update);
+    update();
+  });
+}
 async function loadLive() {
   const generation = ++listGeneration;
+  listPhotoWait?.finish();
   let entries;
   try { entries = await api.list(); }
   catch (error) {
@@ -905,7 +946,15 @@ async function loadLive() {
       observations:detail.observations, purchases:detail.purchases,
     } : entry);
   }
-  state={version:1,entries};loading=false;loadError=null;render();
+  state = {version:1,entries};
+  loadError = null;
+  if (loading) {
+    render();
+    await waitForListPhotos();
+    if (generation !== listGeneration) return;
+  }
+  loading = false;
+  render();
   if(selected && $('#detail').open) {
     if (entryById(selected)) await loadDetail(selected);
     else $('#detail').close();

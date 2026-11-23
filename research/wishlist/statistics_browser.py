@@ -225,6 +225,12 @@ def main():
                     expect(page.locator("#list-status")).to_have_text("Načítám wishlist…")
                     expect(page.locator("#rows .item-title")).to_have_count(0)
                     audit("list-loading")
+                    skeleton_style = """node => {
+                        const shape = getComputedStyle(node.querySelector('.skeleton-fill'));
+                        const motion = getComputedStyle(node);
+                        return [shape.backgroundColor, shape.borderRadius, motion.animationName, motion.animationDuration];
+                    }"""
+                    list_style = pending.locator(".skeleton").evaluate(skeleton_style)
                     page.screenshot(path=str(args.output / "wishlist-loading-desktop.png"), animations="disabled")
                     page.set_viewport_size({"width": 390, "height": 844})
                     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
@@ -242,6 +248,12 @@ def main():
                     page.wait_for_function("() => Boolean(window.settleList)")
                     with page.expect_request(lambda request: "/api/image/i/" in request.url):
                         page.evaluate("window.settleList(true)")
+                    expect(pending).to_be_visible()
+                    expect(page.locator("#list-content")).to_have_attribute("aria-busy", "true")
+                    expect(page.locator("#rows .item-title").first).not_to_be_visible()
+                    expect(page.locator("#rows img")).to_have_attribute("loading", "eager")
+                    pending_images.pop().continue_()
+                    page.unroute("**/api/image/i/**")
                     expect(pending).not_to_be_visible()
                     expect(page.locator("#list-content")).to_have_attribute("aria-busy", "false")
                     expect(page.locator("#visible-count")).to_have_text("3")
@@ -250,11 +262,50 @@ def main():
                     expect(page.get_by_text("Znovu skladem")).to_be_visible()
                     expect(page.get_by_text("Zlevnilo o")).to_be_visible()
                     expect(page.locator("#rows img")).to_have_count(1)
-                    expect(page.locator("#rows .thumbnail.is-loading")).to_have_count(1)
-                    pending_images.pop().continue_()
-                    page.unroute("**/api/image/i/**")
                     expect(page.locator("#rows .thumbnail.is-loading")).to_have_count(0)
                     assert page.locator("#rows img").evaluate("(img) => img.decode().then(() => img.naturalWidth)") == 1
+                    for scenario, viewport in (
+                        ("broken", {"width": 390, "height": 844}),
+                        ("timeout", {"width": 390, "height": 844}),
+                        ("below-fold", {"width": 390, "height": 300}),
+                    ):
+                        check = context.new_page()
+                        check.set_viewport_size(viewport)
+                        check.clock.install()
+                        held_photos = []
+                        if scenario == "below-fold":
+                            check.add_init_script("HTMLImageElement.prototype.decode = () => new Promise(() => {});")
+                        elif scenario == "broken":
+                            check.route("**/api/image/i/**", lambda route: route.abort())
+                        else:
+                            check.route("**/api/image/i/**", lambda route: held_photos.append(route))
+                        try:
+                            if scenario == "below-fold":
+                                check.goto(shared["origin"] + "/wishlist/", wait_until="domcontentloaded")
+                            else:
+                                with check.expect_request(lambda request: "/api/image/i/" in request.url):
+                                    check.goto(shared["origin"] + "/wishlist/", wait_until="domcontentloaded")
+                            photo = check.locator("#rows img")
+                            skeleton = check.locator("#list-pending")
+                            if scenario == "below-fold":
+                                expect(photo).to_have_attribute("loading", "lazy")
+                            if scenario == "timeout":
+                                expect(skeleton).to_be_visible()
+                                check.emulate_media(reduced_motion="reduce")
+                                expect(skeleton.locator(".skeleton")).to_have_css("animation-name", "none")
+                                check.clock.run_for(5001)
+                            expect(skeleton).not_to_be_visible(timeout=1000)
+                            expect(check.locator("#list-content")).to_have_attribute("aria-busy", "false")
+                            if scenario == "broken":
+                                expect(photo).to_have_count(0)
+                                expect(check.locator("#rows .thumbnail:not(.is-loading)")).to_have_count(3)
+                            if scenario == "timeout":
+                                expect(check.locator("#rows .thumbnail.is-loading")).to_have_count(1)
+                                held_photos.pop().continue_()
+                                expect(check.locator("#rows .thumbnail.is-loading")).to_have_count(0)
+                        finally:
+                            check.unroute_all(behavior="ignoreErrors")
+                            check.close()
                     sort = page.locator("#sort")
                     page.locator("#filter-category").focus()
                     page.keyboard.press("Tab")
@@ -568,6 +619,8 @@ def main():
                     page.evaluate("window.finishPreview()")
                     page.wait_for_function("() => Boolean(window.finishCategory)")
                     expect(page.locator("#preview-skeleton")).to_be_visible()
+                    assert page.locator("#preview-skeleton").evaluate(skeleton_style) == list_style
+                    page.screenshot(path=str(args.output / "wishlist-preview-loading-mobile.png"), animations="disabled")
                     expect(page.locator("#preview-product")).not_to_be_visible()
                     expect(category).not_to_be_visible()
                     expect(page.locator("#editor-submit")).to_be_disabled()
@@ -603,7 +656,9 @@ def main():
                         "dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()),
                         "browser": browser.version, "viewports": [width for width, _ in VIEWPORTS],
                         "same_origin_fonts": bool(args.fonts),
-                        "checks": ["purchase summaries absent", "no automatic aggregate requests", "list filters",
+                        "checks": ["list and visible photos reveal together", "failed, slow and offscreen photos",
+                                   "shared skeleton styling and reduced motion",
+                                   "purchase summaries absent", "no automatic aggregate requests", "list filters",
                                    "search and empty result", "purchase history retained", "purchase recording",
                                    "price and stock changes", "sorting", "responsive rows", "keyboard focus",
                                    "informative and single-price histories", "pre-save preview and manual fallback",
