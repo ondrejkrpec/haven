@@ -197,13 +197,63 @@ def main():
                         a11y[name] = report
 
                     page.clock.install()
+                    page.add_init_script("""(() => {
+                        const request = window.fetch;
+                        let held = 0;
+                        window.fetch = async (url, options) => {
+                            const response = await request(url, options);
+                            const body = options?.body && JSON.parse(options.body);
+                            if (body?.operation === 'web.list' && body.arguments.state === 'removed' && held++ < 2) {
+                                return new Promise((resolve, reject) => {
+                                    window.settleList = success => {
+                                        delete window.settleList;
+                                        if (success) resolve(response);
+                                        else reject(new Error('Synthetic list failure'));
+                                    };
+                                });
+                            }
+                            return response;
+                        };
+                    })()""")
+                    pending_images = []
+                    page.route("**/api/image/i/**", lambda route: pending_images.append(route))
                     page.goto(shared["origin"] + "/wishlist/")
+                    page.wait_for_function("() => Boolean(window.settleList)")
+                    pending = page.locator("#list-pending")
+                    expect(pending).to_be_visible()
+                    expect(page.locator("#list-content")).to_have_attribute("aria-busy", "true")
+                    expect(page.locator("#list-status")).to_have_text("Načítám wishlist…")
+                    expect(page.locator("#rows .item-title")).to_have_count(0)
+                    audit("list-loading")
+                    page.screenshot(path=str(args.output / "wishlist-loading-desktop.png"), animations="disabled")
+                    page.set_viewport_size({"width": 390, "height": 844})
+                    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+                    page.screenshot(path=str(args.output / "wishlist-loading-mobile.png"), animations="disabled")
+                    page.set_viewport_size({"width": 1440, "height": 1100})
+                    page.evaluate("window.settleList(false)")
+                    expect(pending).not_to_be_visible()
+                    expect(page.locator("#list-content")).to_have_attribute("aria-busy", "false")
+                    expect(page.locator("#empty-title")).to_have_text("Přehled se nepodařilo načíst")
+                    retry = page.get_by_role("button", name="Zkusit znovu", exact=True)
+                    retry.focus()
+                    page.keyboard.press("Enter")
+                    expect(page.locator("#list-title")).to_be_focused()
+                    expect(pending).to_be_visible()
+                    page.wait_for_function("() => Boolean(window.settleList)")
+                    with page.expect_request(lambda request: "/api/image/i/" in request.url):
+                        page.evaluate("window.settleList(true)")
+                    expect(pending).not_to_be_visible()
+                    expect(page.locator("#list-content")).to_have_attribute("aria-busy", "false")
                     expect(page.locator("#visible-count")).to_have_text("3")
                     expect(page.locator("#purchase-statistics")).to_have_count(0)
                     expect(page.locator(".summary-card")).to_have_count(0)
                     expect(page.get_by_text("Znovu skladem")).to_be_visible()
                     expect(page.get_by_text("Zlevnilo o")).to_be_visible()
                     expect(page.locator("#rows img")).to_have_count(1)
+                    expect(page.locator("#rows .thumbnail.is-loading")).to_have_count(1)
+                    pending_images.pop().continue_()
+                    page.unroute("**/api/image/i/**")
+                    expect(page.locator("#rows .thumbnail.is-loading")).to_have_count(0)
                     assert page.locator("#rows img").evaluate("(img) => img.decode().then(() => img.naturalWidth)") == 1
                     sort = page.locator("#sort")
                     page.locator("#filter-category").focus()

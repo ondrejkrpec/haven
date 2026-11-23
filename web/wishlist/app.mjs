@@ -35,11 +35,18 @@ function thumbnail(source, {large = false, lazy = false} = {}) {
   // Only authenticated same-origin raster responses can replace the placeholder.
   const image = imagePath.test(source)
     ? `<img src="${source}" alt="" width="160" height="160"${lazy ? ' loading="lazy"' : ''} decoding="async">` : '';
-  return `<span class="thumbnail${large ? ' thumbnail-large' : ''}" aria-hidden="true">${icon('package')}${image}</span>`;
+  return `<span class="thumbnail${large ? ' thumbnail-large' : ''}${image ? ' is-loading' : ''}" aria-hidden="true">${icon('package')}${image}</span>`;
 }
-document.addEventListener('error', event => {
-  if (event.target instanceof HTMLImageElement && event.target.closest('.thumbnail')) event.target.remove();
-}, true);
+function settleThumbnail(event) {
+  const image = event.target;
+  if (!(image instanceof HTMLImageElement)) return;
+  const wrapper = image.closest('.thumbnail');
+  if (!wrapper) return;
+  wrapper.classList.remove('is-loading');
+  if (event.type === 'error') image.remove();
+}
+document.addEventListener('load', settleThumbnail, true);
+document.addEventListener('error', settleThumbnail, true);
 const stock = value => ({in_stock:'Skladem',out_of_stock:'Nedostupné',unknown:'Neověřená dostupnost',preorder:'Předobjednávka',backorder:'Na objednávku',limited:'Omezená dostupnost',discontinued:'Prodej ukončen'}[value] || 'Neověřená dostupnost');
 const storageKey = 'haven.wishlist.preview.v1';
 let state, lastSaved = null;
@@ -202,6 +209,8 @@ function render() {
   $('#reset-filters').hidden = !filtered;
   const titles = {default:'V hledáčku', purchased:'Koupené položky', removed:'Odstraněné položky', all:'Všechny položky'};
   setText($('#list-label'), titles[f.state]);
+  $('#list-pending').hidden = !loading;
+  $('#rows').hidden = loading;
   const groups = new Map();
   for (const [index, entry] of entries.entries()) {
     if (!groups.has(entry.category)) groups.set(entry.category, []);
@@ -209,17 +218,18 @@ function render() {
   }
   renderMarkup($('#rows'), [...groups].map(([category, rows]) => `<section class="product-group"><h3>${escape(category)}</h3>
     <ul class="product-list" role="list">${rows.join('')}</ul></section>`).join(''), '#list-title');
-  const title = loading ? 'Načítám wishlist…' : loadError ? 'Přehled se nepodařilo načíst' :
+  $('#list-content').setAttribute('aria-busy', String(loading));
+  const title = loadError ? 'Přehled se nepodařilo načíst' :
     entries.length ? '' : filtered ? 'Žádné odpovídající položky' : 'Wishlist je zatím prázdný';
-  const message = loading ? '' : loadError || (filtered ? 'Uprav hledání nebo filtry.' : 'Přidej odkaz na první produkt.');
-  $('#empty').hidden = !title;
+  const message = title && (loadError || (filtered ? 'Uprav hledání nebo filtry.' : 'Přidej odkaz na první produkt.'));
+  $('#empty').hidden = loading || !title;
   $('#empty-message').hidden = !message;
   setText($('#empty-title'), title);
-  setText($('#empty-message'), title ? message : '');
+  setText($('#empty-message'), message);
   $('#empty-action').hidden = loading || !title;
   setText($('#empty-action'), loadError ? 'Zkusit znovu' : filtered ? 'Zrušit filtry' : 'Přidat položku');
   $('#empty-action').onclick = loadError ? reloadList : filtered ? resetFilters : () => openEditor('add');
-  setText($('#list-status'), title || `Počet zobrazených položek: ${entries.length}`);
+  setText($('#list-status'), loading ? 'Načítám wishlist…' : title || `Počet zobrazených položek: ${entries.length}`);
 }
 
 function priceChange(change) {
@@ -872,9 +882,11 @@ function showLoadError(error) {
 }
 function reloadList() {
   if (loading) return;
+  const retryFocused = document.activeElement === $('#empty-action');
   loading = true;
   loadError = null;
   render();
+  if (retryFocused) $('#list-title').focus({preventScroll:true});
   loadLive().catch(showLoadError);
 }
 async function loadLive() {
