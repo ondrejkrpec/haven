@@ -59,6 +59,21 @@ def unavailable_page():
 class IntimissimiTests(unittest.TestCase):
     responses = fetch_tests.FetchTests.responses
 
+    def test_primary_gallery_falls_back_to_a_photo_of_the_verified_colour(self):
+        prefix = ("https://www.intimissimi.com/dw/image/v2/BHHR_PRD/on/demandware.static/"
+                  "-/Sites-INT_EC_COM/default/dw1234abcd/images/")
+        photo = prefix + "TOP100123A-M.jpg?sw=600&sfrm=jpeg"
+        wrong_colour = prefix + "TOP100123B-M.jpg?sw=600&sfrm=jpeg"
+        product = record() | {"image": "not_available"}
+        html = page(product).replace('<div class="product-main-price">',
+                                     f'''<div class="cc-intProductDetail-images-wrapper">
+          <img class="productImageCarouselItem" itemprop="image" src="{wrong_colour}">
+          <img class="productImageCarouselItem" itemprop="image" srcset="{photo} 600w">
+        </div><div class="product-main-price">''')
+        self.assertNotIn("image_url", public_offer(html, URL))
+        self.assertEqual(public_offer(html, URL, include_image=True)["image_url"], photo)
+        self.assertNotIn("image_url", public_offer(html.replace(photo, wrong_colour), URL, include_image=True))
+
     def test_exact_unavailable_variant_can_report_stock_without_inventing_a_price(self):
         result = public_offer(unavailable_page(), URL)
         self.assertEqual(result['availability'], 'out_of_stock')
