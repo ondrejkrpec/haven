@@ -30,9 +30,10 @@ const selectTrigger = typeof HTMLSelectedContentElement === 'function' && CSS.su
   ? '<button type="button"><selectedcontent></selectedcontent></button>' : '';
 for (const field of document.querySelectorAll('select')) field.insertAdjacentHTML('afterbegin', selectTrigger);
 const shopName = url => new URL(url).hostname.replace(/^www\./, '');
+const imagePath = /^\/wishlist\/api\/image\/[ip]\/[a-f0-9]{32}$/;
 function thumbnail(source, {large = false, lazy = false} = {}) {
   // Only authenticated same-origin raster responses can replace the placeholder.
-  const image = /^\/wishlist\/api\/image\/[ip]\/[a-f0-9]{32}$/.test(source)
+  const image = imagePath.test(source)
     ? `<img src="${source}" alt="" width="160" height="160"${lazy ? ' loading="lazy"' : ''} decoding="async">` : '';
   return `<span class="thumbnail${large ? ' thumbnail-large' : ''}" aria-hidden="true">${icon('package')}${image}</span>`;
 }
@@ -452,7 +453,13 @@ function select(label, name, choices, value, description = '') {
 const previewPanel = `<p class="sr-only" id="preview-announcement" role="status"></p>
 <p class="sr-only" id="category-announcement" role="status"></p>
 <section class="product-preview" id="product-preview" aria-label="Náhled produktu" hidden>
+  <div class="preview-skeleton" id="preview-skeleton" aria-hidden="true" hidden>
+    <span class="skeleton-photo"></span>
+    <div class="skeleton-product"><span></span><span></span><span></span></div>
+    <div class="skeleton-category"><span></span><span></span></div>
+  </div>
   <p id="preview-message"></p>
+  <label class="form-field" id="preview-size-field" hidden><span>Velikost</span><select id="preview-size"></select></label>
   <div id="preview-product" class="preview-product" hidden></div>
   <button type="button" class="text-button" id="preview-action" hidden></button>
 </section>`;
@@ -461,6 +468,25 @@ function stopPreview() {
   clearTimeout(previewTimer);
   previewRequest?.abort();
   previewRequest = null;
+}
+
+async function loadPreviewPhoto(source, signal) {
+  if (!imagePath.test(source)) return null;
+  const photo = new Image(160, 160);
+  photo.alt = '';
+  const bounded = AbortSignal.any([signal, AbortSignal.timeout(5000)]);
+  if (bounded.aborted) return null;
+  const cancel = () => photo.removeAttribute('src');
+  bounded.addEventListener('abort', cancel, {once:true});
+  try {
+    photo.src = source;
+    await photo.decode();
+    return bounded.aborted ? null : photo;
+  } catch {
+    return null;
+  } finally {
+    bounded.removeEventListener('abort', cancel);
+  }
 }
 
 function shortProductName(name) {
@@ -473,21 +499,28 @@ function shortProductName(name) {
   return (space >= 45 ? fragment.slice(0, space) : fragment).trimEnd() + '…';
 }
 
-function showPreview(status, message, product = null) {
+function showPreview(status, message, product = null, variants = []) {
   const panel = $('#product-preview'), content = $('#preview-product'), action = $('#preview-action');
   const focusedAction = document.activeElement === action;
   const canSave = ['ready', 'unsupported', 'retry_later', 'unavailable', 'manual'].includes(status);
   const extra = $('#editor-fields .extra-fields'), submit = $('#editor-submit');
   panel.hidden = !status;
   panel.dataset.state = status;
+  $('#preview-skeleton').hidden = status !== 'loading';
+  $('#preview-size-field').hidden = status !== 'choose_variant';
+  $('#preview-size').innerHTML = variants.length ? selectTrigger +
+    '<option value="" disabled selected>Vyber velikost</option>' +
+    variants.map(({size, url}) => `<option value="${escape(url)}">${escape(size)}</option>`).join('') : '';
   content.hidden = !product;
-  content.innerHTML = product ? `${thumbnail(product.image)}<div class="preview-identity">
+  content.innerHTML = product ? `${thumbnail()}<div class="preview-identity">
     <strong>${escape(product.name)}</strong>
     <div class="preview-facts"><span class="preview-price">${product.price == null ? 'Cena nezjištěna' : money(Math.round(Number(product.price) * 100))}</span>
     <span>${stock(product.availability)}</span><span>${escape(product.shop)}</span></div>
     ${product.variant_url ? '<p>Odkaz doplněn o variantu.</p>' : ''}</div>` : '';
-  action.hidden = !['loading', 'unavailable', 'retry_later', 'manual'].includes(status);
-  setText(action, status === 'loading' ? 'Přeskočit náhled' : 'Zkusit náhled znovu');
+  if (product?.photo) content.querySelector('.thumbnail').append(product.photo);
+  const skippable = status === 'loading' || status === 'choose_variant';
+  action.hidden = !skippable && !['unavailable', 'retry_later', 'manual'].includes(status);
+  setText(action, skippable ? 'Přeskočit náhled' : 'Zkusit náhled znovu');
   setText($('#preview-message'), product ? '' : message);
   $('#preview-message').hidden = Boolean(product);
   setText($('#preview-announcement'), product ? `${message} ${content.textContent.replace(/\s+/g, ' ').trim()}` : message);
@@ -502,14 +535,14 @@ function showPreview(status, message, product = null) {
 function showCategory(state = '', label = '') {
   const status = $('#category-status');
   if (!status) return;
-  const messages = {loading:'Navrhuji kategorii…', suggested:'Navrženo automaticky', unavailable:'Bez návrhu. Kategorii můžeš vybrat.'};
+  const messages = {suggested:'Navrženo automaticky', unavailable:'Bez návrhu. Kategorii můžeš vybrat.'};
   status.dataset.state = state;
   status.hidden = !state;
   setText(status, messages[state] || '');
   setText($('#category-announcement'), state === 'suggested' ? `Návrh kategorie: ${label}.` : messages[state] || '');
-  const submit = $('#editor-submit');
-  submit.disabled = formBusy || submit.hidden || state === 'loading';
 }
+
+const previewLoading = 'Načítám údaje o produktu a kategorii…';
 
 function schedulePreview(input, delay = 450) {
   stopPreview();
@@ -534,26 +567,28 @@ function schedulePreview(input, delay = 450) {
     }
     const controller = new AbortController();
     previewRequest = controller;
-    showPreview('loading', 'Načítám produkt…');
+    showPreview('loading', previewLoading);
     try {
       const result = await api.preview(url, controller.signal);
       if (controller.signal.aborted) return;
       if (result.status === 'ready') {
+        const offerCategory = /^[a-f0-9]{32}$/.test(result.category_token) && !category.dataset.edited;
+        const [code, photo] = await Promise.all([
+          offerCategory ? api.previewCategory(result.category_token, controller.signal).catch(() => null) : null,
+          loadPreviewPhoto(result.image, controller.signal),
+        ]);
+        if (controller.signal.aborted) return;
         const title = shortProductName(result.name);
         if (!name.value.trim()) name.value = suggestedName = title;
         if (result.variant_url) input.value = result.variant_url;
-        showPreview('ready', 'Náhled je připravený.', {...result, name: title, shop:shopName(url)});
-        if (/^[a-f0-9]{32}$/.test(result.category_token) && !category.dataset.edited) {
-          category.value = '';
-          showCategory('loading');
-          const code = await api.previewCategory(result.category_token, controller.signal).catch(() => null);
+        showPreview('ready', 'Náhled je připravený.', {...result, photo, name: title, shop:shopName(url)});
+        if (offerCategory) {
           const label = Object.hasOwn(api.categoryNames, code) && api.categoryNames[code];
-          if (!controller.signal.aborted && !category.dataset.edited) {
-            category.value = label || 'Nezařazeno';
-            suggestedCategory = label || '';
-            showCategory(label ? 'suggested' : 'unavailable', label);
-          }
+          if (label) category.value = suggestedCategory = label;
+          showCategory(label ? 'suggested' : 'unavailable', label);
         }
+      } else if (result.status === 'choose_variant') {
+        showPreview('choose_variant', 'Pro ověření ceny a dostupnosti vyber velikost.', null, result.variants);
       } else if (result.status === 'unsupported') {
         showPreview('unsupported', 'Tento obchod nemá náhled.');
       } else if (result.status === 'retry_later') {
@@ -606,7 +641,6 @@ function openEditor(action, id = null, purchaseId = null) {
       entry ? 'Odkaz patří ke sledované variantě.' : '');
     const liveAdd = live && action === 'add';
     const categoryOptions = CATEGORIES.map(c => [c, c]);
-    if (liveAdd) categoryOptions.unshift(['', 'Vyber kategorii']);
     const category = select('Kategorie', 'category', categoryOptions,
       entry?.category || 'Nezařazeno', liveAdd ? 'category-status' : '');
     const addCategory = liveAdd ? `<div id="add-category" hidden>${category}
@@ -616,7 +650,8 @@ function openEditor(action, id = null, purchaseId = null) {
       (liveAdd ? mode : `<div class="form-pair">${category}${mode}</div>`) +
       `<label class="form-field"><span>Poznámka</span><textarea name="note" maxlength="2000">${escape(entry?.note||'')}</textarea></label>`;
     $('#editor-fields').innerHTML = url + (action === 'add'
-      ? `${liveAdd ? previewPanel + addCategory : ''}<details class="extra-fields"><summary>Další údaje</summary><div>${extra}</div></details>` : extra);
+      ? `${liveAdd ? previewPanel + addCategory : ''}<details class="extra-fields"><summary>Další údaje</summary>
+        <div class="disclosure-content"><div class="extra-field-inputs">${extra}</div></div></details>` : extra);
     if (liveAdd) showPreview('', '');
   }
   editorInitialValues = editorValues();
@@ -659,6 +694,14 @@ $('#editor-form').addEventListener('input', event => {
   updatePurchaseTotal();
 });
 $('#editor-form').addEventListener('change', event => {
+  if (event.target.id === 'preview-size' && event.target.value) {
+    const input = event.target.form.elements.url;
+    input.value = event.target.value;
+    input.focus({preventScroll:true});
+    // The follow-up fetch still uses the shop's preview cooldown.
+    schedulePreview(input, 2000);
+    showPreview('loading', previewLoading);
+  }
   if (event.target.name === 'category') {
     event.target.dataset.edited = 'true';
     suggestedCategory = '';
@@ -739,7 +782,7 @@ document.addEventListener('click',event=>{
   if (event.target.closest('#preview-action')) {
     const input = $('#editor-form').elements.url;
     input.focus({preventScroll:true});
-    if ($('#product-preview').dataset.state === 'loading') {
+    if (['loading', 'choose_variant'].includes($('#product-preview').dataset.state)) {
       stopPreview();
       showPreview('manual', 'Náhled přeskočen.');
     } else schedulePreview(input, 0);

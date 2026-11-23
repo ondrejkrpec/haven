@@ -66,7 +66,8 @@ async def run_fetch(admission, *, timeout=40):
 
 async def run_fetch_process(payload, *, timeout, preview=False):
     result = await fetch_process(payload, timeout=timeout, mode="--preview" if preview else None)
-    validate_result({key: value for key, value in result.items() if key != "variant_url"})
+    preview_fields = {"variant_url", "variants"} if preview else set()
+    validate_result({key: value for key, value in result.items() if key not in preview_fields})
     return result
 
 

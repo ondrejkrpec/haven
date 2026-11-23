@@ -36,6 +36,9 @@ class QuietHandler(WSGIRequestHandler):
 
 
 async def fixture_offer(payload, **_):
+    if payload["url"].endswith("?dwvar_TOP100_Z_COL_INTU=123A"):
+        return {"status": "failed", "http_status": 200, "retry_after": 0, "reason": "offer_unverified",
+                "variants": [{"size": "M", "url": "https://www.intimissimi.com/cz/product/synthetic-TOP100+++123AM.html"}]}
     if payload["url"].endswith("/unavailable"):
         return {"status": "failed", "http_status": None, "retry_after": 0}
     name = "Rozpoznaný testovací produkt"
@@ -405,6 +408,10 @@ def main():
                     audit("add-ready")
                     page.screenshot(path=str(args.output / "wishlist-product-preview-mobile.png"), animations="disabled")
                     page.locator(".extra-fields summary").click()
+                    if page.evaluate("CSS.supports('selector(details::details-content)')"):
+                        assert page.locator(".extra-fields").evaluate(
+                            "(el) => parseFloat(getComputedStyle(el, '::details-content').transitionDuration) > 0"
+                        )
                     name = page.locator('#editor [name="name"]')
                     expect(name).to_have_value("Testovací pánev, ø 26 cm")
                     category = page.locator('#editor [name="category"]')
@@ -471,6 +478,21 @@ def main():
                     page.keyboard.press("Escape")
                     expect(page.locator("#visible-count")).to_have_text("5")
                     page.locator("#add-button").click()
+                    page.wait_for_timeout(2100)
+                    url.fill("https://www.intimissimi.com/cz/product/synthetic-TOP100.html?dwvar_TOP100_Z_COL_INTU=123A")
+                    page.clock.run_for(500)
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "choose_variant")
+                    expect(page.locator("#preview-size")).to_be_visible()
+                    expect(page.locator("#editor-submit")).to_be_disabled()
+                    page.wait_for_timeout(2100)
+                    page.locator("#preview-size").select_option(label="M")
+                    expect(page.locator("#preview-skeleton")).to_be_visible()
+                    page.clock.run_for(2100)
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "ready")
+                    expect(url).to_have_value("https://www.intimissimi.com/cz/product/synthetic-TOP100+++123AM.html")
+                    page.keyboard.press("Escape")
+                    page.get_by_role("button", name="Zahodit", exact=True).click()
+                    page.locator("#add-button").click()
                     page.evaluate("""() => {
                         const request = window.fetch;
                         window.fetch = async (url, options) => {
@@ -492,19 +514,22 @@ def main():
                     skip = page.get_by_role("button", name="Přeskočit náhled")
                     expect(skip).to_be_visible()
                     skip.focus()
-                    page.wait_for_function("Boolean(window.finishPreview)")
+                    page.wait_for_function("() => Boolean(window.finishPreview)")
                     page.evaluate("window.finishPreview()")
-                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "ready")
-                    expect(disclosure).to_be_focused()
-                    expect(page.locator("#category-status")).to_have_text("Navrhuji kategorii…")
-                    expect(category).to_have_value("")
+                    page.wait_for_function("() => Boolean(window.finishCategory)")
+                    expect(page.locator("#preview-skeleton")).to_be_visible()
+                    expect(page.locator("#preview-product")).not_to_be_visible()
+                    expect(category).not_to_be_visible()
                     expect(page.locator("#editor-submit")).to_be_disabled()
                     page.locator("#editor-form").evaluate("(form) => form.requestSubmit()")
                     assert operations.count("web.add") == 2
-                    category.select_option("Dárky")
-                    expect(page.locator("#editor-submit")).to_be_enabled()
-                    page.wait_for_function("Boolean(window.finishCategory)")
                     page.evaluate("window.finishCategory()")
+                    expect(page.locator("#preview-skeleton")).not_to_be_visible()
+                    expect(page.locator("#product-preview")).to_have_attribute("data-state", "ready")
+                    expect(disclosure).to_be_focused()
+                    expect(category).to_have_value("Domácnost")
+                    expect(page.locator("#editor-submit")).to_be_enabled()
+                    category.select_option("Dárky")
                     expect(category).to_have_value("Dárky")
                     expect(page.locator("#category-status")).not_to_be_visible()
                     page.keyboard.press("Escape")

@@ -78,6 +78,8 @@ class PreviewServer(PeerServer):
                 self.retry_until[host] = max(self.retry_until.get(host, 0), self.clock() + delay)
         finally:
             self.active_hosts.remove(host)
+        if delay == 0 and host == "www.intimissimi.com" and (variants := outcome.get("variants")):
+            return result | {"data": {"status": "choose_variant", "variants": variants}}
         if outcome["status"] != "ok":
             return result | {"data": {"status": "retry_later" if delay else "unavailable"}}
         offer = outcome["offer"]
