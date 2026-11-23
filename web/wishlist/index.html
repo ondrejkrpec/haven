@@ -46,7 +46,32 @@
         <div id="activity-controls" class="activity-controls"></div>
       </div>
       <p class="sr-only" id="list-status" role="status"></p>
-      <div id="rows"></div>
+      <div id="list-content" aria-busy="false">
+        <div id="list-pending" hidden aria-hidden="true">
+          <p class="list-loading-label">Načítám wishlist…</p>
+          <div class="product-group list-skeleton">
+            <span class="skeleton-group"></span>
+            <ul class="product-list">
+              <li class="product-row">
+                <span class="thumbnail"></span><span class="skeleton-name"></span>
+                <span class="skeleton-price"></span><span class="skeleton-meta"></span>
+                <span class="skeleton-stock"></span><span class="skeleton-action"></span>
+              </li>
+              <li class="product-row">
+                <span class="thumbnail"></span><span class="skeleton-name"></span>
+                <span class="skeleton-price"></span><span class="skeleton-meta"></span>
+                <span class="skeleton-stock"></span><span class="skeleton-action"></span>
+              </li>
+              <li class="product-row">
+                <span class="thumbnail"></span><span class="skeleton-name"></span>
+                <span class="skeleton-price"></span><span class="skeleton-meta"></span>
+                <span class="skeleton-stock"></span><span class="skeleton-action"></span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div id="rows"></div>
+      </div>
       <div class="empty" id="empty" hidden>
         <h3 id="empty-title"></h3>
         <p id="empty-message"></p>
