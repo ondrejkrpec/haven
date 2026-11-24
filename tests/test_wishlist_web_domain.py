@@ -80,6 +80,50 @@ class WebDomainTests(unittest.TestCase):
         row = self.domain.store.db.execute("SELECT * FROM purchases").fetchone()
         self.assertEqual((row["reference_price"] - row["unit_price"]) * row["quantity"], 10000)
 
+    def test_alza_backfill_reconstructs_stats_with_one_weight_per_day_and_internal_source(self):
+        result = self.call("add", {"url": "https://www.alza.cz/synthetic-d100000000.htm"})
+        entry_id = result["data"]["entry"]["entry_id"]
+        collection = Collection(self.domain, alza_history_enabled=True)
+
+        def complete(result):
+            admitted = collection.handle({"protocol_version": 1, "operation": "collection.claim", "claim_id": uuid4().hex})
+            self.assertEqual(admitted["job"]["adapter"], "alza-history-v1")
+            message = {"protocol_version": 1, "operation": "collection.complete", "job": admitted["job"], "result": result}
+            self.assertEqual(collection.handle(message)["code"], "ok")
+            self.assertEqual(collection.handle(message)["code"], "ok")
+
+        days = [[(self.now.date() - timedelta(days=offset)).isoformat(), "200.00"] for offset in range(89, 0, -1)]
+        current_day = self.now.date().isoformat()
+        offer = {"name": "Synthetic item", "sku": "100000000", "price": "110.00", "currency": "CZK",
+                 "availability": "unknown", "conditions_verification": "not_verified"}
+        complete({"status": "ok", "reason": "structured_offer_candidate", "http_status": 200, "retry_after": 0,
+                  "offer": offer, "history": [*days, [current_day, "110.00"]]})
+        projected = self.get({"entry_id": entry_id})
+        self.assertEqual(projected["stats90"]["average"], 19900)
+        self.assertEqual(projected["stats90"]["measured_days"], 90)
+        self.assertEqual(projected["latest_availability"]["availability"], "unknown")
+        self.assertEqual(projected["latest_availability"]["checked_at"], "2026-11-18T12:00:00.000000Z")
+        self.assertNotIn("adapter", str(projected))
+        history = self.call("history", {"entry_id": entry_id})["data"]["history"]
+        self.assertEqual(len(history), 90)
+        self.assertEqual((history[0]["cents"], history[-1]["cents"]), (20000, 11000))
+
+        self.now += timedelta(days=1)
+        complete({"status": "ok", "reason": "structured_offer_candidate", "http_status": 200, "retry_after": 0,
+                  "offer": {**offer, "price": "290.00"},
+                  "history": [*days[1:], [current_day, "100.00"], [self.now.date().isoformat(), "290.00"]]})
+        projected = self.get({"entry_id": entry_id})
+        self.assertEqual(projected["stats90"]["average"], 20000)
+        history = self.call("history", {"entry_id": entry_id})["data"]["history"]
+        self.assertEqual(len(history), 91)
+        checked_at = projected["latest_availability"]["checked_at"]
+        self.now += timedelta(days=1)
+        complete({"status": "failed", "reason": "network_failed", "http_status": None, "retry_after": 0})
+        projected = self.get({"entry_id": entry_id})
+        self.assertEqual(projected["latest_availability"]["checked_at"], checked_at)
+        self.assertEqual(projected["latest_observation"]["price"], "290.00")
+        self.assertEqual(self.call("history", {"entry_id": entry_id})["data"]["history"], history)
+
     def test_recurring_purchase_mutes_only_notifications_and_collection_continues(self):
         entry = self.add("recurring")
         self.observe()

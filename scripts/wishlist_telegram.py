@@ -104,13 +104,16 @@ def _reply_text(result, operation, arguments):
             reply += "\nPoznámka: " + entry["note"].encode("utf-16-le")[:800].decode("utf-16-le", errors="ignore")
         observation = entry.get("latest_observation")
         if observation:
-            reply += "\nPozorováno: " + observation["observed_at"]
             availability = (entry.get("latest_availability") or {}).get("availability", observation["availability"])
-            reply += "\nDostupnost: " + {"in_stock": "skladem", "out_of_stock": "vyprodáno",
-                "preorder": "předobjednávka", "backorder": "na objednávku", "limited": "omezená",
-                "discontinued": "ukončený prodej"}[availability]
-            checked_at = (entry.get("latest_availability") or {}).get("checked_at", observation["observed_at"])
-            reply += " (ověřeno " + checked_at + ")"
+            if availability == "unknown":
+                reply += "\nPoslední úspěšná kontrola: " + observation["observed_at"] + "\nSkladovost neověřena."
+            else:
+                reply += "\nPozorováno: " + observation["observed_at"]
+                reply += "\nDostupnost: " + {"in_stock": "skladem", "out_of_stock": "vyprodáno",
+                    "preorder": "předobjednávka", "backorder": "na objednávku", "limited": "omezená",
+                    "discontinued": "ukončený prodej"}[availability]
+                checked_at = (entry.get("latest_availability") or {}).get("checked_at", observation["observed_at"])
+                reply += " (ověřeno " + checked_at + ")"
         else:
             reply += "\nCena zatím není zjištěná."
         if entry.get("collection_reason"):
@@ -122,6 +125,8 @@ def _reply_text(result, operation, arguments):
                        "source_http_429": "Zdroj omezil počet požadavků; další kontrola je odložená.",
                        "offer_unverified": "Nepodařilo se spolehlivě přiřadit cenu ke zvolené variantě.",
                        "lease_expired": "Předchozí kontrola nebyla dokončená; čeká na nový pokus."}
+            if observation and observation["availability"] == "unknown":
+                reasons["structured_offer_candidate"] = "Podmínky nabídky nejsou ověřené."
             reasons["schedule_overdue"] = "Plánovaná kontrola chybí; poslední cena je historická."
             reply += "\n" + reasons.get(entry["collection_reason"], "Poslední kontrola ceny se nezdařila.")
         if entry.get("next_collection_at"):

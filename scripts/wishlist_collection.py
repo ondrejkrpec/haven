@@ -1,12 +1,13 @@
 """W3 durable collection admission. Only the domain service opens SQLite."""
 
-from datetime import timedelta
+from datetime import UTC, timedelta
 import hashlib
 import json
 import re
 import sqlite3
 from uuid import uuid4
 
+from scripts import wishlist_alza_history as alza_history
 from scripts.wishlist_domain import canonical, digest, instant, stamp
 from scripts.wishlist_extract import AVAILABILITY, amount
 
@@ -28,7 +29,7 @@ REASONS = frozenset({
 
 def validate_result(result, *, shop=None):
     keys = {"status", "reason", "http_status", "retry_after"}
-    if (not isinstance(result, dict) or not keys <= set(result) or set(result) - keys - {"offer", "image_url"}
+    if (not isinstance(result, dict) or not keys <= set(result) or set(result) - keys - {"offer", "image_url", "history"}
             or result["status"] not in ("ok", "blocked", "unsupported", "failed")
             or result["reason"] not in REASONS
             or (result["http_status"] is not None and (type(result["http_status"]) is not int
@@ -36,19 +37,20 @@ def validate_result(result, *, shop=None):
             or type(result["retry_after"]) is not int or not 0 <= result["retry_after"] <= 31536000):
         raise ValueError("collection_result")
     if result["status"] != "ok":
-        if {"offer", "image_url"} & result.keys() or result["reason"] in {"structured_offer_candidate", "source_out_of_stock"}:
+        if {"offer", "image_url", "history"} & result.keys() or result["reason"] in {"structured_offer_candidate", "source_out_of_stock"}:
             raise ValueError("collection_failed_offer")
         return
     if "image_url" in result and shop is not None and not image_url(shop, result["image_url"]):
         raise ValueError("collection_image")
     offer = result.get("offer")
+    has_history = "history" in result
     if (result["http_status"] != 200 or result["reason"] not in {"structured_offer_candidate", "source_out_of_stock"}
             or not isinstance(offer, dict)
             or set(offer) != {"name", "sku", "price", "currency", "availability", "conditions_verification"}
             or any(not isinstance(offer[key], str) or not 1 <= len(offer[key]) <= maximum
                    or any(ord(c) < 32 for c in offer[key])
                    for key, maximum in (("name", 200), ("sku", 100)))
-            or offer["availability"] not in AVAILABILITY.values()
+            or (offer["availability"] != "unknown" if has_history else offer["availability"] not in AVAILABILITY.values())
             or offer["conditions_verification"] != "not_verified"):
         raise ValueError("collection_offer")
     if result["reason"] == "source_out_of_stock":
@@ -57,11 +59,17 @@ def validate_result(result, *, shop=None):
     elif (not isinstance(offer["price"], str) or not 1 <= len(offer["price"]) <= 12
           or amount(offer["price"]) != offer["price"] or offer["currency"] != "CZK"):
         raise ValueError("collection_price")
+    if has_history:
+        alza_history.validate_series(result["history"])
+        if ((shop is not None and shop != alza_history.SHOP) or "image_url" in result
+                or result["history"][-1][1] != offer["price"]):
+            raise ValueError("collection_history")
 
 
 class Collection:
-    def __init__(self, domain):
+    def __init__(self, domain, *, alza_history_enabled=False):
         self.domain = domain
+        self.adapters = ADAPTERS | ({alza_history.SHOP: alza_history.ADAPTER} if alza_history_enabled else {})
 
     def handle(self, request):
         try:
@@ -137,7 +145,7 @@ class Collection:
             return {"protocol_version": 1, "code": "idle"}
         job = {"job_id": uuid4().hex, "attempt_id": uuid4().hex, "offer_id": row["offer_id"],
                "generation": row["collection_generation"], "entry_version": row["entry_version"],
-               "url_sha256": row["url_sha256"], "adapter": ADAPTERS.get(row["shop_host"], "unsupported")}
+               "url_sha256": row["url_sha256"], "adapter": self.adapters.get(row["shop_host"], "unsupported")}
         expires_at = stamp(now + timedelta(seconds=LEASE))
         db.execute("""INSERT INTO collection_jobs
             (job_id, claim_id, attempt_id, offer_id, generation, entry_version, url_sha256, adapter,
@@ -176,23 +184,31 @@ class Collection:
             return {"protocol_version": 1, "code": "stale"}
         if "image_url" in result and not image_url(offer["shop_host"], result["image_url"]):
             raise ValueError("collection_image")
-        if result["status"] == "ok" and row["adapter"] not in ADAPTERS.values():
-            raise ValueError("unsupported_adapter")
         if result["status"] == "ok":
             candidate = result["offer"]
-            # Pin product SKU and currency after the first observation; changed variants need review.
-            previous = db.execute("SELECT sku, currency FROM observations WHERE offer_id=? ORDER BY sequence DESC LIMIT 1",
-                                  (row["offer_id"],)).fetchone()
+            imported = row["adapter"] == alza_history.ADAPTER
+            if row["adapter"] not in {*ADAPTERS.values(), alza_history.ADAPTER} or imported != ("history" in result):
+                raise ValueError("unsupported_adapter")
+            if imported:
+                today = now.astimezone(UTC).date()
+                if (alza_history.product(offer["url"])[0] != candidate["sku"]
+                        or not (today - timedelta(days=1)).isoformat() <= result["history"][-1][0] <= today.isoformat()):
+                    raise ValueError("collection_history_identity")
+            # A catalog ID verifies the requested URL independently from a merchant SKU.
+            previous = db.execute("""SELECT sku, currency FROM observations WHERE offer_id=? AND adapter<>?
+                ORDER BY sequence DESC LIMIT 1""", (row["offer_id"], alza_history.ADAPTER)).fetchone()
             key = "collection_availability:" + row["offer_id"]
             saved = db.execute("SELECT value FROM metadata WHERE key=?", (key,)).fetchone()
             availability = json.loads(saved[0]) if saved else {}
-            pinned_sku = previous["sku"] if previous else availability.get("sku")
-            if ((pinned_sku is not None and candidate["sku"] != pinned_sku) or (
+            pinned_sku = previous["sku"] if previous else (availability.get("sku") if availability.get("availability") != "unknown" else None)
+            if ((not imported and pinned_sku is not None and candidate["sku"] != pinned_sku) or (
                     previous and candidate["price"] is not None and candidate["currency"] != previous["currency"])):
                 result = {"status": "failed", "reason": "offer_unverified", "http_status": 200, "retry_after": 0}
             else:
                 # Retain the last verified stock state independently of price
                 # history and compactable worker payloads, in this transaction.
+                if imported:
+                    alza_history.save_backfill(db, row["offer_id"], result["history"], now, self.domain.zone)
                 current_stock = candidate["availability"]
                 prior_stock = availability.get("availability")
                 stock_change = availability.get("change") if current_stock == prior_stock else None

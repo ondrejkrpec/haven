@@ -18,9 +18,9 @@ from scripts.wishlist_socket import PeerServer, socket_path
 
 
 class CollectionServer(PeerServer):
-    def __init__(self, domain, path, **kwargs):
+    def __init__(self, domain, path, *, alza_history_enabled=False, **kwargs):
         from scripts.wishlist_collection import Collection
-        self.collection = Collection(domain)
+        self.collection = Collection(domain, alza_history_enabled=alza_history_enabled)
         super().__init__(path, **kwargs)
 
     async def respond(self, request):

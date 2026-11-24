@@ -5,13 +5,14 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 import hashlib
 import io
+import json
 import os
 import socket
 import sys
 import unittest
 from unittest.mock import Mock, patch
 
-from scripts import wishlist_fetch as fetch
+from scripts import wishlist_alza_history as alza_history, wishlist_fetch as fetch
 from scripts.wishlist_collector import run_fetch
 from tests.test_wishlist_extract import page, product
 
@@ -101,6 +102,25 @@ class FetchTests(unittest.TestCase):
             clients.append(client)
         with patch.object(fetch, "connection", side_effect=clients) as connect:
             yield clients, connect
+
+    def test_alza_history_worker_sends_only_the_bound_public_variant_and_rejects_a_mismatch(self):
+        product_url = "https://www.alza.cz/synthetic-d100000000.htm"
+        today = datetime.now(UTC).date().isoformat()
+        metadata = {"itemId": "100000000", "name": "Synthetic product"}
+        body = {"metadata": metadata, "data": {"currentPrice": [{"x": today + "T00:00:00.000Z", "y": 249.90}]}}
+        with self.responses((200, {"Content-Type": "application/json"}, json.dumps(body).encode())) as (clients, connect):
+            result = fetch.fetch(product_url + "?utm_source=private-tracking", alza_history.ADAPTER)
+            self.assertEqual(result["history"], [[today, "249.90"]])
+            self.assertEqual(result["offer"]["availability"], "unknown")
+            connect.assert_called_once_with("api.hlidacshopu.cz")
+            self.assertNotIn("private-tracking", clients[0].request.call_args.args[1])
+            self.assertIn("synthetic-d100000000.htm", clients[0].request.call_args.args[1])
+        metadata["itemId"] = "100000001"
+        with self.responses((200, {"Content-Type": "application/json"}, json.dumps(body).encode())):
+            self.assertEqual(fetch.fetch(product_url, alza_history.ADAPTER)["reason"], "offer_unverified")
+        with self.responses() as (_, connect):
+            self.assertEqual(fetch.fetch(product_url + "?variant=other", alza_history.ADAPTER)["reason"], "offer_unverified")
+            connect.assert_not_called()
 
     def test_structured_variant_extraction_is_not_a_verified_discount(self):
         html = page([product(url=URL.replace("two", "one"), price="1"), product(url=URL)]).encode()

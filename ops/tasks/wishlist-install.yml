@@ -87,6 +87,7 @@
     - wishlist_extract
     - wishlist_media
     - wishlist_alza
+    - wishlist_alza_history
     - wishlist_intimissimi
     - model_contract
     - model_probe
