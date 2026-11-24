@@ -7,6 +7,7 @@ from urllib.parse import unquote, urljoin, urlsplit
 
 # Add a CDN only for its corresponding merchant. Unlisted sources use a placeholder.
 IMAGE_HOSTS = {
+    "www.alza.cz": {"image.alza.cz"},
     "www.momenti.cz": {"www.momenti.cz", "cdn.myshoptet.com"},
     "www.fabini.cz": {"www.fabini.cz", "cdn.shopify.com"},
     "www.ifantazie.cz": {"www.ifantazie.cz", "cdn.myshoptet.com"},
@@ -31,6 +32,9 @@ def image_url(shop, value):
                 or parsed.port not in (None, 443) or parsed.username is not None
                 or parsed.password is not None or parsed.fragment
                 or not re.search(r"\.(?:jpe?g|png|webp)\Z", parsed.path, re.IGNORECASE)):
+            return None
+        if shop == "www.alza.cz" and (parsed.query or not re.fullmatch(
+                r"/products/[A-Za-z0-9_-]+/[A-Za-z0-9_-]+\.(?:jpe?g|png|webp)", parsed.path, re.IGNORECASE)):
             return None
         if shop == "www.ifantazie.cz" and parsed.hostname == "cdn.myshoptet.com":
             if not re.fullmatch(r"/usr/www\.ifantazie\.cz/user/shop/(?:big|detail|orig)/[\w .~()+-]+",
