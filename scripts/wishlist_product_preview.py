@@ -7,6 +7,7 @@ import re
 import signal
 import time
 
+from scripts import wishlist_alza_history as alza_history
 from scripts.wishlist_collection import ADAPTERS
 from scripts.wishlist_collector import request, run_fetch_process, run_image_process
 from scripts.wishlist_domain import source_host
@@ -17,8 +18,11 @@ from scripts.wishlist_socket import PeerServer
 
 class PreviewServer(PeerServer):
     def __init__(self, path, *, ingress_uid, fetcher=run_fetch_process, clock=time.monotonic, category_endpoint=None,
-                 image_fetcher=run_image_process):
+                 image_fetcher=run_image_process, alza_history_enabled=False):
         super().__init__(path, ingress_uid=ingress_uid, deadline=25, max_connections=4, response_limit=IMAGE_FRAME_LIMIT)
+        self.adapters = {host: adapter for host, adapter in ADAPTERS.items() if host != alza_history.SHOP}
+        if alza_history_enabled:
+            self.adapters[alza_history.SHOP] = alza_history.ADAPTER
         self.fetcher = fetcher
         self.clock = clock
         self.active_hosts = set()
@@ -62,8 +66,8 @@ class PreviewServer(PeerServer):
             raise ValueError("preview_arguments")
         url = args["url"]
         host = source_host(url)
-        adapter = ADAPTERS.get(host)
-        if adapter is None or host == "www.alza.cz":
+        adapter = self.adapters.get(host)
+        if adapter is None:
             return result | {"data": {"status": "unsupported"}}
         if host in self.active_hosts or self.clock() < max(self.next_attempt.get(host, 0), self.retry_until.get(host, 0)):
             return result | {"data": {"status": "retry_later"}}
@@ -159,7 +163,7 @@ class PreviewServer(PeerServer):
                 self.image_locks[key] = lock, users - 1
 
 
-async def serve(path, ingress_uid, language_uid):
+async def serve(path, ingress_uid, language_uid, *, alza_history_enabled=False):
     stopped = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
@@ -167,7 +171,8 @@ async def serve(path, ingress_uid, language_uid):
     category_endpoint = None if language_uid is None else {
         "socket": "/run/haven-wishlist-language/category/request.sock", "service_uid": language_uid,
     }
-    server = PreviewServer(path, ingress_uid=ingress_uid, category_endpoint=category_endpoint)
+    server = PreviewServer(path, ingress_uid=ingress_uid, category_endpoint=category_endpoint,
+                           alza_history_enabled=alza_history_enabled)
     await server.start()
     try:
         await stopped.wait()
@@ -180,8 +185,9 @@ def main():
     parser.add_argument("--socket", required=True)
     parser.add_argument("--client-uid", required=True, type=int)
     parser.add_argument("--language-uid", type=int)
+    parser.add_argument("--alza-history", action="store_true")
     args = parser.parse_args()
-    asyncio.run(serve(args.socket, args.client_uid, args.language_uid))
+    asyncio.run(serve(args.socket, args.client_uid, args.language_uid, alza_history_enabled=args.alza_history))
 
 
 if __name__ == "__main__":

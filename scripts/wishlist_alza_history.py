@@ -15,7 +15,8 @@ WINDOW = 90
 
 def product(url):
     host, path, query = identity(url)
-    match = re.fullmatch(r"/[A-Za-z0-9][A-Za-z0-9_-]*-d([1-9][0-9]{0,11})\.htm", path, re.IGNORECASE)
+    match = re.fullmatch(r"/(?:[A-Za-z0-9][A-Za-z0-9_-]*/)*[A-Za-z0-9][A-Za-z0-9_-]*-d([1-9][0-9]{0,11})\.htm",
+                         path, re.IGNORECASE)
     if host != SHOP or query or not match:
         raise ValueError("alza_history_product")
     return match[1], f"https://{SHOP}{path}"

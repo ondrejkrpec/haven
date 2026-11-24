@@ -11,7 +11,7 @@ RuntimeDirectory=haven-wishlist-preview
 RuntimeDirectoryMode=0750
 Environment=PYTHONPATH=/opt/haven-wishlist:/opt/haven-wishlist/vendor
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStart=/opt/haven-wishlist/native/venv/bin/python -B -m scripts.wishlist_product_preview --socket /run/haven-wishlist-preview/request.sock --client-uid {{ haven_web_client_uid }} --language-uid {{ haven_web_language_uid }}
+ExecStart=/opt/haven-wishlist/native/venv/bin/python -B -m scripts.wishlist_product_preview --socket /run/haven-wishlist-preview/request.sock --client-uid {{ haven_web_client_uid }} --language-uid {{ haven_web_language_uid }}{{ ' --alza-history' if haven_web_alza_history_enabled | default(false) | bool else '' }}
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=10
