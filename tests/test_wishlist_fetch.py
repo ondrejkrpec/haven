@@ -104,7 +104,7 @@ class FetchTests(unittest.TestCase):
             yield clients, connect
 
     def test_alza_history_worker_sends_only_the_bound_public_variant_and_rejects_a_mismatch(self):
-        product_url = "https://www.alza.cz/synthetic-d100000000.htm"
+        product_url = "https://www.alza.cz/maxi/synthetic-d100000000.htm"
         today = datetime.now(UTC).date().isoformat()
         metadata = {"itemId": "100000000", "name": "Synthetic product"}
         body = {"metadata": metadata, "data": {"currentPrice": [{"x": today + "T00:00:00.000Z", "y": 249.90}]}}
@@ -114,7 +114,9 @@ class FetchTests(unittest.TestCase):
             self.assertEqual(result["offer"]["availability"], "unknown")
             connect.assert_called_once_with("api.hlidacshopu.cz")
             self.assertNotIn("private-tracking", clients[0].request.call_args.args[1])
-            self.assertIn("synthetic-d100000000.htm", clients[0].request.call_args.args[1])
+            self.assertIn("%2Fmaxi%2Fsynthetic-d100000000.htm", clients[0].request.call_args.args[1])
+        with self.responses((200, {"Content-Type": "application/json"}, json.dumps(body).encode())):
+            self.assertEqual(fetch.fetch(product_url, alza_history.ADAPTER, preview=True)["status"], "ok")
         metadata["itemId"] = "100000001"
         with self.responses((200, {"Content-Type": "application/json"}, json.dumps(body).encode())):
             self.assertEqual(fetch.fetch(product_url, alza_history.ADAPTER)["reason"], "offer_unverified")

@@ -236,7 +236,7 @@ def fetch_alza_history(url):
 
 
 def fetch(url, adapter, *, preview=False):
-    if adapter == alza_history.ADAPTER and not preview:
+    if adapter == alza_history.ADAPTER:
         return fetch_alza_history(url)
     try:
         host = source_host(url)
