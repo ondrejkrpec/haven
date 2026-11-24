@@ -45,7 +45,9 @@ def load_service_config(path):
             raise ValueError("language_identity_must_be_separate")
     if "collector" in config:
         collector = config["collector"]
-        if (not isinstance(collector, dict) or set(collector) != {"socket", "socket_gid", "client_uid"}
+        if (not isinstance(collector, dict) or not {"socket", "socket_gid", "client_uid"} <= set(collector)
+                or set(collector) - {"socket", "socket_gid", "client_uid", "alza_history"}
+                or type(collector.get("alza_history", False)) is not bool
                 or any(type(collector[key]) is not int or not 1 <= collector[key] < 2**31
                        for key in ("socket_gid", "client_uid"))
                 or collector["client_uid"] in (os.geteuid(), config["ingress_uid"],
@@ -137,7 +139,8 @@ async def serve(config):
             private_directory(directory, uid=os.geteuid(), socket_directory=True)
             os.chown(directory, -1, settings["socket_gid"])
             collection_server = CollectionServer(domain, settings["socket"], ingress_uid=settings["client_uid"],
-                                                 socket_gid=settings["socket_gid"])
+                                                 socket_gid=settings["socket_gid"],
+                                                 alza_history_enabled=settings.get("alza_history", False))
             await collection_server.start()
         if "web" in config:
             from scripts.wishlist_web_domain import WebServer

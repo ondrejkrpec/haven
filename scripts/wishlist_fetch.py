@@ -15,8 +15,9 @@ import ssl
 import subprocess
 import sys
 import tempfile
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urlencode, urljoin, urlsplit
 
+from scripts import wishlist_alza_history as alza_history
 from scripts.wishlist_collection import ADAPTERS, validate_result
 from scripts.wishlist_domain import source_host
 from scripts.wishlist_extract import MAX_BYTES, ExtractionError, extract, identity
@@ -194,7 +195,49 @@ def retry_delay(value, now=None):
         return 0
 
 
+def fetch_alza_history(url):
+    try:
+        item_id, public_url = alza_history.product(url)
+        client = connection(alza_history.SOURCE)
+        try:
+            client.request("GET", "/v2/detail?" + urlencode({"url": public_url}), headers={
+                "User-Agent": "HavenWishlistCollector/1.0", "Accept": "application/json",
+                "Accept-Encoding": "identity", "Connection": "close",
+            })
+            response = client.getresponse()
+            status = response.status
+            retry = retry_delay(response.getheader("Retry-After"))
+            if status in (401, 403, 429):
+                return failure("source_http_" + str(status), status="blocked", http_status=status, retry_after=retry)
+            if 300 <= status < 400:
+                return failure("redirect_denied", http_status=status)
+            if status != 200:
+                return failure("source_http_error", http_status=status, retry_after=retry)
+            if response.getheader("Content-Encoding", "identity").lower() != "identity":
+                return failure("unsupported_encoding", http_status=status)
+            if response.getheader("Content-Type", "").split(";", 1)[0].strip().lower() != "application/json":
+                return failure("unsupported_content_type", http_status=status)
+            body = response.read(alza_history.MAX_BYTES + 1)
+            if len(body) > alza_history.MAX_BYTES:
+                return failure("document_limit", http_status=status)
+            offer, history = alza_history.read_series(decode(body, limit=alza_history.MAX_BYTES), item_id, datetime.now(UTC))
+            result = {"status": "ok", "reason": "structured_offer_candidate", "http_status": 200,
+                      "retry_after": retry, "offer": offer, "history": history}
+            validate_result(result, shop=alza_history.SHOP)
+            return result
+        finally:
+            client.close()
+    except FetchError as error:
+        return failure(str(error))
+    except (OSError, http.client.HTTPException):
+        return failure("network_failed")
+    except (IndexError, KeyError, ValueError, TypeError, UnicodeError, OverflowError, RecursionError):
+        return failure("offer_unverified")
+
+
 def fetch(url, adapter, *, preview=False):
+    if adapter == alza_history.ADAPTER and not preview:
+        return fetch_alza_history(url)
     try:
         host = source_host(url)
         if adapter == "unsupported":

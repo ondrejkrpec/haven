@@ -4,5 +4,6 @@
     'owner_id': haven_wishlist_owner_id | string, 'timezone': haven_wishlist_timezone,
     'language': {'socket': '/run/haven-wishlist-language/request.sock', 'service_uid': haven_wishlist_language_uid | int}}
     | combine({'collector': {'socket': '/run/haven-wishlist-collection/request.sock',
-        'socket_gid': haven_wishlist_collection_gid | int, 'client_uid': haven_wishlist_collector_uid | int}}
+        'socket_gid': haven_wishlist_collection_gid | int, 'client_uid': haven_wishlist_collector_uid | int,
+        'alza_history': haven_wishlist_alza_history | default(false) | bool}}
         if haven_wishlist_collection_enabled | default(false) | bool else {}) | to_json }}

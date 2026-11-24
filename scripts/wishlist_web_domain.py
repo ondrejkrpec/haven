@@ -10,6 +10,7 @@ import json
 import re
 import sqlite3
 
+from scripts import wishlist_alza_history as alza_history
 from scripts.wishlist_contract import CATEGORIES, COMMAND_VALIDATOR
 from scripts.wishlist_domain import canonical, digest, instant, stamp
 from scripts.wishlist_socket import PeerServer
@@ -134,6 +135,12 @@ def cents(value):
     return int(Decimal(value.replace(",", ".")) * 100)
 
 
+def imported_prices(domain, db, entry):
+    if entry["shop_host"] != alza_history.SHOP:
+        return []
+    return alza_history.backfilled_prices(db, entry["offer_id"], domain.zone)
+
+
 def stats(domain, db, entry, at, *, include_change=False):
     first = at.astimezone(domain.zone).date() - timedelta(days=89)
     cutoff = stamp(datetime.combine(first, time(), domain.zone))
@@ -142,6 +149,10 @@ def stats(domain, db, entry, at, *, include_change=False):
                       (entry["offer_id"], cutoff, stamp(at))).fetchall()
     if len(rows) > 20000:
         raise ValueError("history_limit")
+    imported = imported_prices(domain, db, entry)
+    if imported:
+        rows = sorted([*rows, *(row for row in imported if cutoff <= row["observed_at"] <= stamp(at))],
+                      key=lambda row: row["observed_at"])
     days = {}
     minimum = None
     price_change = None
@@ -167,8 +178,12 @@ def stats(domain, db, entry, at, *, include_change=False):
     if include_change and rows:
         # A price immediately preceding the window can establish its first transition.
         if price_change is None:
-            older = db.execute("""SELECT price FROM observations WHERE offer_id=? AND observed_at<?
+            older = db.execute("""SELECT price, observed_at FROM observations WHERE offer_id=? AND observed_at<?
                 ORDER BY observed_at DESC, sequence DESC LIMIT 1""", (entry["offer_id"], cutoff)).fetchone()
+            preceding = [row for row in imported if row["observed_at"] < cutoff]
+            if older:
+                preceding.append(older)
+            older = max(preceding, key=lambda row: row["observed_at"], default=None)
             if older or len(rows) > 1:
                 price_change = {"at": rows[0]["observed_at"], "delta": previous - cents(older["price"]) if older else 0}
         result["price_change"] = price_change
@@ -261,7 +276,8 @@ class WebApplication:
                 raise ValueError("cursor")
         rows = db.execute(f"SELECT * FROM {table} WHERE {field}=? AND sequence>? AND sequence<=? ORDER BY sequence LIMIT 129",
                           (value, after, ceiling)).fetchall()
-        data = []
+        data = ([{"at": row["observed_at"], "cents": cents(row["price"])}
+                 for row in imported_prices(self.domain, db, entry)] if kind == "history" and "cursor" not in args else [])
         for row in rows[:128]:
             if kind == "history":
                 data.append({"at": row["observed_at"], "cents": cents(row["price"])})

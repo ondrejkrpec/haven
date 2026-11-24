@@ -10,7 +10,7 @@
     haven_web_modules: [wishlist_store, wishlist_domain, wishlist_contract, wishlist_protocol, wishlist_socket, wishlist_service,
                         wishlist_web_domain, wishlist_web_gateway, wishlist_dependencies, wishlist_operations,
                         wishlist_observability, wishlist_language, wishlist_language_contract, wishlist_model, wishlist_telegram,
-                        wishlist_collection, wishlist_media]
+                        wishlist_collection, wishlist_media, wishlist_alza_history]
   pre_tasks:
     - name: Require the explicit deployment and private owner configuration
       ansible.builtin.assert:
@@ -234,12 +234,21 @@
           register: haven_web_domain_config
           no_log: true
 
-        - name: Add only the dedicated web endpoint to the existing domain settings
+        - name: Require an existing collector before changing the Alza history source
+          ansible.builtin.assert:
+            that: "'collector' in (haven_web_domain_config.content | b64decode | from_json)"
+            quiet: true
+          when: haven_wishlist_alza_history is defined
+          no_log: true
+
+        - name: Update the dedicated web endpoint and optional Alza history source
           ansible.builtin.copy:
             content: >-
               {{ (haven_web_domain_config.content | b64decode | from_json)
                  | combine({'web': {'socket': '/run/haven-wishlist-web-domain/request.sock',
-                   'socket_gid': haven_web_socket_gid | int, 'client_uid': haven_web_client_uid | int}}) | to_json }}
+                   'socket_gid': haven_web_socket_gid | int, 'client_uid': haven_web_client_uid | int}})
+                 | combine({'collector': {'alza_history': haven_wishlist_alza_history | bool}}
+                   if haven_wishlist_alza_history is defined else {}, recursive=true) | to_json }}
             dest: /var/lib/haven-wishlist/config.json
             owner: root
             group: haven-wishlist

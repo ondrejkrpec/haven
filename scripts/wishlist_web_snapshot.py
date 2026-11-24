@@ -10,7 +10,7 @@ import tempfile
 MODULES = ("wishlist_store", "wishlist_domain", "wishlist_contract", "wishlist_protocol", "wishlist_socket",
            "wishlist_service", "wishlist_web_domain", "wishlist_web_gateway", "wishlist_dependencies",
            "wishlist_operations", "wishlist_observability", "wishlist_language", "wishlist_language_contract",
-           "wishlist_model", "wishlist_telegram", "wishlist_collection", "wishlist_media")
+           "wishlist_model", "wishlist_telegram", "wishlist_collection", "wishlist_media", "wishlist_alza_history")
 FILES = (
     *(f"{root}/scripts/{module}.py" for root in ("/opt/haven-wishlist", "/var/lib/haven/haven-tools") for module in MODULES),
     *(f"/opt/haven-wishlist/scripts/{module}.py" for module in
