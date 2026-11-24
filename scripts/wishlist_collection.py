@@ -61,7 +61,7 @@ def validate_result(result, *, shop=None):
         raise ValueError("collection_price")
     if has_history:
         alza_history.validate_series(result["history"])
-        if ((shop is not None and shop != alza_history.SHOP) or "image_url" in result
+        if ((shop is not None and shop != alza_history.SHOP)
                 or result["history"][-1][1] != offer["price"]):
             raise ValueError("collection_history")
 

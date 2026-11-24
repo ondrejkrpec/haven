@@ -106,18 +106,30 @@ class FetchTests(unittest.TestCase):
     def test_alza_history_worker_sends_only_the_bound_public_variant_and_rejects_a_mismatch(self):
         product_url = "https://www.alza.cz/maxi/synthetic-d100000000.htm"
         today = datetime.now(UTC).date().isoformat()
-        metadata = {"itemId": "100000000", "name": "Synthetic product"}
+        picture = "https://image.alza.cz/products/SYN-1/SYN-1.jpg"
+        metadata = {"itemId": "100000000", "name": "Synthetic product", "imageUrl": picture}
         body = {"metadata": metadata, "data": {"currentPrice": [{"x": today + "T00:00:00.000Z", "y": 249.90}]}}
         with self.responses((200, {"Content-Type": "application/json"}, json.dumps(body).encode())) as (clients, connect):
             result = fetch.fetch(product_url + "?utm_source=private-tracking", alza_history.ADAPTER)
             self.assertEqual(result["history"], [[today, "249.90"]])
             self.assertEqual(result["offer"]["availability"], "unknown")
+            self.assertEqual(result["image_url"], picture)
             connect.assert_called_once_with("api.hlidacshopu.cz")
             self.assertNotIn("private-tracking", clients[0].request.call_args.args[1])
             self.assertIn("%2Fmaxi%2Fsynthetic-d100000000.htm", clients[0].request.call_args.args[1])
         with self.responses((200, {"Content-Type": "application/json"}, json.dumps(body).encode())):
-            self.assertEqual(fetch.fetch(product_url, alza_history.ADAPTER, preview=True)["status"], "ok")
+            self.assertEqual(fetch.fetch(product_url, alza_history.ADAPTER, preview=True)["image_url"], picture)
+        for unsafe in (None, {"url": picture}, "https://example.test/products/SYN-1/SYN-1.jpg",
+                       "https://www.alza.cz/products/SYN-1/SYN-1.jpg", "https://image.alza.cz/logo.jpg",
+                       picture.replace(".jpg", ".svg"), picture + "?other=1"):
+            with self.subTest(image=unsafe):
+                metadata["imageUrl"] = unsafe
+                with self.responses((200, {"Content-Type": "application/json"}, json.dumps(body).encode())):
+                    result = fetch.fetch(product_url, alza_history.ADAPTER, preview=True)
+                    self.assertEqual(result["offer"]["price"], "249.90")
+                    self.assertNotIn("image_url", result)
         metadata["itemId"] = "100000001"
+        metadata["imageUrl"] = picture
         with self.responses((200, {"Content-Type": "application/json"}, json.dumps(body).encode())):
             self.assertEqual(fetch.fetch(product_url, alza_history.ADAPTER)["reason"], "offer_unverified")
         with self.responses() as (_, connect):

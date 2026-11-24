@@ -220,9 +220,12 @@ def fetch_alza_history(url):
             body = response.read(alza_history.MAX_BYTES + 1)
             if len(body) > alza_history.MAX_BYTES:
                 return failure("document_limit", http_status=status)
-            offer, history = alza_history.read_series(decode(body, limit=alza_history.MAX_BYTES), item_id, datetime.now(UTC))
+            document = decode(body, limit=alza_history.MAX_BYTES)
+            offer, history = alza_history.read_series(document, item_id, datetime.now(UTC))
             result = {"status": "ok", "reason": "structured_offer_candidate", "http_status": 200,
                       "retry_after": retry, "offer": offer, "history": history}
+            if picture := image_url(alza_history.SHOP, document["metadata"].get("imageUrl")):
+                result["image_url"] = picture
             validate_result(result, shop=alza_history.SHOP)
             return result
         finally:

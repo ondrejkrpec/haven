@@ -128,15 +128,21 @@ class PreviewTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_opted_in_alza_returns_a_read_only_preview_without_source_or_history(self):
         url = "https://www.alza.cz/maxi/synthetic-d100000000.htm"
+        picture = "https://image.alza.cz/products/SYN-1/SYN-1.jpg"
         fetcher = AsyncMock(return_value={"status": "ok", "http_status": 200, "retry_after": 0,
                                           "offer": {"name": "Syntetický produkt", "price": "127.00", "availability": "unknown"},
+                                          "image_url": picture,
                                           "history": [["2026-11-24", "127.00"]]})
-        server = PreviewServer("/tmp/not-used.sock", ingress_uid=1000, fetcher=fetcher, alza_history_enabled=True)
+        images = AsyncMock(return_value={"mime": "image/png", "body": PNG})
+        server = PreviewServer("/tmp/not-used.sock", ingress_uid=1000, fetcher=fetcher,
+                               alza_history_enabled=True, image_fetcher=images)
         result = await server.respond(request(url))
         self.assertFalse(result["committed"])
         self.assertEqual(result["data"], {"status": "ready", "name": "Syntetický produkt", "price": "127.00",
-                                          "availability": "unknown"})
+                                          "availability": "unknown", "image": "/wishlist/api/image/p/" + "1" * 32})
         fetcher.assert_awaited_once_with({"url": url, "adapter": "alza-history-v1"}, timeout=8, preview=True)
+        self.assertEqual(image_content(await server.preview_image({"token": "1" * 32})), (b64decode(PNG), "image/png"))
+        images.assert_awaited_once_with({"shop": "www.alza.cz", "url": picture}, timeout=3)
 
     async def test_address_admission_and_shop_retry_after(self):
         fetcher = AsyncMock(return_value={"status": "blocked", "http_status": 429, "retry_after": 180})

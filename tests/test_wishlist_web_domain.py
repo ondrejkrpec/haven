@@ -104,16 +104,20 @@ class WebDomainTests(unittest.TestCase):
         self.assertEqual(projected["latest_availability"]["availability"], "unknown")
         self.assertEqual(projected["latest_availability"]["checked_at"], "2026-11-18T12:00:00.000000Z")
         self.assertNotIn("adapter", str(projected))
+        self.assertNotIn("image", projected)
         history = self.call("history", {"entry_id": entry_id})["data"]["history"]
         self.assertEqual(len(history), 90)
         self.assertEqual((history[0]["cents"], history[-1]["cents"]), (20000, 11000))
 
         self.now += timedelta(days=1)
+        picture = "https://image.alza.cz/products/SYN-1/SYN-1.jpg"
         complete({"status": "ok", "reason": "structured_offer_candidate", "http_status": 200, "retry_after": 0,
-                  "offer": {**offer, "price": "290.00"},
+                  "offer": {**offer, "price": "290.00"}, "image_url": picture,
                   "history": [*days[1:], [current_day, "100.00"], [self.now.date().isoformat(), "290.00"]]})
         projected = self.get({"entry_id": entry_id})
         self.assertEqual(projected["stats90"]["average"], 20000)
+        self.assertEqual(projected["image"], "/wishlist/api/image/i/" + entry_id[3:])
+        self.assertNotIn(picture, str(projected))
         history = self.call("history", {"entry_id": entry_id})["data"]["history"]
         self.assertEqual(len(history), 91)
         checked_at = projected["latest_availability"]["checked_at"]
@@ -122,6 +126,7 @@ class WebDomainTests(unittest.TestCase):
         projected = self.get({"entry_id": entry_id})
         self.assertEqual(projected["latest_availability"]["checked_at"], checked_at)
         self.assertEqual(projected["latest_observation"]["price"], "290.00")
+        self.assertIn("image", projected)
         self.assertEqual(self.call("history", {"entry_id": entry_id})["data"]["history"], history)
 
     def test_recurring_purchase_mutes_only_notifications_and_collection_continues(self):
