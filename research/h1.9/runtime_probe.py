@@ -40,6 +40,7 @@ def probe():
 
         class Controller:
             running = True
+            units = ("haven.service",)
 
             def healthy(self):
                 return self.running
@@ -55,6 +56,7 @@ def probe():
                 self.running = True
 
         controller = Controller()
+        repository_operations = []
 
         class LocalRepository(runtime.Repository):
             def __init__(self, settings, config, work):
@@ -62,6 +64,9 @@ def probe():
 
             def run(self, *arguments):
                 assert controller.running, "network/archive work ran before service resume"
+                repository_operations.append(arguments[0])
+                if arguments == ("check", "--read-data") and repository_operations.count("check") == 1:
+                    raise runtime.CaptureError("command_timeout")
                 return runtime.command([str(binary), "--no-cache", "--repo", str(repository),
                                         "--password-file", str(password), *arguments], cwd=self.work, timeout=60)
 
@@ -80,8 +85,19 @@ def probe():
             with patch.object(runtime, "Repository", LocalRepository), \
                     patch.object(runtime, "SystemController", return_value=controller), \
                     patch.object(runtime, "ping", side_effect=lambda *args: pings.append(args[1:])):
+                try:
+                    runtime.backup(settings, state, config, policy)
+                except runtime.CaptureError as error:
+                    assert str(error) == "command_timeout"
+                else:
+                    raise AssertionError("expected verification to be interrupted")
+                pending = runtime.load(state / "run.json")
+                assert pending["stage"] == "verifying"
+                assert not (state / "accepted.json").exists()
                 runtime.backup(settings, state, config, policy)
         accepted = runtime.load(state / "accepted.json")
+        assert (accepted["snapshot_id"], accepted["run_id"]) == (pending["snapshot_id"], pending["run_id"])
+        assert repository_operations.count("backup") == 1 and repository_operations.count("check") == 2
         assert accepted["restored_and_verified"] and controller.running
         assert not (state / "resume.json").exists() and not (state / "work").exists()
         assert pings == [("backup", "/start"), ("backup",)]
@@ -97,6 +113,7 @@ def probe():
         result = {"result": "passed", "scope": "synthetic local controller only", "restic_version": pins["version"],
                   "exact_snapshot_restored": True, "sqlite_wal_restored": True, "metadata_rebuilt": True,
                   "service_resumed_before_archive": True, "intent_and_staging_removed": True,
+                  "interrupted_verification_retried_without_second_upload": True,
                   "production_credentials_used": False, "external_requests": False,
                   "source_revision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                   "source_dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT)),

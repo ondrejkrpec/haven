@@ -12,7 +12,7 @@ Environment=PYTHONPATH=/usr/local/lib/haven-backup
 Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStart=/usr/bin/python3 -m scripts.backup_runtime backup
 ExecStopPost=/usr/bin/python3 -m scripts.backup_runtime recover
-TimeoutStartSec=30min
+TimeoutStartSec=45min
 TimeoutStopSec=5min
 KillMode=control-group
 UMask=0077

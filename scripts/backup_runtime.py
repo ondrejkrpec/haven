@@ -31,6 +31,9 @@ CONFIG = Path("/etc/haven-backup")
 LOCK = Path("/run/lock/haven-maintenance.lock")
 TOOLS = Path("/usr/local/lib/haven-backup")
 INTERRUPT_GRACE_SECONDS = 20
+RESTIC_COMMAND_TIMEOUT = 5 * 60
+RESTIC_FULL_CHECK_TIMEOUT = 15 * 60
+UPLOADED_STAGES = {"uploaded", "verifying"}
 IDENTIFIER = re.compile(r"[0-9a-f]{64}")
 URL = re.compile(r"https://hc-ping\.com/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}")
 
@@ -292,11 +295,12 @@ class Repository:
         require(32 <= len(read_private(config / "password", 258).rstrip(b"\n")) <= 256, "invalid_repository_password")
 
     def run(self, *arguments):
+        timeout = RESTIC_FULL_CHECK_TIMEOUT if arguments == ("check", "--read-data") else RESTIC_COMMAND_TIMEOUT
         return command([str(self.binary), "--no-cache", "--repo", self.settings["repository"],
                         "--password-file", str(self.config / "password"), "--stuck-request-timeout", "20s",
                         "-o", "s3.region=fr-par", "-o", "s3.bucket-lookup=path", "-o", "s3.connections=2",
                         "-o", "s3.retries=1", "-o", "s3.storage-class=STANDARD", *arguments],
-                       timeout=300, cwd=self.work, env=self.environment)
+                       timeout=timeout, cwd=self.work, env=self.environment)
 
     def identity(self):
         config = json.loads(self.run("cat", "config"))
@@ -372,12 +376,18 @@ def clear_workspace(state):
         shutil.rmtree(path)
 
 
-def accept_snapshot(repo, journal, state, config):
+def finish_snapshot(repo, journal, state, config):
+    expected = journal.get("snapshot_id")
+    if journal["stage"] in UPLOADED_STAGES or expected is not None:
+        require(isinstance(expected, str) and IDENTIFIER.fullmatch(expected), "snapshot_identity_mismatch")
     rows = repo.snapshots(journal["run_id"])
+    if not rows and journal["stage"] == "uploading" and expected is None:
+        journal.update(stage="interrupted_without_snapshot", finished_at_utc=now())
+        save(state / "run.json", journal)
+        return
     require(len(rows) == 1, "snapshot_not_found")
     snapshot = rows[0]["id"]
-    if journal.get("snapshot_id"):
-        require(snapshot == journal["snapshot_id"], "snapshot_identity_mismatch")
+    require(expected is None or snapshot == expected, "snapshot_identity_mismatch")
     journal.update(stage="verifying", snapshot_id=snapshot)
     save(state / "run.json", journal)
     repo.run("check", "--read-data")
@@ -409,7 +419,10 @@ def recover(settings, state):
 def backup(settings, state, config, policy):
     recover(settings, state)
     previous = load(state / "run.json") if (state / "run.json").exists() else {}
-    require(previous.get("stage") not in {"uploading", "uploaded", "verifying"}, "reconcile_required")
+    if previous.get("stage") in UPLOADED_STAGES:
+        resume_snapshot(settings, state, config, previous)
+        return
+    require(previous.get("stage") != "uploading", "reconcile_required")
     validate_policy(policy)
     work = state / "work"
     work.mkdir(mode=0o700)
@@ -458,25 +471,24 @@ def backup(settings, state, config, policy):
     require(len(summaries) == 1 and IDENTIFIER.fullmatch(summaries[0].get("snapshot_id", "")), "incomplete_snapshot")
     journal.update(stage="uploaded", snapshot_id=summaries[0]["snapshot_id"])
     save(state / "run.json", journal)
-    accept_snapshot(repo, journal, state, config)
+    finish_snapshot(repo, journal, state, config)
     clear_workspace(state)
 
 
 def reconcile(settings, state, config):
     recover(settings, state)
-    journal = load(state / "run.json")
-    require(journal.get("stage") in {"uploading", "uploaded", "verifying"}
-            and re.fullmatch(r"[a-f0-9]{32}", journal.get("run_id", "")), "no_uncertain_upload")
+    resume_snapshot(settings, state, config, load(state / "run.json"))
+
+
+def resume_snapshot(settings, state, config, journal):
+    run_id = journal.get("run_id")
+    require(journal.get("stage") in UPLOADED_STAGES | {"uploading"}
+            and isinstance(run_id, str) and re.fullmatch(r"[a-f0-9]{32}", run_id), "no_uncertain_upload")
     work = state / "work"
     work.mkdir(mode=0o700)
     repo = Repository(settings, config, work)
     repo.identity()
-    rows = repo.snapshots(journal["run_id"])
-    if not rows:
-        journal.update(stage="interrupted_without_snapshot", finished_at_utc=now())
-        save(state / "run.json", journal)
-    else:
-        accept_snapshot(repo, journal, state, config)
+    finish_snapshot(repo, journal, state, config)
     clear_workspace(state)
 
 
