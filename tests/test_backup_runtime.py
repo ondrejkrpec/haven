@@ -2,12 +2,13 @@ from contextlib import closing, contextmanager
 import hashlib
 import os
 from pathlib import Path
+import shutil
 import sqlite3
 import subprocess
 import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 from scripts import backup_capture as capture
 from scripts import backup_restore as restore
@@ -45,6 +46,15 @@ class BackupRuntimeTests(unittest.TestCase):
                     runtime.command([os.sys.executable, "-c", code], timeout=0.5)
             with self.assertRaises(ProcessLookupError):
                 os.kill(int(pid_path.read_text()), 0)
+
+    def test_only_full_repository_check_has_a_longer_deadline(self):
+        repository = Mock(settings={"repository": "synthetic"}, config=Path("/synthetic/config"),
+                          work=Path("/synthetic/work"), binary=Path("/synthetic/restic"), environment={})
+        with patch.object(runtime, "command") as command:
+            runtime.Repository.run(repository, "check", "--read-data")
+            self.assertEqual(command.call_args.kwargs["timeout"], 900)
+            runtime.Repository.run(repository, "restore", "a" * 64, "--verify")
+            self.assertEqual(command.call_args.kwargs["timeout"], 300)
 
     def test_stopped_requires_no_main_process_and_an_empty_service_cgroup(self):
         controller = runtime.SystemController({})
@@ -176,6 +186,61 @@ class BackupRuntimeTests(unittest.TestCase):
                 with self.assertRaisesRegex(capture.CaptureError, "reconcile_required"):
                     runtime.backup({}, state, state, POLICY)
                 repository.assert_not_called()
+
+    def test_next_backup_retries_verification_of_the_same_snapshot_before_capturing_again(self):
+        with self.fixture() as (_, payload, state, manifest, digest):
+            snapshot = "b" * 64
+            previous = {"snapshot_id": "c" * 64, "restored_and_verified": True}
+            runtime.save(state / "accepted.json", previous)
+            runtime.save(state / "run.json", {"stage": "uploaded", "run_id": manifest["run_id"],
+                                             "snapshot_id": snapshot, "manifest_sha256": digest})
+            repository = Mock(work=state / "work")
+            repository.snapshots.return_value = [{"id": snapshot}]
+
+            def restore_snapshot(*arguments):
+                if arguments[0] == "restore":
+                    shutil.copytree(payload, repository.work / "restored/payload")
+
+            repository.run.side_effect = capture.CaptureError("command_timeout")
+            with patch.object(runtime, "Repository", return_value=repository), \
+                    patch.object(runtime, "capture_with_pause") as capture_files, patch.object(runtime, "ping") as ping:
+                with self.assertRaisesRegex(capture.CaptureError, "command_timeout"):
+                    runtime.backup({}, state, state, POLICY)
+                self.assertEqual(runtime.load(state / "accepted.json"), previous)
+                self.assertEqual(runtime.load(state / "run.json")["stage"], "verifying")
+                ping.assert_not_called()
+
+                repository.run.reset_mock(side_effect=True)
+                repository.run.side_effect = restore_snapshot
+                runtime.backup({}, state, state, POLICY)
+                self.assertEqual(repository.snapshots.call_args_list, [call(manifest["run_id"])] * 2)
+                self.assertEqual(repository.run.call_args_list, [call("check", "--read-data"),
+                    call("restore", snapshot, "--target", str(repository.work / "restored"), "--verify")])
+                capture_files.assert_not_called()
+                ping.assert_called_once_with(state, "backup")
+                accepted = runtime.load(state / "accepted.json")
+                self.assertEqual(accepted["snapshot_id"], snapshot)
+                self.assertEqual(accepted["captured_at_utc"], manifest["capture"]["captured_at_utc"])
+                self.assertEqual(runtime.load(state / "run.json")["stage"], "accepted")
+                self.assertFalse(repository.work.exists())
+
+    def test_uploaded_snapshot_must_remain_present_with_same_identity(self):
+        with self.fixture() as (_, _, state, manifest, digest):
+            journal = {"stage": "uploaded", "run_id": manifest["run_id"], "snapshot_id": "a" * 64,
+                       "manifest_sha256": digest}
+            runtime.save(state / "run.json", journal)
+            repository = Mock()
+            cases = (([], "snapshot_not_found"), ([{"id": "b" * 64}], "snapshot_identity_mismatch"))
+            with patch.object(runtime, "Repository", return_value=repository), patch.object(runtime, "ping") as ping:
+                for rows, reason in cases:
+                    with self.subTest(reason=reason):
+                        repository.snapshots.return_value = rows
+                        with self.assertRaisesRegex(capture.CaptureError, reason):
+                            runtime.backup({}, state, state, POLICY)
+                        self.assertEqual(runtime.load(state / "run.json"), journal)
+                        self.assertFalse((state / "accepted.json").exists())
+                repository.run.assert_not_called()
+                ping.assert_not_called()
 
     def test_missing_stale_and_future_backup_never_report_service_success(self):
         with self.fixture() as (_, _, state, _, _):
