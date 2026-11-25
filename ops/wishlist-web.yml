@@ -190,6 +190,20 @@
             mode: '0640'
           loop: "{{ haven_web_modules }}"
 
+        - name: Inspect the optional dashboard aggregate reader
+          ansible.builtin.stat:
+            path: /var/lib/haven/web-tools/wishlist_observability.py
+          register: haven_web_dashboard_reader
+
+        - name: Keep the dashboard aggregate reader compatible with the exporter
+          ansible.builtin.copy:
+            src: ../scripts/wishlist_observability.py
+            dest: /var/lib/haven/web-tools/wishlist_observability.py
+            owner: root
+            group: haven
+            mode: '0640'
+          when: haven_web_dashboard_reader.stat.exists
+
         - name: Install the read-only preview worker and shared fetch process
           ansible.builtin.copy:
             src: "../scripts/{{ item }}.py"

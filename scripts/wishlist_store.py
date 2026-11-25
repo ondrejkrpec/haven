@@ -123,6 +123,17 @@ MIGRATIONS = ((
     "CHECK (category IN ('uncategorized','home','personal_care','gifts','kitchen','clothing'))",
     "UPDATE purchases SET category = category_v7",
     "ALTER TABLE purchases DROP COLUMN category_v7",
+), (
+    "ALTER TABLE entries RENAME COLUMN category TO category_v8",
+    "ALTER TABLE entries ADD COLUMN category TEXT NOT NULL DEFAULT 'uncategorized' "
+    "CHECK (category IN ('uncategorized','home','personal_care','gifts','kitchen','clothing','fitness'))",
+    "UPDATE entries SET category = category_v8",
+    "ALTER TABLE entries DROP COLUMN category_v8",
+    "ALTER TABLE purchases RENAME COLUMN category TO category_v8",
+    "ALTER TABLE purchases ADD COLUMN category TEXT NOT NULL DEFAULT 'uncategorized' "
+    "CHECK (category IN ('uncategorized','home','personal_care','gifts','kitchen','clothing','fitness'))",
+    "UPDATE purchases SET category = category_v8",
+    "ALTER TABLE purchases DROP COLUMN category_v8",
 ))
 
 

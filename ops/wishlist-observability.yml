@@ -14,7 +14,10 @@
           - haven_wishlist_observability_authorized | default(false) | bool
           - haven_wishlist_deferred_hosts | default([]) is sequence
           - haven_wishlist_deferred_hosts | default([]) is not string
-          - haven_wishlist_deferred_hosts | default([]) | difference(['www.momenti.cz', 'www.fabini.cz', 'www.ifantazie.cz', 'www.intimissimi.com', 'www.alza.cz']) | length == 0
+          - >-
+            haven_wishlist_deferred_hosts | default([]) |
+            difference(['www.momenti.cz', 'www.fabini.cz', 'www.ifantazie.cz', 'www.intimissimi.com', 'www.alza.cz', 'cz.roborock.com']) |
+            length == 0
 
     - name: Inspect the separately deployed W4 domain code
       ansible.builtin.stat:

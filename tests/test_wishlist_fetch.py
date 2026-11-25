@@ -8,6 +8,7 @@ import io
 import json
 import os
 import socket
+import struct
 import sys
 import unittest
 from unittest.mock import Mock, patch
@@ -136,6 +137,56 @@ class FetchTests(unittest.TestCase):
             self.assertEqual(fetch.fetch(product_url + "?variant=other", alza_history.ADAPTER)["reason"], "offer_unverified")
             connect.assert_not_called()
 
+    def test_alza_history_accepts_a_single_dq_catalog_variant(self):
+        url = "https://www.alza.cz/sport/synthetic?dq=100000001"
+        today = datetime.now(UTC).date().isoformat()
+        body = {"metadata": {"itemId": "100000001", "name": "Synthetic variant"},
+                "data": {"currentPrice": [{"x": today + "T00:00:00.000Z", "y": 199}]}}
+        with self.responses((200, {"Content-Type": "application/json"}, json.dumps(body).encode())) as (clients, _):
+            result = fetch.fetch(url + "&utm_source=tracking", alza_history.ADAPTER)
+            self.assertEqual(result["offer"]["sku"], "100000001")
+            self.assertIn("%2Fsport%2Fsynthetic%3Fdq%3D100000001", clients[0].request.call_args.args[1])
+            self.assertNotIn("tracking", clients[0].request.call_args.args[1])
+        for locator in (url + "&dq=100000002", url + "&variant=other", url.replace("dq=1", "dq=0")):
+            with self.subTest(locator=locator), self.responses() as (_, connect):
+                self.assertEqual(fetch.fetch(locator, alza_history.ADAPTER)["reason"], "offer_unverified")
+                connect.assert_not_called()
+
+    def test_wide_alza_photo_keeps_the_pixel_budget(self):
+        url = "https://image.alza.cz/products/SYN-1/SYN-1.png"
+        for width, height, accepted in ((3040, 1150, True), (3040, 2000, False), (4097, 500, False)):
+            body = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR" + struct.pack(">II", width, height) + b"\0" * 10
+            with self.subTest(size=(width, height)), self.responses((200, {"Content-Type": "image/png"}, body)):
+                result = fetch.fetch_image("www.alza.cz", url)
+                self.assertEqual(result.get("mime") == "image/png", accepted)
+
+    def test_roborock_bare_link_uses_the_shop_selected_variant_and_pins_preview_url(self):
+        url = "https://cz.roborock.com/products/synthetic"
+        primary_url = url + "?variant=100000001"
+        alternative = url + "?variant=100000002"
+        first = product(url=primary_url, sku="SYNTHETIC-BASE")["offers"]
+        second = product(url=alternative, price="350", sku="SYNTHETIC-SET")["offers"]
+        image = "https://cz.roborock.com/cdn/shop/files/synthetic.png?v=100"
+        record = product() | {"url": url, "sku": "SYNTHETIC-BASE", "offers": [first, second], "image": image}
+        html = page(record).encode()
+        with self.responses((200, {"Content-Type": "text/html"}, html)):
+            result = fetch.fetch(url, "roborock-shopify-v1", preview=True)
+            self.assertEqual(result["offer"]["price"], "249.90")
+            self.assertEqual(result["variant_url"], primary_url)
+            self.assertEqual(result["image_url"], image)
+        with self.responses((200, {"Content-Type": "text/html"}, html)):
+            result = fetch.fetch(url, "roborock-shopify-v1")
+            self.assertEqual(result["offer"]["sku"], "SYNTHETIC-BASE")
+            self.assertNotIn("variant_url", result)
+        with self.responses((200, {"Content-Type": "text/html"}, html)):
+            result = fetch.fetch(alternative, "roborock-shopify-v1")
+            self.assertEqual(result["offer"]["sku"], "SYNTHETIC-SET")
+            self.assertEqual(result["offer"]["price"], "350.00")
+            self.assertNotIn("image_url", result)
+        for changed in (record | {"sku": "UNCONFIRMED"}, record | {"offers": [first, second | {"sku": "SYNTHETIC-BASE"}]}):
+            with self.responses((200, {"Content-Type": "text/html"}, page(changed).encode())):
+                self.assertEqual(fetch.fetch(url, "roborock-shopify-v1")["reason"], "offer_unverified")
+
     def test_structured_variant_extraction_is_not_a_verified_discount(self):
         html = page([product(url=URL.replace("two", "one"), price="1"), product(url=URL)]).encode()
         with self.responses((200, {"Content-Type": "text/html; charset=utf-8"}, html)) as (clients, _), \
@@ -254,6 +305,20 @@ class FetchTests(unittest.TestCase):
                 self.assertNotIn("image_url", fetch.fetch(url, "ifantazie-microdata-v1"))
         with self.responses((200, {"Content-Type": "text/html"}, page(product(url=url)).encode())):
             self.assertEqual(fetch.fetch(url, "ifantazie-microdata-v1")["reason"], "offer_unverified")
+
+    def test_ifantazie_falls_back_to_the_main_named_availability_label(self):
+        url = "https://www.ifantazie.cz/synthetic-shop-item/"
+        markup = b'<link itemprop="availability" href="https://schema.org/InStock">'
+        label = ('<div class="availability-value"><span class="availability-label" '
+                 'data-testid="labelAvailability">k dodání do 4 týdnů</span></div>').encode()
+        html = shoptet_page(url).replace(markup, b"").replace(b"</main>", label + b"</main>")
+        with self.responses((200, {"Content-Type": "text/html"}, html)):
+            result = fetch.fetch(url, "ifantazie-microdata-v1")
+            self.assertEqual(result["offer"]["availability"], "backorder")
+            self.assertEqual(result["offer"]["price"], "249.90")
+        for invalid in (html.replace(label + b"</main>", b"</main>" + label), html.replace(label, label * 2)):
+            with self.responses((200, {"Content-Type": "text/html"}, invalid)):
+                self.assertEqual(fetch.fetch(url, "ifantazie-microdata-v1")["reason"], "offer_unverified")
 
     def test_alza_accepts_only_explicit_new_condition_and_exact_product(self):
         url = "https://www.alza.cz/synthetic-product-d100000000.htm"

@@ -18,6 +18,7 @@ FILES = (
        "wishlist_interpreter", "wishlist_model", "wishlist_intimissimi")),
     "/opt/haven-wishlist/schemas/wishlist-request-v1.schema.json",
     "/var/lib/haven/haven-tools/schemas/wishlist-request-v1.schema.json",
+    "/var/lib/haven/web-tools/wishlist_observability.py",
     "/opt/haven-wishlist/requirements-web.txt",
     *(f"/usr/local/lib/haven-backup/scripts/{name}.py" for name in ("backup_runtime", "wishlist_store", "wishlist_operations", "wishlist_observability")),
     "/var/lib/haven-wishlist/config.json", "/etc/haven-wishlist-web.json",

@@ -110,6 +110,32 @@ def microdata(node):
     return record
 
 
+def ifantazie_availability(product):
+    labels = []
+    pending = [(product, False)]
+    while pending:
+        node, in_availability = pending.pop()
+        classes = node.attrs.get("class", "").split()
+        if "hidden" in node.attrs or "hidden" in classes or node.attrs.get("aria-hidden") == "true":
+            continue
+        in_availability |= "availability-value" in classes
+        if (in_availability and "availability-label" in classes
+                and node.attrs.get("data-testid") == "labelAvailability"):
+            labels.append(" ".join(node.text().casefold().split()))
+        pending.extend((child, in_availability) for child in node.children
+                       if isinstance(child, Node) and "itemscope" not in child.attrs)
+    if len(labels) != 1:
+        return None
+    label = labels[0]
+    if label == "skladem":
+        return "InStock"
+    if re.fullmatch(r"k dodání do [1-9][0-9]? (?:pracovních )?(?:dnů|týdnů)", label):
+        return "BackOrder"
+    if label in {"dočasně nedostupné", "vyprodáno", "není skladem"}:
+        return "OutOfStock"
+    return None
+
+
 def json_products(value, depth=0):
     if depth > 64:
         raise ExtractionError("structured_data_limit")
@@ -190,6 +216,37 @@ def single_fabini_variant(products, requested):
     return None
 
 
+def roborock_variants(products, requested):
+    host, path, query = requested
+    if not re.fullmatch(r"/products/[a-z0-9][a-z0-9-]*", path):
+        return [], None
+    variants, defaults = [], set()
+    for product, source in products:
+        if source != "jsonld":
+            continue
+        product_url = one(product, "url", required=False)
+        if product_url is None or identity(product_url) != (host, path, ()):
+            continue
+        selected_sku = one(product, "sku", required=False)
+        for offer in values(product, "offers"):
+            if not isinstance(offer, dict) or "Offer" not in types(offer):
+                continue
+            url = one(offer, "url", required=False)
+            sku = one(offer, "sku", required=False)
+            if url is None or sku is None:
+                continue
+            offer_host, offer_path, offer_query = identity(url)
+            if ((offer_host, offer_path) != (host, path) or len(offer_query) != 1
+                    or offer_query[0][0] != "variant" or not re.fullmatch(r"[1-9][0-9]{0,19}", offer_query[0][1])):
+                continue
+            image = values(offer, "image") or (values(product, "image") if selected_sku == sku else [])
+            variants.append(({**product, "sku": sku, "offers": [offer], "image": image}, source))
+            if selected_sku == sku:
+                defaults.add(f"https://{host}{path}?variant={offer_query[0][1]}")
+    default = defaults.pop() if not query and len(defaults) == 1 else None
+    return variants, default
+
+
 def exact_offer(products, requested, required_condition):
     candidates, sources, images = {}, set(), set()
     for product, source in products:
@@ -250,14 +307,21 @@ def extract(html, source_url, *, http_status=200, required_condition=None, resol
         products = []
         for node in document.nodes:
             if "itemscope" in node.attrs and type_name(node.attrs.get("itemtype", "")) == "Product":
-                products.append((microdata(node), "microdata"))
+                product = microdata(node)
+                offers = values(product, "offers")
+                if (requested[0] == "www.ifantazie.cz" and len(offers) == 1 and isinstance(offers[0], dict)
+                        and "availability" not in offers[0] and (stock := ifantazie_availability(node))):
+                    offers[0]["availability"] = stock
+                products.append((product, "microdata"))
             if node.tag == "script" and node.attrs.get("type", "").lower() == "application/ld+json":
                 value = json.loads(node.text(), parse_float=Decimal, parse_constant=invalid_constant)
                 products.extend((p, "jsonld") for p in json_products(value))
         if not products:
             raise ExtractionError("product_data_missing")
-        offer, evidence, image = exact_offer(products, requested, required_condition)
         variant_url = None
+        if requested[0] == "cz.roborock.com":
+            products, variant_url = roborock_variants(products, requested)
+        offer, evidence, image = exact_offer(products, identity(variant_url) if variant_url else requested, required_condition)
         if offer is None and resolve_fabini_variant and requested in canonical:
             variant_url = single_fabini_variant(products, requested)
             if variant_url:

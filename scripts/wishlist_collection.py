@@ -17,7 +17,7 @@ DAY = 86400
 LEASE = 120
 ADAPTERS = {"www.momenti.cz": "momenti-microdata-v1", "www.fabini.cz": "fabini-jsonld-v1",
             "www.ifantazie.cz": "ifantazie-microdata-v1", "www.alza.cz": "alza-public-price-v1",
-            "www.intimissimi.com": "intimissimi-public-price-v1"}
+            "www.intimissimi.com": "intimissimi-public-price-v1", "cz.roborock.com": "roborock-shopify-v1"}
 JOB_KEYS = {"job_id", "attempt_id", "offer_id", "generation", "entry_version", "url_sha256", "adapter"}
 REASONS = frozenset({
     "structured_offer_candidate", "unsupported_shop", "source_http_401", "source_http_403",

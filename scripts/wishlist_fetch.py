@@ -27,7 +27,7 @@ from scripts.wishlist_protocol import MAX_FRAME, decode
 TIMEOUT = 10
 REQUIRED_EVIDENCE = {"momenti-microdata-v1": "microdata", "fabini-jsonld-v1": "jsonld",
                      "ifantazie-microdata-v1": "microdata", "alza-public-price-v1": "jsonld",
-                     "intimissimi-public-price-v1": "jsonld"}
+                     "intimissimi-public-price-v1": "jsonld", "roborock-shopify-v1": "jsonld"}
 
 
 class FetchError(ValueError):
@@ -313,7 +313,7 @@ def fetch(url, adapter, *, preview=False):
                 if picture:
                     result["image_url"] = picture
                 validate_result(result, shop=host)
-                if "variant_url" in candidate:
+                if preview and "variant_url" in candidate:
                     result["variant_url"] = candidate["variant_url"]
                 return result
             finally:
