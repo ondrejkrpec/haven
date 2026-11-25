@@ -541,6 +541,9 @@ sudo tailscale serve status --json</code></pre>
 <p>A Czech Intimissimi URL with a colour parameter can offer a size picker when the primary product DOM and structured SKUs agree on the model and colour. The selected size opens a separate exact-variant preview. Price, availability and photos come from that verified variant. A colour page by itself provides only size choices.</p>
 </div>
 <div class="paragraph">
+<p>For the Czech Roborock store, a plain product link resolves to the offer matching the product&#8217;s selected SKU. The preview fills in the exact variant URL. An explicit <code>variant</code> selects that version, including a set when the shop offers one. A product-wide photo is only used for the matching selected SKU.</p>
+</div>
+<div class="paragraph">
 <p>An eligible product preview returns a short-lived category token. The browser keeps one skeleton visible until product data, the category suggestion and the bounded photo load settle, then shows the preview and enables saving together. The preview worker exchanges the one-use token for the verified product title and requests a category through the language socket restricted to its UID. The request contains only the public merchant title. The model receives the fixed category codes in a short instruction and returns one code. The request uses GPT-6.1 Terra with reasoning disabled, no tools and no repeated provider attempt. It prefers the latest explicit OAuth enrollment labeled <code>wishlist</code> on the pinned Codex origin. A rate limit and a short deadline bound the call. If a suggestion is unavailable, the editor indicates that outcome and offers the default or a manual category. The owner can override any suggestion before saving. This path has no write access and does not export traces.</p>
 </div>
 </div>
@@ -558,7 +561,7 @@ sudo tailscale serve status --json</code></pre>
 <p>For Alza, the history adapter can use the photo URL in the metadata for the verified product ID. It allows raster files under the product directory on <code>image.alza.cz</code>. The preview and subsequent collections use the same validation.</p>
 </div>
 <div class="paragraph">
-<p>List, detail and preview return only authenticated same-origin image paths. The gateway resolves each path against either a saved offer or a short-lived preview record. The preview service fetches the approved merchant asset via the existing checked HTTPS transport, denies redirects and restricts it to JPEG, PNG and WebP with a byte and dimension limit. The browser receives a placeholder if the request fails. Image requests have separate concurrency limits and use a bounded in-memory cache. No shop request is made by the browser and the preview unit still has no database access.</p>
+<p>List, detail and preview return only authenticated same-origin image paths. The gateway resolves each path against either a saved offer or a short-lived preview record. The preview service fetches the approved merchant asset via the existing checked HTTPS transport and denies redirects. JPEG, PNG and WebP images are limited to 512 KiB, 4096 pixels per side and 4,194,304 pixels in total. This admits wide product photos within the existing total pixel limit. The browser receives a placeholder if the request fails. Image requests have separate concurrency limits and use a bounded in-memory cache. No shop request is made by the browser and the preview unit still has no database access.</p>
 </div>
 </div>
 </div>
@@ -570,6 +573,14 @@ sudo tailscale serve status --json</code></pre>
 </div>
 <div class="paragraph">
 <p>Migration 8 expands the allowed values on the item and purchase category columns in one transaction. The existing guarded web playbook installs compatible domain, web, language, observability and recovery files together after a fresh verified backup. Schema-7 code refuses the migrated database. Keep schema-8-compatible recovery code and verify a new backup after rollout.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_fitness_category"><a class="anchor" href="#_fitness_category"></a>Fitness category</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Fitness (<code>fitness</code>) is available in the category picker, filters and automatic suggestions. Migration 9 adds it to the item and purchase categories and preserves existing assignments, purchases and price history. The guarded web playbook installs compatible readers, including the dashboard and backup helpers, before opening the migrated database. Use schema-9-compatible recovery tools and verify a new backup after rollout.</p>
 </div>
 </div>
 </div>

@@ -47,7 +47,7 @@
         "label": {"type": "string", "minLength": 1, "maxLength": 200},
         "purpose": {"enum": ["self", "gift"]},
         "purchase_mode": {"enum": ["once", "recurring"]},
-        "category": {"enum": ["uncategorized", "home", "personal_care", "gifts", "kitchen", "clothing"]},
+        "category": {"enum": ["uncategorized", "home", "personal_care", "gifts", "kitchen", "clothing", "fitness"]},
         "recipient": {"type": ["string", "null"], "minLength": 1, "maxLength": 100},
         "note": {"type": ["string", "null"], "maxLength": 2000}
       }
