@@ -429,7 +429,7 @@ class RecoveryTests(unittest.TestCase):
             with patch("scripts.wishlist_store.MIGRATIONS", MIGRATIONS[:6]), self.assertRaises(ValueError):
                 Wishlist(path, bot_id=BOT, owner_id=OWNER)
 
-    def test_schema_eight_expands_categories_and_preserves_existing_purchase_history(self):
+    def test_schema_nine_expands_categories_and_preserves_existing_purchase_history(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "state"
             now = datetime(2026, 11, 20, 12, tzinfo=UTC)
@@ -441,11 +441,11 @@ class RecoveryTests(unittest.TestCase):
                 self.assertEqual(result["code"], "ok", result)
                 return result["data"]
 
-            with patch("scripts.wishlist_store.MIGRATIONS", MIGRATIONS[:7]):
+            with patch("scripts.wishlist_store.MIGRATIONS", MIGRATIONS[:8]):
                 domain = Wishlist(path, **settings)
             try:
                 entry = call("add", {"url": "https://shop.example.com/legacy",
-                                     "details": {"category": "home", "purchase_mode": "recurring"}})["entry"]
+                                     "details": {"category": "kitchen", "purchase_mode": "recurring"}})["entry"]
                 ref = {"entry_id": entry["entry_id"], "expected_version": entry["version"]}
                 call("purchase", ref | {"unit_price": "250", "quantity": 2})
                 tables = ("entries", "offers", "purchases")
@@ -456,13 +456,13 @@ class RecoveryTests(unittest.TestCase):
             domain = Wishlist(path, **settings)
             try:
                 db = domain.store.db
-                self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 8)
+                self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 9)
                 self.assertEqual([dict(db.execute(f"SELECT * FROM {table}").fetchone()) for table in tables], original)
                 self.assertEqual(db.execute("PRAGMA integrity_check").fetchone()[0], "ok")
                 self.assertEqual(db.execute("PRAGMA foreign_key_check").fetchall(), [])
                 with self.assertRaises(sqlite3.IntegrityError):
                     db.execute("UPDATE entries SET category='invalid'")
-                for category in ("kitchen", "clothing"):
+                for category in ("clothing", "fitness"):
                     entry = call("get", {"entry_id": entry["entry_id"]})["entry"]
                     ref = {"entry_id": entry["entry_id"], "expected_version": entry["version"]}
                     edited = call("update", ref | {"patch": {"category": category}})["entry"]

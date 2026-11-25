@@ -11,15 +11,18 @@ SHOP = "www.alza.cz"
 SOURCE = "api.hlidacshopu.cz"
 MAX_BYTES = 512 * 1024
 WINDOW = 90
+CATALOG_PATH = r"/(?:[A-Za-z0-9][A-Za-z0-9_-]*/)*[A-Za-z0-9][A-Za-z0-9_-]*"
+PRODUCT_ID = r"[1-9][0-9]{0,11}"
 
 
 def product(url):
     host, path, query = identity(url)
-    match = re.fullmatch(r"/(?:[A-Za-z0-9][A-Za-z0-9_-]*/)*[A-Za-z0-9][A-Za-z0-9_-]*-d([1-9][0-9]{0,11})\.htm",
-                         path, re.IGNORECASE)
-    if host != SHOP or query or not match:
-        raise ValueError("alza_history_product")
-    return match[1], f"https://{SHOP}{path}"
+    if host == SHOP:
+        if not query and (match := re.fullmatch(rf"{CATALOG_PATH}-d({PRODUCT_ID})\.htm", path, re.IGNORECASE)):
+            return match[1], f"https://{SHOP}{path}"
+        if len(query) == 1 and query[0][0] == "dq" and re.fullmatch(PRODUCT_ID, query[0][1]) and re.fullmatch(CATALOG_PATH, path):
+            return query[0][1], f"https://{SHOP}{path}?dq={query[0][1]}"
+    raise ValueError("alza_history_product")
 
 
 def price(value):

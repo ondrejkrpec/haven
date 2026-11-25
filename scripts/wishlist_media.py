@@ -12,8 +12,11 @@ IMAGE_HOSTS = {
     "www.fabini.cz": {"www.fabini.cz", "cdn.shopify.com"},
     "www.ifantazie.cz": {"www.ifantazie.cz", "cdn.myshoptet.com"},
     "www.intimissimi.com": {"www.intimissimi.com", "static.intimissimi.com", "static.calzedonia.com"},
+    "cz.roborock.com": {"cz.roborock.com", "cdn.shopify.com"},
 }
 MAX_IMAGE_BYTES = 512 * 1024
+MAX_IMAGE_SIDE = 4096
+MAX_IMAGE_PIXELS = 2048 * 2048
 IMAGE_FRAME_LIMIT = 4 * ((MAX_IMAGE_BYTES + 2) // 3) + 1024
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 INTIMISSIMI_ORIGINAL = re.compile(
@@ -38,6 +41,11 @@ def image_url(shop, value):
             return None
         if shop == "www.ifantazie.cz" and parsed.hostname == "cdn.myshoptet.com":
             if not re.fullmatch(r"/usr/www\.ifantazie\.cz/user/shop/(?:big|detail|orig)/[\w .~()+-]+",
+                                unquote(parsed.path, errors="strict")):
+                return None
+        if shop == "cz.roborock.com":
+            prefix = r"/cdn/shop" if parsed.hostname == shop else r"/s/files/1/0740/0862/5402"
+            if not re.fullmatch(prefix + r"/(?:files|products)/[A-Za-z0-9._ -]+",
                                 unquote(parsed.path, errors="strict")):
                 return None
         if (shop == parsed.hostname == "www.intimissimi.com" and INTIMISSIMI_ORIGINAL.fullmatch(parsed.path)):
@@ -105,7 +113,7 @@ def valid_image(mime, data):
     if mime not in IMAGE_TYPES or not 32 <= len(data) <= MAX_IMAGE_BYTES:
         return False
     width, height = dimensions(mime, data)
-    return 1 <= width <= 2048 and 1 <= height <= 2048
+    return 1 <= min(width, height) and max(width, height) <= MAX_IMAGE_SIDE and width * height <= MAX_IMAGE_PIXELS
 
 
 def image_content(payload):
