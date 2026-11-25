@@ -370,10 +370,13 @@
 <p><code>accepted.json</code> records capture time rather than upload completion time. A success heartbeat follows acceptance. Credentials or storage failures before capture do not stop Nora. Handled failure and <code>ExecStopPost</code> clean private staging; boot recovery retries a pending resume. Synthetic stop/SIGKILL/real-systemd recovery and cleanup passed. Physical power loss was not simulated.</p>
 </div>
 <div class="paragraph">
-<p>A timed-out subprocess first receives SIGINT and has 20 seconds to exit and release its lock before forced termination. The operation remains failed with <code>command_timeout</code>, even if cleanup exits successfully; snapshot acceptance still requires reconciliation.</p>
+<p>The full <code>check --read-data</code> can run for up to 15 minutes. Other restic commands keep a five-minute limit, and systemd bounds the whole backup service activation to 45 minutes. A timed-out subprocess first receives SIGINT and has 20 seconds to exit and release its lock before forced termination. The operation reports <code>command_timeout</code> even if cleanup succeeds.</p>
 </div>
 <div class="paragraph">
-<p>An uncertain upload is never repeated automatically. Repository locks are never cleared automatically. Inspect its protected <code>run.json</code>, then use the explicit root operation:</p>
+<p>If <code>run.json</code> records an uploaded or verifying snapshot, the next backup invocation checks that exact snapshot under the maintenance lock. It repeats the full repository check, exact restore and manifest validation before accepting it. That invocation finishes the interrupted run and leaves fresh capture to the following invocation. An absent or different snapshot keeps the run pending and raises an error. The last accepted capture timestamp remains the basis of backup freshness.</p>
+</div>
+<div class="paragraph">
+<p>An uncertain upload (<code>uploading</code>) requires explicit reconciliation before another capture. Repository locks require operator review and explicit cleanup. The operator inspects the protected <code>run.json</code>, then runs:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -385,7 +388,7 @@
 <p>If an interrupted restic process leaves a lock, inspect its exact identity, host, age and owning PID under maintenance exclusion. Only after establishing that the owner is gone and no repository operation is active may an operator use standard <code>unlock</code>; never use <code>--remove-all</code> as a retry strategy. Unlocking is not snapshot acceptance: continue with reconciliation of the original run. The pinned <a href="https://github.com/restic/restic/blob/v0.19.1/cmd/restic/cmd_unlock.go">restic 0.19.1 implementation</a> distinguishes stale-lock removal from forced removal.</p>
 </div>
 <div class="paragraph">
-<p>Reconciliation searches only that run&#8217;s exact tag/host, verifies any completed snapshot and restores it before acceptance. No matching snapshot closes the interrupted run without creating a new backup. A failed integrity/restore check preserves the uncertainty for operator review.</p>
+<p>Reconciliation searches only that run&#8217;s exact tag and host, verifies any completed snapshot and restores it before acceptance. An uncertain upload without a recorded snapshot ID can be closed if the lookup finds no snapshot. A failed integrity or restore check preserves the pending run for operator review.</p>
 </div>
 </div>
 </div>
@@ -483,6 +486,9 @@ podman run --rm --network=none --security-opt=no-new-privileges --cap-drop=NET_R
 </div>
 <div class="paragraph">
 <p>The original metadata inventory, local restic/WAL/retention/corruption experiment and remote synthetic probe remain under <code>research/h1.9</code> and the provider guide. The public suite uses synthetic fixtures; real data and provider/notification evidence are private. Context7 supplied restic/systemd/Healthchecks documentation; local restic help, exact native sources and the installed systemd verifier established the actual version-specific behavior.</p>
+</div>
+<div class="paragraph">
+<p>With the pinned restic binary in <code>build/h1.9/restic</code>, run <code>.venv/bin/python research/h1.9/runtime_probe.py</code> to exercise restart after an interrupted check. The probe uses a disposable encrypted repository. It verifies that the next invocation restores the exact original snapshot, with a single upload and the original captured SQLite data.</p>
 </div>
 </div>
 </div>
