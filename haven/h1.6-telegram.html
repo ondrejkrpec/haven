@@ -319,6 +319,32 @@ export ANSIBLE_HOME="$PWD/build/ansible"
 </div>
 </div>
 <div class="sect1">
+<h2 id="_tornado_6_6_1_candidate"><a class="anchor" href="#_tornado_6_6_1_candidate"></a>Tornado 6.6.1 candidate</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The 2026-11-25 candidate updates Tornado from 6.5.10 to 6.6.1 in the Telegram dependency lock. The pinned PTB 22.8 wheel accepts Tornado 6.x from 6.5 onward. uv 0.13.5 resolved the specific upgrade with <code>uv lock --upgrade-package 'tornado==6.6.1'</code>. All 327 other package records and the lock metadata compared equal. See the Tornado <a href="https://www.tornadoweb.org/en/stable/releases/v6.6.0.html">6.6.0</a> and <a href="https://www.tornadoweb.org/en/stable/releases/v6.6.1.html">6.6.1</a> release notes.</p>
+</div>
+<div class="paragraph">
+<p>In a disposable checkout of the pinned Hermes commit, apply <code>research/h1.6/telegram-tornado-6.6.1.patch</code> from the public Haven checkout. Use a fresh output directory and keep the disposable build checkout with the environment because PM installs the project in editable mode.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">test "$(sha256sum uv.lock | cut -d ' ' -f1)" = f1609519f30dac8886b03e60693e36fa75e033fa3e7259c8c8befe8fb6e34460
+git apply --check "$HAVEN_ROOT/research/h1.6/telegram-tornado-6.6.1.patch"
+git apply "$HAVEN_ROOT/research/h1.6/telegram-tornado-6.6.1.patch"
+test "$(sha256sum uv.lock | cut -d ' ' -f1)" = 346c60a85a4473e8cd3146f164ffa5bbb3cd6a7558795f94acb6ed7659e426a6
+python3 -m pm.build_env --source "$PWD" --out "$TELEGRAM_CANDIDATE_ENV" --extra telegram</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Use the isolated PM home and tool store described in <a href="research/h0.1/README.html" class="xref page">the pinned Hermes reproduction</a>. Add <code>--group dev --group test</code> for the canonical native test runner. The runtime-only build imported PTB 22.8 and Tornado 6.6.1 under Python 3.14.9. The test build passed the nine Telegram files listed below plus <code>research/h1.6.1/test_native_capabilities.py</code>, <code>research/w2/test_native_wishlist.py</code> and <code>research/w5/test_native_language.py</code>. The 92 synthetic tests used the original source lock after dependency preparation to match Haven&#8217;s source integrity check.</p>
+</div>
+<div class="paragraph">
+<p>Production uses the original source lock to verify the running Hermes tree. Treat activation of the new dependency set as a separate service maintenance operation and keep the previous interpreter available for recovery. Context7 returned a quota error. The verified package metadata and upstream release notes supplied the version details.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_owner_enrollment"><a class="anchor" href="#_owner_enrollment"></a>Owner enrollment</h2>
 <div class="sectionbody">
 <div class="olist arabic">

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "6a3bcf6cef5c5ed9d296609fe07fa29bbc64398e",
-  "checked_at_utc": "2026-11-25T10:09:54.554238+00:00",
+  "source_revision": "3f4096e4b8c57fd8709f803cd56762a28a7c8b3f",
+  "checked_at_utc": "2026-11-25T14:54:47.179715+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -289,7 +289,7 @@
     },
     {
       "path": "haven/h1.6-telegram.html",
-      "sha256": "7f432c632ee7c2399ee0cd66d76f088c44fd763065426aebeec46c9232020f2d"
+      "sha256": "eed9814f4593ccfc11bf1b7f2b6f6372ba0e1320dad4c3da19c319457cc4a263"
     },
     {
       "path": "haven/h1.6-whatsapp.html",
