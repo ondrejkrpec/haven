@@ -28,6 +28,25 @@ This checks the exact source and dependency hashes, builds `/var/lib/haven/teleg
 
 Render/deploy the updated service with both transports disabled using link:h1.5-service-recovery.adoc[the application procedure] before owner enrollment. The guard/helper/pin files belong to the bounded application snapshot; credentials, conversations and databases do not. The selected interpreter changes to the prepared Telegram environment only when Telegram is enabled. A missing model login still does not stop deterministic scheduling; an enabled messaging transport requires its own protected credential file.
 
+== Tornado 6.6.1 candidate
+
+The 2026-11-25 candidate updates Tornado from 6.5.10 to 6.6.1 in the Telegram dependency lock. The pinned PTB 22.8 wheel accepts Tornado 6.x from 6.5 onward. uv 0.13.5 resolved the specific upgrade with `uv lock --upgrade-package 'tornado==6.6.1'`. All 327 other package records and the lock metadata compared equal. See the Tornado https://www.tornadoweb.org/en/stable/releases/v6.6.0.html[6.6.0] and https://www.tornadoweb.org/en/stable/releases/v6.6.1.html[6.6.1] release notes.
+
+In a disposable checkout of the pinned Hermes commit, apply `research/h1.6/telegram-tornado-6.6.1.patch` from the public Haven checkout. Use a fresh output directory and keep the disposable build checkout with the environment because PM installs the project in editable mode.
+
+[source,bash]
+----
+test "$(sha256sum uv.lock | cut -d ' ' -f1)" = f1609519f30dac8886b03e60693e36fa75e033fa3e7259c8c8befe8fb6e34460
+git apply --check "$HAVEN_ROOT/research/h1.6/telegram-tornado-6.6.1.patch"
+git apply "$HAVEN_ROOT/research/h1.6/telegram-tornado-6.6.1.patch"
+test "$(sha256sum uv.lock | cut -d ' ' -f1)" = 346c60a85a4473e8cd3146f164ffa5bbb3cd6a7558795f94acb6ed7659e426a6
+python3 -m pm.build_env --source "$PWD" --out "$TELEGRAM_CANDIDATE_ENV" --extra telegram
+----
+
+Use the isolated PM home and tool store described in link:../research/h0.1/README.adoc[the pinned Hermes reproduction]. Add `--group dev --group test` for the canonical native test runner. The runtime-only build imported PTB 22.8 and Tornado 6.6.1 under Python 3.14.9. The test build passed the nine Telegram files listed below plus `research/h1.6.1/test_native_capabilities.py`, `research/w2/test_native_wishlist.py` and `research/w5/test_native_language.py`. The 92 synthetic tests used the original source lock after dependency preparation to match Haven's source integrity check.
+
+Production uses the original source lock to verify the running Hermes tree. Treat activation of the new dependency set as a separate service maintenance operation and keep the previous interpreter available for recovery. Context7 returned a quota error. The verified package metadata and upstream release notes supplied the version details.
+
 == Owner enrollment
 
 . Create a bot through official https://t.me/BotFather[BotFather] using `/newbot`. Keep the token private; do not put it in YAML, command arguments, chat or Git.
