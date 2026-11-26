@@ -275,7 +275,7 @@
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Status, 2026-11-13: the pinned browser is installed separately on the Ubuntu pilot. Installed UID/file restrictions, private networking, sandboxed Chromium startup and normal descendant cleanup passed. Its normal VPS egress still returns Cloudflare verification. Two fresh-context reads using the exact installed renderer on that VPS succeeded through a temporary restricted workstation egress relay. Permanent egress and production collection acceptance remain open; the relay was removed after the experiment.</p>
+<p>Initial pilot, 2026-11-13: the separate browser passed UID/file restrictions, private networking, sandboxed Chromium startup and normal descendant cleanup. VPS egress returned Cloudflare verification. Two fresh-context reads using the installed renderer on that VPS succeeded through a temporary restricted workstation egress relay. The relay was removed after the experiment.</p>
 </div>
 <div class="paragraph">
 <p>This implements the path demonstrated by the historical <a href="wishlist-browser-feasibility.html" class="xref page">headed/Xvfb experiment</a>. The optional browser endpoint provides a second source path; it does not guarantee access from every network. There is no CAPTCHA interaction, stealth plugin, modified browser identity, account login or reuse of the owner&#8217;s browser/session.</p>
@@ -331,13 +331,16 @@
 <h2 id="_explicit_preparation"><a class="anchor" href="#_explicit_preparation"></a>Explicit preparation</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="_attachments/config/wishlist-browser-runtime.json" class="xref attachment">The runtime pin</a> fixes Playwright 1.64.1 and Linux x86_64 Chromium 156.0.8078.4/revision 1248 with a SHA-256 for the complete official archive. The downloaded archive was compared against all 301 cached browser files used by the successful experiment. Other architectures need a separate reviewed pin. <a href="_attachments/requirements-browser.txt" class="xref attachment">The optional dependency lock</a> is separate from coordinator/public-check dependencies.</p>
+<p><a href="_attachments/config/wishlist-browser-runtime.json" class="xref attachment">The runtime pin</a> fixes Playwright 1.64.1 and Linux x86_64 Chrome for Testing 158.0.8127.88 (Google revision 1727472) with a SHA-256 for the complete official archive. This stable build includes the Chromium security fix for CVE-2026-76024. Playwright launches the pinned executable through its explicit executable path. Other architectures need a separate reviewed pin. <a href="_attachments/requirements-browser.txt" class="xref attachment">The optional dependency lock</a> is separate from coordinator/public-check dependencies. <a href="https://googlechromelabs.github.io/chrome-for-testing/">Chrome for Testing</a> · <a href="https://chromereleases.googleblog.com/2026/10/stable-channel-update-for-desktop_02107719452.html">Security advisory</a></p>
 </div>
 <div class="paragraph">
 <p><code>ops/wishlist-browser.yml</code> requires an explicit private inventory, <code>haven_browser_install_authorized: true</code> and a local <code>haven_browser_chromium_archive</code> matching that digest. It creates independent non-login accounts, builds a separate hash-pinned environment under an unprivileged build account, freezes <code>/opt/haven-wishlist-browser</code> as root-owned files and installs only the declared public modules. It neither overwrites the active domain runtime nor starts/enables the browser units.</p>
 </div>
 <div class="paragraph">
 <p>Preparation refuses running browser services and incompatible in-place runtime/dependency replacements. An apt simulation refuses planned existing-package upgrades/removals; the install uses the current package indexes, <code>--no-upgrade</code> and <code>--no-remove</code>. It does not refresh repositories or authorize general OS maintenance. The declared packages and repeat preparation passed on the Ubuntu pilot without existing-package upgrades or removals.</p>
+</div>
+<div class="paragraph">
+<p>For a version-only security update on an installed host, stage the hash-verified archive under a separate root-owned directory on the same filesystem. Verify the executable version and test it with the installed Playwright, a synthetic page, the browser service identity, disabled external networking and scoped AppArmor user-namespace admission. Stop the browser unit during the switch, install the entire browser directory at its existing executable path and record the matching runtime pin. Keep a guarded copy of the previous tree until startup and a scoped browser request pass. If the new runtime fails, keep the affected browser path out of service until repaired. Verify the independent collector and monitor after the switch.</p>
 </div>
 <div class="paragraph">
 <p>Ubuntu&#8217;s user-namespace restriction remains enabled. The staged AppArmor profile grants user-namespace admission only to the new root-owned Chromium executable so Chromium can create its renderer sandbox; it does not disable global AppArmor/namespace policy or change existing profiles. The scoped profile parsed and sandboxed Chromium started on the target while the global user-namespace restriction remained enabled.</p>
