@@ -1,0 +1,32 @@
+[Unit]
+Description=Haven read-only operational dashboard
+Requires=haven-dashboard-web.socket
+After=haven-dashboard-web.socket
+
+[Service]
+Type=exec
+User=haven-dashboard
+Group=haven-dashboard
+Sockets=haven-dashboard-web.socket
+WorkingDirectory=/usr/local/lib/haven-dashboard
+Environment=PYTHONPATH=/usr/local/lib/haven-dashboard/vendor-3.0.2
+ExecStart=/usr/bin/python3 -B -s /usr/local/lib/haven-dashboard/dashboard_web.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictSUIDSGID=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectProc=invisible
+InaccessiblePaths=-/var/lib/haven -/var/lib/haven-backup -/etc/haven-backup -/var/lib/haven-wishlist -/var/lib/haven-language /var/lib/haven-web/private-docs
+MemoryMax=64M
+TasksMax=12

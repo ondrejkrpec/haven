@@ -254,6 +254,33 @@ class BackupRuntimeTests(unittest.TestCase):
                         runtime.monitor({}, state, state)
                     ping.assert_not_called()
 
+    def test_dashboard_monitor_checks_only_the_selected_regular_snapshot(self):
+        with self.fixture() as (root, _, _, _, _):
+            web = root / "web"
+            inbox = web / "dashboard-input"
+            inbox.mkdir(parents=True)
+            legacy = root / "legacy.json"
+            fresh = runtime.datetime.now(runtime.timezone.utc).isoformat()
+            legacy.write_text(runtime.json.dumps({"generated_at_utc": fresh}))
+            legacy.chmod(0o640)
+            with patch.object(runtime, "DASHBOARD_WEB", web), patch.object(runtime, "LEGACY_DASHBOARD_SNAPSHOT", legacy), \
+                    patch.object(runtime.pwd, "getpwnam") as getpwnam:
+                getpwnam.return_value.pw_uid = os.geteuid()
+                self.assertTrue(runtime.dashboard_fresh())
+                marker = web / "dashboard-active"
+                marker.write_text("1\n")
+                marker.chmod(0o600)
+                self.assertFalse(runtime.dashboard_fresh())
+                snapshot = inbox / "snapshot.json"
+                snapshot.symlink_to(legacy)
+                self.assertFalse(runtime.dashboard_fresh())
+                snapshot.unlink()
+                snapshot.write_text(runtime.json.dumps({"generated_at_utc": fresh}))
+                snapshot.chmod(0o640)
+                self.assertTrue(runtime.dashboard_fresh())
+                snapshot.write_text(runtime.json.dumps({"generated_at_utc": "2000-01-01T00:00:00Z"}))
+                self.assertFalse(runtime.dashboard_fresh())
+
     def test_reconciliation_requires_exact_run_snapshot_before_check_and_restore(self):
         with self.fixture() as (_, _, state, _, _):
             runtime.save(state / "run.json", {"stage": "uploading", "run_id": "a" * 32})

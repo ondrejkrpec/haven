@@ -18,7 +18,6 @@ FILES = (
        "wishlist_interpreter", "wishlist_model", "wishlist_intimissimi")),
     "/opt/haven-wishlist/schemas/wishlist-request-v1.schema.json",
     "/var/lib/haven/haven-tools/schemas/wishlist-request-v1.schema.json",
-    "/var/lib/haven/web-tools/wishlist_observability.py",
     "/opt/haven-wishlist/requirements-web.txt",
     *(f"/usr/local/lib/haven-backup/scripts/{name}.py" for name in ("backup_runtime", "wishlist_store", "wishlist_operations", "wishlist_observability")),
     "/var/lib/haven-wishlist/config.json", "/etc/haven-wishlist-web.json",
@@ -39,7 +38,10 @@ def snapshot():
     os.umask(0o077)
     destination = Path(tempfile.mkdtemp(prefix="haven-wishlist-web-", dir="/root"))
     manifest = {"schema_version": 1, "files": []}
-    for index, value in enumerate(FILES):
+    dashboard = "/usr/local/lib/haven-dashboard/wishlist_observability.py"
+    if not Path(dashboard).exists():
+        dashboard = "/var/lib/haven/web-tools/wishlist_observability.py"
+    for index, value in enumerate((*FILES, dashboard)):
         path = Path(value)
         row = {"path": value, "present": path.exists()}
         if path.is_symlink():

@@ -69,13 +69,17 @@ ANSIBLE_CONFIG=ops/ansible.cfg ANSIBLE_HOME=build/ansible \
   -e haven_private_site=/absolute/path/to/private-instance/build/site
 ----
 
-An independent systemd oneshot runs the fixed snapshot exporter as `haven`, with no network access, no capabilities, protected system directories and a single writable dashboard output directory. Credential directories, `.env` and native configuration are inaccessible to that process. The timer refreshes once a minute. SQLite uses read-only/query-only access; missing databases are not created and errors appear as unavailable data. The exporter selects no conversation content, titles, message rows or task bodies.
+An independent systemd oneshot runs the fixed snapshot exporter as `haven`, with network denied and a single output directory under `/var/lib/haven-web`. The timer refreshes the data JSON once a minute. SQLite uses read-only/query-only access. The exporter selects aggregate counters and fixed service properties. The code lives under root-owned `/usr/local/lib/haven-dashboard`.
+
+The web service runs as `haven-dashboard` with a read-only filesystem, no IP networking and no access to the coordinator home, private runbooks, wishlist database or backup directories. The server inherits a root-owned mode-0600 Unix HTTP socket. It serves only the dashboard, its stylesheet and a bounded JSON snapshot. It checks the data shape and file identity, renders from trusted code and sets a restrictive content security policy. The exporter directory is an input to this service. Private releases are under root-owned `/var/lib/haven-web/private-docs`. Both roots sit outside the coordinator home.
+
+For the first deployment, pass `haven_dashboard_http_dependencies` as the absolute artifact directory for the repository's existing hash-pinned HTTP lock. The playbook verifies the corresponding archive, verifies the installed dependency and checks the dashboard through its socket before selecting the new snapshot for the independent monitor. Later deployments verify the installed dependency in place. See link:wishlist-web.adoc[building the HTTP dependency bundle]. Deploy the new artifacts before changing the Serve routes.
 
 The page refreshes every minute and displays its UTC snapshot timestamp. Treat a snapshot older than two minutes as stale; it is not an external outage monitor. Model counters are retained-session aggregates, and recorded costs are neither subscription quota nor a provider invoice. Unknown costs are not displayed as zero. An absent default board is reported as unavailable, not as an empty healthy queue. Other boards and task controls remain future work.
 
 == Enable owner-only HTTPS through Tailscale
 
-The pilot's installed Serve CLI is 1.104.4. Preserve all current settings and inspect `sudo tailscale serve status --json` before changing anything. This rollout expects no pre-existing Serve routes. Do not use `serve reset` on a host with unrelated routes.
+Inspect `sudo tailscale serve status --json` before changing the dashboard and private guide mounts. Preserve the wishlist proxy and any unrelated routes.
 
 In the Tailscale admin console, enable HTTPS certificates and add an owner-only grant to `tag:haven` for TCP 443 and 8443 while preserving SSH. Update policy tests to accept the two new ports and retain denials for unused ports and an unauthorized identity. A new narrow grant does not cancel an existing broad allow rule; inspect the complete policy. Certificate Transparency publicly records the node's certificate DNS name, not private content. No Funnel capability is required.
 
@@ -83,12 +87,12 @@ After reviewing and authorizing the installed artifact and policy, configure onl
 
 [source,sh]
 ----
-sudo tailscale serve --bg --https=443 /var/lib/haven/web/dashboard
-sudo tailscale serve --bg --https=8443 /var/lib/haven/web/private-docs/current
+sudo tailscale serve --bg --https=443 --set-path=/ unix:/run/haven-dashboard-http.sock
+sudo tailscale serve --bg --https=8443 --set-path=/ /var/lib/haven-web/private-docs/current
 sudo tailscale serve status --json
 ----
 
-Both sites use root paths on separate HTTPS ports. The tailnet DNS name is instance-specific and stays in private runbooks. Tailscale Serve owns the TLS listener and persists background configuration across daemon restarts. It serves only the chosen generated directories. Do not expose an entire home, repository or parent directory. Verify whether the installed version honors the release symlink on each request when testing rollback.
+Both sites use root paths on separate HTTPS ports. The wishlist continues through its own path and socket. The tailnet DNS name is instance-specific and stays in private runbooks. Tailscale Serve owns the TLS listener and persists background configuration across daemon restarts. For rollback, keep the root mount on the isolated dashboard socket and select a previously verified private release under the protected web root. If the dashboard cannot be restored on that socket, serving a static status message for the root mount contains the failure while preserving the wishlist route.
 
 No public firewall rule, public HTTP listener, OS update, service-account change or Nora restart is part of this operation. Tailscale's policy, together with authenticated tailnet devices, controls access; UFW alone is not that boundary. Funnel must remain absent from the resulting Serve configuration.
 

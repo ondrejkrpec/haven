@@ -145,11 +145,9 @@ class ObservabilityTests(Fixture, unittest.TestCase):
             self.scan(domain)
             compact(domain)
             snapshot = metrics.collect(path, now=self.now)
-            dashboard = root / 'dashboard.json'
-            dashboard.write_text(json.dumps({'generated_at_utc': stamp(self.now)}))
             with patch.object(runtime, 'SystemController') as controller, patch.object(runtime, 'ping') as ping, \
                     patch.object(runtime.time, 'time', return_value=self.now.timestamp()), \
-                    patch.object(runtime, 'Path', return_value=dashboard), \
+                    patch.object(runtime, 'dashboard_fresh', return_value=True), \
                     patch.object(metrics, 'read_snapshot', return_value=snapshot), \
                     patch.object(metrics, 'health') as checked_health:
                 # Use fixed health decisions here; actual time boundaries above

@@ -16,7 +16,7 @@ else:
     from wishlist_observability import SNAPSHOT, health, read_snapshot
 
 STATE = Path("/var/lib/haven/.hermes")
-OUTPUT = Path("/var/lib/haven/web/dashboard")
+OUTPUT = Path("/var/lib/haven-web/dashboard-input")
 
 
 def query(database, sql):
@@ -111,16 +111,15 @@ def write_snapshot(output=OUTPUT, snapshot=None):
     if output.is_symlink():
         raise ValueError("Dashboard output must not be a symlink")
     output.mkdir(mode=0o750, parents=True, exist_ok=True)
-    for name, content in (("snapshot.json", json.dumps(snapshot, indent=2) + "\n"),
-                          ("index.html", render(snapshot))):
-        descriptor, temporary = tempfile.mkstemp(prefix=".snapshot-", dir=output)
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8") as target:
-                target.write(content)
-            os.chmod(temporary, 0o640)
-            os.replace(temporary, output / name)
-        finally:
-            Path(temporary).unlink(missing_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=".snapshot-", dir=output)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as target:
+            json.dump(snapshot, target, indent=2, allow_nan=False)
+            target.write("\n")
+        os.chmod(temporary, 0o640)
+        os.replace(temporary, output / "snapshot.json")
+    finally:
+        Path(temporary).unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
