@@ -51,14 +51,27 @@
         group: root
         mode: '0644'
 
-    - name: Install the dashboard consumers
+    - name: Locate the isolated dashboard reader
+      ansible.builtin.stat:
+        path: /usr/local/lib/haven-dashboard/wishlist_observability.py
+        follow: false
+      register: haven_isolated_dashboard_reader
+
+    - name: Keep the installed dashboard reader compatible
       ansible.builtin.copy:
-        src: "../scripts/{{ item }}"
-        dest: "/var/lib/haven/web-tools/{{ item }}"
+        src: ../scripts/wishlist_observability.py
+        dest: "{{ '/usr/local/lib/haven-dashboard' if haven_isolated_dashboard_reader.stat.exists
+          else '/var/lib/haven/web-tools' }}/wishlist_observability.py"
         owner: root
-        group: haven
-        mode: '0640'
-      loop: [dashboard_snapshot.py, wishlist_observability.py]
+        group: "{{ 'root' if haven_isolated_dashboard_reader.stat.exists else 'haven' }}"
+        mode: "{{ '0644' if haven_isolated_dashboard_reader.stat.exists else '0640' }}"
+      register: haven_dashboard_reader_update
+
+    - name: Refresh the isolated HTTP reader after its import changed
+      ansible.builtin.systemd_service:
+        name: haven-dashboard-web.service
+        state: restarted
+      when: haven_isolated_dashboard_reader.stat.exists and haven_dashboard_reader_update.changed
 
     - name: Install read-only exporter units
       ansible.builtin.template:

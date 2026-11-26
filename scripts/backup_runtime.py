@@ -30,6 +30,8 @@ STATE = Path("/var/lib/haven-backup")
 CONFIG = Path("/etc/haven-backup")
 LOCK = Path("/run/lock/haven-maintenance.lock")
 TOOLS = Path("/usr/local/lib/haven-backup")
+DASHBOARD_WEB = Path("/var/lib/haven-web")
+LEGACY_DASHBOARD_SNAPSHOT = Path("/var/lib/haven/web/dashboard/snapshot.json")
 INTERRUPT_GRACE_SECONDS = 20
 RESTIC_COMMAND_TIMEOUT = 5 * 60
 RESTIC_FULL_CHECK_TIMEOUT = 15 * 60
@@ -57,15 +59,17 @@ def protected_directory(path):
         os.close(fd)
 
 
-def read_private(path, limit=1024 * 1024):
+def read_private(path, limit=1024 * 1024, *, owner_uid=None, mode=0o600):
     """Require trusted ancestors and a bounded, owned, single-link regular file."""
+    if owner_uid is None:
+        owner_uid = os.geteuid()
     parent = open_root(path.parent)
     try:
         fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
         try:
             info = os.fstat(fd)
-            require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_uid == os.geteuid()
-                    and stat.S_IMODE(info.st_mode) == 0o600 and info.st_size <= limit, "private_file_required")
+            require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_uid == owner_uid
+                    and stat.S_IMODE(info.st_mode) == mode and info.st_size <= limit, "private_file_required")
             value = os.read(fd, limit + 1)
             require(len(value) <= limit, "private_file_too_large")
             return value
@@ -492,15 +496,31 @@ def resume_snapshot(settings, state, config, journal):
     clear_workspace(state)
 
 
+def dashboard_fresh():
+    try:
+        try:
+            marker = read_private(DASHBOARD_WEB / "dashboard-active", 8)
+        except FileNotFoundError:
+            path = LEGACY_DASHBOARD_SNAPSHOT
+        else:
+            require(marker == b"1\n", "dashboard_marker")
+            path = DASHBOARD_WEB / "dashboard-input/snapshot.json"
+        # The exporter runs as the coordinator identity. The monitor only takes
+        # the timestamp from a bounded, regular input and never follows links.
+        snapshot = json.loads(read_private(path, 65536, owner_uid=pwd.getpwnam("haven").pw_uid, mode=0o640))
+        timestamp = datetime.fromisoformat(snapshot["generated_at_utc"])
+        return timestamp.utcoffset() is not None and 0 <= time.time() - timestamp.timestamp() < 120
+    except (OSError, CaptureError, ValueError, TypeError, KeyError, OverflowError, RecursionError):
+        return False
+
+
 def monitor(settings, state, config):
     require(SystemController(settings).healthy(), "coordinator_unhealthy")
     accepted = load(state / "accepted.json")
     require(accepted.get("restored_and_verified") is True
             and 0 <= time.time() - datetime.fromisoformat(accepted["captured_at_utc"]).timestamp() <= 86400,
             "backup_missing_or_stale")
-    snapshot = json.loads(Path("/var/lib/haven/web/dashboard/snapshot.json").read_text())
-    require(0 <= time.time() - datetime.fromisoformat(snapshot["generated_at_utc"]).timestamp() < 120,
-            "dashboard_stale")
+    require(dashboard_fresh(), "dashboard_stale")
     if settings.get("wishlist_collection_enabled", False):
         from scripts.wishlist_observability import health, read_snapshot
         problems = health(read_snapshot())

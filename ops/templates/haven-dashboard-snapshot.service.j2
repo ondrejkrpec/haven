@@ -6,7 +6,8 @@ After=haven.service
 Type=oneshot
 User=haven
 Group=haven
-ExecStart=/usr/bin/python3 /var/lib/haven/web-tools/dashboard_snapshot.py
+Environment=LC_ALL=C
+ExecStart=/usr/bin/python3 -B -E -s /usr/local/lib/haven-dashboard/dashboard_snapshot.py
 UMask=0027
 TimeoutStartSec=20
 NoNewPrivileges=true
@@ -20,6 +21,6 @@ ProtectControlGroups=true
 RestrictSUIDSGID=true
 RestrictAddressFamilies=AF_UNIX
 IPAddressDeny=any
-ReadWritePaths=/var/lib/haven/web/dashboard
+ReadWritePaths=/var/lib/haven-web/dashboard-input
 InaccessiblePaths=-/var/lib/haven/.hermes/credentials -/var/lib/haven/.hermes/.env -/var/lib/haven/.hermes/config.yaml
 CapabilityBoundingSet=

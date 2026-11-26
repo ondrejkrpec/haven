@@ -190,19 +190,32 @@
             mode: '0640'
           loop: "{{ haven_web_modules }}"
 
-        - name: Inspect the optional dashboard aggregate reader
+        - name: Inspect the available dashboard aggregate readers
           ansible.builtin.stat:
-            path: /var/lib/haven/web-tools/wishlist_observability.py
-          register: haven_web_dashboard_reader
+            path: "{{ item.path }}"
+            follow: false
+          loop:
+            - {path: /usr/local/lib/haven-dashboard/wishlist_observability.py, group: root, mode: '0644'}
+            - {path: /var/lib/haven/web-tools/wishlist_observability.py, group: haven, mode: '0640'}
+          register: haven_web_dashboard_readers
 
         - name: Keep the dashboard aggregate reader compatible with the exporter
           ansible.builtin.copy:
             src: ../scripts/wishlist_observability.py
-            dest: /var/lib/haven/web-tools/wishlist_observability.py
+            dest: "{{ item.item.path }}"
             owner: root
-            group: haven
-            mode: '0640'
-          when: haven_web_dashboard_reader.stat.exists
+            group: "{{ item.item.group }}"
+            mode: "{{ item.item.mode }}"
+          loop: "{{ (haven_web_dashboard_readers.results | selectattr('stat.exists') | list)[:1] }}"
+          loop_control:
+            label: "{{ item.item.path }}"
+          register: haven_web_dashboard_update
+
+        - name: Reload the isolated dashboard if its data decoder changed
+          ansible.builtin.systemd_service:
+            name: haven-dashboard-web.service
+            state: restarted
+          when: haven_web_dashboard_readers.results[0].stat.exists and haven_web_dashboard_update.changed
 
         - name: Install the read-only preview worker and shared fetch process
           ansible.builtin.copy:

@@ -1,0 +1,12 @@
+[Unit]
+Description=Root-only HTTP socket for Tailscale dashboard proxy
+
+[Socket]
+ListenStream=/run/haven-dashboard-http.sock
+SocketUser=root
+SocketGroup=root
+SocketMode=0600
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target

@@ -1,6 +1,9 @@
 """Snapshots cannot execute work, create missing databases or expose conversations."""
 
 from contextlib import closing
+from datetime import datetime, timezone
+import json
+import os
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -8,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from scripts.dashboard_snapshot import collect, render, write_snapshot
+from scripts.dashboard_web import Application
 from scripts import wishlist_observability as metrics
 
 
@@ -58,4 +62,55 @@ class DashboardTests(unittest.TestCase):
             self.assertEqual(before, {p.name: p.read_bytes() for p in root.iterdir()})
             output = root / "output"
             write_snapshot(output, snapshot)
-            self.assertEqual({p.name for p in output.iterdir()}, {"index.html", "snapshot.json"})
+            self.assertEqual({p.name for p in output.iterdir()}, {"snapshot.json"})
+
+
+class DashboardWebTests(unittest.TestCase):
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        self.snapshot = self.root / "snapshot.json"
+        self.data = {"generated_at_utc": datetime.now(timezone.utc).isoformat(),
+                     "service": {"ActiveState": "active", "SubState": "running", "NRestarts": "0",
+                                 "ActiveEnterTimestamp": "Thu 2026-11-26 08:00:00 UTC"},
+                     "usage": {"status": "unavailable"}, "tasks": {"status": "ok", "rows": []},
+                     "wishlist": {"status": "unavailable"}}
+        self.app = Application(b"body {}", producer_uid=os.geteuid(), snapshot=self.snapshot)
+        write_snapshot(self.root, self.data)
+
+    def request(self, path, method="GET"):
+        respond = unittest.mock.Mock()
+        body, = self.app({"REQUEST_METHOD": method, "PATH_INFO": path}, respond)
+        status, headers = respond.call_args.args
+        return status, dict(headers), body
+
+    def test_html_is_rendered_from_data_and_only_fixed_get_routes_are_served(self):
+        (self.root / "index.html").write_text("UNTRUSTED_FILE")
+        status, headers, body = self.request("/")
+        self.assertEqual(status, "200 OK")
+        self.assertIn(b"Stav instance", body)
+        self.assertNotIn(b"UNTRUSTED_FILE", body)
+        self.assertIn("default-src 'none'", headers["Content-Security-Policy"])
+        self.assertEqual(headers["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(json.loads(self.request("/snapshot.json")[2]), self.data)
+        self.assertEqual(self.request("/snapshot.json", "HEAD")[2], b"")
+        self.assertEqual(self.request("/site.css")[2], b"body {}")
+        self.assertEqual(self.request("/unknown")[0], "404 Not Found")
+        self.assertEqual(self.request("/", "POST")[0], "405 Method Not Allowed")
+
+    def test_snapshot_reader_rejects_unknown_fields_and_unsafe_input_types(self):
+        for data in ({**self.data, "unexpected": "UNRELATED_DATA"},
+                     {**self.data, "service": {"ActiveState": "<script>"}}):
+            with self.subTest(data=data):
+                write_snapshot(self.root, data)
+                self.assertEqual(self.request("/snapshot.json")[0], "503 Service Unavailable")
+        self.snapshot.unlink()
+        external = self.root / "unrelated.json"
+        external.write_text(json.dumps(self.data))
+        external.chmod(0o640)
+        self.snapshot.symlink_to(external)
+        self.assertEqual(self.request("/")[0], "503 Service Unavailable")
+        self.snapshot.unlink()
+        os.mkfifo(self.snapshot, 0o640)
+        self.assertEqual(self.request("/")[0], "503 Service Unavailable")

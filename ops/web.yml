@@ -8,7 +8,7 @@
   become: true
   vars:
     haven_web_metadata: "{{ lookup('ansible.builtin.file', haven_private_site + '/publication.json') | from_json }}"
-    haven_web_release: "/var/lib/haven/web/private-docs/releases/{{ haven_web_metadata.release_id }}"
+    haven_web_release: "/var/lib/haven-web/private-docs/releases/{{ haven_web_metadata.release_id }}"
   pre_tasks:
     - name: Require the explicit web deployment and private artifact
       ansible.builtin.assert:
@@ -37,55 +37,146 @@
       become: false
       changed_when: false
 
+    - name: Inspect the dashboard migration marker
+      ansible.builtin.stat:
+        path: /var/lib/haven-web/dashboard-active
+        follow: false
+      register: haven_dashboard_active
+
+    - name: Identify the installed independent monitor before changing its input
+      ansible.builtin.stat:
+        path: /usr/local/lib/haven-backup/scripts/backup_runtime.py
+        checksum_algorithm: sha256
+        follow: false
+      register: haven_dashboard_monitor
+      when: not haven_dashboard_active.stat.exists
+
+    - name: Require the verified legacy or current monitor before migrating
+      ansible.builtin.assert:
+        that:
+          - haven_dashboard_monitor.stat.isreg
+          - haven_dashboard_monitor.stat.uid == 0
+          - >-
+            haven_dashboard_monitor.stat.checksum in
+            ['a9a221c7237161efce96e5b9756f7906a2133ab8f8ca3379c78c72512f9afd41',
+            lookup('ansible.builtin.file', playbook_dir + '/../scripts/backup_runtime.py', rstrip=false) | hash('sha256')]
+        fail_msg: The installed backup controller needs a compatible reviewed revision before the dashboard migration.
+      when: not haven_dashboard_active.stat.exists and haven_dashboard_monitor.stat.exists
+
+    - name: Inspect the pinned dashboard HTTP dependency
+      ansible.builtin.stat:
+        path: /usr/local/lib/haven-dashboard/vendor-3.0.2/wishlist-dependencies.json
+        follow: false
+      register: haven_dashboard_vendor
+
+    - name: Require the explicit dependency artifact on first install
+      ansible.builtin.assert:
+        that:
+          - haven_dashboard_vendor.stat.exists or haven_dashboard_http_dependencies is defined
+
+    - name: Verify the supplied dashboard dependency archive
+      ansible.builtin.command:
+        argv: ["{{ ansible_playbook_python }}", -m, scripts.wishlist_dependencies, verify-bundle,
+               --directory, "{{ haven_dashboard_http_dependencies }}", --requirements, "{{ playbook_dir }}/../requirements-web.txt"]
+        chdir: "{{ playbook_dir }}/.."
+      delegate_to: localhost
+      become: false
+      changed_when: false
+      when: haven_dashboard_http_dependencies is defined
+
   tasks:
-    - name: Protect internal web output and trusted snapshot code
+    - name: Create the dedicated dashboard group
+      ansible.builtin.group:
+        name: haven-dashboard
+        system: true
+
+    - name: Create the unprivileged dashboard identity
+      ansible.builtin.user:
+        name: haven-dashboard
+        group: haven-dashboard
+        system: true
+        create_home: false
+        home: /nonexistent
+        shell: /usr/sbin/nologin
+
+    - name: Protect published releases and executable parents outside the coordinator home
       ansible.builtin.file:
         path: "{{ item.path }}"
         state: directory
-        owner: "{{ item.owner }}"
-        group: haven
-        mode: '0750'
+        owner: root
+        group: root
+        mode: "{{ item.mode }}"
       loop:
-        - {path: /var/lib/haven/web, owner: root}
-        - {path: /var/lib/haven/web/dashboard, owner: haven}
-        - {path: /var/lib/haven/web/private-docs, owner: root}
-        - {path: /var/lib/haven/web/private-docs/releases, owner: root}
-        - {path: "{{ haven_web_release }}", owner: root}
-        - {path: /var/lib/haven/web-tools, owner: root}
+        - {path: /var/lib/haven-web, mode: '0755'}
+        - {path: /var/lib/haven-web/private-docs, mode: '0700'}
+        - {path: /var/lib/haven-web/private-docs/releases, mode: '0700'}
+        - {path: "{{ haven_web_release }}", mode: '0700'}
+        - {path: /usr/local/lib/haven-dashboard, mode: '0755'}
+        - {path: /usr/local/lib/haven-dashboard/vendor-3.0.2, mode: '0755'}
 
-    - name: Install the bounded snapshot exporter
+    - name: Create the unserved single-writer dashboard input directory
+      ansible.builtin.file:
+        path: /var/lib/haven-web/dashboard-input
+        state: directory
+        owner: haven
+        group: haven-dashboard
+        mode: '2750'
+
+    - name: Install the bounded dashboard exporter and reader
       ansible.builtin.copy:
         src: "../scripts/{{ item }}"
-        dest: "/var/lib/haven/web-tools/{{ item }}"
+        dest: "/usr/local/lib/haven-dashboard/{{ item }}"
         owner: root
-        group: haven
-        mode: '0640'
-      loop: [dashboard_snapshot.py, wishlist_observability.py]
+        group: root
+        mode: '0644'
+      loop: [dashboard_snapshot.py, dashboard_web.py, wishlist_observability.py, wishlist_dependencies.py]
+      register: haven_dashboard_code
 
-    - name: Install local dashboard styling
+    - name: Install the trusted dashboard stylesheet and dependency lock
       ansible.builtin.copy:
-        src: ../docs/ui/css/site.css
-        dest: /var/lib/haven/web/dashboard/site.css
+        src: "../{{ item.source }}"
+        dest: "/usr/local/lib/haven-dashboard/{{ item.target }}"
         owner: root
-        group: haven
-        mode: '0640'
+        group: root
+        mode: '0644'
+      loop:
+        - {source: docs/ui/css/site.css, target: site.css}
+        - {source: requirements-web.txt, target: requirements-web.txt}
+      register: haven_dashboard_assets
+
+    - name: Install the reviewed dashboard HTTP dependency archive
+      ansible.builtin.unarchive:
+        src: "{{ haven_dashboard_http_dependencies }}.tar.gz"
+        dest: /usr/local/lib/haven-dashboard/vendor-3.0.2
+        owner: root
+        group: root
+        mode: 'u=rwX,go=rX'
+      when: haven_dashboard_http_dependencies is defined
+      register: haven_dashboard_http
+
+    - name: Verify the installed pinned dashboard HTTP dependency
+      ansible.builtin.command:
+        argv: [/usr/bin/python3, -B, /usr/local/lib/haven-dashboard/wishlist_dependencies.py, verify,
+               --directory, /usr/local/lib/haven-dashboard/vendor-3.0.2,
+               --requirements, /usr/local/lib/haven-dashboard/requirements-web.txt]
+      changed_when: false
 
     - name: Install the separately built private documentation
       ansible.builtin.copy:
         src: "{{ haven_private_site }}/"
         dest: "{{ haven_web_release }}/"
         owner: root
-        group: haven
+        group: root
         mode: preserve
         directory_mode: '0750'
 
     - name: Switch the private site after the complete release is installed
       ansible.builtin.file:
         src: "{{ haven_web_release }}"
-        dest: /var/lib/haven/web/private-docs/current
+        dest: /var/lib/haven-web/private-docs/current
         state: link
         owner: root
-        group: haven
+        group: root
 
     - name: Install independent read-only dashboard units
       ansible.builtin.template:
@@ -94,14 +185,56 @@
         owner: root
         group: root
         mode: '0644'
-      loop: [haven-dashboard-snapshot.service, haven-dashboard-snapshot.timer]
+      loop: [haven-dashboard-snapshot.service, haven-dashboard-snapshot.timer, haven-dashboard-web.socket, haven-dashboard-web.service]
       register: haven_web_units
 
-    - name: Refresh the read-only dashboard
+    - name: Verify the installed dashboard units before activation
+      ansible.builtin.command:
+        argv: [systemd-analyze, verify, /etc/systemd/system/haven-dashboard-snapshot.service,
+               /etc/systemd/system/haven-dashboard-snapshot.timer, /etc/systemd/system/haven-dashboard-web.socket,
+               /etc/systemd/system/haven-dashboard-web.service]
+      changed_when: false
+
+    - name: Refresh the unserved dashboard data
       ansible.builtin.systemd_service:
         name: haven-dashboard-snapshot.service
-        state: started
+        state: restarted
         daemon_reload: "{{ haven_web_units.changed }}"
+
+    - name: Enable the root-only dashboard proxy socket
+      ansible.builtin.systemd_service:
+        name: haven-dashboard-web.socket
+        enabled: true
+        state: started
+
+    - name: Load the reviewed dashboard reader and assets
+      ansible.builtin.systemd_service:
+        name: haven-dashboard-web.service
+        state: "{{ 'restarted' if haven_web_units.changed or haven_dashboard_code.changed or haven_dashboard_assets.changed
+          or haven_dashboard_http.changed else 'started' }}"
+
+    - name: Require a working dashboard before switching any consumer
+      ansible.builtin.command:
+        argv: [/usr/bin/curl, --fail, --silent, --show-error, --max-time, '8', --output, /dev/null,
+               --unix-socket, /run/haven-dashboard-http.sock, http://localhost/]
+      changed_when: false
+
+    - name: Install the bounded monitor reader during migration
+      ansible.builtin.copy:
+        src: ../scripts/backup_runtime.py
+        dest: /usr/local/lib/haven-backup/scripts/backup_runtime.py
+        owner: root
+        group: root
+        mode: '0600'
+      when: not haven_dashboard_active.stat.exists and haven_dashboard_monitor.stat.exists
+
+    - name: Select the isolated input for independent monitoring
+      ansible.builtin.copy:
+        content: "1\n"
+        dest: /var/lib/haven-web/dashboard-active
+        owner: root
+        group: root
+        mode: '0600'
 
     - name: Enable independent periodic refresh
       ansible.builtin.systemd_service:
