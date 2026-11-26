@@ -393,7 +393,13 @@ git config --local haven.publishDocs true
 </div>
 </div>
 <div class="paragraph">
-<p>An independent systemd oneshot runs the fixed snapshot exporter as <code>haven</code>, with no network access, no capabilities, protected system directories and a single writable dashboard output directory. Credential directories, <code>.env</code> and native configuration are inaccessible to that process. The timer refreshes once a minute. SQLite uses read-only/query-only access; missing databases are not created and errors appear as unavailable data. The exporter selects no conversation content, titles, message rows or task bodies.</p>
+<p>An independent systemd oneshot runs the fixed snapshot exporter as <code>haven</code>, with network denied and a single output directory under <code>/var/lib/haven-web</code>. The timer refreshes the data JSON once a minute. SQLite uses read-only/query-only access. The exporter selects aggregate counters and fixed service properties. The code lives under root-owned <code>/usr/local/lib/haven-dashboard</code>.</p>
+</div>
+<div class="paragraph">
+<p>The web service runs as <code>haven-dashboard</code> with a read-only filesystem, no IP networking and no access to the coordinator home, private runbooks, wishlist database or backup directories. The server inherits a root-owned mode-0600 Unix HTTP socket. It serves only the dashboard, its stylesheet and a bounded JSON snapshot. It checks the data shape and file identity, renders from trusted code and sets a restrictive content security policy. The exporter directory is an input to this service. Private releases are under root-owned <code>/var/lib/haven-web/private-docs</code>. Both roots sit outside the coordinator home.</p>
+</div>
+<div class="paragraph">
+<p>For the first deployment, pass <code>haven_dashboard_http_dependencies</code> as the absolute artifact directory for the repository&#8217;s existing hash-pinned HTTP lock. The playbook verifies the corresponding archive, verifies the installed dependency and checks the dashboard through its socket before selecting the new snapshot for the independent monitor. Later deployments verify the installed dependency in place. See <a href="wishlist-web.html" class="xref page">building the HTTP dependency bundle</a>. Deploy the new artifacts before changing the Serve routes.</p>
 </div>
 <div class="paragraph">
 <p>The page refreshes every minute and displays its UTC snapshot timestamp. Treat a snapshot older than two minutes as stale; it is not an external outage monitor. Model counters are retained-session aggregates, and recorded costs are neither subscription quota nor a provider invoice. Unknown costs are not displayed as zero. An absent default board is reported as unavailable, not as an empty healthy queue. Other boards and task controls remain future work.</p>
@@ -404,7 +410,7 @@ git config --local haven.publishDocs true
 <h2 id="_enable_owner_only_https_through_tailscale"><a class="anchor" href="#_enable_owner_only_https_through_tailscale"></a>Enable owner-only HTTPS through Tailscale</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The pilot&#8217;s installed Serve CLI is 1.104.4. Preserve all current settings and inspect <code>sudo tailscale serve status --json</code> before changing anything. This rollout expects no pre-existing Serve routes. Do not use <code>serve reset</code> on a host with unrelated routes.</p>
+<p>Inspect <code>sudo tailscale serve status --json</code> before changing the dashboard and private guide mounts. Preserve the wishlist proxy and any unrelated routes.</p>
 </div>
 <div class="paragraph">
 <p>In the Tailscale admin console, enable HTTPS certificates and add an owner-only grant to <code>tag:haven</code> for TCP 443 and 8443 while preserving SSH. Update policy tests to accept the two new ports and retain denials for unused ports and an unauthorized identity. A new narrow grant does not cancel an existing broad allow rule; inspect the complete policy. Certificate Transparency publicly records the node&#8217;s certificate DNS name, not private content. No Funnel capability is required.</p>
@@ -414,13 +420,13 @@ git config --local haven.publishDocs true
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo tailscale serve --bg --https=443 /var/lib/haven/web/dashboard
-sudo tailscale serve --bg --https=8443 /var/lib/haven/web/private-docs/current
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">sudo tailscale serve --bg --https=443 --set-path=/ unix:/run/haven-dashboard-http.sock
+sudo tailscale serve --bg --https=8443 --set-path=/ /var/lib/haven-web/private-docs/current
 sudo tailscale serve status --json</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Both sites use root paths on separate HTTPS ports. The tailnet DNS name is instance-specific and stays in private runbooks. Tailscale Serve owns the TLS listener and persists background configuration across daemon restarts. It serves only the chosen generated directories. Do not expose an entire home, repository or parent directory. Verify whether the installed version honors the release symlink on each request when testing rollback.</p>
+<p>Both sites use root paths on separate HTTPS ports. The wishlist continues through its own path and socket. The tailnet DNS name is instance-specific and stays in private runbooks. Tailscale Serve owns the TLS listener and persists background configuration across daemon restarts. For rollback, keep the root mount on the isolated dashboard socket and select a previously verified private release under the protected web root. If the dashboard cannot be restored on that socket, serving a static status message for the root mount contains the failure while preserving the wishlist route.</p>
 </div>
 <div class="paragraph">
 <p>No public firewall rule, public HTTP listener, OS update, service-account change or Nora restart is part of this operation. Tailscale&#8217;s policy, together with authenticated tailnet devices, controls access; UFW alone is not that boundary. Funnel must remain absent from the resulting Serve configuration.</p>
