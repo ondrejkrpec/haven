@@ -20,6 +20,21 @@
           - haven_backup_healthchecks is defined
         fail_msg: Backup requires explicit private settings and protected credential paths.
 
+    - name: Inspect the supplied local backup executable
+      ansible.builtin.stat:
+        path: "{{ haven_backup_restic }}"
+        checksum_algorithm: sha256
+      delegate_to: localhost
+      become: false
+      register: haven_backup_binary
+
+    - name: Require the executable to match the supplied backup settings
+      ansible.builtin.assert:
+        that:
+          - haven_backup_binary.stat.isreg | default(false)
+          - haven_backup_binary.stat.checksum == (lookup('ansible.builtin.file', haven_backup_settings) | from_json).restic_sha256
+        fail_msg: The backup executable and rendered settings must use the same reviewed digest.
+
     - name: Require that no backup or maintenance is in progress
       ansible.builtin.command:
         argv: [systemctl, show, haven-backup.service, haven-maintenance.service, '-p', ActiveState]

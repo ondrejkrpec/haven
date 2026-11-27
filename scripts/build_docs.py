@@ -16,6 +16,7 @@ ATTACHMENTS = (
     "examples/instance.yaml", "examples/scaleway-backup.json", "examples/backup-capture.json", "examples/backup-runtime.json", "schemas/instance-v1.schema.json",
     "research/h0.1/provenance.json", "research/h0.1/UPSTREAM-LICENSE",
     "research/h0.1/pins.json", "research/h0.1/patches/upstream-117820.patch",
+    "research/h1.9/restic-0.20.0.json",
     "research/h0.1/evidence/h0.2-portable-isolation.json",
     ".github/workflows/checks.yml",
     "research/h0.5/acceptance.json", "research/h0.5/source-manifest.json",

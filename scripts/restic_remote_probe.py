@@ -157,6 +157,7 @@ def synthetic_restore(restic, journal):
 def main(argv=None):
     parser = PrivateArgumentParser(description=__doc__)
     parser.add_argument("--live", action="store_true")
+    parser.add_argument("--candidate", action="store_true", help="use the separate restic 0.20.0 candidate")
     for name in ("settings", "credentials", "password-directory", "preflight", "receipt"):
         parser.add_argument("--" + name, type=Path, required=True)
     args = parser.parse_args(argv)
@@ -169,8 +170,9 @@ def main(argv=None):
     try:
         settings = json.loads(args.settings.read_text())
         validate(settings)
-        pins = json.loads((ROOT / "research/h1.9/pins.json").read_text())
-        binary = ROOT / "build/h1.9/restic"
+        pin_name = "restic-0.20.0.json" if args.candidate else "pins.json"
+        pins = json.loads((ROOT / "research/h1.9" / pin_name).read_text())
+        binary = ROOT / "build/h1.9" / ("restic-" + pins["version"] if args.candidate else "restic")
         require(not binary.is_symlink()
                 and hashlib.sha256(binary.read_bytes()).hexdigest() == pins["binary_sha256"])
         password = password_value(args.password_directory)

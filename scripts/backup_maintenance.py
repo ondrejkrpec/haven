@@ -60,6 +60,8 @@ def main(argv=None):
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--ssh-alias", required=True)
     parser.add_argument("--ssh-config", type=Path, default=Path.home() / ".ssh/config")
+    parser.add_argument("--restic-binary", type=Path, default=ROOT / "build/h1.9/restic",
+                        help="local executable matching the rendered backup settings digest")
     for name in ("settings", "accepted", "operator-credentials", "password-directory", "receipt"):
         parser.add_argument("--" + name, type=Path, required=True)
     args = parser.parse_args(argv)
@@ -93,7 +95,7 @@ def main(argv=None):
                 with (root / name).open("xb") as output:
                     os.fchmod(output.fileno(), 0o600)
                     output.write(read_private(source, 258))
-            repository = Repository(settings, root, root, binary=ROOT / "build/h1.9/restic")
+            repository = Repository(settings, root, root, binary=args.restic_binary.absolute())
             retention(repository, accepted, apply=args.apply, journal=journal, receipt=args.receipt)
     except Exception:
         print('{"result":"failed","code":"maintenance_failed","reconcile_private_receipt":true}')

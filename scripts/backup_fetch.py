@@ -53,7 +53,8 @@ def discover_snapshot(repo, snapshot=None):
             "server_acceptance_status": "unavailable"}
 
 
-def fetch(settings, accepted, credentials, password_directory, destination, *, snapshot=None):
+def fetch(settings, accepted, credentials, password_directory, destination, *, snapshot=None,
+          restic_binary=ROOT / "build/h1.9/restic"):
     if accepted is not None:
         validate_receipt(accepted)
     with parent_directory(destination) as (parent, name):
@@ -66,7 +67,7 @@ def fetch(settings, accepted, credentials, password_directory, destination, *, s
             with (temporary / name).open("xb") as output:
                 os.fchmod(output.fileno(), 0o600)
                 output.write(read_private(path, 258))
-        repo = Repository(settings, temporary, destination, binary=ROOT / "build/h1.9/restic")
+        repo = Repository(settings, temporary, destination, binary=restic_binary)
         repo.identity()
         if accepted is None:
             accepted = discover_snapshot(repo, snapshot)
@@ -97,6 +98,8 @@ def main(argv=None):
     source.add_argument("--accepted", type=Path)
     source.add_argument("--discover", action="store_true")
     parser.add_argument("--snapshot", help="optional full ID for explicit disaster recovery selection")
+    parser.add_argument("--restic-binary", type=Path, default=ROOT / "build/h1.9/restic",
+                        help="local executable matching the rendered backup settings digest")
     args = parser.parse_args(argv)
     if not args.live:
         print("Explicit --live required; no credentials read or request sent.", file=sys.stderr)
@@ -105,7 +108,8 @@ def main(argv=None):
     try:
         require(args.snapshot is None or (args.discover and IDENTIFIER.fullmatch(args.snapshot)), "full_disaster_snapshot_required")
         result = fetch(load(args.settings), load(args.accepted) if args.accepted else None,
-                       args.credentials, args.password_directory, args.destination, snapshot=args.snapshot)
+                       args.credentials, args.password_directory, args.destination, snapshot=args.snapshot,
+                       restic_binary=args.restic_binary.absolute())
     except Exception:
         print('{"result":"failed","code":"recovery_fetch_failed"}')
         return 1

@@ -1,5 +1,8 @@
 {
   "schema_version": 1,
+  "pip_version": "26.3",
+  "pip_wheel_url": "https://files.pythonhosted.org/packages/07/25/ee8c38ae72d66b844ce8eb9711ba905dba21ca1a8a0c960057c41cd23337/pip-26.3-py3-none-any.whl",
+  "pip_wheel_sha256": "f3b60b20ffaadd4415ed7957212a38ac63fa4c5fa375bd0f4a797777940fad13",
   "playwright": "1.64.1",
   "chromium_revision": "1727472",
   "chromium_version": "158.0.8127.88",

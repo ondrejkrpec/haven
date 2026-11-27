@@ -61,7 +61,7 @@ def probe(binary, pins):
                                     cwd=root, env=environment, stdin=subprocess.DEVNULL,
                                     capture_output=True, text=True, timeout=60)
             if (result.returncode == 0) != success:
-                diagnostic = ROOT / "build/h1.9/probe-failure.txt"
+                diagnostic = binary.with_name(binary.name + "-probe-failure.txt")
                 diagnostic.write_text((result.stdout + result.stderr).replace(temporary, "<fixture>"))
                 raise ValueError("unexpected_restic_result_" + args[0] + "_" + str(result.returncode))
             return result
@@ -148,21 +148,23 @@ def probe(binary, pins):
             "retention_prune_and_remaining_restore": True, "corruption_detected": True,
             "production_credentials_used": False, "remote_repository_tested": False,
             "external_alert_delivery_tested": False, "captured_at_utc": datetime.now(timezone.utc).isoformat(),
-            "source_sha256": {name: sha(ROOT / name) for name in
-                              ("research/h1.9/probe.py", "research/h1.9/pins.json")}}
+            "source_sha256": {"research/h1.9/probe.py": sha(Path(__file__))}}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--download", action="store_true", help="explicitly download the pinned public binary")
+    parser.add_argument("--candidate", action="store_true", help="use the separate restic 0.20.0 candidate")
     args = parser.parse_args()
-    pins = json.loads(PINS.read_text())
-    binary = ROOT / "build/h1.9/restic"
+    pin_path = PINS.with_name("restic-0.20.0.json") if args.candidate else PINS
+    pins = json.loads(pin_path.read_text())
+    binary = ROOT / "build/h1.9" / ("restic-" + pins["version"] if args.candidate else "restic")
     if args.download:
         install(binary, pins)
-    output = ROOT / "build/h1.9/probe-result.json"
+    output_name = "probe-result-" + pins["version"] + ".json" if args.candidate else "probe-result.json"
+    output = binary.with_name(output_name)
     output.unlink(missing_ok=True)
-    (ROOT / "build/h1.9/probe-failure.txt").unlink(missing_ok=True)
+    binary.with_name(binary.name + "-probe-failure.txt").unlink(missing_ok=True)
     previous = os.umask(0o077)
     try:
         result = probe(binary, pins)
@@ -170,6 +172,7 @@ def main():
         os.umask(previous)
     result["python_version"] = platform.python_version()
     result["sqlite_version"] = sqlite3.sqlite_version
+    result["source_sha256"][str(pin_path.relative_to(ROOT))] = sha(pin_path)
     result["source_revision"] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     result["source_dirty"] = bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip())
     output.write_text(json.dumps(result, indent=2) + "\n")
