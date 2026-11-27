@@ -432,6 +432,23 @@ ANSIBLE_CONFIG=ops/ansible.cfg ANSIBLE_HOME=build/ansible \
 <div class="paragraph">
 <p>Never share another invocation&#8217;s lease. A lost administrative session may leave a transient lease holding the lock; reconcile that exact lease before releasing it. Busy maintenance defers monitoring without forging success; prolonged silence still expires externally.</p>
 </div>
+<div class="sect2">
+<h3 id="_restic_0_20_0_candidate"><a class="anchor" href="#_restic_0_20_0_candidate"></a>Restic 0.20.0 candidate</h3>
+<div class="paragraph">
+<p>The <a href="_attachments/research/h1.9/restic-0.20.0.json" class="xref attachment">separate candidate pin</a> records the official Linux AMD64 archive and binary digests. <a href="https://github.com/restic/restic/releases/tag/v0.20.0">Restic 0.20.0</a> hardens tree validation during <code>restore</code>. Keep the existing executable available for recovery.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">.venv/bin/python research/h1.9/probe.py --candidate --download</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This verifies both digests and runs the synthetic backup, exact restore and retention probe. The binary is staged at <code>build/h1.9/restic-0.20.0</code> with a separate result file. The original probe retains its executable and result path. A separate versioned S3 emulator over HTTPS loopback verified format 2, full data checks, exact SQLite restores and no remaining locks. The candidate restored a snapshot written by 0.19.1, and 0.19.1 restored a snapshot written by the candidate.</p>
+</div>
+<div class="paragraph">
+<p>Before an authorized production switch, verify the pair on an isolated provider repository using <a href="h1.9-scaleway-healthchecks.html" class="xref page">the remote probe</a> with <code>--candidate</code>. Preserve the installed binary and settings together. Confirm that no pause intent or incomplete upload/verification remains and that a fresh accepted backup is available. Select the candidate digest in the private inputs and pass the staged binary to the deployment playbook. Its preflight requires the supplied executable to match the rendered settings. After the switch, verify a newly accepted backup and independent monitoring. If reverting, use both original files under maintenance exclusion and reconcile any in-flight backup before resuming. The S3 emulator exercise covers protocol compatibility, with provider IAM, throughput and the actual service window pending a separate check.</p>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -453,6 +470,9 @@ ANSIBLE_CONFIG=ops/ansible.cfg ANSIBLE_HOME=build/ansible \
 <div class="sectionbody">
 <div class="paragraph">
 <p>Obtain the independent repository password and private repository settings. The protected accepted receipt is useful when available; recovery must also work when the VPS and that receipt are lost. <code>scripts.backup_fetch --live</code> takes explicit settings, receipt, runtime credential/password directories and a new destination outside Git. It verifies repository/run/snapshot identity and restores exact bytes without starting software. With <code>--discover</code>, it reads the authenticated encrypted snapshot catalogue, pins a full ID, reads that snapshot’s authenticated manifest and verifies the complete restored file set. It does not contact the VPS or infer that a discovered candidate was previously accepted by the missing server. <code>--snapshot</code> can select a reviewed full ID if the newest candidate is incomplete. Temporary input-key copies are removed. Do not select mutable <code>latest</code> or overwrite an existing profile.</p>
+</div>
+<div class="paragraph">
+<p>Both workstation commands <code>scripts.backup_fetch</code> and <code>scripts.backup_maintenance</code> default to <code>build/h1.9/restic</code>. Pass <code>--restic-binary</code> to use a separately staged executable. Its SHA-256 must match <code>restic_sha256</code> in the supplied settings.</p>
 </div>
 <div class="paragraph">
 <p>Rebuild dependencies from pinned public sources using upstream PM and its frozen lock. Use the pinned Python&#8217;s SQLite: the base container&#8217;s older SQLite rejected the production schema; the rebuilt Python 3.14.9/SQLite 3.53.1 passed. <code>scripts.backup_restore</code> verifies the sealed manifest, independently maps numeric UIDs/GIDs, restores executable/group modes and creates a new profile under a trusted owned parent. Place it at the final path only after admission checks. Restore Telegram delivery receipts before allowing the one production poller to connect.</p>

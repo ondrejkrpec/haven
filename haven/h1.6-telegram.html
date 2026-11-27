@@ -345,6 +345,29 @@ python3 -m pm.build_env --source "$PWD" --out "$TELEGRAM_CANDIDATE_ENV" --extra 
 </div>
 </div>
 <div class="sect1">
+<h2 id="_cpython_3_14_10_candidate"><a class="anchor" href="#_cpython_3_14_10_candidate"></a>CPython 3.14.10 candidate</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <a href="https://github.com/astral-sh/python-build-standalone/releases/tag/20261124">Astral Linux x86-64 glibc stripped build</a> contains CPython 3.14.10, SQLite 3.54.1, OpenSSL 3.5.9 and Expat 2.11.0. Verify the archive SHA-256 <code>73ee0629c19e9f87077f318cd50d7e703137c274479ce8e8fd5723e75c86c9bc</code> before extraction. See the <a href="https://docs.python.org/3.14/whatsnew/changelog.html#python-3-14-10-final">CPython security changes</a>.</p>
+</div>
+<div class="paragraph">
+<p>In the disposable patched Hermes checkout, use the extracted <code>python/bin/python3</code> as <code>CANDIDATE_PYTHON</code>. Use isolated PM paths and keep the extracted interpreter and source checkout beside the environments for their lifetime. With the reviewed Tornado patch applied, prepare the Telegram environment. Restore the original dependency lock in the disposable checkout before the separate wishlist build and before verifying the installed source contract.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">python3 -m pm.build_env --source "$PWD" --out "$TELEGRAM_CANDIDATE_ENV" \
+  --python "$CANDIDATE_PYTHON" --extra telegram
+git restore --source=HEAD -- uv.lock
+python3 -m pm.build_env --source "$PWD" --out "$WISHLIST_CANDIDATE_ENV" \
+  --python "$CANDIDATE_PYTHON"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This retains the exact Hermes source revision and security patches. Use a separate test output with <code>--group dev --group test</code> for the canonical runner. The 3.14.10 test environment imported PTB 22.8 and Tornado 6.6.1 and passed 92 tests across the Telegram, capability guard, wishlist ingress and wishlist language suites. The separate wishlist build imported its provider dependencies under 3.14.10. A production switch requires verifying the service entry points and backup/recovery paths together, keeping the old environment and original service configuration available, and checking a single Telegram poller after restart.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_owner_enrollment"><a class="anchor" href="#_owner_enrollment"></a>Owner enrollment</h2>
 <div class="sectionbody">
 <div class="olist arabic">

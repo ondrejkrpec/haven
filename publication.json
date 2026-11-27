@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "f0cbc941625ba591bd046b0565388c6fe5fcbdd8",
-  "checked_at_utc": "2026-11-26T13:10:42.626890+00:00",
+  "source_revision": "dc0080e8894b1e16b4b3533e4604696e31508da7",
+  "checked_at_utc": "2026-11-27T09:26:18.389493+00:00",
   "files": [
     {
       "path": "_/css/site.css",
@@ -29,7 +29,7 @@
     },
     {
       "path": "haven/_attachments/config/wishlist-browser-runtime.json",
-      "sha256": "ab1e93b97425126cd7a9c753f0351c9f9be9f87b017e3db08d9149308d0521aa"
+      "sha256": "c681b6e0aa1a09562cbbaf6f11bfebc0dfac3bed359b33135d0f5fe8c8883c5d"
     },
     {
       "path": "haven/_attachments/examples/backup-capture.json",
@@ -82,6 +82,10 @@
     {
       "path": "haven/_attachments/research/h0.5/source-manifest.json",
       "sha256": "aa9a1df0bd3f102d23eb64f7625bf8c6db14d14011b73737f2c928813709591c"
+    },
+    {
+      "path": "haven/_attachments/research/h1.9/restic-0.20.0.json",
+      "sha256": "43c196b6dcd5ea3fa3e003d17b2f65c678ad7585d0d506c7ef0b10d543e7e136"
     },
     {
       "path": "haven/_attachments/research/w2/acceptance.json",
@@ -289,7 +293,7 @@
     },
     {
       "path": "haven/h1.6-telegram.html",
-      "sha256": "eed9814f4593ccfc11bf1b7f2b6f6372ba0e1320dad4c3da19c319457cc4a263"
+      "sha256": "a43351385990dd1aba6a47c5bffad7a4f98e028d3db4cc0191de3b3b4495fe48"
     },
     {
       "path": "haven/h1.6-whatsapp.html",
@@ -309,7 +313,7 @@
     },
     {
       "path": "haven/h1.9-backup-recovery.html",
-      "sha256": "9f3a677fcb3fd419a3aab91469282beff40e6a346fe8de54ae04a3a89f6caad5"
+      "sha256": "ec4046a2c11fd93e8e0fd78dfc0f5edd440466c5ccfda6d908ec10a1997857ca"
     },
     {
       "path": "haven/h1.9-provider-options.html",
@@ -341,7 +345,7 @@
     },
     {
       "path": "haven/wishlist-browser.html",
-      "sha256": "6a55546793a3084f11177606a6e54711a4f811c5e067e2f30ef6459c5cd4cd4e"
+      "sha256": "8045b0f465c0b16a00d30dfe4162478f0e105e5deacc9bd445f569ec98813c67"
     },
     {
       "path": "haven/wishlist-collection.html",
