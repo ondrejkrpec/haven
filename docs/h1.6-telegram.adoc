@@ -47,6 +47,23 @@ Use the isolated PM home and tool store described in link:../research/h0.1/READM
 
 Production uses the original source lock to verify the running Hermes tree. Treat activation of the new dependency set as a separate service maintenance operation and keep the previous interpreter available for recovery. Context7 returned a quota error. The verified package metadata and upstream release notes supplied the version details.
 
+== CPython 3.14.10 candidate
+
+The https://github.com/astral-sh/python-build-standalone/releases/tag/20261124[Astral Linux x86-64 glibc stripped build] contains CPython 3.14.10, SQLite 3.54.1, OpenSSL 3.5.9 and Expat 2.11.0. Verify the archive SHA-256 `73ee0629c19e9f87077f318cd50d7e703137c274479ce8e8fd5723e75c86c9bc` before extraction. See the https://docs.python.org/3.14/whatsnew/changelog.html#python-3-14-10-final[CPython security changes].
+
+In the disposable patched Hermes checkout, use the extracted `python/bin/python3` as `CANDIDATE_PYTHON`. Use isolated PM paths and keep the extracted interpreter and source checkout beside the environments for their lifetime. With the reviewed Tornado patch applied, prepare the Telegram environment. Restore the original dependency lock in the disposable checkout before the separate wishlist build and before verifying the installed source contract.
+
+[source,sh]
+----
+python3 -m pm.build_env --source "$PWD" --out "$TELEGRAM_CANDIDATE_ENV" \
+  --python "$CANDIDATE_PYTHON" --extra telegram
+git restore --source=HEAD -- uv.lock
+python3 -m pm.build_env --source "$PWD" --out "$WISHLIST_CANDIDATE_ENV" \
+  --python "$CANDIDATE_PYTHON"
+----
+
+This retains the exact Hermes source revision and security patches. Use a separate test output with `--group dev --group test` for the canonical runner. The 3.14.10 test environment imported PTB 22.8 and Tornado 6.6.1 and passed 92 tests across the Telegram, capability guard, wishlist ingress and wishlist language suites. The separate wishlist build imported its provider dependencies under 3.14.10. A production switch requires verifying the service entry points and backup/recovery paths together, keeping the old environment and original service configuration available, and checking a single Telegram poller after restart.
+
 == Owner enrollment
 
 . Create a bot through official https://t.me/BotFather[BotFather] using `/newbot`. Keep the token private; do not put it in YAML, command arguments, chat or Git.

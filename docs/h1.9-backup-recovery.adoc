@@ -91,6 +91,19 @@ sudo flock -n /run/lock/haven-maintenance.lock systemctl restart haven.service
 
 Never share another invocation's lease. A lost administrative session may leave a transient lease holding the lock; reconcile that exact lease before releasing it. Busy maintenance defers monitoring without forging success; prolonged silence still expires externally.
 
+=== Restic 0.20.0 candidate
+
+The link:../research/h1.9/restic-0.20.0.json[separate candidate pin] records the official Linux AMD64 archive and binary digests. https://github.com/restic/restic/releases/tag/v0.20.0[Restic 0.20.0] hardens tree validation during `restore`. Keep the existing executable available for recovery.
+
+[source,sh]
+----
+.venv/bin/python research/h1.9/probe.py --candidate --download
+----
+
+This verifies both digests and runs the synthetic backup, exact restore and retention probe. The binary is staged at `build/h1.9/restic-0.20.0` with a separate result file. The original probe retains its executable and result path. A separate versioned S3 emulator over HTTPS loopback verified format 2, full data checks, exact SQLite restores and no remaining locks. The candidate restored a snapshot written by 0.19.1, and 0.19.1 restored a snapshot written by the candidate.
+
+Before an authorized production switch, verify the pair on an isolated provider repository using link:h1.9-scaleway-healthchecks.adoc[the remote probe] with `--candidate`. Preserve the installed binary and settings together. Confirm that no pause intent or incomplete upload/verification remains and that a fresh accepted backup is available. Select the candidate digest in the private inputs and pass the staged binary to the deployment playbook. Its preflight requires the supplied executable to match the rendered settings. After the switch, verify a newly accepted backup and independent monitoring. If reverting, use both original files under maintenance exclusion and reconcile any in-flight backup before resuming. The S3 emulator exercise covers protocol compatibility, with provider IAM, throughput and the actual service window pending a separate check.
+
 == Monitoring and retention
 
 `haven-backup` has a 24-hour period/one-hour grace. `haven-service` has a five-minute period/five-minute grace and requires a fresh native heartbeat/dashboard plus a verified backup no older than 24 hours. The twice-daily schedule leaves room to recover from a failed backup. The owner confirmed the actual missed-service-heartbeat email; reporting was then restored. Telegram reply delivery is not measured by this monitor.
@@ -102,6 +115,8 @@ The VPS application key cannot delete data/snapshots or access previous object v
 == Restore to a new target
 
 Obtain the independent repository password and private repository settings. The protected accepted receipt is useful when available; recovery must also work when the VPS and that receipt are lost. `scripts.backup_fetch --live` takes explicit settings, receipt, runtime credential/password directories and a new destination outside Git. It verifies repository/run/snapshot identity and restores exact bytes without starting software. With `--discover`, it reads the authenticated encrypted snapshot catalogue, pins a full ID, reads that snapshot’s authenticated manifest and verifies the complete restored file set. It does not contact the VPS or infer that a discovered candidate was previously accepted by the missing server. `--snapshot` can select a reviewed full ID if the newest candidate is incomplete. Temporary input-key copies are removed. Do not select mutable `latest` or overwrite an existing profile.
+
+Both workstation commands `scripts.backup_fetch` and `scripts.backup_maintenance` default to `build/h1.9/restic`. Pass `--restic-binary` to use a separately staged executable. Its SHA-256 must match `restic_sha256` in the supplied settings.
 
 Rebuild dependencies from pinned public sources using upstream PM and its frozen lock. Use the pinned Python's SQLite: the base container's older SQLite rejected the production schema; the rebuilt Python 3.14.9/SQLite 3.53.1 passed. `scripts.backup_restore` verifies the sealed manifest, independently maps numeric UIDs/GIDs, restores executable/group modes and creates a new profile under a trusted owned parent. Place it at the final path only after admission checks. Restore Telegram delivery receipts before allowing the one production poller to connect.
 

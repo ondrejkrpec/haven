@@ -9,6 +9,7 @@
   vars:
     haven_browser_root: /opt/haven-wishlist-browser
     haven_browser_pin: "{{ lookup('ansible.builtin.file', '../config/wishlist-browser-runtime.json') | from_json }}"
+    haven_browser_pip_stage: "{{ haven_browser_root }}/pip-{{ haven_browser_pin.pip_version }}-py3-none-any.whl"
     haven_browser_packages_required:
       - python3-venv
       - xvfb
@@ -155,12 +156,42 @@
         mode: '0755'
       when: not haven_browser_prepared.stat.exists
 
-    - name: Prepare a separate virtual environment
+    - name: Prepare a separate virtual environment without the system pip seed
       ansible.builtin.command:
-        argv: [/usr/bin/python3, -m, venv, /opt/haven-wishlist-browser/venv]
+        argv: [/usr/bin/python3, -m, venv, --without-pip, /opt/haven-wishlist-browser/venv]
         creates: /opt/haven-wishlist-browser/venv/bin/python
       become: true
       become_user: haven-browser-build
+      when: not haven_browser_prepared.stat.exists
+
+    - name: Stage the checksum-pinned installer wheel
+      ansible.builtin.get_url:
+        url: "{{ haven_browser_pin.pip_wheel_url }}"
+        dest: "{{ haven_browser_pip_stage }}"
+        checksum: "sha256:{{ haven_browser_pin.pip_wheel_sha256 }}"
+        owner: root
+        group: root
+        mode: '0644'
+      when: not haven_browser_prepared.stat.exists
+
+    - name: Bootstrap the reviewed installer from the local wheel
+      ansible.builtin.command:
+        argv:
+          - /opt/haven-wishlist-browser/venv/bin/python
+          - -I
+          - -c
+          - 'import runpy, sys; sys.path.insert(0, sys.argv.pop(1)); runpy.run_module("pip", run_name="__main__")'
+          - "{{ haven_browser_pip_stage }}"
+          - --isolated
+          - install
+          - --no-index
+          - --no-deps
+          - --force-reinstall
+          - "{{ haven_browser_pip_stage }}"
+      become: true
+      become_user: haven-browser-build
+      register: haven_browser_pip_bootstrap
+      changed_when: "'Successfully installed pip-' in haven_browser_pip_bootstrap.stdout"
       when: not haven_browser_prepared.stat.exists
 
     - name: Stage exact hash-pinned browser and validator requirements
@@ -174,13 +205,19 @@
 
     - name: Install only the declared binary wheels under the build identity
       ansible.builtin.command:
-        argv: [/opt/haven-wishlist-browser/venv/bin/python, -m, pip, install, '--only-binary=:all:',
+        argv: [/opt/haven-wishlist-browser/venv/bin/python, -I, -m, pip, --isolated, install, '--only-binary=:all:',
                --require-hashes, -r, /opt/haven-wishlist-browser/requirements-browser.txt,
                -r, /opt/haven-wishlist-browser/requirements-wishlist.txt]
       become: true
       become_user: haven-browser-build
       register: haven_browser_python_packages
       changed_when: "'Successfully installed' in haven_browser_python_packages.stdout"
+      when: not haven_browser_prepared.stat.exists
+
+    - name: Remove the installer archive from the prepared runtime
+      ansible.builtin.file:
+        path: "{{ haven_browser_pip_stage }}"
+        state: absent
       when: not haven_browser_prepared.stat.exists
 
     - name: Create independent code and browser directories
@@ -231,6 +268,17 @@
       register: haven_browser_version
       changed_when: false
       failed_when: haven_browser_pin.chromium_version not in haven_browser_version.stdout
+
+    - name: Verify the prepared Python package versions
+      ansible.builtin.command:
+        argv:
+          - /opt/haven-wishlist-browser/venv/bin/python
+          - -I
+          - -c
+          - 'import sys; from importlib.metadata import version; assert [version("pip"), version("playwright")] == sys.argv[1:]'
+          - "{{ haven_browser_pin.pip_version }}"
+          - "{{ haven_browser_pin.playwright }}"
+      changed_when: false
 
     - name: Create the private service configuration directory
       ansible.builtin.file:

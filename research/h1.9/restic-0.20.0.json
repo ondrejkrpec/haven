@@ -1,0 +1,8 @@
+{
+  "version": "0.20.0",
+  "platform": "linux/amd64",
+  "release": "https://github.com/restic/restic/releases/tag/v0.20.0",
+  "url": "https://github.com/restic/restic/releases/download/v0.20.0/restic_0.20.0_linux_amd64.bz2",
+  "archive_sha256": "0ccd9fa7885074a24603b051e01bf9bd8b5e45d6a1791e9d9887e9e9372107f7",
+  "binary_sha256": "c109579d3a1a4d26094bef5400ac5645fceb1043414c05f51b8fb48272001c72"
+}
